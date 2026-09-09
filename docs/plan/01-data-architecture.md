@@ -4,6 +4,50 @@
 
 Mỗi hệ thống lưu trữ sở hữu một workload riêng. SQLite là nguồn dữ liệu sự thật; các database khác là lớp dẫn xuất, vận hành hoặc phân tích và phải có thể xây dựng lại từ SQLite cùng nội dung đã lưu.
 
+## Tech stack đã chốt
+
+| Lớp | Công nghệ | Vai trò |
+| --- | --- | --- |
+| Runtime | Python 3.12 | Ngôn ngữ và môi trường chạy ứng dụng. |
+| Web | FastAPI + Uvicorn | HTTP API, routes và background tasks local. |
+| UI | Jinja2 + HTMX + CSS tĩnh | Server-rendered dashboard, không cần SPA hay Node build step. |
+| Dữ liệu chính | SQLite + FTS5 | Metadata, snapshot, quan hệ, keyword search và transaction. |
+| Vector | ChromaDB | Semantic retrieval theo `chunk_id`. |
+| KV/cache | RocksDB | Cache embedding và trạng thái index có thể tái tạo. |
+| Analytics | DuckDB | Aggregate queries read-only trên dữ liệu SQLite. |
+| Embedding | sentence-transformers | Provider local mặc định; cloud provider là implementation cấu hình thêm. |
+| Trích xuất nội dung | Trafilatura, PyMuPDF, Markdown | Lần lượt xử lý bài web, PDF và Markdown/text. |
+| Kiểm thử | pytest + httpx | Unit test, integration test và test HTTP API. |
+
+Không dùng ORM ở MVP. Data-access layer sử dụng `sqlite3` của Python và SQL có version-controlled schema để giữ vai trò của từng database minh bạch, thuận lợi cho mục tiêu học kiến trúc dữ liệu của project.
+
+## Cấu trúc project
+
+```text
+InfoBoard/
+├── app/
+│   ├── main.py                 # Khởi tạo FastAPI và đăng ký routes
+│   ├── config.py               # Cấu hình local, storage và embedding provider
+│   ├── routes/                 # HTTP handlers: items, collections, search, analytics
+│   ├── models/                 # Pydantic request/response và domain types
+│   ├── services/
+│   │   ├── ingestion/          # URL/file/text extract, normalize, chunk
+│   │   ├── embeddings/         # EmbeddingProvider và các implementation
+│   │   ├── retrieval/          # Keyword, semantic và hybrid search
+│   │   └── analytics/          # DuckDB dashboard queries
+│   ├── storage/                # SQLite, ChromaDB, RocksDB adapters và schema
+│   ├── templates/              # Jinja pages và HTMX partials
+│   └── static/                 # CSS và JavaScript tối thiểu
+├── data/                       # SQLite DB, Chroma/RocksDB files, snapshots; bị gitignore
+├── tests/                      # Unit, integration và fixtures import/search
+├── docs/plan/                  # Tài liệu quyết định sản phẩm và kiến trúc
+├── pyproject.toml              # Dependencies, tooling và pytest config
+├── .env.example                # Ví dụ cấu hình provider, không chứa secret
+└── README.md                   # Cách cài đặt, chạy local và kiến trúc tóm tắt
+```
+
+`routes` chỉ điều phối HTTP, `services` chứa nghiệp vụ, và `storage` là ranh giới duy nhất với các database. Input adapter mới—bookmark HTML hay browser extension—được đặt dưới `services/ingestion/` để không tạo thêm luồng index riêng.
+
 ## SQLite: nguồn dữ liệu sự thật của ứng dụng
 
 SQLite lưu dữ liệu sản phẩm bền vững:
@@ -57,4 +101,3 @@ SQLite (read-only attach)
   -> DuckDB aggregate queries
   -> dashboard
 ```
-
