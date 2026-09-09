@@ -4,6 +4,24 @@
 
 Mỗi hệ thống lưu trữ sở hữu một workload riêng. SQLite là nguồn dữ liệu sự thật; các database khác là lớp dẫn xuất, vận hành hoặc phân tích và phải có thể xây dựng lại từ SQLite cùng nội dung đã lưu.
 
+## Mô hình dữ liệu MVP
+
+SQLite dùng các bảng chính: `items`, `item_contents`, `chunks`, `collections`, `item_collections`, `notes`, `search_history` và `index_jobs`. `items.status` nhận `inbox`, `active` hoặc `archived`; trạng thái index nằm riêng trong `index_jobs`.
+
+- Item có `id`, `source_type`, `source_url` hoặc `original_filename`, `title`, `content_hash`, `content_version`, `created_at`, `updated_at` và `deleted_at`.
+- `item_contents` lưu snapshot text theo version; `chunks` có `item_id`, `content_version`, `chunk_index`, `text` và `content_hash`.
+- `item_collections` là bảng liên kết nhiều-nhiều với khóa duy nhất `(item_id, collection_id)`.
+- Bật foreign key, index các cột lọc thường dùng, và dùng soft delete trước khi cleanup các index dẫn xuất.
+- FTS5 lập chỉ mục title và snapshot/chunk text; trigger hoặc service transaction phải giữ FTS đồng bộ với SQLite.
+
+Migration SQL được đánh số và ghi `schema_version`. Mọi thay đổi schema phải có migration, test nâng cấp từ version trước và đường rollback dữ liệu rõ ràng.
+
+## Tính nhất quán và phục hồi
+
+SQLite commit item, snapshot, chunks và index job trước khi worker bắt đầu xử lý. ChromaDB và RocksDB chỉ được cập nhật sau đó; trạng thái cuối cùng được xác nhận lại trong SQLite. Nếu database dẫn xuất bị mất, worker có thể quét các chunks chưa indexed và dựng lại chúng từ SQLite.
+
+Khi xóa item, UI ẩn item ngay bằng `deleted_at`; cleanup xóa vector và cache rồi mới dọn dữ liệu phụ thuộc. Backup tối thiểu gồm SQLite cùng thư mục snapshot; ChromaDB/RocksDB có thể phục hồi bằng lệnh rebuild.
+
 ## Tech stack đã chốt
 
 | Lớp | Công nghệ | Vai trò |
