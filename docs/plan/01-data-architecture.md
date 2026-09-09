@@ -1,57 +1,57 @@
-# Data Architecture and Database Responsibilities
+# Kiến trúc dữ liệu và trách nhiệm database
 
-## Guiding rule
+## Nguyên tắc nền tảng
 
-Each storage system owns one workload. SQLite is the source of truth; the other databases are derived, operational, or analytical layers and must be rebuildable from SQLite plus the saved content.
+Mỗi hệ thống lưu trữ sở hữu một workload riêng. SQLite là nguồn dữ liệu sự thật; các database khác là lớp dẫn xuất, vận hành hoặc phân tích và phải có thể xây dựng lại từ SQLite cùng nội dung đã lưu.
 
-## SQLite: application source of truth
+## SQLite: nguồn dữ liệu sự thật của ứng dụng
 
-SQLite stores the durable product data:
+SQLite lưu dữ liệu sản phẩm bền vững:
 
-- items and their source metadata;
-- extracted text snapshots;
-- chunks and their stable identifiers;
-- collections and many-to-many item memberships;
-- reading state and item-level personal notes;
-- search history and configuration metadata.
+- items và metadata nguồn;
+- snapshot text đã trích xuất;
+- chunks và định danh ổn định của chúng;
+- collections và quan hệ nhiều-nhiều giữa item–collection;
+- trạng thái đọc và note cá nhân theo item;
+- lịch sử search và metadata cấu hình.
 
-SQLite owns the relationships that render the reader, library, and collection views. An item is never considered valid solely because an index entry exists.
+SQLite sở hữu các quan hệ để render trang reader, library và collection. Một item không bao giờ được xem là hợp lệ chỉ vì index còn tồn tại.
 
 ## ChromaDB: semantic retrieval index
 
-ChromaDB stores embeddings keyed by SQLite chunk IDs. It returns the most semantically similar chunk IDs and scores; InfoBoard then fetches the authoritative item metadata and text snippets from SQLite.
+ChromaDB lưu embedding theo `chunk_id` của SQLite. Nó trả về các `chunk_id` cùng score tương đồng; InfoBoard sau đó lấy metadata item và đoạn text có thẩm quyền từ SQLite.
 
-ChromaDB is not the authoritative metadata store. Its collection can be deleted and rebuilt by re-indexing SQLite chunks.
+ChromaDB không phải metadata store chính. Collection của nó có thể bị xóa và xây dựng lại bằng cách index lại chunks từ SQLite.
 
-## RocksDB: operational state and cache
+## RocksDB: trạng thái vận hành và cache
 
-RocksDB handles high-frequency, disposable key-value data:
+RocksDB xử lý dữ liệu key-value có tần suất cao và có thể tái tạo:
 
-- indexing job state (`queued`, `extracting`, `embedding`, `completed`, `failed`);
-- embedding cache keyed by `content_hash + embedding_provider + model_version`;
-- optional short-lived progress or retry markers.
+- trạng thái job index (`queued`, `extracting`, `embedding`, `completed`, `failed`);
+- embedding cache theo `content_hash + embedding_provider + model_version`;
+- tiến độ ngắn hạn hoặc retry marker khi cần.
 
-The embedding cache prevents duplicate work when identical text is imported again. Durable item-level status is also mirrored in SQLite when it affects the UI or user recovery.
+Embedding cache tránh tính lại embedding nếu nội dung giống nhau được import lần nữa. Trạng thái item bền vững, có ảnh hưởng đến UI hoặc khả năng phục hồi của người dùng, cũng phải được phản chiếu trong SQLite.
 
-## DuckDB: read-only analytics layer
+## DuckDB: lớp analytics chỉ đọc
 
-DuckDB attaches SQLite in read-only mode to answer dashboard queries without duplicating the application database. It powers counts and grouped analysis such as items by collection/source, reading-state distribution, and activity over time.
+DuckDB gắn SQLite ở chế độ chỉ đọc để trả lời các truy vấn dashboard mà không tạo bản sao application database. Nó phục vụ các phép tổng hợp như item theo collection/nguồn, phân bố trạng thái đọc và hoạt động theo thời gian.
 
-DuckDB must not be used for transactional writes. Analytics queries should degrade gracefully if its local extension is unavailable.
+DuckDB không được dùng cho transactional write. Các truy vấn analytics phải suy giảm an toàn nếu extension local không khả dụng.
 
-## Data flow
+## Luồng dữ liệu
 
 ```text
 URL/file/text
-  -> extractor and normalizer
-  -> SQLite item + snapshot + chunks
-  -> RocksDB cache/job state
-  -> ChromaDB chunk embeddings
+  -> extractor và normalizer
+  -> SQLite: item + snapshot + chunks
+  -> RocksDB: cache/trạng thái job
+  -> ChromaDB: embedding của chunks
 
 Search query
-  -> SQLite full-text/keyword retrieval
-  -> ChromaDB semantic retrieval
-  -> SQLite hydration of visible results
+  -> SQLite: keyword retrieval
+  -> ChromaDB: semantic retrieval
+  -> SQLite: hydrate kết quả hiển thị
 
 SQLite (read-only attach)
   -> DuckDB aggregate queries
