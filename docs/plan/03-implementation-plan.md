@@ -1,34 +1,34 @@
-# Implementation Plan
+# Kế hoạch triển khai
 
-## Application shape
+## Hình dạng ứng dụng
 
-Build a local web app using Python, FastAPI, Jinja templates, and HTMX. The browser is the UI shell; no desktop packaging is required initially. Keep the application modular around ingestion, library data, retrieval, analytics, and rendering.
+Xây dựng web app local bằng Python, FastAPI, Jinja templates và HTMX. Browser là UI shell; chưa cần đóng gói desktop. Giữ ứng dụng theo các module ingestion, library data, retrieval, analytics và rendering.
 
 ## Ingestion pipeline
 
-1. Validate the input and create an SQLite item with an indexing state.
-2. Extract and normalize text into a durable snapshot.
-3. Split the snapshot into deterministic chunks and save them in SQLite.
-4. Compute a content hash for every chunk.
-5. Check RocksDB for an embedding matching the hash, provider, and model version.
-6. Generate missing embeddings through the configured provider and upsert them into ChromaDB by chunk ID.
-7. Mark the job complete or failed, exposing a retry path.
+1. Validate input và tạo SQLite item với trạng thái index.
+2. Extract và normalize text thành snapshot bền vững.
+3. Chia snapshot thành chunks xác định được và lưu trong SQLite.
+4. Tính content hash cho từng chunk.
+5. Kiểm tra RocksDB xem embedding theo hash, provider và model version đã tồn tại chưa.
+6. Tạo embedding còn thiếu qua provider đã cấu hình và upsert vào ChromaDB theo chunk ID.
+7. Đánh dấu job là hoàn tất hoặc lỗi, đồng thời có đường retry.
 
-The implementation must define an `EmbeddingProvider` interface whose only responsibility is embedding batches of text. The default implementation runs a local sentence-transformers model. Cloud providers are optional implementations enabled only through explicit configuration.
+Implementation cần định nghĩa interface `EmbeddingProvider`, với trách nhiệm duy nhất là tạo embedding theo batch text. Implementation mặc định chạy sentence-transformers local. Cloud provider là implementation tùy chọn, chỉ bật khi có cấu hình rõ ràng.
 
 ## Retrieval
 
-Implement keyword and semantic retrieval as separate services, then merge and deduplicate their chunk results before hydrating results from SQLite. A missing or rebuilding Chroma index must leave keyword search available. Record latency and result count in SQLite search history.
+Triển khai keyword retrieval và semantic retrieval thành hai service riêng, sau đó merge và deduplicate chunk results trước khi hydrate kết quả từ SQLite. Nếu Chroma index đang thiếu hoặc được xây dựng lại, keyword search vẫn dùng được. Lưu latency và result count vào SQLite search history.
 
 ## Dashboard
 
-Use DuckDB only behind an analytics service. Attach SQLite read-only, execute aggregate queries, and return view-model data rather than SQL to templates. The dashboard must not write through DuckDB.
+Chỉ dùng DuckDB phía sau analytics service. Gắn SQLite read-only, chạy aggregate queries và trả view-model cho templates thay vì trả SQL. Dashboard không được write qua DuckDB.
 
-## Reliability and recovery
+## Độ tin cậy và phục hồi
 
-The service must be restart-safe: SQLite data remains usable if ChromaDB or RocksDB is reset, and the app provides re-indexing to recreate derived state. Failed imports preserve their source metadata and error reason for retry or removal.
+Service phải an toàn khi restart: dữ liệu SQLite vẫn dùng được nếu ChromaDB hoặc RocksDB bị reset, và app có re-index để tạo lại derived state. Import thất bại vẫn giữ metadata nguồn và lý do lỗi để retry hoặc xóa.
 
-## Security baseline
+## Bảo mật cơ bản
 
-Before fetching a URL, validate scheme, resolve its host, and reject loopback, private, link-local, and reserved network addresses. Limit download size and extraction time. Treat imported text as data, never as executable instructions.
+Trước khi fetch URL, validate scheme, resolve host và từ chối loopback, private, link-local và reserved network addresses. Giới hạn kích thước tải xuống và thời gian extract. Luôn coi text import là dữ liệu, không phải chỉ dẫn để thực thi.
 
