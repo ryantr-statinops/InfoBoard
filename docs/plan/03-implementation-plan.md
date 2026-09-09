@@ -1,34 +1,42 @@
-# Kế hoạch triển khai
+# Xử lý dữ liệu và tìm kiếm
 
-## Hình dạng ứng dụng
+## Job bền vững
 
-Xây dựng web app local bằng Python, FastAPI, Jinja templates và HTMX. Browser là UI shell; chưa cần đóng gói desktop. Giữ ứng dụng theo các module ingestion, library data, retrieval, analytics và rendering.
+```text
+queued → extracting → chunking → embedding → indexed
+                       lỗi bất kỳ → failed → retry
+```
 
-## Ingestion pipeline
+- Một tiến trình Uvicorn, một worker tuần tự đọc job từ SQLite; không dựa riêng vào background task trong bộ nhớ.
+- SQLite sở hữu trạng thái job; RocksDB giữ cache và bản tiến độ có thể bỏ đi.
+- Mỗi bước ghi checkpoint; khi restart, job đang chạy được đưa về queued và chạy lại an toàn.
+- Trùng URL chuẩn hóa hoặc hash nội dung: trả item cũ, không ghi đè note/trạng thái; bổ sung collection được chọn. Chuẩn hóa URL chỉ bỏ fragment, giữ query string.
+- Retry/upsert theo item_id và content_version; kết quả phiên bản cũ không được công bố.
+- Xóa: đánh dấu deleted trong SQLite và tạo job cleanup; mọi truy vấn loại item đó ngay. Worker xóa vectors, cache riêng của job rồi cascade nội dung SQLite. Cache embedding dùng chung giữ lại đến khi xóa cache toàn bộ.
+- Backup khi đã dừng worker: SQLite và file gốc trong data; restore rồi dựng lại Chroma/RocksDB. Migration SQL đánh số, chạy transaction và ghi schema_version.
 
-1. Validate input và tạo SQLite item với trạng thái index.
-2. Extract và normalize text thành snapshot bền vững.
-3. Chia snapshot thành chunks xác định được và lưu trong SQLite.
-4. Tính content hash cho từng chunk.
-5. Kiểm tra RocksDB xem embedding theo hash, provider và model version đã tồn tại chưa.
-6. Tạo embedding còn thiếu qua provider đã cấu hình và upsert vào ChromaDB theo chunk ID.
-7. Đánh dấu job là hoàn tất hoặc lỗi, đồng thời có đường retry.
+## Chuẩn hóa và embedding
 
-Implementation cần định nghĩa interface `EmbeddingProvider`, với trách nhiệm duy nhất là tạo embedding theo batch text. Implementation mặc định chạy sentence-transformers local. Cloud provider là implementation tùy chọn, chỉ bật khi có cấu hình rõ ràng.
+- Text chuẩn hóa Unicode NFC và xuống dòng; giữ đoạn. PDF không có text báo chưa hỗ trợ OCR.
+- Chia theo tokenizer của provider: tối đa 200 token, overlap 30, giảm xuống nếu giới hạn model thấp hơn; không cắt âm thầm.
+- Chunk ID từ item_id + content_version + vị trí chunk. Cache key gồm hash text, provider, model revision và cấu hình embedding.
+- Interface provider: embed(texts), model_id, revision, dimension, max_tokens, tokenize. Model local cụ thể và binding RocksDB được kiểm chứng ở bước thử kỹ thuật trước khi khóa dependency.
+- Đổi model/revision tạo bộ index riêng và rebuild; chỉ chuyển index hoạt động khi hoàn tất. Chưa có index thì dùng keyword search.
+- Cloud là adapter tùy chọn sau local; API key đọc từ môi trường, không ghi vào DB/log.
 
-## Retrieval
+## Search và nhóm nội dung
 
-Triển khai keyword retrieval và semantic retrieval thành hai service riêng, sau đó merge và deduplicate chunk results trước khi hydrate kết quả từ SQLite. Nếu Chroma index đang thiếu hoặc được xây dựng lại, keyword search vẫn dùng được. Lưu latency và result count vào SQLite search history.
+- FTS5 tìm theo từ khóa trên title/text, cấu hình unicode61 với bỏ dấu; không diễn giải input người dùng thành cú pháp FTS trực tiếp.
+- Lấy 50 chunks mỗi nhánh, áp dụng filters trước giới hạn; hợp nhất bằng Reciprocal Rank Fusion, k=60 và trọng số hai nhánh bằng nhau.
+- Gom theo item, lấy score chunk tốt nhất và đoạn trích tương ứng; score là thứ hạng, không phải xác suất.
+- Nếu lọc vector không đủ kết quả, mở rộng tập ứng viên đến hết phạm vi đủ điều kiện. Hydrate và kiểm tra lại trạng thái từ SQLite.
+- Nhóm nội dung: trung bình vector chunks đã chuẩn hóa theo item, chuẩn hóa lại; gom theo cosine với ngưỡng cấu hình mặc định 0.75. Duyệt id cố định, gán vào nhóm có tâm gần nhất và cập nhật tâm; nhãn là title gần tâm nhất. Đây là heuristic cần kiểm tra trên dữ liệu Việt/Anh.
+- Related lấy 5 item gần nhất theo cosine trong index đang hoạt động, loại deleted/archived và chính nó.
 
-## Dashboard
+## Giới hạn và chạy local
 
-Chỉ dùng DuckDB phía sau analytics service. Gắn SQLite read-only, chạy aggregate queries và trả view-model cho templates thay vì trả SQL. Dashboard không được write qua DuckDB.
-
-## Độ tin cậy và phục hồi
-
-Service phải an toàn khi restart: dữ liệu SQLite vẫn dùng được nếu ChromaDB hoặc RocksDB bị reset, và app có re-index để tạo lại derived state. Import thất bại vẫn giữ metadata nguồn và lý do lỗi để retry hoặc xóa.
-
-## Bảo mật cơ bản
-
-Trước khi fetch URL, validate scheme, resolve host và từ chối loopback, private, link-local và reserved network addresses. Giới hạn kích thước tải xuống và thời gian extract. Luôn coi text import là dữ liệu, không phải chỉ dẫn để thực thi.
-
+- Bind 127.0.0.1; kiểm tra Host/Origin cho thao tác ghi, không bật CORS rộng.
+- URL chỉ HTTP(S); kiểm tra IP thực kết nối và từng redirect, chặn địa chỉ nội bộ, giới hạn 5 redirect, timeout 30 giây.
+- File tối đa 20 MB; tải HTML tối đa 5 MB; text sau extract tối đa 1 triệu ký tự hoặc 10.000 chunks/item. Báo lỗi thay vì cắt nội dung.
+- Hiển thị text có escape; không render HTML nhập vào trực tiếp. Không ghi nội dung/query/API key vào log kỹ thuật.
+- Lịch sử search lưu local, có thao tác xóa lịch sử. Dependencies frontend đóng gói local để không cần CDN khi dùng offline.
