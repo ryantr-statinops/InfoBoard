@@ -1,49 +1,57 @@
-# Trải nghiệm và giao diện MVP
+# Dashboard và giao diện MVP
 
-## Nguồn nhập được hỗ trợ
+## Bố cục
 
-Phiên bản đầu nhận:
+```text
+┌──────────────┬──────────────────────────────────────────────┐
+│ InfoBoard    │ Search                         + Thêm       │
+│ Dashboard    ├──────────────────────────────────────────────┤
+│ Tất cả       │ Collection · Nguồn · Trạng thái · Thời gian │
+│ Collections  ├──────────────────────────────────────────────┤
+│ Inbox        │ Tổng item | Mới trong kỳ | Collections | Job │
+│ Active       ├────────────────────────┬─────────────────────┤
+│ Archived     │ Thông tin gần đây      │ Hoạt động theo ngày │
+│ Cài đặt      │                        │ Phân bố nguồn       │
+│              ├────────────────────────┼─────────────────────┤
+│              │ Collections            │ Nhóm nội dung       │
+└──────────────┴────────────────────────┴─────────────────────┘
+                         Click item → panel chi tiết bên phải
+```
 
-- URL bài viết công khai;
-- PDF;
-- Markdown;
-- file plain-text;
-- text nhập thủ công.
+- Sidebar 240 px, nội dung hai cột trên desktop; mobile một cột và menu thu gọn. Mobile là giao diện responsive, chưa hỗ trợ truy cập từ thiết bị khác.
+- Bộ lọc lưu trong URL: collection, loại nguồn, trạng thái, khoảng ngày tạo. Mặc định 30 ngày và loại archived; có lựa chọn toàn thời gian.
+- Tổng số liệu áp dụng cùng bộ lọc; số job đang chạy là toàn ứng dụng và phải ghi rõ.
+- Item gần đây và tiến độ lấy từ SQLite; số đếm, biểu đồ ngày và phân bố nguồn/collection do DuckDB tổng hợp.
+- Một item thuộc nhiều collection nên tổng số theo collection có thể lớn hơn tổng item; giao diện ghi chú điều này.
+- Nhóm nội dung tương đồng được tính từ embedding; nhãn là tiêu đề item đại diện, không gọi LLM đặt tên. Ít hơn 5 item đã index thì hiển thị trạng thái chưa đủ dữ liệu.
 
-Lưu URL tạo ra snapshot text chứ không chỉ bookmark. Importer chỉ chấp nhận URL HTTP(S) có địa chỉ công khai; trang yêu cầu đăng nhập, ứng dụng mạng xã hội, trang video và lưu ảnh ngoài phạm vi MVP.
+## Tương tác
 
-## Các màn hình chính
+- Thêm thông tin: chọn Text/URL/File, nhập tiêu đề tùy chọn và nhiều collections; mặc định lưu vào inbox.
+- Click item mở panel: toàn văn, nguồn, collections, trạng thái, note, sửa/xóa và tối đa 5 item liên quan.
+- Chỉ sửa trực tiếp nội dung text nhập tay; URL/file giữ snapshot. Thay đổi text tạo phiên bản index mới.
+- Click biểu đồ/collection/nhóm mở danh sách tương ứng. Search trả kết quả theo item với đoạn trích.
+- Chưa có dữ liệu: hướng dẫn thêm item. Đang tải: placeholder. Lỗi index: lý do và nút thử lại. Analytics/vector lỗi: thông báo rõ vùng bị ảnh hưởng.
+- Xóa cần xác nhận; đóng panel trả về đúng bộ lọc trước đó.
 
-### Library
+## HTTP API
 
-Danh sách item có filter, hiển thị tiêu đề, nguồn, collections, trạng thái đọc, thời điểm lưu và kết quả index. Người dùng có thể lọc theo collection, loại nguồn, trạng thái hoặc truy vấn search.
+Tiền tố `/api`; các trang và HTMX partial dùng routes riêng.
 
-### Collections
+| Endpoint | Dữ liệu và kết quả |
+| --- | --- |
+| POST /items | JSON: source_type=text/url, text hoặc url, title?, collection_ids?; 202 với item_id, job_id |
+| POST /items/upload | multipart: file, title?, collection_ids?; cùng kết quả tạo item |
+| GET /items | Bộ lọc chung, limit=20 (tối đa 100), offset=0; items và total |
+| GET /items/{id} | Nội dung, metadata, note, collections, trạng thái item và job |
+| PATCH /items/{id} | title, note, status, collection_ids hoặc text đối với nguồn text |
+| DELETE /items/{id} | 202; ẩn ngay và lên lịch dọn dữ liệu |
+| POST /items/{id}/reindex | 202, job_id; dùng cho retry và index lại |
+| GET/POST /collections | Danh sách hoặc tạo collection với name |
+| PATCH/DELETE /collections/{id} | Đổi tên hoặc xóa quan hệ; không xóa item |
+| POST /search | query, bộ lọc, limit tối đa 50; item_id, title, excerpt, score, retrieval_mode |
+| GET /items/{id}/related | Tối đa 5 item tương đồng, loại chính item đang mở |
+| GET /analytics | Bộ lọc chung; số đếm, biểu đồ, phân bố, nhóm nội dung |
+| GET /health | Trạng thái SQLite, vector, cache, analytics; 503 khi SQLite không dùng được |
 
-Collection đại diện cho project hoặc lĩnh vực như `MLOps`, `Career`, hay `Research`. Một item có thể thuộc nhiều collection. Collection là cơ chế tổ chức chính; tags chưa cần ở bản đầu.
-
-### Item reader
-
-Reader hiển thị snapshot text đã lưu, URL gốc hoặc metadata file, các collection liên quan, trạng thái nhẹ (`unread`, `reading`, `completed`, `archived`) và một note cá nhân theo item.
-
-### Search
-
-Search kết hợp keyword retrieval của SQLite và semantic retrieval của Chroma. Kết quả hiển thị item nguồn, đoạn trích liên quan, collections và score/lý do đủ để người dùng đánh giá độ phù hợp. Filters phải thu hẹp nhất quán cả hai nhánh tìm kiếm.
-
-### Dashboard
-
-Dashboard trả lời các câu hỏi thực dụng: Gần đây đã lưu gì? Collection nào đang tăng? Đã hoàn thành bao nhiêu so với chưa đọc? Nguồn và chủ đề nào chiếm nhiều nhất? MVP không bao gồm recommendation hay auto-summary.
-
-## HTTP interface
-
-- `POST /items`: lưu URL, upload file hỗ trợ hoặc gửi text; trả về item mới ở trạng thái `indexing`.
-- `GET /items` và `GET /items/{id}`: liệt kê và đọc item đã lưu.
-- `PATCH /items/{id}`: cập nhật trạng thái đọc, note, title hoặc collection memberships.
-- `GET`, `POST`, `PATCH /collections`: quản lý collections.
-- `POST /search`: chạy hybrid retrieval với filter tùy chọn theo source, collection và state.
-- `GET /analytics`: trả về aggregate cho dashboard.
-
-## Phần được hoãn rõ ràng
-
-Import bookmark HTML và browser extension là input adapter ở các giai đoạn sau. Chúng phải dùng chung ingestion pipeline nhưng không thuộc MVP. User accounts, cloud sync, collaboration, snapshot ảnh web, highlight theo vị trí text và recommendation feed cũng được hoãn.
-
+Danh sách mặc định sắp theo created_at giảm dần, rồi id; search theo score giảm dần. Lỗi JSON thống nhất: `{error: {code, message, details}}`; dùng 404, 409, 413, 422 hoặc 503 theo nguyên nhân.
