@@ -1,31 +1,29 @@
-# Kế hoạch chất lượng và roadmap
+# Kiểm thử và lộ trình
 
-## Tiêu chí nghiệm thu MVP
+## Thứ tự thực hiện
 
-- Import fixture từ một bài HTML công khai, một PDF, một file Markdown, một file text và text nhập tay.
-- Xác nhận mỗi lần import tạo snapshot có thể đọc và SQLite chunks xác định được.
-- Đặt một item trong nhiều collections; cập nhật state và note; restart app và xác nhận dữ liệu còn nguyên.
-- Import lại nội dung giống nhau và xác nhận lần index thứ hai tái sử dụng RocksDB embedding cache.
-- Xác nhận keyword và semantic search trả đúng item nguồn cùng đoạn trích; collection/state filters hoạt động cho cả hai nhánh.
-- Mô phỏng lỗi extract và embedding, hiển thị trạng thái lỗi và kiểm tra retry.
-- So sánh số liệu dashboard DuckDB với các rows nguồn trong SQLite.
-- Xác nhận URL private/internal và định dạng file không hỗ trợ bị từ chối trước khi xử lý nội dung.
+1. Thử kỹ thuật trên Python 3.12/Linux: cài binding RocksDB, Chroma, DuckDB SQLite extension, embedding Việt/Anh; khóa phiên bản và model revision sau khi chạy được.
+2. Nền tảng: uv/lockfile, schema/migration SQLite, dashboard và text nhập tay, collections, note, trạng thái.
+3. Import URL/PDF/MD/TXT và worker có checkpoint/retry.
+4. FTS5, embedding local, Chroma, cache RocksDB, hybrid search, related và nhóm nội dung.
+5. DuckDB analytics, giao diện responsive, backup/restore và kiểm thử tích hợp.
+6. Adapter cloud embedding; sau MVP mới thêm bookmark HTML rồi browser extension.
 
-## Observability
+## Nghiệm thu
 
-Lưu outcome có cấu trúc của import, thời gian index, số lần cache hit/miss của embedding, latency search và result count. Các metrics local này đủ để chẩn đoán MVP và nuôi dashboard mà không cần telemetry bên ngoài.
+- Năm nguồn nhập tạo nội dung đúng; text/metadata/collections còn nguyên sau restart.
+- Trùng input không sinh item ngoài ý muốn; embedding cache tái sử dụng với cùng cấu hình, không dùng nhầm model.
+- Sửa text, retry sau crash và đổi model không trả chunks cũ hay mất note.
+- Xóa item dọn vector; xóa collection giữ item; backup/restore phục hồi dữ liệu chính và index lại được.
+- Search Việt/Anh, có/không dấu, filters và fallback keyword đúng; bộ 20 query có item đích trong top 5 ở ít nhất 16 query.
+- Analytics khớp SQLite; nhóm nội dung có empty state; lỗi từng database dẫn xuất không làm mất dữ liệu chính.
+- Test URL redirect vào mạng nội bộ, file quá lớn, PDF không text, escape nội dung và yêu cầu ghi từ origin khác.
+- Kiểm tra UI desktop 1440 px/mobile 390 px: thêm item → mở panel → sửa note → tìm lại; không tràn ngang.
+- Đo trên 1.000 item/10.000 chunks: mục tiêu search p95 dưới 1 giây khi model đã tải, loại thời gian khởi động; ghi cấu hình máy và kết quả thực, không coi là bảo đảm phần cứng.
 
-## Thứ tự triển khai
+## Công cụ và quan sát
 
-1. Thiết lập cấu hình project, SQLite schema, vị trí local storage và library UI cơ bản.
-2. Triển khai manual text + file ingestion, snapshot reader, collections, state và note.
-3. Thêm safe public-article extraction và background indexing state.
-4. Thêm local embedding, ChromaDB semantic search và hybrid search results.
-5. Thêm RocksDB cache/retry và DuckDB dashboard aggregates.
-6. Thêm cloud embedding provider có cấu hình sau khi local path đã được kiểm chứng.
-7. Thêm bookmark-HTML import, rồi browser extension, như adapter trên ingestion API ổn định.
-
-## Non-goals của MVP
-
-Phiên bản đầu không cam kết multi-user access, remote sync, cộng tác real-time, recommendation tự động, OCR, video transcript, lưu ảnh bài viết hoặc highlight theo vùng text. Tất cả có thể được thêm sau mà không thay đổi vai trò sở hữu dữ liệu chính của SQLite.
-
+- pytest + httpx cho unit/integration; bài kiểm tra recovery dùng database thật trong thư mục tạm.
+- Ruff, type check và test chạy trong CI; kiểm tra embedding thật ở smoke test riêng, unit test dùng provider giả.
+- Log job_id, bước xử lý, thời gian, mã lỗi, cache hit/miss; không log text hay secret.
+- Dependency/model/extension cần mạng được tải trong bước setup; khi thiếu phải báo hướng dẫn, không tự tải trong một truy vấn dashboard.
