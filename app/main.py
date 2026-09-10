@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from .db import ROOT, connect, init_db
 from .services import add_collection, add_item, add_note, import_file, import_url, search
+from .worker import process_pending
 
 
 @asynccontextmanager
@@ -81,6 +82,10 @@ def reindex_item(item_id:int):
         if not c.execute("SELECT id FROM items WHERE id=? AND deleted_at IS NULL",(item_id,)).fetchone(): raise HTTPException(404,"Item not found")
         c.execute("INSERT INTO index_jobs(item_id,state) VALUES(?, 'queued')",(item_id,))
     return {"item_id":item_id,"state":"queued"}
+@app.post("/api/reindex")
+def reindex_all():
+    with connect() as c: c.execute("UPDATE index_jobs SET state='queued',updated_at=CURRENT_TIMESTAMP WHERE state!='indexed'")
+    return {"state":"queued","processed":process_pending()}
 @app.get("/api/collections")
 def collections():
     with connect() as c: return [dict(r) for r in c.execute("SELECT * FROM collections ORDER BY name")]
