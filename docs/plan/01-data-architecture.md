@@ -103,19 +103,19 @@ DuckDB không được dùng cho transactional write. Các truy vấn analytics 
 
 ## Luồng dữ liệu
 
-```text
-URL/file/text
-  -> extractor và normalizer
-  -> SQLite: item + snapshot + chunks
-  -> RocksDB: cache/trạng thái job
-  -> ChromaDB: embedding của chunks
-
-Search query
-  -> SQLite: keyword retrieval
-  -> ChromaDB: semantic retrieval
-  -> SQLite: hydrate kết quả hiển thị
-
-SQLite (read-only attach)
-  -> DuckDB aggregate queries
-  -> dashboard
+```mermaid
+flowchart LR
+    Input[Text / URL / file] --> Ingest[Extractor + normalizer + chunker]
+    Ingest --> SQLite[(SQLite<br/>System of record)]
+    Ingest --> Worker[Index worker]
+    Worker <--> Rocks[(RocksDB<br/>Cache + job state)]
+    Worker --> Embed[Embedding provider]
+    Embed --> Chroma[(ChromaDB<br/>Vector index)]
+    SQLite --> FTS[SQLite FTS5<br/>Keyword retrieval]
+    Chroma --> Sem[Semantic retrieval]
+    FTS --> Hybrid[Hybrid retrieval]
+    Sem --> Hybrid
+    SQLite --> Duck[DuckDB<br/>Read-only analytics]
+    Hybrid --> Dashboard[InfoBoard dashboard]
+    Duck --> Dashboard
 ```
