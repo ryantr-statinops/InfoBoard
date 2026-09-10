@@ -3,14 +3,16 @@ import re
 import unicodedata
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 from urllib.request import Request, urlopen
 
 from .db import connect, rebuild_fts
 
 
 def normalize(text: str) -> str:
-    return unicodedata.normalize("NFC", text).strip()
+    text = unicodedata.normalize("NFC", text).strip()
+    if len(text) > 1_000_000: raise ValueError("text exceeds 1,000,000 characters")
+    return text
 
 def chunks(text: str, size: int = 200, overlap: int = 30) -> list[str]:
     words = text.split(); step = max(1, size - overlap)
@@ -35,6 +37,13 @@ def search(query: str, limit=20) -> list[dict]:
         rows = c.execute("SELECT i.*, snippet(items_fts,1,'<mark>','</mark>','…',24) excerpt FROM items_fts JOIN items i ON i.id=items_fts.rowid WHERE items_fts MATCH ? AND i.deleted_at IS NULL LIMIT ?", (re.sub(r'[^\w ]',' ',query),limit)).fetchall()
         return [dict(r) for r in rows]
 
+def reciprocal_rank_fusion(*ranked_lists: list[dict], k: int = 60) -> list[dict]:
+    scores = {}; records = {}
+    for results in ranked_lists:
+        for rank, item in enumerate(results, 1):
+            key = item.get('id'); scores[key] = scores.get(key, 0) + 1 / (k + rank); records[key] = item
+    return [dict(records[key], score=round(scores[key], 6)) for key in sorted(scores, key=scores.get, reverse=True)]
+
 def add_note(item_id: int, body: str) -> dict:
     with connect() as c:
         if not c.execute("SELECT id FROM items WHERE id=? AND deleted_at IS NULL", (item_id,)).fetchone(): raise KeyError("item")
@@ -55,14 +64,23 @@ def import_file(path: str) -> dict:
     p=Path(path); raw=p.read_bytes()
     if len(raw)>20*1024*1024: raise ValueError("file exceeds 20 MB limit")
     if p.suffix.lower()=='.pdf':
-        content=raw.decode('utf-8','ignore')
+        try:
+            from pypdf import PdfReader
+            content='\n'.join(page.extract_text() or '' for page in PdfReader(str(p)).pages)
+        except ImportError: content=raw.decode('utf-8','ignore')
     else: content=raw.decode('utf-8','replace')
     return add_item(p.stem, content, p.suffix.lower().lstrip('.') or 'text')
 
 def import_url(url: str) -> dict:
     u=urlparse(url)
-    if u.scheme not in ('http','https') or u.hostname in ('localhost','127.0.0.1','::1'): raise ValueError('URL is not allowed')
-    data=urlopen(Request(url, headers={'User-Agent':'InfoBoard/0.1'}), timeout=10).read(5*1024*1024+1)
+    import ipaddress
+    import socket
+    if u.scheme not in ('http','https') or not u.hostname: raise ValueError('URL is not allowed')
+    try: addresses={x[4][0] for x in socket.getaddrinfo(u.hostname, None)}
+    except socket.gaierror: raise ValueError('URL host cannot be resolved')
+    if any(ipaddress.ip_address(a).is_private or ipaddress.ip_address(a).is_loopback or ipaddress.ip_address(a).is_link_local or ipaddress.ip_address(a).is_reserved for a in addresses): raise ValueError('URL is not allowed')
+    canonical=urlunparse((u.scheme,u.netloc,u.path or '/', '',u.query,''))
+    data=urlopen(Request(canonical, headers={'User-Agent':'InfoBoard/0.1'}), timeout=10).read(5*1024*1024+1)
     if len(data)>5*1024*1024: raise ValueError('HTML exceeds 5 MB limit')
     parser=_Text(); parser.feed(data.decode('utf-8','replace'))
-    return add_item(u.hostname or url, ' '.join(parser.parts), 'url', url)
+    return add_item(u.hostname or url, ' '.join(parser.parts), 'url', canonical)

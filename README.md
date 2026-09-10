@@ -9,6 +9,8 @@ uv sync
 uv run uvicorn app.main:app --reload
 ```
 
+Copy `.env.example` to `.env` to override local data paths.
+
 API docs: http://127.0.0.1:8000/docs
 
 ## Kiến trúc
