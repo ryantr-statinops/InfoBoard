@@ -13,9 +13,15 @@ InfoBoard là dashboard thông tin cá nhân chạy local, giúp thu thập, t�
 
 ## Ba luồng sử dụng
 
-1. Thêm text/URL/file → hệ thống lưu và xử lý → đưa vào collection.
-2. Mở dashboard → lọc thông tin theo project/thời gian/nguồn → mở panel chi tiết và ghi note.
-3. Search → xem đoạn trích → mở item hoặc các item liên quan.
+```mermaid
+flowchart TD
+    A[Thêm text / URL / file] --> B[Lưu và xử lý nội dung]
+    B --> C[Đưa vào collection]
+    D[Mở dashboard] --> E[Lọc theo project / thời gian / nguồn]
+    E --> F[Mở panel chi tiết và ghi note]
+    G[Search] --> H[Xem đoạn trích]
+    H --> I[Mở item hoặc item liên quan]
+```
 
 ## Giới hạn
 
