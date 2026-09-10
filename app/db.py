@@ -24,6 +24,7 @@ def init_db() -> None:
         CREATE TABLE IF NOT EXISTS index_jobs (id INTEGER PRIMARY KEY, item_id INTEGER REFERENCES items(id) ON DELETE CASCADE, state TEXT NOT NULL, error TEXT, attempts INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
         CREATE VIRTUAL TABLE IF NOT EXISTS items_fts USING fts5(title, content, content='');
         """)
+        c.execute("UPDATE index_jobs SET state='queued',updated_at=CURRENT_TIMESTAMP WHERE state IN ('extracting','chunking','embedding')")
 
 def rebuild_fts(c: sqlite3.Connection) -> None:
     c.execute("DELETE FROM items_fts")
