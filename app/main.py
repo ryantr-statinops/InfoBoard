@@ -65,8 +65,16 @@ def update_item(item_id:int, body:dict):
         return dict(c.execute("SELECT * FROM items WHERE id=?",(item_id,)).fetchone())
 @app.delete("/api/items/{item_id}")
 def delete_item(item_id:int):
-    with connect() as c: c.execute("UPDATE items SET deleted_at=CURRENT_TIMESTAMP,status='deleted' WHERE id=?",(item_id,))
+    with connect() as c:
+        if not c.execute("SELECT id FROM items WHERE id=? AND deleted_at IS NULL",(item_id,)).fetchone(): raise HTTPException(404,"Item not found")
+        c.execute("UPDATE items SET deleted_at=CURRENT_TIMESTAMP,status='deleted' WHERE id=?",(item_id,))
     return {"deleted":True}
+@app.post("/api/items/{item_id}/reindex")
+def reindex_item(item_id:int):
+    with connect() as c:
+        if not c.execute("SELECT id FROM items WHERE id=? AND deleted_at IS NULL",(item_id,)).fetchone(): raise HTTPException(404,"Item not found")
+        c.execute("INSERT INTO index_jobs(item_id,state) VALUES(?, 'queued')",(item_id,))
+    return {"item_id":item_id,"state":"queued"}
 @app.get("/api/collections")
 def collections():
     with connect() as c: return [dict(r) for r in c.execute("SELECT * FROM collections ORDER BY name")]
