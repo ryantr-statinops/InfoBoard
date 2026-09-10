@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from .db import init_db, connect
 from .services import add_item, search, add_note, add_collection, import_file, import_url
@@ -7,12 +8,20 @@ from .services import add_item, search, add_note, add_collection, import_file, i
 @asynccontextmanager
 async def lifespan(app): init_db(); yield
 app = FastAPI(title="InfoBoard", lifespan=lifespan)
+templates = Jinja2Templates(directory="app/templates")
 
 class ItemIn(BaseModel): title: str; content: str; source_type: str = "text"; source_url: str | None = None
 class CollectionIn(BaseModel): name: str
 
 @app.get("/api/health")
 def health(): return {"status":"ok"}
+@app.get("/")
+def dashboard(request: Request, q: str = ""):
+    with connect() as c:
+        items = search(q) if q else [dict(r) for r in c.execute("SELECT * FROM items WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 30")]
+        count=c.execute("SELECT count(*) n FROM items WHERE deleted_at IS NULL").fetchone()["n"]
+        chunks=c.execute("SELECT count(*) n FROM chunks").fetchone()["n"]
+    return templates.TemplateResponse("dashboard.html", {"request":request,"items":items,"count":count,"chunks":chunks,"q":q})
 @app.post("/api/items")
 def create_item(body: ItemIn): return add_item(**body.model_dump())
 @app.get("/api/items")
@@ -51,6 +60,11 @@ def collections():
     with connect() as c: return [dict(r) for r in c.execute("SELECT * FROM collections ORDER BY name")]
 @app.post("/api/collections")
 def collection(body:CollectionIn): return add_collection(body.name)
+@app.post("/api/items/{item_id}/collections/{collection_id}")
+def attach_collection(item_id:int, collection_id:int):
+    with connect() as c:
+        c.execute("INSERT OR IGNORE INTO item_collections(item_id,collection_id) VALUES(?,?)",(item_id,collection_id))
+    return {"ok":True}
 @app.post("/api/items/{item_id}/notes")
 def note(item_id:int, body:dict): return add_note(item_id, str(body.get('body','')))
 @app.get("/api/items/{item_id}/related")
