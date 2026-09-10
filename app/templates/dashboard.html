@@ -1,8 +1,84 @@
 <!doctype html>
-<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>InfoBoard</title>
-<style>body{font:16px system-ui;margin:0;background:#f5f7fb;color:#182230}header{padding:20px 5%;background:#172554;color:white}main{max-width:1100px;margin:24px auto;padding:0 20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.card{background:white;border-radius:12px;padding:18px;box-shadow:0 2px 8px #0001}input,textarea,button{padding:10px;border:1px solid #ccd3df;border-radius:8px;margin:4px}input{width:35%}textarea{width:60%;min-height:60px;vertical-align:middle}#message{min-height:24px}</style></head>
-<body><header><h1>InfoBoard</h1><p>Information dashboard local-first</p></header><main>
-<form action="/" method="get"><input name="q" value="{{ q }}" placeholder="Tìm kiếm thông tin..."><button>Tìm</button></form>
-<h2>Thêm thông tin</h2><form id="add-form"><input id="title" placeholder="Tiêu đề" required><textarea id="content" placeholder="Nội dung" required></textarea><button>Lưu</button></form><p id="message"></p>
-<p>{{ count }} items · {{ chunks }} chunks</p><section class="grid">{% for item in items %}<article class="card"><h2>{{ item.title }}</h2><small>{{ item.source_type }} · {{ item.created_at }}</small><p>{{ item.excerpt or '' }}</p></article>{% else %}<article class="card">Chưa có thông tin nào.</article>{% endfor %}</section></main>
-<script>document.getElementById('add-form').addEventListener('submit',async(e)=>{e.preventDefault();const m=document.getElementById('message');const r=await fetch('/api/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title.value,content:content.value})});if(r.ok){m.textContent='Đã lưu thông tin';location.reload()}else{m.textContent='Lỗi: '+(await r.text())}});</script></body></html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>InfoBoard</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; color: #182230; background: #f5f7fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { padding: 24px 5%; color: white; background: #172554; }
+    header h1 { margin: 0 0 4px; }
+    header p { margin: 0; opacity: .8; }
+    main { max-width: 1100px; margin: 24px auto; padding: 0 20px; }
+    form { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    input, textarea, button { padding: 10px 12px; border: 1px solid #ccd3df; border-radius: 8px; font: inherit; }
+    input { flex: 1 1 260px; }
+    textarea { flex: 2 1 360px; min-height: 70px; resize: vertical; }
+    button { color: white; cursor: pointer; background: #2563eb; border-color: #2563eb; }
+    button:hover { background: #1d4ed8; }
+    #message { min-height: 24px; color: #166534; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .card { padding: 18px; background: white; border-radius: 12px; box-shadow: 0 2px 8px #0001; }
+    .card h2 { margin-top: 0; }
+    .card small { color: #64748b; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>InfoBoard</h1>
+    <p>Information dashboard local-first</p>
+  </header>
+
+  <main>
+    <form action="/" method="get">
+      <input name="q" value="{{ q }}" placeholder="Tìm kiếm thông tin...">
+      <button type="submit">Tìm</button>
+    </form>
+
+    <h2>Thêm thông tin</h2>
+    <form id="add-form">
+      <input id="title" placeholder="Tiêu đề" required>
+      <textarea id="content" placeholder="Nội dung" required></textarea>
+      <button type="submit">Lưu</button>
+    </form>
+    <p id="message" role="status"></p>
+
+    <p>{{ count }} items · {{ chunks }} chunks</p>
+    <section class="grid">
+      {% for item in items %}
+      <article class="card">
+        <h2>{{ item.title }}</h2>
+        <small>{{ item.source_type }} · {{ item.created_at }}</small>
+        <p>{{ item.excerpt or '' }}</p>
+      </article>
+      {% else %}
+      <article class="card">Chưa có thông tin nào.</article>
+      {% endfor %}
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('add-form');
+    const titleInput = document.getElementById('title');
+    const contentInput = document.getElementById('content');
+    const message = document.getElementById('message');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const response = await fetch('/api/items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: titleInput.value, content: contentInput.value }),
+      });
+      if (response.ok) {
+        message.textContent = 'Đã lưu thông tin';
+        window.location.reload();
+      } else {
+        message.textContent = `Lỗi: ${await response.text()}`;
+      }
+    });
+  </script>
+</body>
+</html>
