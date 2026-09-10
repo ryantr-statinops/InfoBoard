@@ -1,9 +1,13 @@
-import hashlib, re, unicodedata
+import hashlib
+import re
+import unicodedata
+from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
-from html.parser import HTMLParser
+
 from .db import connect, rebuild_fts
+
 
 def normalize(text: str) -> str:
     return unicodedata.normalize("NFC", text).strip()
@@ -13,6 +17,8 @@ def chunks(text: str, size: int = 200, overlap: int = 30) -> list[str]:
     return [" ".join(words[i:i+size]) for i in range(0, len(words), step) if words[i:i+size]]
 
 def add_item(title: str, content: str, source_type="text", source_url=None) -> dict:
+    title = normalize(title)
+    if not title or not content.strip(): raise ValueError("title and content are required")
     content = normalize(content); digest = hashlib.sha256(content.encode()).hexdigest()
     with connect() as c:
         old = c.execute("SELECT * FROM items WHERE content_hash=? AND deleted_at IS NULL", (digest,)).fetchone()
@@ -31,6 +37,8 @@ def search(query: str, limit=20) -> list[dict]:
 
 def add_note(item_id: int, body: str) -> dict:
     with connect() as c:
+        if not c.execute("SELECT id FROM items WHERE id=? AND deleted_at IS NULL", (item_id,)).fetchone(): raise KeyError("item")
+        if not body.strip(): raise ValueError("note body is required")
         cur=c.execute("INSERT INTO notes(item_id,body) VALUES(?,?)", (item_id, normalize(body)))
         return dict(c.execute("SELECT * FROM notes WHERE id=?", (cur.lastrowid,)).fetchone())
 

@@ -1,14 +1,17 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, UploadFile, File, Request
+
+from fastapi import FastAPI, HTTPException, Request, UploadFile
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from .db import init_db, connect
-from .services import add_item, search, add_note, add_collection, import_file, import_url
+
+from .db import ROOT, connect, init_db
+from .services import add_collection, add_item, add_note, import_file, import_url, search
+
 
 @asynccontextmanager
 async def lifespan(app): init_db(); yield
 app = FastAPI(title="InfoBoard", lifespan=lifespan)
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory=str(ROOT / "app" / "templates"))
 
 class ItemIn(BaseModel): title: str; content: str; source_type: str = "text"; source_url: str | None = None
 class CollectionIn(BaseModel): name: str
@@ -18,31 +21,40 @@ def health(): return {"status":"ok"}
 @app.get("/")
 def dashboard(request: Request, q: str = ""):
     with connect() as c:
-        items = search(q) if q else [dict(r) for r in c.execute("SELECT * FROM items WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 30")]
+        items = [dict(r) for r in c.execute("SELECT * FROM items WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 30")]
         count=c.execute("SELECT count(*) n FROM items WHERE deleted_at IS NULL").fetchone()["n"]
         chunks=c.execute("SELECT count(*) n FROM chunks").fetchone()["n"]
-    return templates.TemplateResponse("dashboard.html", {"request":request,"items":items,"count":count,"chunks":chunks,"q":q})
+    if q: items = search(q)
+    return templates.TemplateResponse(request=request, name="dashboard.html", context={"items":items,"count":count,"chunks":chunks,"q":q})
 @app.post("/api/items")
-def create_item(body: ItemIn): return add_item(**body.model_dump())
+def create_item(body: ItemIn):
+    try: return add_item(**body.model_dump())
+    except ValueError as e: raise HTTPException(400, str(e))
 @app.get("/api/items")
-def list_items(limit: int=50):
-    with connect() as c: return [dict(r) for r in c.execute("SELECT * FROM items WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT ?",(limit,))]
+def list_items(limit: int=50, offset: int=0, collection_id: int|None=None, status: str|None=None):
+    with connect() as c:
+        sql="SELECT DISTINCT i.* FROM items i LEFT JOIN item_collections ic ON ic.item_id=i.id WHERE i.deleted_at IS NULL"; args=[]
+        if collection_id is not None: sql += " AND ic.collection_id=?"; args.append(collection_id)
+        if status: sql += " AND i.status=?"; args.append(status)
+        sql += " ORDER BY i.created_at DESC LIMIT ? OFFSET ?"; args.extend([min(limit,100),offset])
+        return [dict(r) for r in c.execute(sql,args)]
 @app.get("/api/items/{item_id}")
 def get_item(item_id:int):
     with connect() as c:
         r=c.execute("SELECT i.*,co.content FROM items i JOIN item_contents co ON co.item_id=i.id WHERE i.id=? AND i.deleted_at IS NULL",(item_id,)).fetchone()
         if not r: raise HTTPException(404,"Item not found")
-        return dict(r)
+        item=dict(r); item["collections"]=[dict(x) for x in c.execute("SELECT col.* FROM collections col JOIN item_collections ic ON ic.collection_id=col.id WHERE ic.item_id=?",(item_id,))]; item["notes"]=[dict(x) for x in c.execute("SELECT * FROM notes WHERE item_id=? ORDER BY created_at DESC",(item_id,))]; return item
 @app.post("/api/search")
 def do_search(body: dict): return {"items": search(str(body.get("query","")))}
 @app.post("/api/items/upload")
-async def upload(file: UploadFile = File(...)):
+async def upload(file: UploadFile):
     import tempfile
     suffix='.' + (file.filename or 'txt').split('.')[-1]
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as f: f.write(await file.read()); path=f.name
     try: return import_file(path)
     finally:
-        import os; os.unlink(path)
+        import os
+        os.unlink(path)
 @app.post("/api/items/url")
 def url_item(body: dict): return import_url(str(body['url']))
 @app.patch("/api/items/{item_id}")

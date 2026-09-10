@@ -1,5 +1,5 @@
-from pathlib import Path
 import sqlite3
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DB_PATH = Path(__import__("os").environ.get("INFOBOARD_DB", ROOT / "data" / "infoboard.db"))
