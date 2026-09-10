@@ -2,9 +2,21 @@
 
 ## Job bền vững
 
-```text
-queued → extracting → chunking → embedding → indexed
-                       lỗi bất kỳ → failed → retry
+```mermaid
+stateDiagram-v2
+    [*] --> queued
+    queued --> extracting
+    extracting --> chunking
+    chunking --> embedding
+    embedding --> indexed
+    extracting --> failed
+    chunking --> failed
+    embedding --> failed
+    failed --> queued: retry
+    extracting --> queued: restart
+    chunking --> queued: restart
+    embedding --> queued: restart
+    indexed --> [*]
 ```
 
 - Một tiến trình Uvicorn, một worker tuần tự đọc job từ SQLite; không dựa riêng vào background task trong bộ nhớ.
