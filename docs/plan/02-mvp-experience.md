@@ -18,6 +18,21 @@
                          Click item → panel chi tiết bên phải
 ```
 
+Luồng điều hướng chính:
+
+```mermaid
+flowchart LR
+    Dashboard[Dashboard] --> Filter[Bộ lọc]
+    Dashboard --> Add[Thêm thông tin]
+    Dashboard --> Search[Tìm kiếm]
+    Filter --> List[Danh sách item]
+    Add --> List
+    Search --> Results[Kết quả hybrid]
+    List --> Detail[Panel chi tiết]
+    Results --> Detail
+    Detail --> Edit[Sửa note / collection / trạng thái]
+```
+
 - Sidebar 240 px, nội dung hai cột trên desktop; mobile một cột và menu thu gọn. Mobile là giao diện responsive, chưa hỗ trợ truy cập từ thiết bị khác.
 - Bộ lọc lưu trong URL: collection, loại nguồn, trạng thái, khoảng ngày tạo. Mặc định 30 ngày và loại archived; có lựa chọn toàn thời gian.
 - Tổng số liệu áp dụng cùng bộ lọc; số job đang chạy là toàn ứng dụng và phải ghi rõ.
