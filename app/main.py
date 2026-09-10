@@ -5,6 +5,7 @@ from fastapi import FastAPI, HTTPException, Request, UploadFile
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
+from .analytics import dashboard_metrics
 from .db import ROOT, connect, init_db
 from .services import add_collection, add_item, add_note, import_file, import_url, search
 from .worker import process_pending
@@ -142,4 +143,7 @@ def related(item_id:int):
     return [x for x in search(terms,10) if x['id']!=item_id][:5]
 @app.get("/api/analytics")
 def analytics():
-    with connect() as c: return {"items":c.execute("SELECT count(*) n FROM items WHERE deleted_at IS NULL").fetchone()["n"],"chunks":c.execute("SELECT count(*) n FROM chunks").fetchone()["n"]}
+    metrics = dashboard_metrics()
+    if metrics.get('engine') == 'sqlite-fallback':
+        with connect() as c: metrics.update(items=c.execute("SELECT count(*) n FROM items WHERE deleted_at IS NULL").fetchone()["n"], chunks=c.execute("SELECT count(*) n FROM chunks").fetchone()["n"])
+    return metrics

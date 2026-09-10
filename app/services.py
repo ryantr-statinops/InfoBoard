@@ -37,6 +37,13 @@ def search(query: str, limit=20) -> list[dict]:
         rows = c.execute("SELECT i.*, snippet(items_fts,1,'<mark>','</mark>','…',24) excerpt FROM items_fts JOIN items i ON i.id=items_fts.rowid WHERE items_fts MATCH ? AND i.deleted_at IS NULL LIMIT ?", (re.sub(r'[^\w ]',' ',query),limit)).fetchall()
         return [dict(r) for r in rows]
 
+def reciprocal_rank_fusion(*ranked_lists: list[dict], k: int = 60) -> list[dict]:
+    scores = {}; records = {}
+    for results in ranked_lists:
+        for rank, item in enumerate(results, 1):
+            key = item.get('id'); scores[key] = scores.get(key, 0) + 1 / (k + rank); records[key] = item
+    return [dict(records[key], score=round(scores[key], 6)) for key in sorted(scores, key=scores.get, reverse=True)]
+
 def add_note(item_id: int, body: str) -> dict:
     with connect() as c:
         if not c.execute("SELECT id FROM items WHERE id=? AND deleted_at IS NULL", (item_id,)).fetchone(): raise KeyError("item")
