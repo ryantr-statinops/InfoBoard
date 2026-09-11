@@ -1,6 +1,6 @@
 # 04 — Cross-cutting contracts
 
-**Status:** `ready`  
+**Status:** `ready`
 **Applies to:** core mode và full mode
 
 ## API conventions
