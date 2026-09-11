@@ -1,6 +1,6 @@
 # 90 — Operational runbooks
 
-**Status:** `draft`  
+**Status:** `draft`
 **Scope:** local MVP và full mode
 
 ## Runbook index
