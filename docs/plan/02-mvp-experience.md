@@ -1,6 +1,6 @@
 # Dashboard và giao diện MVP — compatibility reference
 
-Định hướng trải nghiệm product-level mới nằm tại [`docs/product/03-core-experience.md`](../product/03-core-experience.md). Tài liệu này giữ contract và bố cục MVP hiện hành để các implementation docs không bị thay đổi.
+Goal, users, core workflows và product acceptance nằm trong [Internal PRD](../product/internal-prd/README.md). Tài liệu này giữ contract và bố cục MVP hiện hành để các implementation docs không bị thay đổi.
 
 ## Bố cục
 

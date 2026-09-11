@@ -1,15 +1,24 @@
 # InfoBoard — Product documentation
 
-Bộ tài liệu này định hình sản phẩm ở cấp problem, người dùng, trải nghiệm, ranh giới dữ liệu và roadmap. Nó là nguồn tham chiếu product-level; kế hoạch triển khai cụ thể vẫn nằm tại [`docs/plan/implementation/`](../plan/implementation/).
+Product docs được chia theo thời điểm ra quyết định:
 
-## Đọc theo thứ tự
+- [Internal PRD](internal-prd/README.md) là nguồn sự thật cho sản phẩm đang build và nghiệm thu trong MVP hiện tại.
+- [Next Plan](next-plan/README.md) chứa các hướng hậu MVP còn ở discovery, chưa phải implementation requirement.
+- [`docs/plan/implementation/`](../plan/implementation/) là nguồn sự thật cho cách triển khai, milestone, test và execution evidence.
 
-1. [Product strategy](00-product-strategy.md)
-2. [Users and problems](01-users-and-problems.md)
-3. [Product principles](02-product-principles.md)
-4. [Core experience](03-core-experience.md)
-5. [Data and privacy boundary](04-data-and-privacy-boundary.md)
-6. [Capability map](05-capability-map.md)
-7. [Product roadmap](06-product-roadmap.md)
+## Thứ tự đọc
 
-InfoBoard là knowledge hub local-first cho người dùng phổ thông, có advanced path cho power user và mục tiêu dài hạn là browser-data portability.
+1. Đọc [Internal PRD](internal-prd/README.md) để hiểu goal, user, scope, requirements, workflows và acceptance.
+2. Tra [Product glossary](internal-prd/glossary.md) khi cần thống nhất thuật ngữ.
+3. Đọc [implementation current state](../plan/implementation/00-program/current-state.md) và [roadmap](../plan/implementation/00-program/roadmap.md) để biết trạng thái build.
+4. Chỉ đọc [Next Plan](next-plan/README.md) khi nghiên cứu capability hậu MVP.
+
+## Boundary
+
+```text
+Internal PRD   = What and why we build now
+Implementation = How and in which order we build it
+Next Plan      = What we may build after discovery
+```
+
+Một capability trong Next Plan không được coi là MVP commitment nếu chưa đi qua discovery gate và được đưa chính thức vào Internal PRD cùng implementation roadmap.

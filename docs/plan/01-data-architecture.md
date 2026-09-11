@@ -1,6 +1,6 @@
 # Kiến trúc dữ liệu và trách nhiệm database — compatibility reference
 
-Product boundary mới được mô tả tại [`docs/product/04-data-and-privacy-boundary.md`](../product/04-data-and-privacy-boundary.md) và capability map tại [`docs/product/05-capability-map.md`](../product/05-capability-map.md). Phần dưới đây giữ nguyên architecture reference để implementation docs tiếp tục dùng được.
+Product scope, constraints và privacy boundary được mô tả trong [Internal PRD](../product/internal-prd/README.md); thuật ngữ chuẩn nằm tại [Product glossary](../product/internal-prd/glossary.md). Phần dưới đây giữ nguyên architecture reference để implementation docs tiếp tục dùng được.
 
 ## Nguyên tắc nền tảng
 
