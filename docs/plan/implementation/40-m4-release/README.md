@@ -1,20 +1,21 @@
 # M4 — Hardening and release
 
-**Gate:** MVP có thể backup, chẩn đoán, kiểm thử và phát hành lặp lại
+**Outcome:** The MVP can be secured, diagnosed, recovered, tested, and released repeatedly.
+**Gate:** Security, recovery, observability, quality, and clean-checkout evidence is complete.
 **Dependencies:** M1–M3
 
 ## Epic packages
 
-- [17 — Security](17-security/plan.md)
-- [18 — Reliability](18-reliability/plan.md)
-- [19 — Observability](19-observability/plan.md)
-- [20 — Testing và CI](20-testing-and-ci/plan.md)
-- [21 — Packaging và release](21-packaging/plan.md)
+- [17 — Security](17-security/README.md)
+- [18 — Reliability](18-reliability/README.md)
+- [19 — Observability](19-observability/README.md)
+- [20 — Testing and CI](20-testing-and-ci/README.md)
+- [21 — Packaging and release](21-packaging/README.md)
 
-## Thứ tự
+## Delivery order
 
-Security boundary và recovery contract trước; observability hỗ trợ test; packaging chỉ release sau quality gate `20`.
+Security boundaries and recovery contracts come first; observability supports testing; packaging releases only after quality gate `20`.
 
 ## Acceptance gate
 
-Test/lint/benchmark pass, backup/restore/rebuild verified, security limits pass, health/degraded states rõ và clean checkout chạy được core/full mode.
+Tests, lint, and benchmark pass; backup/restore/rebuild is verified; security limits pass; health/degraded states are truthful; and a clean checkout runs the supported core/full modes.

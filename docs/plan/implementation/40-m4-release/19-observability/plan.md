@@ -1,41 +1,27 @@
-# 19 — Observability và diagnostics
+# 19 — Observability and diagnostics
 
-**Status:** `draft`
-**Canonical references:** [Quality attributes](../../../../quality/00-quality-attributes.md) · [Health/troubleshooting](../../../../operations/02-health-and-troubleshooting.md) · [Security boundaries](../../../../architecture/07-security-boundaries.md)
-**Milestone:** M4
+**Plan status:** `ready`  
+**Delivery status:** `not_started`  
+**Baseline coverage:** `partial`  
+**Milestone:** M4  
 **Dependencies:** 10, 14, 15, 16, 17
 
 ## Outcome
 
-Có đủ thông tin để chẩn đoán startup, ingestion, search và derived dependency mà không ghi nội dung người dùng hoặc secret.
+Operators can diagnose startup, ingestion, search, and derived dependencies without exposing user content or secrets.
 
-## Event schema
+## Event and health contracts
 
-Structured event gồm `timestamp`, `level`, `component`, `event`, `request_id`/`job_id`, `duration_ms`, `state`, `error_code`, `retry_count`, `cache_hit` và `degraded`. Content/title/query chỉ được log dạng length/hash nếu cần.
+Structured events contain `timestamp`, `level`, `component`, `event`, `request_id`/`job_id`, `duration_ms`, `state`, `error_code`, `retry_count`, `cache_hit`, and `degraded`. Content/title/query values are represented only by length/hash when required.
 
-## Health model
+`/api/health` reports SQLite, FTS, worker, Chroma, RocksDB, DuckDB, and model components. SQLite or FTS5 unavailable returns HTTP `503 unavailable`; derived dependency failure returns HTTP `200 degraded`. List/read may continue during FTS failure, but core mode is not advertised as healthy and the UI points to repair/rebuild.
 
-`/api/health` trả status tổng và component: sqlite, fts, worker, chroma, rocksdb, duckdb, model. `ok`, `degraded`, `unavailable`; SQLite hoặc FTS5 unavailable trả HTTP 503, còn derived dependency unavailable trả HTTP 200 với trạng thái degraded.
+The UI maps `queued` to queued, `extracting | chunking | embedding` to processing, `indexed` to indexed, and `failed` to failed.
 
-## Diagnostics
+## Diagnostics and acceptance
 
-CLI `diagnose` tạo bundle metadata (versions, schema, health, recent error codes, timings) không bao gồm DB content/secret. UI hiển thị reason và action retry/rebuild phù hợp.
-
-## Commit slices
-
-1. `feat: add structured application and job events`
-2. `feat: expand component health checks`
-3. `feat: add local diagnostics bundle`
-4. `test: verify redaction health and degraded states`
-
-## Acceptance
-
-Worker retry có job ID và duration; semantic unavailable hiện degraded nhưng keyword usable; health phản ánh đúng component; diagnostics không chứa content/secret khi scan.
+The target `diagnose` command produces versions, schema, health, recent error codes, and timings without database content or secrets. Worker retry events include job ID and duration. A semantic failure is visibly degraded while keyword search remains usable.
 
 ## Review gate
 
-Capture log trong happy path/error path, assert forbidden fields không xuất hiện và verify health status bằng dependency giả lập lỗi.
-
-## Execution log
-
-Hiện health chỉ trả `{"status":"ok"}`; cần mở rộng theo contract.
+Capture happy/error logs, assert forbidden fields are absent, and simulate every component failure in health tests.

@@ -1,42 +1,34 @@
-# 17 — Security và privacy
+# 17 — Security and privacy
 
-**Status:** `draft`
-**Canonical references:** [Privacy/trust](../../../../product/internal-prd/05-privacy-and-trust.md) · [Security boundaries](../../../../architecture/07-security-boundaries.md) · [Test strategy](../../../../quality/01-test-strategy.md)
-**Milestone:** M4
+**Plan status:** `ready`  
+**Delivery status:** `not_started`  
+**Baseline coverage:** `partial`  
+**Milestone:** M4  
 **Dependencies:** 10, 13, 18, 19
 
 ## Threat boundary
 
-MVP bind `127.0.0.1`, single-user và không có auth. URL/file/text là untrusted input; Chroma/RocksDB/DuckDB là derived local stores. Bất kỳ việc mở network hoặc cloud provider nào đều cần threat-model mới.
+The MVP binds to `127.0.0.1`, is single-user, and has no authentication. URL/file/text inputs are untrusted. Chroma, RocksDB, and DuckDB are local derived stores. Any network or cloud provider requires a new threat model.
 
 ## Controls
 
-- Validate Host/Origin cho write requests; không bật CORS wildcard.
-- URL chỉ HTTP(S), DNS/socket/redirect đều chặn loopback, private, link-local, reserved và metadata endpoints.
-- File 20 MB, HTML 5 MB, text 1M chars/10k chunks.
-- Escape Jinja/HTMX output; không render user HTML/Markdown trực tiếp.
-- Secrets chỉ đọc từ environment; không ghi DB/log/backup không mã hóa nếu có provider key.
-- Log redaction cho body, content, query nhạy cảm và URL có credential/query secret.
+- Validate Host/Origin on write requests; never enable wildcard CORS.
+- Accept only HTTP(S) URLs and block loopback, private, link-local, reserved, and metadata destinations after DNS, socket, and redirect checks.
+- Enforce 20 MB file, 5 MB HTML, and 1,000,000-character/10,000-chunk text limits.
+- Escape Jinja/HTMX output; never render user HTML or Markdown directly.
+- Read secrets only from the environment; never write provider keys to the database, logs, or unencrypted backups.
+- Redact bodies, content, sensitive queries, and credential-bearing URLs from logs.
 
-## Commit slices
+## Failure and acceptance
 
-1. `security: enforce host origin and request boundaries`
-2. `security: harden url redirect and network validation`
-3. `security: add rendering escaping and log redaction`
-4. `test: add ingestion and rendering security cases`
+Reject unsafe input before creating a row/job, use stable error codes, and avoid revealing filesystem/network details. Security failures must not retry indefinitely.
 
-## Failure behavior
-
-Từ chối input trước khi tạo row/job; dùng mã lỗi ổn định và message không tiết lộ filesystem/network detail. Security check failure không retry vô hạn.
-
-## Acceptance
-
-SSRF fixture bị chặn ở initial URL và redirect; oversized input trả 413; XSS string render dạng text; secrets không xuất hiện trong captured log; write từ Origin không hợp lệ bị chặn.
+- Initial and redirected SSRF fixtures are blocked.
+- Oversized input returns `413`.
+- XSS strings render as text.
+- Secrets are absent from captured logs.
+- Invalid write Origin/Host is rejected.
 
 ## Review gate
 
-Security checklist được chạy cùng test integration; reviewer inspect mọi nơi dùng `urlopen`, template `safe`, logging và subprocess.
-
-## Execution log
-
-Một phần limit/SSRF/escape đã có trong skeleton; cần audit và test đầy đủ.
+Inspect URL clients, template `safe` usage, logging, subprocesses, and the integration security suite.

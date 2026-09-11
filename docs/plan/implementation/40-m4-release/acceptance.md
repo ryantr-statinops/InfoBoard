@@ -1,10 +1,10 @@
 # M4 release acceptance checklist
 
-- [ ] Security limits, SSRF, escaping, Origin/Host và log redaction pass.
-- [ ] Backup/restore/rebuild derived indexes verified trên DB copy.
-- [ ] Health/degraded/diagnostics phản ánh đúng component.
-- [ ] Core/full clean checkout chạy theo README.
-- [ ] Full test, Ruff, migration test và benchmark report pass.
-- [ ] Release/upgrade/rollback/runbook được review.
+- [ ] Security limits, SSRF, escaping, Origin/Host, and log redaction pass.
+- [ ] Backup/restore/rebuild of derived indexes is verified on a database copy.
+- [ ] Health/degraded/diagnostics accurately represent each component.
+- [ ] Core/full clean checkout follows the README.
+- [ ] Full tests, Ruff, migration tests, and benchmark report pass.
+- [ ] Release, upgrade, rollback, and runbooks are reviewed.
 
-**Evidence:** release checklist, CI run, benchmark report và restore transcript.
+**Evidence:** release checklist, CI run, benchmark report, and restore transcript.
