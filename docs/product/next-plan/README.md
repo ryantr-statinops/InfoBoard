@@ -6,11 +6,11 @@ Thư mục này chứa các product direction hậu MVP. Nội dung ở đây kh
 
 ## Hướng nghiên cứu
 
-- [Browser data portability](browser-portability.md)
-- [Browser extension](browser-extension.md)
-- [Migration assistant](migration-assistant.md)
-- [Cloud sync](cloud-sync.md)
-- [AI and providers](ai-and-providers.md)
+- [Browser data portability](00-browser-portability.md)
+- [Browser extension](01-browser-extension.md)
+- [Migration assistant](02-migration-assistant.md)
+- [Cloud sync](03-cloud-sync.md)
+- [AI and providers](04-ai-and-providers.md)
 
 ## Discovery gate chung
 

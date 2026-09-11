@@ -7,14 +7,14 @@
 
 ## Đọc theo thứ tự
 
-1. [Overview](overview.md) — mục tiêu, phạm vi và constraints.
-2. [Users and use cases](users-and-use-cases.md) — người dùng và nhu cầu chính.
-3. [Product requirements](product-requirements.md) — hành vi sản phẩm phải cung cấp.
-4. [Core workflows](core-workflows.md) — các luồng end-to-end cần hoàn thành.
-5. [Domain model](domain-model.md) — khái niệm và lifecycle cấp sản phẩm.
-6. [Privacy and trust](privacy-and-trust.md) — ranh giới dữ liệu và cam kết an toàn.
-7. [Success criteria](success-criteria.md) — cách nghiệm thu MVP.
-8. [Decisions and open questions](decisions-and-open-questions.md) — quyết định đã khóa và vấn đề còn mở.
+1. [Overview](00-overview.md) — mục tiêu, phạm vi và constraints.
+2. [Users and use cases](01-users-and-use-cases.md) — người dùng và nhu cầu chính.
+3. [Product requirements](02-product-requirements.md) — hành vi sản phẩm phải cung cấp.
+4. [Core workflows](03-core-workflows.md) — các luồng end-to-end cần hoàn thành.
+5. [Domain model](04-domain-model.md) — khái niệm và lifecycle cấp sản phẩm.
+6. [Privacy and trust](05-privacy-and-trust.md) — ranh giới dữ liệu và cam kết an toàn.
+7. [Success criteria](06-success-criteria.md) — cách nghiệm thu MVP.
+8. [Decisions and open questions](07-decisions-and-open-questions.md) — quyết định đã khóa và vấn đề còn mở.
 
 ## Documentation boundary
 

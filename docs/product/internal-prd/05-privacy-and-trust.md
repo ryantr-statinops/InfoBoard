@@ -29,4 +29,4 @@ MVP xử lý text người dùng cung cấp, URL công khai và file local đư�
 
 ## Future sensitive data
 
-Cookies, passwords, session tokens, localStorage và IndexedDB chỉ được xem xét trong [Browser portability](../next-plan/browser-portability.md), sau threat model, compatibility matrix, consent, backup và rollback.
+Cookies, passwords, session tokens, localStorage và IndexedDB chỉ được xem xét trong [Browser portability](../next-plan/00-browser-portability.md), sau threat model, compatibility matrix, consent, backup và rollback.
