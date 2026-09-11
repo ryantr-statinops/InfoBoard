@@ -1,7 +1,7 @@
 # 18 — Reliability, backup và recovery
 
-**Status:** `draft`  
-**Milestone:** M4  
+**Status:** `draft`
+**Milestone:** M4
 **Dependencies:** 11, 14, 17, 19
 
 ## Outcome
