@@ -1,8 +1,8 @@
 # 12 — Dashboard và item workspace
 
-**Status:** `in_progress`  
-**Milestone:** M1  
-**Dependencies:** 10, 11, 13, 15, 16  
+**Status:** `in_progress`
+**Milestone:** M1
+**Dependencies:** 10, 11, 13, 15, 16
 **Reference:** `docs/plan/02-mvp-experience.md`
 
 ## Outcome
