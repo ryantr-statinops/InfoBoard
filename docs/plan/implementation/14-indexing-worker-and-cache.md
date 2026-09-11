@@ -1,8 +1,8 @@
 # 14 — Indexing worker và cache
 
-**Status:** `partial`  
-**Milestone:** M2–M3  
-**Dependencies:** 11, 13, 15  
+**Status:** `partial`
+**Milestone:** M2–M3
+**Dependencies:** 11, 13, 15
 **Source of truth:** SQLite job state
 
 ## Outcome
