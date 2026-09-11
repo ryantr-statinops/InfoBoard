@@ -1,7 +1,7 @@
 # 30 — Browser extension và capture
 
-**Status:** `discovery`  
-**Milestone:** M5  
+**Status:** `discovery`
+**Milestone:** M5
 **Dependencies:** 12, 13, 17, 21
 
 ## Product outcome
