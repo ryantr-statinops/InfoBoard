@@ -1,6 +1,6 @@
 # Kiến trúc dữ liệu và trách nhiệm database — compatibility reference
 
-Product scope, constraints và privacy boundary được mô tả trong [Internal PRD](../product/internal-prd/README.md); thuật ngữ chuẩn nằm tại [Product glossary](../product/internal-prd/glossary.md). Phần dưới đây giữ nguyên architecture reference để implementation docs tiếp tục dùng được.
+Product scope, constraints và privacy boundary được mô tả trong [Internal PRD](../product/internal-prd/README.md); thuật ngữ chuẩn nằm tại [Domain model](../product/internal-prd/domain-model.md). Phần dưới đây giữ nguyên architecture reference để implementation docs tiếp tục dùng được.
 
 ## Nguyên tắc nền tảng
 
