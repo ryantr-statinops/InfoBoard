@@ -1,8 +1,8 @@
 # 00 — Program charter
 
-**Status:** `ready`  
-**Milestone:** toàn chương trình  
-**Owner:** project maintainer  
+**Status:** `ready`
+**Milestone:** toàn chương trình
+**Owner:** project maintainer
 **Dependencies:** `docs/plan/00-product-vision.md`, `01-data-architecture.md`
 
 ## Mục tiêu
