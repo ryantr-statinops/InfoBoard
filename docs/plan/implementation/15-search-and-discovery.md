@@ -1,8 +1,8 @@
 # 15 — Search và discovery
 
-**Status:** `partial`  
-**Milestone:** M3  
-**Dependencies:** 11, 14  
+**Status:** `partial`
+**Milestone:** M3
+**Dependencies:** 11, 14
 **Modes:** core keyword, full hybrid
 
 ## Outcome
