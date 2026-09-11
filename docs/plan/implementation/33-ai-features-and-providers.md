@@ -1,7 +1,7 @@
 # 33 — AI features và providers
 
-**Status:** `discovery`  
-**Milestone:** M5–M7  
+**Status:** `discovery`
+**Milestone:** M5–M7
 **Dependencies:** 15, 17, 19, 21
 
 ## Product outcome
