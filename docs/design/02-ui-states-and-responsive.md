@@ -12,6 +12,17 @@
 | Duplicate/conflict | Giải thích item hiện có và hành động tiếp theo |
 | Deleted | Đóng detail/refresh list nhưng giữ filter context |
 
+## Job-to-UI state mapping
+
+| Job state | UI state |
+| --- | --- |
+| `queued` | `queued` |
+| `extracting`, `chunking`, `embedding` | `processing` |
+| `indexed` | `indexed` |
+| `failed` | `failed` |
+
+UI có thể hiển thị step label chi tiết trong advanced/detail view nhưng không tạo thêm organization status cho item.
+
 ## Responsive behavior
 
 - Desktop target 1440 px: sidebar khoảng 240 px, dashboard hai cột, detail panel bên phải.

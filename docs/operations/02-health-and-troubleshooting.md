@@ -6,7 +6,9 @@ Health endpoint cơ bản tồn tại; component-level status, diagnostics bundl
 
 ## Target health model
 
-`/api/health` báo `ok`, `degraded` hoặc `unavailable` cho SQLite, FTS, worker, ChromaDB, RocksDB, DuckDB và model. Chỉ SQLite/core-data unavailable làm toàn health trả HTTP 503.
+`/api/health` báo `ok`, `degraded` hoặc `unavailable` cho SQLite, FTS, worker, ChromaDB, RocksDB, DuckDB và model. SQLite hoặc FTS5 unavailable làm core health trả HTTP 503; derived dependency unavailable trả HTTP 200 với trạng thái degraded.
+
+Khi FTS5 hỏng, list/detail có thể vẫn đọc được từ SQLite nhưng ứng dụng không được báo healthy core mode vì keyword retrieval là capability bắt buộc. UI phải nêu rõ keyword search unavailable và hướng người dùng tới kiểm tra/rebuild FTS.
 
 ## Troubleshooting routes
 

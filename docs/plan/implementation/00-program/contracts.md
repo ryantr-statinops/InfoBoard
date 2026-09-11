@@ -24,7 +24,7 @@
 }
 ```
 
-HTTP mapping: `400` input invalid, `404` resource missing, `409` duplicate/conflict, `413` vượt giới hạn, `422` schema validation, `503` SQLite unavailable hoặc dependency bắt buộc degraded.
+HTTP mapping: `400` input invalid, `404` resource missing, `409` duplicate/conflict, `413` vượt giới hạn, `422` schema validation, `503` khi SQLite hoặc FTS5 bắt buộc của core mode unavailable. Derived dependency unavailable trả degraded state nhưng không làm core request thất bại.
 
 ## Item và job states
 
@@ -52,7 +52,7 @@ HTTP mapping: `400` input invalid, `404` resource missing, `409` duplicate/confl
 | `POST /api/search` | Query + shared filters; trả excerpt, score, retrieval mode/source. |
 | `GET /api/items/{id}/related` | Tối đa 5 item, loại chính item hiện tại. |
 | `GET /api/analytics` | KPI, activity, distributions, clusters theo shared filters. |
-| `GET /api/health` | Component status; `503` chỉ khi SQLite không dùng được. |
+| `GET /api/health` | Component status; `503` khi SQLite hoặc FTS5 không dùng được, `200 degraded` khi chỉ derived dependency lỗi. |
 
 ## Provider interfaces
 

@@ -1,7 +1,8 @@
 # 01 — Current state và gap analysis
 
 **Status:** `ready`
-**Snapshot:** `main` tại merge commit `c8ac771`
+**Runtime snapshot:** `f073724` — commit gần nhất thay đổi `app/`, tests hoặc runtime dependency files
+**Docs baseline:** `1aa7cd0` — HEAD trước lượt đồng bộ health/current-gap này
 **Branch triển khai:** `dev`
 
 ## Hiện trạng đã có
@@ -22,6 +23,13 @@
 | Dashboard | `partial` | Server-rendered form/list; thiếu HTMX, panel, filter nâng cao và KPI. |
 | Quality | `partial` | 4 test và Ruff pass; thiếu HTTP integration, benchmark và CI. |
 
+## Known contract gaps so với target docs
+
+- Runtime tạo item với status mặc định `active`; target M1 là `inbox` cho item mới.
+- `pypdf` và các extraction/full-mode dependencies chưa được khai báo trong `pyproject.toml`.
+- Schema runtime chưa có content version/migration history hoàn chỉnh và còn dùng `index_jobs.attempts` thay vì target `retry_count`.
+- `/api/health` hiện chỉ trả `{"status":"ok"}` và chưa kiểm tra SQLite/FTS5/component health theo canonical contract.
+
 ## Khoảng cách ưu tiên
 
 1. Chuẩn hóa foundation/data contract trước khi mở rộng UI.
@@ -39,4 +47,4 @@
 
 ## Cách cập nhật file này
 
-Sau mỗi milestone, cập nhật bảng hiện trạng bằng commit hash, test command và evidence link. Không dùng `done` cho capability mới chỉ có adapter hoặc mock.
+Sau mỗi milestone, cập nhật runtime snapshot bằng commit gần nhất thực sự chạm runtime, cùng test command và evidence link. Docs-only HEAD được ghi riêng khi cần. Không dùng `done` cho capability mới chỉ có adapter hoặc mock.

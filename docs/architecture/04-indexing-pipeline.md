@@ -42,3 +42,7 @@ flowchart LR
 - Retry/upsert idempotent; restart requeue job đang xử lý.
 - Quá retry limit chuyển `failed` và giữ error message an toàn.
 - Xóa hoặc đổi version trước khi hoàn tất khiến worker skip/cleanup stale output.
+
+## UI projection
+
+`extracting`, `chunking` và `embedding` được chiếu thành UI state `processing`. Các state `queued`, `indexed` và `failed` giữ nguyên; mapping UI không thay đổi durable job state trong SQLite.

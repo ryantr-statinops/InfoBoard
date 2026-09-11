@@ -32,6 +32,8 @@
 - `PR-REC-04`: Health/degraded state chỉ rõ capability bị ảnh hưởng.
 - `PR-REC-05`: Backup/restore bảo toàn item, snapshot, collection và note; index có thể rebuild.
 
+UI state `processing` tổng hợp các job state kỹ thuật `extracting`, `chunking` và `embedding`; `queued`, `indexed` và `failed` giữ mapping một-một.
+
 ## Experience
 
 - `PR-UX-01`: Core flow dùng được mà không cần advanced setup.

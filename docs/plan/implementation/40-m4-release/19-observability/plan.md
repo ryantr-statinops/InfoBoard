@@ -15,7 +15,7 @@ Structured event gồm `timestamp`, `level`, `component`, `event`, `request_id`/
 
 ## Health model
 
-`/api/health` trả status tổng và component: sqlite, fts, worker, chroma, rocksdb, duckdb, model. `ok`, `degraded`, `unavailable`; SQLite unavailable mới trả HTTP 503.
+`/api/health` trả status tổng và component: sqlite, fts, worker, chroma, rocksdb, duckdb, model. `ok`, `degraded`, `unavailable`; SQLite hoặc FTS5 unavailable trả HTTP 503, còn derived dependency unavailable trả HTTP 200 với trạng thái degraded.
 
 ## Diagnostics
 

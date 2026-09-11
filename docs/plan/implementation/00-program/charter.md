@@ -41,7 +41,7 @@ Không có authentication, cloud sync, chat, OCR, video transcript, recommendati
 
 ## Definition of done cấp chương trình
 
-Tất cả tiêu chí trong `92-requirement-traceability.md` đạt; test/lint/benchmark pass; README và runbook khớp cách chạy thực tế; release có backup/restore verification; branch `main` sạch và tag được phiên bản MVP.
+Tất cả tiêu chí trong [`90-governance/requirement-traceability.md`](../90-governance/requirement-traceability.md) đạt; test/lint/benchmark pass; README và runbook khớp cách chạy thực tế; release có backup/restore verification; branch `main` sạch và tag được phiên bản MVP.
 
 ## Rủi ro chấp nhận
 
