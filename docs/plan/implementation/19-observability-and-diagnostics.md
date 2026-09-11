@@ -1,7 +1,7 @@
 # 19 — Observability và diagnostics
 
-**Status:** `draft`  
-**Milestone:** M4  
+**Status:** `draft`
+**Milestone:** M4
 **Dependencies:** 10, 14, 15, 16, 17
 
 ## Outcome
