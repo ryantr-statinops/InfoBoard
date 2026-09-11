@@ -1,8 +1,8 @@
 # 10 — Application foundation
 
-**Status:** `partial`  
-**Milestone:** M1  
-**Dependencies:** 11, 17  
+**Status:** `partial`
+**Milestone:** M1
+**Dependencies:** 11, 17
 **Target branch:** `dev`
 
 ## Outcome
