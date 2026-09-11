@@ -15,6 +15,7 @@
 6. [Privacy and trust](05-privacy-and-trust.md) — ranh giới dữ liệu và cam kết an toàn.
 7. [Success criteria](06-success-criteria.md) — cách nghiệm thu MVP.
 8. [Decisions and open questions](07-decisions-and-open-questions.md) — quyết định đã khóa và vấn đề còn mở.
+9. [Requirement traceability](08-requirement-traceability.md) — nối product requirement với architecture, design và epic.
 
 ## Documentation boundary
 
