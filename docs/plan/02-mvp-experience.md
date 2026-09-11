@@ -1,4 +1,6 @@
-# Dashboard và giao diện MVP
+# Dashboard và giao diện MVP — compatibility reference
+
+Định hướng trải nghiệm product-level mới nằm tại [`docs/product/03-core-experience.md`](../product/03-core-experience.md). Tài liệu này giữ contract và bố cục MVP hiện hành để các implementation docs không bị thay đổi.
 
 ## Bố cục
 
