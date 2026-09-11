@@ -1,60 +1,40 @@
-# 11 — Data model và migrations
+# 11 — Data model and migrations
 
-**Status:** `partial`
-**Canonical references:** [Product requirements](../../../../product/internal-prd/02-product-requirements.md) · [Data model/ERD](../../../../architecture/02-data-model-and-erd.md) · [Lifecycle/recovery](../../../../architecture/06-lifecycle-and-recovery.md)
-**Milestone:** M1
-**Dependencies:** 10
-**Source of truth:** SQLite + FTS5
+**Plan status:** `ready`  
+**Delivery status:** `not_started`  
+**Baseline coverage:** `partial`  
+**Milestone:** M1  
+**Dependencies:** 10  
+**System of record:** SQLite + FTS5
 
 ## Outcome
 
-Schema có version, nâng cấp lặp lại được và bảo toàn item/note/collection/job hiện tại. Mọi derived index đều có thể rebuild từ SQLite.
+The schema is versioned, repeatable to upgrade, and preserves existing items, notes, collections, and jobs. Every derived index can be rebuilt from SQLite.
 
-## Canonical schema
+## Target schema and invariants
 
-- `items`: metadata nguồn, `content_hash`, `content_version`, status mặc định `inbox`, timestamps, `deleted_at`.
-- `item_contents`: snapshot text theo `(item_id, content_version)`.
-- `chunks`: `item_id`, version, position, text, hash và index ổn định.
-- `collections`, `item_collections`, `notes`, `search_history`, `index_jobs`.
-- `index_jobs.retry_count` là target field; migration chuyển giá trị từ runtime field `attempts` hiện tại.
-- `schema_version`: một dòng version hiện tại; migration chạy transaction và ghi history.
-- `items_fts`: title + current content/chunks, chỉ index item chưa deleted.
-
-## Data invariants
-
-Foreign keys bật cho mọi connection; quan hệ item–collection unique; note phải thuộc item đang tồn tại; content version tăng đơn điệu; `deleted_at` loại khỏi public query nhưng giữ dữ liệu cho cleanup/restore.
+- `items` stores source metadata, `content_hash`, `content_version`, status default `inbox`, timestamps, and `deleted_at`.
+- `item_contents` is identified by `(item_id, content_version)`.
+- `chunks` stores version, `position`, text, hash, and stable index data.
+- `collections`, `item_collections`, `notes`, `search_history`, `index_jobs`, and `schema_version` preserve the domain relationships.
+- `index_jobs.retry_count` is the target field; the runtime `attempts` field requires migration.
+- Foreign keys are enabled for every connection; item/collection relations are unique; content versions increase monotonically.
+- Soft-deleted items are excluded from public queries while remaining available for cleanup and recovery.
 
 ## Migration strategy
 
-1. Baseline migration mô tả schema đang chạy.
-2. Mỗi migration là file SQL đánh số, idempotency chỉ dùng cho bootstrap.
-3. `migrate()` lock database, chạy transaction, verify expected columns/indexes rồi cập nhật version.
-4. Backup trước migration production; rollback dữ liệu bằng restore backup, không down-migration tự động.
-5. Migration đổi default `items.status` từ `active` sang `inbox` cho item tạo mới; không tự đổi organization status của item đã tồn tại.
+1. Add a baseline migration for the running schema.
+2. Number SQL migrations; use idempotency only for bootstrap.
+3. Lock the database, run each migration transactionally, verify expected columns/indexes, and update the version.
+4. Back up before a production migration. Roll back data through restore, not automatic down-migrations.
+5. Change the default for newly created items from `active` to `inbox` without rewriting existing organization status.
 
-## Commit slices
+## Failure and acceptance
 
-1. `feat: add versioned sqlite migration runner`
-2. `feat: normalize item content version and indexes`
-3. `feat: make fts synchronization transactional`
-4. `test: cover fresh install and upgrade migrations`
+Migration failure rolls back the transaction and reports version/file context. FTS is rebuilt from canonical tables when damaged and is never treated as the source of truth.
 
-## Failure handling
-
-Migration lỗi phải rollback toàn transaction và trả lỗi startup có version/filename. FTS hỏng được rebuild từ canonical tables; không coi FTS là nguồn sự thật.
-
-## Tests và acceptance
-
-- Fresh DB tạo đúng schema/pragma/indexes.
-- Nâng từ snapshot hiện tại lên version mới không mất rows.
-- Re-run migration không tạo duplicate.
-- Concurrent connection không đọc schema nửa chừng.
-- Delete/restore giữ đúng note, collection và content version.
-
-## Review gate
-
-Có SQL diff, data compatibility note, fixture trước/sau migration và lệnh backup/restore thử nghiệm. Không merge nếu migration chưa test trên DB copy từ `data/`.
-
-## Execution log
-
-Chưa bắt đầu.
+- Fresh DB has the expected schema, pragmas, and indexes.
+- The current database snapshot upgrades without row loss.
+- Re-running migrations creates no duplicates.
+- Concurrent connections never observe a half-applied schema.
+- Delete/restore preserves notes, collections, and content versions.

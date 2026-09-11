@@ -1,10 +1,10 @@
 # M1 acceptance checklist
 
-- [ ] Fresh install và migration chạy từ clean DB.
-- [ ] Tạo text, list, filter và search từ dashboard.
-- [ ] Mở detail, sửa title/status, thêm note/collection.
-- [ ] Soft delete ẩn item sau reload và không làm mất quan hệ còn cần.
-- [ ] Restart app không mất dữ liệu.
-- [ ] Browser smoke test ở 1440 px và 390 px.
+- [ ] Fresh install and migration run from a clean database.
+- [ ] Create text, list items, filter, and search from the dashboard.
+- [ ] Open detail, edit title/status, and add a note or collection.
+- [ ] Soft delete hides an item after reload without losing required relations.
+- [ ] Restarting the app does not lose data.
+- [ ] Browser smoke test passes at 1440 px and 390 px.
 
-**Evidence:** ghi link PR, test output, screenshot/manual steps và ngày verified.
+**Evidence:** record the PR link, test output, screenshots/manual steps, and verification date.

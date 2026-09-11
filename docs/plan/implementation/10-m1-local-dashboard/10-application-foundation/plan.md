@@ -1,61 +1,47 @@
 # 10 — Application foundation
 
-**Status:** `partial`
-**Canonical references:** [Product overview](../../../../product/internal-prd/00-overview.md) · [System overview](../../../../architecture/00-system-overview.md) · [Tech stack](../../../../architecture/01-tech-stack.md)
-**Milestone:** M1
+**Plan status:** `ready`  
+**Delivery status:** `not_started`  
+**Baseline coverage:** `partial`  
+**Milestone:** M1  
 **Dependencies:** 11, 17
-**Target branch:** `dev`
 
 ## Outcome
 
-Ứng dụng có ranh giới rõ giữa HTTP routes, domain services và storage adapters; chạy ổn định từ project root trên Python 3.12; lỗi runtime được chuyển thành response thân thiện.
+The application has clear HTTP route, domain service, and storage boundaries. It runs from the project root on Python 3.12 and turns runtime failures into stable, user-facing responses.
 
-## Hiện trạng và gap
+## Scope
 
-`app/main.py` hiện chứa hầu hết route và logic; template path đã absolute nhưng cấu hình/lifespan còn tối giản. Cần tách module mà không phá API hiện có hoặc database local.
+In scope: settings, route registration, dependency wiring, startup/shutdown, static/template serving, exception handlers, and component health. Out of scope: authentication, an external async queue, and an SPA.
 
-## In/out of scope
-
-In-scope: config object, route registration, dependency wiring, startup/shutdown, static/template serving, exception handlers và component health. Out-of-scope: authentication, async job queue ngoài process và SPA.
-
-## Thiết kế
+## Design and contracts
 
 ```mermaid
 flowchart LR
     Request --> Routes[HTTP routes]
     Routes --> Services[Domain services]
-    Services --> Storage[SQLite/FTS storage]
+    Services --> Storage[SQLite / FTS5]
     Services --> Derived[Optional derived adapters]
     Lifespan --> Worker[Worker lifecycle]
 ```
 
-- `Settings` đọc `.env` với path được resolve theo project root hoặc path tuyệt đối.
-- Lifespan gọi `init_db()` đúng một lần, khởi động worker theo cấu hình và shutdown graceful.
-- Route chỉ parse/validate request, không tự viết SQL ngoài storage boundary.
-- Exception handler map `ValueError`, `NotFound`, `Conflict`, limit errors và storage errors về contract chung.
+- `Settings` resolves `.env` values relative to the project root or from absolute paths.
+- Lifespan calls `init_db()` once, starts the configured worker, and shuts down gracefully.
+- Routes parse and validate requests; SQL stays behind the storage boundary.
+- Exception handlers map `ValueError`, `NotFound`, `Conflict`, limit errors, and storage errors to the shared response contract.
+- The public entrypoint remains `app.main:app` during the release.
 
-## Commit slices
+## Failure and observability
 
-1. `refactor: introduce settings and application factory`
-2. `refactor: split api routes from domain services`
-3. `fix: make startup shutdown and template errors explicit`
-4. `test: cover app factory and lifespan`
+Startup fails fast if SQLite cannot open. Derived dependencies report degraded mode. Lifecycle logs include component/job IDs and never include content.
 
-## Compatibility, failure và observability
+## Test and acceptance contract
 
-Giữ nguyên entrypoint `app.main:app` và các URL hiện có trong một release. Startup fail-fast nếu SQLite không mở được; derived dependency chỉ degraded. Log lifecycle bằng component/job ID, không log content.
-
-## Test matrix và acceptance
-
-- Factory tạo app với temp settings và không dùng database mặc định.
-- Lifespan init một lần, shutdown không để task treo.
-- `/`, `/api/health`, lỗi 404/400/500 đều dùng response hợp lệ.
-- `uv run pytest -q` và `uv run ruff check .` pass.
+- The factory can use temporary settings and never touches the default database in tests.
+- Lifespan initializes once and leaves no task running after shutdown.
+- `/`, `/api/health`, and 404/400/500 paths return the shared response shape.
+- `uv run pytest -q` and `uv run ruff check .` pass for the implementation slice.
 
 ## Review gate
 
-Reviewer kiểm tra import graph không vòng, entrypoint vẫn chạy, test không chạm `data/infoboard.db`, và diff không thay đổi behavior ngoài contract đã ghi.
-
-## Execution log
-
-Chưa bắt đầu; cập nhật commit hash, test output và PR sau khi triển khai.
+Review the import graph, entrypoint compatibility, temporary database isolation, and behavior diff. No unrelated API behavior may change.
