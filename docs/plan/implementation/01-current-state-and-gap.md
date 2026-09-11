@@ -1,7 +1,7 @@
 # 01 — Current state và gap analysis
 
-**Status:** `ready`  
-**Snapshot:** `main` tại merge commit `c8ac771`  
+**Status:** `ready`
+**Snapshot:** `main` tại merge commit `c8ac771`
 **Branch triển khai:** `dev`
 
 ## Hiện trạng đã có
