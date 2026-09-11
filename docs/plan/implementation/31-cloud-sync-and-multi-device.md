@@ -1,7 +1,7 @@
 # 31 — Cloud sync và multi-device
 
-**Status:** `discovery`  
-**Milestone:** M6  
+**Status:** `discovery`
+**Milestone:** M6
 **Dependencies:** 11, 18, 21, 32
 
 ## Product outcome
