@@ -1,7 +1,7 @@
 # 17 — Security và privacy
 
-**Status:** `draft`  
-**Milestone:** M4  
+**Status:** `draft`
+**Milestone:** M4
 **Dependencies:** 10, 13, 18, 19
 
 ## Threat boundary
