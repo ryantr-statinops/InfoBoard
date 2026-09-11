@@ -1,8 +1,8 @@
 # 11 — Data model và migrations
 
-**Status:** `partial`  
-**Milestone:** M1  
-**Dependencies:** 10  
+**Status:** `partial`
+**Milestone:** M1
+**Dependencies:** 10
 **Source of truth:** SQLite + FTS5
 
 ## Outcome
