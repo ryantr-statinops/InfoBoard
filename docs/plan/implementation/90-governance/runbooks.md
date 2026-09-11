@@ -1,41 +1,41 @@
 # 90 — Operational runbooks
 
 **Status:** `draft`
-**Scope:** local MVP và full mode
+**Scope:** local MVP and full mode
 
 ## Runbook index
 
 ### First run
 
-1. Kiểm tra Python 3.12 và `uv`.
-2. `uv sync` hoặc `uv sync --extra full`.
-3. Copy `.env.example` thành `.env`, kiểm tra path không trỏ ngoài scope.
-4. Chạy migration/health, sau đó `uv run uvicorn app.main:app --reload`.
+1. Check Python 3.12 and `uv`.
+2. Run `uv sync` or the explicitly supported full-mode install.
+3. Copy `.env.example` to `.env` and verify paths stay within scope.
+4. Run migration/health checks, then `uv run uvicorn app.main:app --reload`.
 
 ### Startup failure
 
-Kiểm tra `INFOBOARD_DB`, quyền thư mục `data/`, schema version và `GET /api/health`. Không xóa DB; copy backup trước khi sửa.
+Check `INFOBOARD_DB`, `data/` permissions, schema version, and `GET /api/health`. Do not delete the database; copy a backup before repair.
 
-### Stuck/failed indexing
+### Stuck or failed indexing
 
-Xem job state/attempt/error code, chạy reindex item hoặc toàn bộ; nếu derived store lỗi, giữ FTS và chạy rebuild. Job vượt retry phải được review nguyên nhân trước khi retry tiếp.
+Inspect job state, retry count, and error code. Reindex the item or all eligible items. If a derived store fails, preserve FTS and run the rebuild path. Review the cause before retrying an exhausted job.
 
-### Backup/restore
+### Backup and restore
 
-Pause worker, tạo manifest/checksum, restore vào path tạm, migrate/verify, rebuild derived stores, chạy smoke test rồi mới đổi active path.
+Pause the worker, create a manifest/checksum, restore to a temporary path, migrate/verify, rebuild derived stores, run smoke tests, and only then change the active path. See the [recovery guide](../40-m4-release/18-reliability/guides/recovery.md).
 
-### Semantic degraded
+### Semantic degraded mode
 
-Xác nhận model/Chroma/RocksDB health; dùng keyword search tiếp tục; chạy model prepare/rebuild ngoài request dashboard.
+Check model/Chroma/RocksDB health, continue with keyword search, and run model preparation/rebuild outside dashboard requests.
 
 ### Data safety
 
-Không chạy destructive command trên `data/` khi chưa xác nhận đường dẫn và backup. Không paste content/secret vào issue/log.
+Never run destructive commands on `data/` without confirming the exact path and backup. Do not paste content or secrets into issues/logs.
 
 ## Evidence checklist
 
-Mỗi incident ghi timestamp, app/schema/dependency version, component state, command, error code, recovery result và backup ID; loại bỏ content/secret.
+For each incident record timestamp, app/schema/dependency version, component state, command, error code, recovery result, and backup ID. Remove content and secrets.
 
 ## Execution log
 
-Runbook này sẽ được cập nhật bằng transcript đã scrub sau mỗi release.
+Update this runbook with scrubbed transcripts after each release.

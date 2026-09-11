@@ -1,7 +1,7 @@
 # 02 — Master roadmap
 
 **Status:** `ready`
-**Release target:** MVP local-first trước, hậu MVP theo discovery gate
+**Release target:** MVP local Advanced Bookmark Manager first; post-MVP follows discovery gates
 
 ## Dependency graph
 
@@ -23,40 +23,38 @@ flowchart TD
     T --> P[21 Packaging + release]
     P --> E1[30 Extension]
     P --> E2[31 Cloud sync]
-    E2 --> E3[32 Identity + collaboration]
+    E2 --> E3[32 Collaboration]
     S --> E4[33 AI + providers]
+    P --> E5[34 Browser portability]
+    E5 --> E6[35 Migration assistant]
 ```
 
 ## Milestones
 
 ### M0 — Documentation and baseline
 
-Hoàn thiện bộ implementation docs, gap analysis, contracts, risk register và traceability. Không thay đổi runtime.
+Implementation packages, gap analysis, contracts, risk register, indexes, and traceability are maintained without changing runtime.
 
 ### M1 — Usable local dashboard
 
-Epic `10–12`: foundation, schema contract và dashboard/item workspace. Acceptance: thêm text, list, filter, mở panel, note, collection, edit/delete.
+Epics `10–12`: foundation, schema contract, dashboard/item workspace, text capture, collections, notes, edit, and delete.
 
 ### M2 — Reliable ingestion
 
-Epic `13–14`: năm nguồn nhập, chunk/version, worker retry/restart và trạng thái UI. Acceptance: import/retry/restart không mất dữ liệu.
+Epics `13–14`: five input sources, chunk/versioning, worker retry/restart, and technical-to-UI state mapping.
 
 ### M3 — Search and insights
 
-Epic `15–16`: FTS5 hardening, optional semantic, RRF, related, clusters và analytics. Acceptance: keyword luôn hoạt động; full mode có semantic.
+Epics `15–16`: FTS5, optional semantic search, RRF, related/clusters, analytics, evaluation, and fallback.
 
 ### M4 — Hardened MVP release
 
-Epic `17–21`: security, backup/recovery, observability, test/benchmark, packaging và release. Acceptance: quality gates trong `20` pass.
+Epics `17–21`: security, recovery, observability, tests/benchmarks, packaging, and release.
 
 ### M5+ — Product expansion
 
-Epic `30–33` lần lượt qua discovery, prototype, decision review rồi mới chuyển thành implementation-ready.
+Packages `30–35` remain discovery-only until prototype, decision, threat, compatibility, and acceptance gates pass.
 
-## Gate chuyển milestone
+## Milestone gate and priority
 
-Không bắt đầu milestone sau nếu: migration chưa verified, acceptance của milestone trước chưa pass, branch chưa merge, hoặc risk blocker chưa có mitigation được chấp thuận.
-
-## Quy tắc ưu tiên
-
-Data integrity và local usability ưu tiên hơn semantic recall; fallback an toàn ưu tiên hơn dependency mới; đo lường trước tối ưu; chỉ thêm capability hậu MVP khi không phá core mode.
+Do not start the next milestone until migrations are verified, the prior acceptance gate passes, the branch is merged, and blockers have an approved mitigation. Data integrity and local usability outrank semantic recall; safe fallback outranks a new dependency; measurement precedes optimization.

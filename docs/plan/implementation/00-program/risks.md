@@ -1,39 +1,39 @@
-# 05 — Dependencies và risks
+# 05 — Dependencies and risks
 
 **Status:** `ready`
 **Environment:** Linux, Python 3.12, `uv`
 
 ## Dependency matrix
 
-| Thành phần | Mode | Vai trò | Fallback |
+| Component | Mode | Role | Fallback |
 | --- | --- | --- | --- |
-| FastAPI/Uvicorn/Jinja2/HTMX assets | core | Web/API/UI | Không có |
-| SQLite FTS5 | core | Source of truth + keyword | Block startup nếu không có FTS5 |
-| `pypdf` | core | PDF text extraction | Báo unsupported nếu parser lỗi |
-| sentence-transformers | full | Local embedding | Keyword search |
+| FastAPI/Uvicorn/Jinja2/HTMX assets | core | Web/API/UI | None |
+| SQLite FTS5 | core | System of record + keyword search | Block startup if unavailable |
+| `pypdf` | core | PDF text extraction | Report unsupported parser |
+| sentence-transformers | full | Local embeddings | Keyword search |
 | ChromaDB | full | Persistent vector index | Keyword search |
-| `rocksdict` | full | Embedding/cache state | SQLite cache/no-cache |
-| DuckDB | full | Read-only analytics | SQLite aggregate |
+| `rocksdict` | full | Embedding/cache state | SQLite/no cache |
+| DuckDB | full | Read-only analytics | SQLite aggregation |
 
-`pyproject.toml` phải cung cấp extra `full`; lockfile được cập nhật sau khi dependency smoke test pass. Model chỉ tải bằng lệnh prepare rõ ràng và lưu metadata model/revision/dimension.
+`pyproject.toml` must provide the full extra before it is advertised. The lockfile is updated only after dependency smoke tests pass. Models are prepared explicitly and record model/revision/dimension metadata.
 
-## Rủi ro và mitigation
+## Risk register
 
-| Rủi ro | Tác động | Mitigation | Gate |
+| Risk | Impact | Mitigation | Gate |
 | --- | --- | --- | --- |
-| Native wheel không có trên Linux/Python 3.12 | Full mode không cài | Giữ core mode; pin version đã kiểm chứng; hướng dẫn lỗi | 05/21 |
-| Model tải lớn/chậm | Startup và UX chậm | Lazy singleton, prepare command, warm-up benchmark | 15/20 |
-| Chroma mất dữ liệu | Semantic unavailable | Rebuild từ SQLite chunks | 18 |
-| DNS rebinding/redirect SSRF | Bảo mật local | Resolve/check từng redirect và địa chỉ kết nối | 13/17 |
-| Schema drift | Mất dữ liệu | Versioned migration + backup + upgrade test | 11/18 |
-| Worker crash giữa bước | Job kẹt | Durable checkpoints, lease/requeue, idempotent upsert | 14 |
-| Analytics query nặng | Dashboard chậm | Read-only connection, bounded range, fallback | 16/20 |
-| API contract drift | UI hỏng | Canonical contract + integration tests + traceability | 04/20 |
+| Native wheel unavailable on Linux/Python 3.12 | Full mode cannot install | Keep core mode; pin verified versions; document failure | 05/21 |
+| Large/slow model download | Slow startup/UX | Lazy singleton, prepare command, warm-up benchmark | 15/20 |
+| Chroma data loss | Semantic unavailable | Rebuild from SQLite chunks | 18 |
+| DNS rebinding/redirect SSRF | Local security issue | Check every redirect and connected address | 13/17 |
+| Schema drift | Data loss | Versioned migration, backup, upgrade test | 11/18 |
+| Worker crash mid-step | Stuck jobs | Durable checkpoints, lease/requeue, idempotent upsert | 14 |
+| Heavy analytics query | Slow dashboard | Read-only connection, bounded range, fallback | 16/20 |
+| API contract drift | Broken UI | Canonical contract, integration tests, traceability | 04/20 |
 
 ## Dependency acceptance
 
-Mỗi dependency mới phải có lý do, version range, license check, import smoke test, failure message, fallback và cách gỡ bỏ. Không thêm CDN runtime; static assets phải chạy offline.
+Every new dependency needs rationale, version range, license check, import smoke test, failure message, fallback, and removal path. Do not add runtime CDN assets; static assets must work offline.
 
-## Security assumptions
+## Security assumption
 
-Ứng dụng chỉ bind `127.0.0.1` ở MVP. Hậu MVP mở network phải qua threat-model và authentication gate, không được suy ra từ cấu hình dev.
+MVP binds only to `127.0.0.1`. Opening the network post-MVP requires a threat model and authentication gate.

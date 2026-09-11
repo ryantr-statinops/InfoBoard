@@ -1,48 +1,40 @@
 # 00 — Program charter
 
 **Status:** `ready`
-**Milestone:** toàn chương trình
+**Milestone:** program-wide
 **Owner:** project maintainer
-**Dependencies:** `docs/plan/00-product-vision.md`, `01-data-architecture.md`
+**Canonical dependencies:** [Internal PRD](../../../product/internal-prd/README.md), [Architecture](../../../architecture/README.md)
 
-## Mục tiêu
+## Objective
 
-InfoBoard là Advanced Bookmark Manager local-first cho một người dùng: lưu URL và snapshot nội dung, nhận thêm text/file, tổ chức bằng notes/collections và tìm lại bằng full-text hoặc semantic search. SQLite là system of record. Các index/cache/analytics khác đều có thể rebuild từ dữ liệu chính.
+InfoBoard is an Advanced Bookmark Manager for one local user: it stores URLs and content snapshots, accepts text/files, organizes information with notes/collections, and supports full-text or semantic retrieval. SQLite is the system of record; indexes, caches, and analytics are rebuildable derived stores.
 
-## Kết quả cần đạt
+## Outcomes
 
-- Người dùng có thể nhập, lọc, mở, sửa, ghi note, gán collection và xóa item.
-- Dashboard có trải nghiệm responsive, trạng thái index rõ ràng và không làm mất dữ liệu khi restart.
-- Keyword search hoạt động độc lập; semantic/hybrid search là capability nâng cao có fallback an toàn.
-- Backup, restore, migration, test và runbook đủ để chạy local dài hạn.
-- Hậu MVP có hướng phát triển rõ nhưng không làm phình phạm vi MVP.
+- Users can import, filter, open, edit, annotate, organize, and delete items.
+- The dashboard is responsive, exposes indexing state, and survives restart without data loss.
+- Keyword search works independently; semantic/hybrid search is an advanced capability with safe fallback.
+- Backup, restore, migration, tests, and runbooks support long-term local use.
+- Post-MVP directions remain explicit without expanding MVP scope.
 
-## Phạm vi theo giai đoạn
+## Scope by phase
 
-### MVP local-first
+### MVP
 
-Python 3.12, FastAPI/Uvicorn, Jinja2 + HTMX, SQLite/FTS5, ingestion text/Markdown/TXT/PDF/public URL, worker tuần tự, optional ChromaDB/sentence-transformers/RocksDB/DuckDB, backup và quality gate.
+Python 3.12, FastAPI/Uvicorn, Jinja2 + HTMX, SQLite/FTS5, text/Markdown/TXT/PDF/public URL ingestion, sequential worker, optional semantic/cache/analytics stores, backup, and quality gates.
 
-### Hậu MVP
+### Post-MVP
 
-Browser extension, multi-device/cloud sync, identity/collaboration và AI/provider ecosystem. Các phần này chỉ triển khai sau discovery gate trong epic `30–33`.
+Browser extension, browser portability, migration assistant, cloud sync, collaboration, and AI/provider ecosystem. These require the discovery packages and gates in `50-post-mvp/`.
 
-## Không thuộc MVP
+## Invariants
 
-Không có authentication, cloud sync, chat, OCR, video transcript, recommendation feed bắt buộc, multi-tenant hay mobile native app.
+1. SQLite is authoritative for items, content, relations, notes, and recoverable job state.
+2. Derived-store failure never removes readable canonical data or keyword search.
+3. Models and network calls are never loaded silently by a dashboard request.
+4. Every input has limits, normalization, and safe rendering.
+5. Every feature uses small commits, verification, push, and user review.
 
-## Nguyên tắc bất biến
+## Program definition of done
 
-1. SQLite là nguồn sự thật duy nhất cho item, content, quan hệ, note và job state có ảnh hưởng tới recovery.
-2. Derived store hỏng không được làm mất khả năng đọc hoặc keyword search.
-3. Không tải model hoặc gọi mạng ngầm trong một truy vấn dashboard.
-4. Mọi input phải có giới hạn, được normalize và escape khi render.
-5. Mỗi feature đi qua test, commit nhỏ, push và user review trước feature kế tiếp.
-
-## Definition of done cấp chương trình
-
-Tất cả tiêu chí trong [`90-governance/requirement-traceability.md`](../90-governance/requirement-traceability.md) đạt; test/lint/benchmark pass; README và runbook khớp cách chạy thực tế; release có backup/restore verification; branch `main` sạch và tag được phiên bản MVP.
-
-## Rủi ro chấp nhận
-
-Model local và các native wheels có thể không tương thích mọi Linux. Core mode phải luôn chạy với SQLite/FTS5; full mode báo degraded rõ ràng nếu dependency dẫn xuất không cài được.
+All requirements in [traceability](../90-governance/requirement-traceability.md) are verified or explicitly waived; test/lint/benchmark pass; README/runbooks match actual behavior; backup/restore is verified; and the MVP release is tagged from a clean main branch.

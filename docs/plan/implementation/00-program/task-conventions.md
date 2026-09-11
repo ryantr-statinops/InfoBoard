@@ -40,7 +40,7 @@ Each task must include:
   - Verify: `uv run pytest tests/test_core.py -q`
   - Accept when: the app factory uses temporary settings without changing the public entrypoint.
   - Commit: `refactor: introduce settings and application factory`
-  - Evidence log: [T10-001](execution.md#t10-001)
+  - Evidence log: [T10-001](../10-m1-local-dashboard/10-application-foundation/execution.md#t10-001)
 ```
 
 Planned paths must be labelled `target` until they exist. Do not turn a code example or target path into evidence.

@@ -1,16 +1,16 @@
 # 04 — Cross-cutting contracts
 
 **Status:** `ready`
-**Applies to:** core mode và full mode
+**Applies to:** core and full modes
 
 ## API conventions
 
 - Prefix: `/api`.
-- JSON dùng `Content-Type: application/json`; upload dùng multipart.
-- ID là integer SQLite hiện tại; client không tự tạo ID.
-- Timestamp là UTC ISO-8601 trong response; database có thể lưu UTC text.
-- List có `{items, total, limit, offset}`; `limit` mặc định 20, tối đa 100.
-- Sort mặc định `created_at DESC, id DESC`; search sort theo score rồi thời gian.
+- JSON uses `Content-Type: application/json`; uploads use multipart.
+- IDs are current SQLite integers; clients do not create IDs.
+- Responses use UTC ISO-8601 timestamps; the database may store UTC text.
+- Lists use `{items, total, limit, offset}` with default limit 20 and maximum 100.
+- Default sort is `created_at DESC, id DESC`; search sorts by score then time.
 
 ## Error envelope
 
@@ -24,55 +24,48 @@
 }
 ```
 
-HTTP mapping: `400` input invalid, `404` resource missing, `409` duplicate/conflict, `413` vượt giới hạn, `422` schema validation, `503` khi SQLite hoặc FTS5 bắt buộc của core mode unavailable. Derived dependency unavailable trả degraded state nhưng không làm core request thất bại.
+HTTP mapping: `400` invalid input, `404` missing resource, `409` duplicate/conflict, `413` limit exceeded, `422` schema validation, and `503 unavailable` when SQLite or FTS5 cannot support core mode. Derived dependency failure returns degraded state without failing the core request.
 
-## Item và job states
+## Item and job states
 
-- Item organization: `inbox`, `active`, `archived`, `deleted` (soft delete nội bộ).
-- Index job: `queued`, `extracting`, `chunking`, `embedding`, `indexed`, `failed`.
-- `deleted_at` luôn loại item khỏi list/search/detail public.
-- `content_version` tăng khi text item được sửa; chunks/vectors cũ không được trả về.
+- Item organization: `inbox`, `active`, `archived`, `deleted` (soft delete internally).
+- Technical job states: `queued`, `extracting`, `chunking`, `embedding`, `indexed`, `failed`.
+- UI mapping: `queued → queued`, `extracting | chunking | embedding → processing`, `indexed → indexed`, `failed → failed`.
+- `deleted_at` excludes an item from public list/search/detail.
+- `content_version` increases when text changes; old chunks/vectors are not returned.
 
 ## Endpoint contract
 
-| Endpoint | Contract chính |
+| Endpoint | Contract |
 | --- | --- |
-| `POST /api/items` | Tạo text, dedup; trả `202` với `item_id`, `job_id`, `state`. |
-| `POST /api/items/upload` | Multipart file, title/collections tùy chọn; cùng job contract. |
-| `POST /api/items/url` | URL public, canonicalize/validate; cùng job contract. |
-| `GET /api/items` | Filter collection/status/source/date/search, pagination wrapper. |
-| `GET /api/items/{id}` | Metadata, current content, collections, notes, chunks/job metadata. |
-| `PATCH /api/items/{id}` | title/status/collections hoặc text nếu source là `text`; tạo version mới khi đổi text. |
-| `DELETE /api/items/{id}` | Soft delete ngay, enqueue cleanup; trả `202`. |
-| `POST /api/items/{id}/reindex` | Tạo/requeue job cho content version hiện tại. |
-| `POST /api/reindex` | Reindex các item/index cần rebuild; chỉ local maintenance. |
-| `GET/POST/PATCH/DELETE /api/collections` | CRUD collection, không xóa item khi xóa collection. |
-| `POST/DELETE /api/items/{id}/collections/{collection_id}` | Attach/detach quan hệ idempotent. |
-| `GET/POST/PATCH/DELETE /api/items/{id}/notes` | Note CRUD, kiểm tra item tồn tại. |
-| `POST /api/search` | Query + shared filters; trả excerpt, score, retrieval mode/source. |
-| `GET /api/items/{id}/related` | Tối đa 5 item, loại chính item hiện tại. |
-| `GET /api/analytics` | KPI, activity, distributions, clusters theo shared filters. |
-| `GET /api/health` | Component status; `503` khi SQLite hoặc FTS5 không dùng được, `200 degraded` khi chỉ derived dependency lỗi. |
+| `POST /api/items` | Create text, deduplicate, and return `202` with `item_id`, `job_id`, and state. |
+| `POST /api/items/upload` | Multipart file with optional title/collections and the same job contract. |
+| `POST /api/items/url` | Validate/canonicalize a public URL and use the same job contract. |
+| `GET /api/items` | Filter by collection/status/source/date/search with pagination wrapper. |
+| `GET /api/items/{id}` | Return metadata, current content, collections, notes, chunks, and job metadata. |
+| `PATCH /api/items/{id}` | Update title/status/collections or text for text sources; text changes create a version. |
+| `DELETE /api/items/{id}` | Soft-delete immediately and enqueue cleanup; return `202`. |
+| `POST /api/items/{id}/reindex` | Create/requeue a job for the current content version. |
+| `POST /api/reindex` | Reindex items/indexes requiring maintenance. |
+| Collection/note endpoints | CRUD and idempotent attach/detach without deleting an item when a collection is removed. |
+| `POST /api/search` | Query plus shared filters; return excerpt, score, retrieval mode, and source. |
+| `GET /api/items/{id}/related` | Return up to five related items, excluding the current item. |
+| `GET /api/analytics` | Return KPI/activity/distribution/cluster data using shared filters. |
+| `GET /api/health` | Component status; `503` for SQLite/FTS5 unavailability and `200 degraded` for derived-only failure. |
 
 ## Provider interfaces
 
 ```text
 EmbeddingProvider.embed(texts) -> vectors
-EmbeddingProvider.model_id
-EmbeddingProvider.revision
-EmbeddingProvider.dimension
-EmbeddingProvider.max_tokens
+EmbeddingProvider.model_id / revision / dimension / max_tokens
 EmbeddingProvider.tokenize(text) -> tokens
-
 Extractor.extract(input) -> ExtractedDocument(title, text, source_type, source_url, original_filename, metadata)
 VectorIndex.upsert(chunks, vectors, metadata)
 VectorIndex.query(vector, filters, limit)
 ```
 
-## Core/full mode
+## Modes and HTMX
 
-Core mode bắt buộc chạy với SQLite/FTS5 và provider giả hoặc không semantic. Full mode bật ChromaDB, sentence-transformers, RocksDB và DuckDB qua optional extra; thiếu một derived dependency phải trả degraded status và giữ keyword fallback.
+Core mode requires SQLite/FTS5 and may use no semantic provider. Full mode adds optional ChromaDB, sentence-transformers, RocksDB, and DuckDB. Missing derived dependencies produce degraded state and preserve keyword fallback.
 
-## HTMX contract
-
-Các route fragment không nằm dưới `/api`, trả HTML partial và dùng `HX-Trigger` cho toast/list refresh. Request lỗi phải trả fragment lỗi có thể render, đồng thời giữ form input chưa gửi thành công.
+Fragment routes stay outside `/api`, return HTML partials, and may use `HX-Trigger` for toast/list refresh. Errors return renderable fragments while preserving unsuccessful form input.
