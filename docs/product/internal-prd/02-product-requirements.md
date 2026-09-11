@@ -22,6 +22,7 @@
 - `PR-RET-03`: Full mode có thể bổ sung semantic/hybrid search và related items.
 - `PR-RET-04`: Kết quả theo item có title, source và excerpt đủ để nhận biết.
 - `PR-RET-05`: Search không trả content version hoặc item đã bị xóa.
+- `PR-RET-06`: Dashboard KPI/analytics dùng cùng filter semantics và có degraded fallback khi analytics engine không khả dụng.
 
 ## Feedback và recovery
 
@@ -44,3 +45,8 @@
 - `PR-SEC-02`: URL ingestion chặn private-network access và redirect không an toàn.
 - `PR-SEC-03`: Log không chứa raw content, credential hoặc secret.
 - `PR-SEC-04`: Cloud provider chỉ nhận nội dung sau cấu hình chủ động của người dùng.
+
+## Operability và release
+
+- `PR-OPS-01`: Clean install, upgrade và rollback phải lặp lại được mà không làm mất dữ liệu chính.
+- `PR-OPS-02`: Release phải có test, security, recovery và benchmark evidence theo quality gates.

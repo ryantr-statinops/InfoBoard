@@ -2,17 +2,17 @@
 
 **Status:** `active`
 
-Bảng này nối product requirement với tài liệu thiết kế hệ thống và epic triển khai. Trạng thái thực tế vẫn được quản lý trong [implementation current state](../../plan/implementation/00-program/current-state.md) và [implementation traceability](../../plan/implementation/90-governance/requirement-traceability.md).
+Bảng này nối product requirement với tài liệu thiết kế hệ thống và epic triển khai. `PR-*` là nguồn product intent canonical; `RQ-*` là requirement/evidence triển khai và không tạo một hệ product requirement thứ hai. Trạng thái thực tế vẫn được quản lý trong [implementation current state](../../plan/implementation/00-program/current-state.md) và [implementation traceability](../../plan/implementation/90-governance/requirement-traceability.md).
 
 | Product requirements | Product outcome | Architecture/design reference | Epic | Acceptance |
 | --- | --- | --- | --- | --- |
 | `PR-CAP-01…05` | Capture và persistence an toàn | Architecture ingestion, data model | 10, 11, 13, 14 | M1, M2 |
 | `PR-ORG-01…04` | Collections, notes, status, delete | Data model, core flows | 11, 12 | M1 |
-| `PR-RET-01…05` | Filter, keyword và optional semantic retrieval | Search/analytics architecture | 15, 16 | M3 |
+| `PR-RET-01…06` | Filter, retrieval và analytics có fallback | Search/analytics architecture | 15, 16 | M3 |
 | `PR-REC-01…05` | Feedback, retry, fallback và recovery | Indexing, lifecycle/recovery, operations | 14, 18, 19 | M2, M4 |
 | `PR-UX-01…04` | Core flow dễ dùng và responsive | Design IA, flows, UI states | 12 | M1 |
 | `PR-SEC-01…04` | Input/network/privacy boundary | Security architecture, quality strategy | 13, 17, 20 | M2, M4 |
-| Tất cả `PR-*` | Repeatable release và upgrade | Quality gates, operations | 20, 21 | M4 |
+| `PR-OPS-01…02` | Repeatable release, upgrade và evidence | Quality gates, operations | 20, 21 | M4 |
 
 ## Epic coverage
 
@@ -23,13 +23,13 @@ Bảng này nối product requirement với tài liệu thiết kế hệ thốn
 | 12 Dashboard | `PR-ORG-*`, `PR-UX-*` | Design IA, core flows, UI states |
 | 13 Ingestion | `PR-CAP-01…04`, `PR-SEC-01…02` | Ingestion pipeline, security boundaries |
 | 14 Index worker | `PR-CAP-05`, `PR-REC-01…03` | Indexing pipeline |
-| 15 Search | `PR-RET-*` | Search and analytics architecture |
-| 16 Analytics | `PR-RET-01`, `PR-REC-03…04` | Search and analytics architecture |
+| 15 Search | `PR-RET-01…05` | Search and analytics architecture |
+| 16 Analytics | `PR-RET-01`, `PR-RET-06`, `PR-REC-03…04` | Search and analytics architecture |
 | 17 Security | `PR-SEC-*` | Privacy/trust, security boundaries |
 | 18 Reliability | `PR-REC-02…05` | Lifecycle/recovery, operations |
 | 19 Observability | `PR-REC-01…04` | Quality attributes, diagnostics operations |
-| 20 Testing/CI | Tất cả `PR-*` | Test strategy, MVP quality gates |
-| 21 Packaging | `PR-CAP-05`, `PR-REC-05` | Setup, upgrade/release/rollback |
+| 20 Testing/CI | `PR-OPS-02` và acceptance của mọi `PR-*` | Test strategy, MVP quality gates |
+| 21 Packaging | `PR-CAP-05`, `PR-REC-05`, `PR-OPS-01` | Setup, upgrade/release/rollback |
 
 ## Rules
 
