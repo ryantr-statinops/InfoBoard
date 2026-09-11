@@ -49,6 +49,6 @@ Capture → Understand source → Organize → Retrieve
 ## Dependencies
 
 - Thuật ngữ và entity semantics: [Domain model](04-domain-model.md).
-- Kiến trúc: [`docs/plan/01-data-architecture.md`](../../plan/01-data-architecture.md).
-- Dashboard/API experience: [`docs/plan/02-mvp-experience.md`](../../plan/02-mvp-experience.md).
+- Kiến trúc: [Architecture](../../architecture/README.md).
+- Dashboard/API experience: [Design](../../design/README.md); HTTP contracts chi tiết nằm trong [implementation contracts](../../plan/implementation/00-program/contracts.md).
 - Milestone và evidence: [Implementation plan](../../plan/implementation/README.md).
