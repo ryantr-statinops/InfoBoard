@@ -1,6 +1,6 @@
 # 05 — Dependencies và risks
 
-**Status:** `ready`  
+**Status:** `ready`
 **Environment:** Linux, Python 3.12, `uv`
 
 ## Dependency matrix
