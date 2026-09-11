@@ -11,6 +11,8 @@ uv run uvicorn app.main:app --reload
 
 Copy `.env.example` to `.env` to override local data paths.
 
+Implementation plan chi tiết: [docs/plan/implementation](docs/plan/implementation/README.md).
+
 API docs: http://127.0.0.1:8000/docs
 
 ## Kiến trúc
@@ -26,7 +28,7 @@ flowchart LR
   W --> C
 ```
 
-MVP hiện triển khai ingestion text, chunking, hash deduplication, SQLite FTS5, health, item listing/detail, search keyword và analytics cơ bản. Semantic indexing, upload/URL extractor, worker retry và UI dashboard sẽ được bổ sung theo các phase trong [docs/plan](docs/plan/).
+MVP hiện triển khai ingestion text, chunking, hash deduplication, SQLite FTS5, health, item listing/detail, search keyword và analytics cơ bản. Semantic indexing, upload/URL extractor, worker retry và UI dashboard sẽ được bổ sung theo các phase trong [docs/plan/implementation](docs/plan/implementation/README.md).
 
 ## Kiểm thử
 
