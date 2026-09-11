@@ -4,7 +4,7 @@
 
 FTS5 keyword search và RRF utility đã có mức cơ bản nhưng chưa nối đầy đủ; Chroma semantic search chưa có. Analytics có SQLite fallback và DuckDB adapter tối thiểu.
 
-## Target search pipeline
+## Target state — search and analytics pipelines
 
 ```mermaid
 flowchart LR

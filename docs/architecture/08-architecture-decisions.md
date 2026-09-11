@@ -4,7 +4,7 @@
 
 Các quyết định nền tảng đã xuất hiện trong product/implementation docs nhưng chưa có architecture index canonical.
 
-## Locked decisions
+## Target state — locked decisions
 
 | Decision | Rationale | Consequence |
 | --- | --- | --- |

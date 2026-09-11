@@ -4,7 +4,7 @@
 
 Ứng dụng bind local và có validation cơ bản; SSRF/redirect, Origin/Host, parser limits, log redaction và component health test còn partial hoặc draft.
 
-## Target boundaries
+## Target state — security boundaries
 
 ```mermaid
 flowchart LR

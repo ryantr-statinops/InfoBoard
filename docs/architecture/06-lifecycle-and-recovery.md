@@ -4,7 +4,7 @@
 
 Soft delete và reindex endpoint tồn tại một phần; derived cleanup, versioned migrations và verified backup/restore/rebuild chưa hoàn chỉnh.
 
-## Target delete pipeline
+## Target state — delete and recovery pipelines
 
 ```mermaid
 flowchart LR
