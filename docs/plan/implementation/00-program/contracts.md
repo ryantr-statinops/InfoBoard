@@ -64,7 +64,7 @@ EmbeddingProvider.dimension
 EmbeddingProvider.max_tokens
 EmbeddingProvider.tokenize(text) -> tokens
 
-Extractor.extract(input) -> ExtractedDocument(title, text, source_type, source_url, metadata)
+Extractor.extract(input) -> ExtractedDocument(title, text, source_type, source_url, original_filename, metadata)
 VectorIndex.upsert(chunks, vectors, metadata)
 VectorIndex.query(vector, filters, limit)
 ```

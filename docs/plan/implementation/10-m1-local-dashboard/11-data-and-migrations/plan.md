@@ -12,10 +12,11 @@ Schema có version, nâng cấp lặp lại được và bảo toàn item/note/c
 
 ## Canonical schema
 
-- `items`: metadata nguồn, `content_hash`, `content_version`, status, timestamps, `deleted_at`.
+- `items`: metadata nguồn, `content_hash`, `content_version`, status mặc định `inbox`, timestamps, `deleted_at`.
 - `item_contents`: snapshot text theo `(item_id, content_version)`.
 - `chunks`: `item_id`, version, position, text, hash và index ổn định.
 - `collections`, `item_collections`, `notes`, `search_history`, `index_jobs`.
+- `index_jobs.retry_count` là target field; migration chuyển giá trị từ runtime field `attempts` hiện tại.
 - `schema_version`: một dòng version hiện tại; migration chạy transaction và ghi history.
 - `items_fts`: title + current content/chunks, chỉ index item chưa deleted.
 
@@ -29,6 +30,7 @@ Foreign keys bật cho mọi connection; quan hệ item–collection unique; not
 2. Mỗi migration là file SQL đánh số, idempotency chỉ dùng cho bootstrap.
 3. `migrate()` lock database, chạy transaction, verify expected columns/indexes rồi cập nhật version.
 4. Backup trước migration production; rollback dữ liệu bằng restore backup, không down-migration tự động.
+5. Migration đổi default `items.status` từ `active` sang `inbox` cho item tạo mới; không tự đổi organization status của item đã tồn tại.
 
 ## Commit slices
 

@@ -2,7 +2,7 @@
 
 ## Current state
 
-Baseline đang dùng Python, FastAPI, Jinja2 và SQLite/FTS5. Một số full-mode adapter tồn tại ở mức tối thiểu; dependency smoke test, lockfile và degraded behavior chưa hoàn tất.
+Baseline đang dùng Python, FastAPI, Jinja2 và SQLite/FTS5. Một số full-mode adapter tồn tại ở mức tối thiểu; dependency smoke test, lockfile và degraded behavior chưa hoàn tất. `pypdf` cùng các extraction/full-mode dependencies chưa được khai báo trong `pyproject.toml`; đây là implementation gap, không phải capability đã cài đặt.
 
 ## Target state
 
@@ -16,7 +16,7 @@ Baseline đang dùng Python, FastAPI, Jinja2 và SQLite/FTS5. Một số full-mo
 | Cache | RocksDB/rocksdict | Rebuildable embedding/cache state | Full |
 | Analytics | DuckDB | Read-only aggregate queries | Full, SQLite fallback |
 | Embedding | sentence-transformers | Local semantic vectors | Full |
-| Extraction | Trafilatura, PyMuPDF, Markdown/text parsers | Public URL and file extraction | Core |
+| Extraction | Trafilatura, `pypdf`, Markdown/text parsers | Public URL and file extraction | Core |
 | Test | pytest + httpx | Unit, integration and HTTP tests | Development |
 | Quality | Ruff + type check + CI | Static and release gates | Development |
 
