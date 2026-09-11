@@ -1,7 +1,7 @@
 # 32 — Identity, sharing và collaboration
 
-**Status:** `discovery`  
-**Milestone:** M6–M7  
+**Status:** `discovery`
+**Milestone:** M6–M7
 **Dependencies:** 17, 21, 31
 
 ## Product outcome
