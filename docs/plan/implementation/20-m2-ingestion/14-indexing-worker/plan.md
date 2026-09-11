@@ -1,16 +1,16 @@
-# 14 — Indexing worker và cache
+# 14 — Indexing worker and cache
 
-**Status:** `partial`
-**Canonical references:** [Product requirements](../../../../product/internal-prd/02-product-requirements.md) · [Indexing pipeline](../../../../architecture/04-indexing-pipeline.md) · [Recovery operations](../../../../operations/01-backup-restore-and-rebuild.md)
-**Milestone:** M2–M3
-**Dependencies:** 11, 13, 15
-**Source of truth:** SQLite job state
+**Plan status:** `ready`  
+**Delivery status:** `not_started`  
+**Baseline coverage:** `partial`  
+**Milestone:** M2  
+**Dependencies:** 11, 13
 
 ## Outcome
 
-Job index durable, idempotent và phục hồi được sau crash; derived vector/cache có thể mất và dựng lại mà không mất item hoặc note.
+Indexing is durable and restartable. SQLite remains the system of record while FTS, semantic vectors, and caches are derived stores.
 
-## Lifecycle
+## Job lifecycle
 
 ```mermaid
 stateDiagram-v2
@@ -22,43 +22,24 @@ stateDiagram-v2
     extracting --> failed
     chunking --> failed
     embedding --> failed
-    failed --> queued: retry <= 3
-    extracting --> queued: lease expired/restart
-    chunking --> queued: lease expired/restart
-    embedding --> queued: lease expired/restart
+    failed --> queued: retry/restart
 ```
 
-Worker tuần tự trong process MVP; claim job bằng transaction/lease, checkpoint sau mỗi bước, retry tối đa 3 lần với error code. Không dùng in-memory queue làm nguồn trạng thái.
+The UI maps `extracting | chunking | embedding` to `processing`; the technical states remain available in logs and diagnostics.
 
-## Chunk/vector rules
+## Index and cache rules
 
-Chunk tối đa 200 token, overlap 30 theo provider tokenizer; ID ổn định từ item/version/position. Upsert vector idempotent; active model/revision không trộn với index cũ.
+- Chunks use content version and stable `position`; chunk text/hash are reproducible.
+- FTS is rebuilt from SQLite when unavailable or stale.
+- Semantic indexing is optional and reports degraded mode when its dependency is unavailable.
+- RocksDB cache is disposable and never required to recover canonical content.
+- `retry_count` is bounded and incremented transactionally with job state.
 
-## RocksDB cache
+## Failure, recovery, and acceptance
 
-Optional cache key gồm content hash, provider, model revision, dimension và chunk config. Cache miss không lỗi job; cache corruption được bỏ qua và tính lại. SQLite phản chiếu state có ảnh hưởng UI/recovery.
+A worker restart reclaims stale jobs safely. A failed derived write never deletes the item or snapshot. Retry exhaustion records a stable failure reason and leaves the item recoverable.
 
-## Commit slices
-
-1. `feat: add durable job claim and lease fields`
-2. `feat: implement checkpointed indexing worker`
-3. `feat: add retry requeue and graceful shutdown`
-4. `feat: add optional rocksdb embedding cache`
-5. `feat: add item and full reindex commands`
-6. `test: cover worker crash retry idempotency and rebuild`
-
-## Failure/recovery
-
-Job đang `extracting/chunking/embedding` khi restart trở về `queued`; job quá 3 lần chuyển `failed` và giữ error message an toàn. Xóa item trước khi job chạy phải cancel/skip và cleanup derived index.
-
-## Acceptance
-
-Restart không mất job; retry không tạo duplicate chunks/vectors; reindex item tạo version/job đúng; model đổi rebuild index mới; keyword search vẫn hoạt động khi worker/Chroma lỗi.
-
-## Review gate
-
-Có test kill/restart worker, inspect SQLite state trước/sau, verify cleanup và log chỉ gồm job ID/step/duration/error code.
-
-## Execution log
-
-Worker hiện chuyển trạng thái đồng bộ trong `app/worker.py`; chưa có lease/cache thật.
+- Jobs survive process restart without duplicate chunks.
+- Retry and backoff are observable.
+- FTS remains searchable in core mode.
+- Semantic/cache failure is a degraded, repairable condition.
