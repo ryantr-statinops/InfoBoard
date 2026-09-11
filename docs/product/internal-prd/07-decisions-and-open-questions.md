@@ -4,7 +4,7 @@
 
 | Decision | Outcome |
 | --- | --- |
-| Product core | Local-first personal knowledge hub |
+| Product core | Advanced Bookmark Manager: URL/snapshot, notes/collections và full-text/semantic search |
 | Primary audience | Người dùng phổ thông; power user có advanced path |
 | Source scope | Text, public URL, PDF có text, Markdown và TXT |
 | System of record | SQLite và stored snapshots |

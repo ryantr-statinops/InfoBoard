@@ -7,7 +7,7 @@
 
 ## Mục tiêu
 
-InfoBoard là information dashboard local-first cho một người dùng: thu thập text, URL công khai và file; tổ chức bằng collections; đọc, ghi note và tìm lại bằng keyword hoặc semantic search. SQLite là system of record. Các index/cache/analytics khác đều có thể rebuild từ dữ liệu chính.
+InfoBoard là Advanced Bookmark Manager local-first cho một người dùng: lưu URL và snapshot nội dung, nhận thêm text/file, tổ chức bằng notes/collections và tìm lại bằng full-text hoặc semantic search. SQLite là system of record. Các index/cache/analytics khác đều có thể rebuild từ dữ liệu chính.
 
 ## Kết quả cần đạt
 

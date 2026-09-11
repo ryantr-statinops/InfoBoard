@@ -2,7 +2,9 @@
 
 ## Product goal
 
-InfoBoard là knowledge hub local-first giúp một người dùng thu thập, lưu giữ, tổ chức và tìm lại thông tin cá nhân từ text, URL và file. Sản phẩm ưu tiên trải nghiệm đơn giản, dữ liệu bền vững và khả năng hoạt động khi các thành phần nâng cao không sẵn sàng.
+InfoBoard là một **Advanced Bookmark Manager** chạy trên máy: lưu URL và snapshot nội dung, thêm notes và collections, rồi tìm kiếm toàn văn hoặc theo ngữ nghĩa. Sản phẩm có thể mở rộng sang browser portability sau MVP.
+
+Định vị này giúp người dùng hiểu sản phẩm từ hành vi bookmark quen thuộc. Đặc tính local-first vẫn được giữ như một nguyên tắc kỹ thuật và quyền sở hữu dữ liệu, không dùng làm tên gọi chính của sản phẩm.
 
 ```text
 Capture → Understand source → Organize → Retrieve

@@ -1,6 +1,17 @@
 # InfoBoard
 
-InfoBoard là knowledge hub local-first giúp một người dùng thu thập, lưu giữ, tổ chức và tìm lại thông tin cá nhân từ text, URL công khai và file. SQLite cùng stored snapshots là nguồn dữ liệu chính; semantic search, cache và analytics là các capability nâng cao có fallback hoặc rebuild path.
+InfoBoard là một **Advanced Bookmark Manager** chạy trên máy của bạn:
+
+- Lưu URL và snapshot nội dung để đọc lại.
+- Thêm notes và collections để giữ bối cảnh.
+- Tìm kiếm toàn văn hoặc theo ngữ nghĩa.
+- Mở rộng trong tương lai sang browser portability.
+
+SQLite cùng stored snapshots là nguồn dữ liệu chính; semantic search, cache và analytics là các capability nâng cao có fallback hoặc rebuild path.
+
+## Ảnh minh họa
+
+![InfoBoard dashboard trên desktop](docs/design/mockups/infoboard-dashboard-desktop.png)
 
 ## Trạng thái dự án
 
