@@ -1,6 +1,6 @@
 # 02 — Master roadmap
 
-**Status:** `ready`  
+**Status:** `ready`
 **Release target:** MVP local-first trước, hậu MVP theo discovery gate
 
 ## Dependency graph
