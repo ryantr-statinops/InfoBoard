@@ -1,62 +1,62 @@
 # InfoBoard
 
-InfoBoard là một **Advanced Bookmark Manager** chạy trên máy của bạn:
+InfoBoard is an **Advanced Bookmark Manager** that runs on your machine:
 
-- Lưu URL và snapshot nội dung để đọc lại.
-- Thêm notes và collections để giữ bối cảnh.
-- Tìm kiếm toàn văn hoặc theo ngữ nghĩa.
-- Mở rộng trong tương lai sang browser portability.
+- Save URLs and content snapshots for later reading.
+- Add notes and collections to preserve context.
+- Search by full text or semantic similarity.
+- Expand toward browser data portability in the future.
 
-SQLite cùng stored snapshots là nguồn dữ liệu chính; semantic search, cache và analytics là các capability nâng cao có fallback hoặc rebuild path.
+SQLite and stored snapshots are the authoritative data sources. Semantic search, caching, and analytics are optional capabilities with safe fallback or rebuild paths.
 
-## Ảnh minh họa
+## Preview
 
-![InfoBoard dashboard trên desktop](docs/design/mockups/infoboard-dashboard-desktop.png)
+![InfoBoard desktop dashboard](docs/design/mockups/infoboard-dashboard-desktop.png)
 
-## Trạng thái dự án
+## Project status
 
-Dự án đang ở giai đoạn đầu triển khai MVP. FastAPI, SQLite/FTS5, ingestion và dashboard đã có baseline nhưng phần lớn capability vẫn ở mức `partial`; semantic index, durable recovery, full quality gates và packaging chưa hoàn tất.
+InfoBoard is in the early stages of MVP implementation. FastAPI, SQLite/FTS5, ingestion, and the dashboard have working baselines, but most capabilities remain partial. Semantic indexing, durable recovery, complete quality gates, and release packaging are not finished yet.
 
-Xem trạng thái có bằng chứng tại [current state](docs/plan/implementation/00-program/current-state.md) và thứ tự triển khai tại [master roadmap](docs/plan/implementation/00-program/roadmap.md).
+See the evidence-based [current state](docs/plan/implementation/00-program/current-state.md) and the [master roadmap](docs/plan/implementation/00-program/roadmap.md).
 
-## Chạy local
+## Run locally
 
-Yêu cầu Python 3.12 và `uv`:
+Python 3.12 and `uv` are required:
 
 ```bash
 uv sync
 uv run uvicorn app.main:app --reload
 ```
 
-Ứng dụng mặc định chạy local tại <http://127.0.0.1:8000>; API docs tại <http://127.0.0.1:8000/docs>.
+The application runs locally at <http://127.0.0.1:8000> by default. API documentation is available at <http://127.0.0.1:8000/docs>.
 
-Sao chép `.env.example` thành `.env` khi cần thay đổi local data path. Không commit secret hoặc dữ liệu runtime.
+Copy `.env.example` to `.env` if you need to override local data paths. Do not commit secrets or runtime data.
 
 ## Project map
 
-| Path | Vai trò |
+| Path | Responsibility |
 | --- | --- |
-| [`app/`](app/) | FastAPI routes, domain services, worker, storage baseline và analytics/semantic adapters |
-| [`app/templates/`](app/templates/) | Dashboard template server-rendered |
-| [`tests/`](tests/) | Unit, API-flow và search tests hiện có |
-| [`data/`](data/) | SQLite/snapshots/derived runtime data local; không phải source code và không commit dữ liệu người dùng |
-| [`docs/`](docs/) | Entry point cho toàn bộ product, architecture, design, quality, operations và implementation docs |
-| [`pyproject.toml`](pyproject.toml) | Python package metadata, core dependencies và development tools |
+| [`app/`](app/) | FastAPI routes, domain services, worker, storage baseline, and analytics/semantic adapters |
+| [`app/templates/`](app/templates/) | Server-rendered dashboard templates |
+| [`tests/`](tests/) | Existing unit, API-flow, and search tests |
+| [`data/`](data/) | Local SQLite, snapshot, and derived runtime data; never commit user data |
+| [`docs/`](docs/) | Entry point for product, architecture, design, quality, operations, and implementation documentation |
+| [`pyproject.toml`](pyproject.toml) | Python package metadata, core dependencies, and development tools |
 | [`uv.lock`](uv.lock) | Dependency lockfile |
-| [`.env.example`](.env.example) | Mẫu cấu hình local, không chứa secret |
+| [`.env.example`](.env.example) | Local configuration template without secrets |
 
 ## Documentation map
 
-| Layer | Nội dung |
+| Layer | Contents |
 | --- | --- |
-| [Product](docs/product/README.md) | Internal PRD, requirements, success criteria và Next Plan |
-| [Architecture](docs/architecture/README.md) | Tech stack, ERD, pipelines, recovery và security boundaries |
-| [Design](docs/design/README.md) | Information architecture, screens, UI states, responsive behavior và mockups |
-| [Quality](docs/quality/README.md) | Quality attributes, test strategy, evaluation và MVP gates |
-| [Operations](docs/operations/README.md) | Setup modes, backup/restore, diagnostics, upgrade và rollback |
-| [Implementation](docs/plan/implementation/README.md) | Milestones, epic plans, acceptance và execution evidence |
+| [Product](docs/product/README.md) | Internal PRD, requirements, success criteria, and future plans |
+| [Architecture](docs/architecture/README.md) | Tech stack, ERD, pipelines, recovery, and security boundaries |
+| [Design](docs/design/README.md) | Information architecture, screens, UI states, responsive behavior, and mockups |
+| [Quality](docs/quality/README.md) | Quality attributes, test strategy, evaluation, and MVP gates |
+| [Operations](docs/operations/README.md) | Setup modes, backup/restore, diagnostics, upgrades, and rollback |
+| [Implementation](docs/plan/implementation/README.md) | Milestones, epic plans, acceptance criteria, and execution evidence |
 
-Bắt đầu từ [documentation guide](docs/README.md). Các file `docs/plan/00–04` chỉ là compatibility entries, không còn là nguồn nội dung canonical.
+Start with the [documentation guide](docs/README.md). Files under `docs/plan/00–04` are compatibility entry points and are no longer canonical sources.
 
 ## Architecture summary
 
@@ -71,13 +71,13 @@ flowchart LR
     Services --> Analytics[DuckDB or SQLite fallback]
 ```
 
-Core mode dựa trên FastAPI và SQLite/FTS5. Full mode với embedding, ChromaDB, RocksDB và DuckDB là target capability chưa được đóng gói đầy đủ trong dependency manifest hiện tại. Xem [tech stack](docs/architecture/01-tech-stack.md) để phân biệt current và target state.
+Core mode is based on FastAPI and SQLite/FTS5. Full mode adds embeddings, ChromaDB, RocksDB, and DuckDB, but these target capabilities are not fully packaged in the current dependency manifest. See the [tech stack](docs/architecture/01-tech-stack.md) for the distinction between current and target states.
 
-## Kiểm thử
+## Testing
 
 ```bash
 uv run pytest
 uv run ruff check .
 ```
 
-Các lệnh trên phản ánh baseline hiện tại. HTTP integration, security/recovery suite, benchmark và CI đầy đủ vẫn thuộc các quality/implementation gates chưa hoàn tất.
+These commands represent the current baseline. Complete HTTP integration, security/recovery suites, benchmarks, and CI remain part of unfinished quality and implementation gates.
