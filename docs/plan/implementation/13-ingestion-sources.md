@@ -1,8 +1,8 @@
 # 13 — Ingestion sources
 
-**Status:** `partial`  
-**Milestone:** M2  
-**Dependencies:** 10, 11, 17  
+**Status:** `partial`
+**Milestone:** M2
+**Dependencies:** 10, 11, 17
 **Inputs:** text, Markdown, TXT, PDF, public URL
 
 ## Outcome
