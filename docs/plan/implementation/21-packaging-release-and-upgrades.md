@@ -1,7 +1,7 @@
 # 21 — Packaging, release và upgrades
 
-**Status:** `draft`  
-**Milestone:** M4 release  
+**Status:** `draft`
+**Milestone:** M4 release
 **Dependencies:** 10, 11, 18, 20
 
 ## Install modes
