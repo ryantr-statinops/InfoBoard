@@ -5,9 +5,9 @@ Tài liệu triển khai chi tiết đã được tổ chức lại tại [`docs
 ## Cách bắt đầu
 
 1. Đọc [implementation README](implementation/README.md) để biết mục lục và trạng thái.
-2. Xem [current state và gap](implementation/01-current-state-and-gap.md).
-3. Theo [master roadmap](implementation/02-master-roadmap.md) để chọn epic đúng dependency.
-4. Tuân thủ [delivery workflow](implementation/03-delivery-workflow.md) khi code trên nhánh `dev`.
+2. Xem [current state và gap](implementation/00-program/current-state.md).
+3. Theo [master roadmap](implementation/00-program/roadmap.md) để chọn epic đúng dependency.
+4. Tuân thủ [delivery workflow](implementation/00-program/delivery-workflow.md) khi code trên nhánh `dev`.
 
 ## Phạm vi
 
