@@ -1,7 +1,7 @@
 # 03 — Delivery workflow
 
-**Status:** `ready`  
-**Branch chính:** `main`  
+**Status:** `ready`
+**Branch chính:** `main`
 **Branch làm việc:** `dev`
 
 ## Chu trình feature
