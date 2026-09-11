@@ -1,8 +1,8 @@
 # 20 — Testing, performance và CI
 
-**Status:** `partial`  
-**Milestone:** M4  
-**Dependencies:** 10–19  
+**Status:** `partial`
+**Milestone:** M4
+**Dependencies:** 10–19
 **Quality commands:** `uv run pytest -q`, `uv run ruff check .`
 
 ## Test layers
