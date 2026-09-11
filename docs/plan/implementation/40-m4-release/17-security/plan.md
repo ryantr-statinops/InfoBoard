@@ -1,6 +1,7 @@
 # 17 — Security và privacy
 
 **Status:** `draft`
+**Canonical references:** [Privacy/trust](../../../../product/internal-prd/05-privacy-and-trust.md) · [Security boundaries](../../../../architecture/07-security-boundaries.md) · [Test strategy](../../../../quality/01-test-strategy.md)
 **Milestone:** M4
 **Dependencies:** 10, 13, 18, 19
 

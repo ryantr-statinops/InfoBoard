@@ -1,6 +1,7 @@
 # 31 — Cloud sync và multi-device
 
 **Status:** `discovery`
+**Canonical product reference:** [Cloud sync](../../../product/next-plan/03-cloud-sync.md)
 **Milestone:** M6
 **Dependencies:** 11, 18, 21, 32
 

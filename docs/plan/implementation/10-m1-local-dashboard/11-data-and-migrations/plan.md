@@ -1,6 +1,7 @@
 # 11 — Data model và migrations
 
 **Status:** `partial`
+**Canonical references:** [Product requirements](../../../../product/internal-prd/02-product-requirements.md) · [Data model/ERD](../../../../architecture/02-data-model-and-erd.md) · [Lifecycle/recovery](../../../../architecture/06-lifecycle-and-recovery.md)
 **Milestone:** M1
 **Dependencies:** 10
 **Source of truth:** SQLite + FTS5

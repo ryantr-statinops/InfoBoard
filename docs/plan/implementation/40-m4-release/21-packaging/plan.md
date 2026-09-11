@@ -1,6 +1,7 @@
 # 21 — Packaging, release và upgrades
 
 **Status:** `draft`
+**Canonical references:** [Setup/modes](../../../../operations/00-local-setup-and-modes.md) · [Upgrade/release/rollback](../../../../operations/03-upgrade-release-and-rollback.md) · [MVP gates](../../../../quality/03-mvp-quality-gates.md)
 **Milestone:** M4 release
 **Dependencies:** 10, 11, 18, 20
 

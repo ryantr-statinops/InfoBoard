@@ -1,6 +1,7 @@
 # 19 — Observability và diagnostics
 
 **Status:** `draft`
+**Canonical references:** [Quality attributes](../../../../quality/00-quality-attributes.md) · [Health/troubleshooting](../../../../operations/02-health-and-troubleshooting.md) · [Security boundaries](../../../../architecture/07-security-boundaries.md)
 **Milestone:** M4
 **Dependencies:** 10, 14, 15, 16, 17
 

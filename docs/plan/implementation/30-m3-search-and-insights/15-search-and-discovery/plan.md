@@ -1,6 +1,7 @@
 # 15 — Search và discovery
 
 **Status:** `partial`
+**Canonical references:** [Product requirements](../../../../product/internal-prd/02-product-requirements.md) · [Search architecture](../../../../architecture/05-search-and-analytics.md) · [Search evaluation](../../../../quality/02-search-and-performance-evaluation.md)
 **Milestone:** M3
 **Dependencies:** 11, 14
 **Modes:** core keyword, full hybrid

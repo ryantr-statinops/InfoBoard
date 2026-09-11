@@ -1,6 +1,7 @@
 # 16 — Analytics và insights
 
 **Status:** `partial`
+**Canonical references:** [Product requirements](../../../../product/internal-prd/02-product-requirements.md) · [Analytics architecture](../../../../architecture/05-search-and-analytics.md) · [Quality attributes](../../../../quality/00-quality-attributes.md)
 **Milestone:** M3–M4
 **Dependencies:** 11, 12
 **Adapters:** DuckDB optional, SQLite fallback

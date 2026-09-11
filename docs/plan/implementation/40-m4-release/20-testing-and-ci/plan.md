@@ -1,6 +1,7 @@
 # 20 — Testing, performance và CI
 
 **Status:** `partial`
+**Canonical references:** [Test strategy](../../../../quality/01-test-strategy.md) · [Evaluation](../../../../quality/02-search-and-performance-evaluation.md) · [MVP gates](../../../../quality/03-mvp-quality-gates.md)
 **Milestone:** M4
 **Dependencies:** 10–19
 **Quality commands:** `uv run pytest -q`, `uv run ruff check .`

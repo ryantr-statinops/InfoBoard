@@ -1,6 +1,7 @@
 # 18 — Reliability, backup và recovery
 
 **Status:** `draft`
+**Canonical references:** [Lifecycle/recovery](../../../../architecture/06-lifecycle-and-recovery.md) · [Backup/restore/rebuild](../../../../operations/01-backup-restore-and-rebuild.md) · [Quality gates](../../../../quality/03-mvp-quality-gates.md)
 **Milestone:** M4
 **Dependencies:** 11, 14, 17, 19
 

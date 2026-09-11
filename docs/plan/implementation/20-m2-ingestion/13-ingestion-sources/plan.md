@@ -1,6 +1,7 @@
 # 13 — Ingestion sources
 
 **Status:** `partial`
+**Canonical references:** [Product requirements](../../../../product/internal-prd/02-product-requirements.md) · [Ingestion pipeline](../../../../architecture/03-ingestion-pipeline.md) · [Security boundaries](../../../../architecture/07-security-boundaries.md)
 **Milestone:** M2
 **Dependencies:** 10, 11, 17
 **Inputs:** text, Markdown, TXT, PDF, public URL

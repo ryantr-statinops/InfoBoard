@@ -1,6 +1,7 @@
 # 10 — Application foundation
 
 **Status:** `partial`
+**Canonical references:** [Product overview](../../../../product/internal-prd/00-overview.md) · [System overview](../../../../architecture/00-system-overview.md) · [Tech stack](../../../../architecture/01-tech-stack.md)
 **Milestone:** M1
 **Dependencies:** 11, 17
 **Target branch:** `dev`

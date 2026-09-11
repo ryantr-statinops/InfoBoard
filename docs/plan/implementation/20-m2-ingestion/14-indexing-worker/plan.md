@@ -1,6 +1,7 @@
 # 14 — Indexing worker và cache
 
 **Status:** `partial`
+**Canonical references:** [Product requirements](../../../../product/internal-prd/02-product-requirements.md) · [Indexing pipeline](../../../../architecture/04-indexing-pipeline.md) · [Recovery operations](../../../../operations/01-backup-restore-and-rebuild.md)
 **Milestone:** M2–M3
 **Dependencies:** 11, 13, 15
 **Source of truth:** SQLite job state

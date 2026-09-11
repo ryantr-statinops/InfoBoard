@@ -1,5 +1,7 @@
 # InfoBoard — Implementation workspace
 
+**Canonical context:** [Product](../../product/internal-prd/README.md) · [Architecture](../../architecture/README.md) · [Design](../../design/README.md) · [Quality](../../quality/README.md) · [Operations](../../operations/README.md)
+
 Đây là cấu trúc triển khai theo milestone và epic package. Mỗi milestone có một README/acceptance gate; mỗi epic có `plan.md` (ý định, contract, commit slices) và `execution.md` (log triển khai, test, PR, evidence).
 
 ## Cách đọc và trạng thái

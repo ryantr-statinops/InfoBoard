@@ -1,6 +1,7 @@
 # 32 — Identity, sharing và collaboration
 
 **Status:** `discovery`
+**Canonical product reference:** [Cloud sync and collaboration direction](../../../product/next-plan/03-cloud-sync.md)
 **Milestone:** M6–M7
 **Dependencies:** 17, 21, 31
 

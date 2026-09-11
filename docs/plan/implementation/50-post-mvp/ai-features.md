@@ -1,6 +1,7 @@
 # 33 — AI features và providers
 
 **Status:** `discovery`
+**Canonical product reference:** [AI and providers](../../../product/next-plan/04-ai-and-providers.md)
 **Milestone:** M5–M7
 **Dependencies:** 15, 17, 19, 21
 

@@ -1,6 +1,7 @@
 # 30 — Browser extension và capture
 
 **Status:** `discovery`
+**Canonical product reference:** [Browser extension](../../../product/next-plan/01-browser-extension.md)
 **Milestone:** M5
 **Dependencies:** 12, 13, 17, 21
 
