@@ -1,8 +1,8 @@
 # 16 — Analytics và insights
 
-**Status:** `partial`  
-**Milestone:** M3–M4  
-**Dependencies:** 11, 12  
+**Status:** `partial`
+**Milestone:** M3–M4
+**Dependencies:** 11, 12
 **Adapters:** DuckDB optional, SQLite fallback
 
 ## Outcome
