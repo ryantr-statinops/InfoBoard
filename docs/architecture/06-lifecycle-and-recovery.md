@@ -11,8 +11,8 @@ flowchart LR
     Request[Delete confirmed] --> Soft[Set deleted_at in SQLite]
     Soft --> Hidden[Hide from list/detail/search]
     Soft --> Cleanup[Queue cleanup job]
-    Cleanup --> Vector[Delete vectors]
-    Cleanup --> Cache[Invalidate cache/job markers]
+    Cleanup --> Vector[Delete vectors if configured]
+    Cleanup --> Cache[Invalidate cache/job markers if configured]
     Vector --> Verify[Verify no derived references]
     Cache --> Verify
 ```
