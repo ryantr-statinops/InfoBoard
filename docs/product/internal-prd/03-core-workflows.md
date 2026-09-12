@@ -19,9 +19,13 @@
 ## Search and retrieve
 
 1. Người dùng nhập query và tùy chọn filter.
-2. Core mode trả keyword results; full mode có thể kết hợp semantic results.
+2. Core mode trả keyword results mà không cần full-mode dependency.
 3. Người dùng nhận biết item từ title, source và excerpt rồi mở detail.
 4. Related result không gồm chính item đang xem hoặc dữ liệu đã xóa/cũ version.
+
+Khi người dùng đã chủ động cấu hình full mode, semantic/hybrid results có thể
+được bổ sung vào keyword results. Full-mode failure chỉ tạo degraded state sau
+khi full mode đã được cấu hình; keyword/read flow vẫn tiếp tục hoạt động.
 
 ## Failure and retry
 
