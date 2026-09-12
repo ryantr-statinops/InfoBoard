@@ -23,12 +23,20 @@
 
 Hai câu hỏi full mode không chặn core MVP. Chúng chỉ phải đóng trước khi full mode được đưa vào release scope.
 
+Owner: Architecture và Packaging maintainers. Closure evidence: model ID/revision,
+supported-platform matrix, dependency installation transcript và full-mode smoke
+result được ghi nhận trước khi release claim full mode.
+
 ### Post-MVP discovery
 
 - Export format đầu tiên cho portable content là gì?
 - Điều kiện nào đưa bookmark import từ Next Plan vào implementation roadmap?
 
 Hai câu hỏi này tiếp tục thuộc Next Plan và không chặn M1–M4.
+
+Owner: Product discovery owner cùng owner của capability tương ứng trong Next Plan.
+Closure evidence: discovery decision, user/value evidence và approved roadmap entry;
+không chuyển thành `PR-*` production requirement chỉ từ một ý tưởng chưa được duyệt.
 
 ## Decision process
 
