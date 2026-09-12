@@ -2,38 +2,39 @@
 
 ## Current state
 
-Health endpoint cơ bản tồn tại; component-level status, diagnostics bundle và verified runbooks còn draft/partial.
+The basic health endpoint exists; component-level status, the diagnostics bundle, and verified runbooks remain draft/partial.
 
 ## Target health model
 
-`/api/health` báo `ok`, `degraded` hoặc `unavailable` cho SQLite, FTS, worker, ChromaDB, RocksDB, DuckDB và model. SQLite hoặc FTS5 unavailable làm core health trả HTTP 503; derived dependency unavailable trả HTTP 200 với trạng thái degraded.
+`/api/health` reports `ok`, `disabled`, `degraded`, or `unavailable` for SQLite, FTS, the worker, ChromaDB, RocksDB, DuckDB, and the model. SQLite or FTS5 unavailability makes core health return HTTP 503. An optional component that was never configured is `disabled` and does not degrade core health. Failure of an explicitly enabled optional component returns HTTP 200 with degraded status when the core fallback is safe.
 
-Khi FTS5 hỏng, list/detail có thể vẫn đọc được từ SQLite nhưng ứng dụng không được báo healthy core mode vì keyword retrieval là capability bắt buộc. UI phải nêu rõ keyword search unavailable và hướng người dùng tới kiểm tra/rebuild FTS.
+When FTS5 fails, list/detail may still read from SQLite, but the application must not be advertised as healthy core mode because keyword retrieval is mandatory. The UI must state that keyword search is unavailable and guide the user to check/rebuild FTS.
 
 ## Troubleshooting routes
 
 ### Startup failure
 
-- Kiểm tra Python/dependencies, config/data path, permissions, SQLite integrity và migration version.
-- Không xóa database để thử lại; làm việc trên copy khi điều tra corruption.
+- Check Python/dependencies, config/data path, permissions, SQLite integrity, and migration version.
+- Do not delete the database to retry; work on a copy when investigating corruption.
 
 ### Stuck or failed indexing
 
-- Xác định job/item/content version, state, retry count và error code.
-- Requeue chỉ current version của non-deleted item.
-- Sau retry limit, giữ failed state và dùng rebuild/diagnostic workflow.
+- Identify the job/item/content version, state, retry count, and error code.
+- Requeue only the current version of a non-deleted item.
+- After the retry limit, keep the failed state and use the rebuild/diagnostic workflow.
 
 ### Semantic or analytics degraded
 
-- Xác nhận core keyword/read flow còn hoạt động.
-- Kiểm tra dependency/model metadata, derived-store path và health details.
-- Rebuild derived store từ SQLite khi integrity của source data đã được xác nhận.
+- Confirm that the affected optional component was explicitly enabled; otherwise it should be disabled rather than degraded.
+- Confirm that the core keyword/read flow still works.
+- Check dependency/model metadata, derived-store paths, and health details.
+- Rebuild the derived store from SQLite after source-data integrity is confirmed.
 
 ### Search/data mismatch
 
-- So sánh item current version/deleted state với FTS/vector candidates.
-- Rebuild index; không chỉnh SQLite dựa trên derived-store content.
+- Compare the item current version/deleted state with FTS/vector candidates.
+- Rebuild the index; do not edit SQLite based on derived-store content.
 
 ## Diagnostics boundary
 
-Bundle/log có component version, timing, job/error codes và hashed identifiers; không chứa raw content, query nhạy cảm, token, secret hoặc filesystem detail không cần thiết.
+The bundle/log contains component versions, timing, job/error codes, and hashed identifiers; it does not contain raw content, sensitive queries, tokens, secrets, or unnecessary filesystem details.

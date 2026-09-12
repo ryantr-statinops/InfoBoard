@@ -8,25 +8,48 @@
 ```mermaid
 flowchart TD
     F[10 Foundation] --> D[11 Data + migrations]
-    D --> I[13 Ingestion sources]
-    D --> W[14 Index worker + cache]
     F --> U[12 Dashboard + workspace]
-    U --> S[15 Search + discovery]
+    D --> U
+    F --> I[13 Ingestion sources]
+    D --> I
+    D --> W[14 Index worker + cache]
+    I --> W
+    D --> S[15 Search + discovery]
+    U --> S
     W --> S
     D --> A[16 Analytics]
-    D --> R[18 Reliability + recovery]
+    U --> A
+    S --> A
     F --> Q[17 Security + privacy]
-    Q --> O[19 Observability]
+    I --> Q
+    D --> R[18 Reliability + recovery]
+    W --> R
+    F --> O[19 Observability]
+    W --> O
     S --> T[20 Testing + performance + CI]
     A --> T
+    Q --> T
     R --> T
-    T --> P[21 Packaging + release]
-    P --> E1[30 Extension]
-    P --> E2[31 Cloud sync]
+    F --> P[21 Packaging + release]
+    S --> P
+    R --> P
+    T --> P
+    U --> E1[30 Extension]
+    I --> E1
+    Q --> E1
+    P --> E1
+    R --> E2[31 Cloud sync]
+    P --> E2
     E2 --> E3[32 Collaboration]
     S --> E4[33 AI + providers]
-    P --> E5[34 Browser portability]
-    E5 --> E6[35 Migration assistant]
+    Q --> E4
+    T --> E4
+    Q --> E5[34 Browser portability]
+    R --> E5
+    P --> E5
+    R --> E6[35 Migration assistant]
+    P --> E6
+    E5 --> E6
 ```
 
 ## Milestones

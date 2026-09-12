@@ -2,22 +2,36 @@
 
 ## Current state
 
-Các quyết định nền tảng đã xuất hiện trong product/implementation docs nhưng chưa có architecture index canonical.
+The foundational decisions have a canonical Architecture index. Runtime delivery remains partial, and implementation evidence determines whether each target decision is operational.
 
-## Target state — locked decisions
+## Target contract — locked decisions
 
 | Decision | Rationale | Consequence |
 | --- | --- | --- |
-| SQLite là system of record | Local, transactional, recoverable | Mọi derived store hydrate/rebuild từ SQLite |
-| Không dùng ORM trong MVP | SQL/schema ownership minh bạch | Migration và data-access SQL phải version-controlled |
-| Server-rendered Jinja2 + HTMX | Không cần SPA/Node build | Route/partial contract cần integration test |
-| Core/full modes | Native/ML dependency không ổn định mọi máy | Keyword/core flow luôn có fallback |
-| Sequential durable worker | Đơn giản hóa local consistency | Cần lease, checkpoint, retry và restart recovery |
-| Local embedding mặc định | Privacy và offline operation | Model prepare/revision metadata bắt buộc |
+| SQLite is the system of record | Local, transactional, recoverable | Every derived store hydrates/rebuilds from SQLite |
+| No ORM in the MVP | Transparent SQL/schema ownership | Migrations and data-access SQL must be version-controlled |
+| Server-rendered Jinja2 + HTMX | No SPA/Node build required | Route/partial contracts need integration tests |
+| Core/full modes | Native/ML dependencies are not stable on every machine | Unconfigured full-mode components are normal; failure after explicit enablement is degraded |
+| Sequential durable worker | Simplifies local consistency | Requires leases, checkpoints, retry, and restart recovery |
+| Local embedding by default | Privacy and offline operation | Explicit model preparation and revision metadata are required |
+| Architecture owns interface contracts | Product and implementation need one target contract | Implementation maps tasks/evidence to the Architecture contract instead of copying it |
 
 ## Decision lifecycle
 
-- Product outcome thay đổi được ghi trong Internal PRD trước.
-- Architecture decision mới ghi context, alternatives, decision, consequence và supersession.
-- Implementation governance giữ execution-specific decision/evidence và liên kết tới đây.
-- Target decision không được đánh dấu implemented nếu current-state/evidence chưa xác nhận.
+- Product outcome changes are recorded in the Internal PRD first.
+- A new architecture decision records context, alternatives, decision, consequence, and supersession.
+- Implementation governance keeps execution-specific decisions/evidence and links here.
+- A target decision is not marked implemented until current-state/evidence confirms it.
+
+## Implementation gap
+
+- The implementation workspace retains compatibility examples and task-specific projections, but Architecture interface contracts are the only canonical target; runtime evidence has not yet converged on them.
+- Proposed implementation decisions remain unimplemented until their owners record evidence.
+
+## Owning work
+
+Architecture maintainers own canonical decisions; affected implementation epics own delivery evidence and governance records supersession/history.
+
+## Evidence required
+
+Accepted decision records for public API/schema/security/dependency changes, linked task evidence, and a review proving that no competing canonical contract remains.

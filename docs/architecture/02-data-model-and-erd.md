@@ -2,9 +2,9 @@
 
 ## Current state
 
-SQLite schema và FTS5 đã tồn tại ở mức partial; chưa có migration history hoặc content-version schema hoàn chỉnh. Runtime hiện dùng `items.status DEFAULT 'active'`, `chunks.position`, một `item_contents` row/item và `index_jobs.attempts`. Target dưới đây chuyển default sang `inbox`, content key sang `(item_id, content_version)` và attempts sang `retry_count` qua epic 11.
+The SQLite schema and FTS5 exist at partial coverage; migration history and the complete content-version schema are not implemented. The runtime currently uses `items.status DEFAULT 'active'`, `chunks.position`, one `item_contents` row per item, and `index_jobs.attempts`. The target below changes the default to `inbox`, the content key to `(item_id, content_version)`, and `attempts` to `retry_count` through epic 11.
 
-## Target state
+## Target contract
 
 ```mermaid
 erDiagram
@@ -78,12 +78,26 @@ erDiagram
 
 ## Invariants
 
-- Foreign keys được bật; `(item_id, collection_id)` là unique.
-- `item_contents` dùng composite key `(item_id, content_version)`; `chunks.position` ổn định trong từng version.
-- Item mới có organization status mặc định `inbox`; runtime default `active` là migration/behavior gap của M1.
-- `index_jobs.retry_count` là target name; runtime `attempts` được chuyển đổi trong migration thay vì tồn tại song song.
-- Snapshot/chunk thuộc content version cụ thể.
-- `deleted_at` loại item khỏi mọi public read path.
-- Notes và organization state không bị ghi đè bởi reindex.
-- Schema thay đổi qua numbered migration, backup trước upgrade và upgrade test.
-- FTS chỉ phản ánh current, non-deleted content và được giữ đồng bộ transactionally.
+- Foreign keys are enabled; `(item_id, collection_id)` is unique.
+- `item_contents` uses the composite key `(item_id, content_version)`; `chunks.position` is stable within each version.
+- New items have the organization status `inbox` by default; the runtime `active` default is an M1 migration/behavior gap.
+- `index_jobs.retry_count` is the target name; runtime `attempts` is converted through migration rather than kept in parallel.
+- Each snapshot and chunk belongs to a specific content version.
+- `deleted_at` excludes an item from every public read path.
+- Reindexing does not overwrite notes or organization state.
+- Schema changes use numbered migrations, backups before upgrade, and upgrade tests.
+- FTS reflects only current, non-deleted content and is kept transactionally synchronized.
+
+## Implementation gap
+
+- Runtime content storage is not version-addressable and has no numbered migration history.
+- Runtime still defaults new items to `active` and stores job attempts under `attempts`.
+- Derived cleanup and stale-version enforcement are incomplete.
+
+## Owning work
+
+Epic 11 owns schema and migration convergence; epic 14 owns job/version enforcement; epic 18 owns cleanup and recovery behavior.
+
+## Evidence required
+
+Schema introspection, migration tests from the current database, foreign-key/FTS invariants, restart tests, and backup-before-upgrade evidence.

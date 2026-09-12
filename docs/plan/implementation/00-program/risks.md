@@ -28,7 +28,7 @@
 | Schema drift | Data loss | Versioned migration, backup, upgrade test | 11/18 |
 | Worker crash mid-step | Stuck jobs | Durable checkpoints, lease/requeue, idempotent upsert | 14 |
 | Heavy analytics query | Slow dashboard | Read-only connection, bounded range, fallback | 16/20 |
-| API contract drift | Broken UI | Canonical contract, integration tests, traceability | 04/20 |
+| API contract drift | Broken UI | Architecture interface contract, integration tests, traceability | 04/20 |
 
 ## Dependency acceptance
 

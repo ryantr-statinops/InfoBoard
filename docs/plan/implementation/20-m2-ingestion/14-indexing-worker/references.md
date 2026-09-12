@@ -2,8 +2,8 @@
 
 | Type | Reference | Use |
 | --- | --- | --- |
-| Product | [Domain model](../../../../product/internal-prd/04-domain-model.md), `PR-CAP-05`, `PR-REC-*` | Content lifecycle and recoverability |
-| Architecture | [Indexing pipeline](../../../../architecture/04-indexing-pipeline.md), [lifecycle](../../../../architecture/06-lifecycle-and-recovery.md) | Job states and derived stores |
+| Product | [Domain model](../../../../product/internal-prd/04-domain-model.md), `PR-CAP-05`, `PR-REC-01`, `PR-REC-02`, `PR-REC-03` | Content lifecycle and recoverability |
+| Architecture | [Indexing pipeline](../../../../architecture/04-indexing-pipeline.md), [lifecycle](../../../../architecture/06-lifecycle-and-recovery.md), [interfaces](../../../../architecture/09-interface-contracts.md) | Job states, response projection, and derived stores |
 | Design | [UI states](../../../../design/02-ui-states-and-responsive.md) | Technical-to-UI state mapping |
 | Quality | [Search evaluation](../../../../quality/02-search-and-performance-evaluation.md) | Index/retrieval evidence |
 | Operations | [Backup and rebuild](../../../../operations/01-backup-restore-and-rebuild.md), [health](../../../../operations/02-health-and-troubleshooting.md) | Recovery and degraded mode |

@@ -2,9 +2,9 @@
 
 ## Current state
 
-Ứng dụng bind local và có validation cơ bản; SSRF/redirect, Origin/Host, parser limits, log redaction và component health test còn partial hoặc draft.
+The application binds locally and has basic validation; SSRF/redirect, Origin/Host, parser limits, log redaction, and component health tests remain partial or draft.
 
-## Target state — security boundaries
+## Target contract — security boundaries
 
 ```mermaid
 flowchart LR
@@ -17,10 +17,23 @@ flowchart LR
 
 ## Controls
 
-- Bind `127.0.0.1`; mở network là capability mới cần authentication threat model.
-- Validate Host/Origin cho state-changing request.
-- Chặn private, loopback, link-local và metadata-service destinations ở từng redirect/connect.
-- Bounded size/time/type cho upload, fetch, extraction và query limits.
-- Escape imported content; không render active markup/script.
-- Không log content, query nhạy cảm, filesystem detail, token hoặc secret.
-- Cloud/provider traffic chỉ bật qua explicit configuration và báo rõ degraded/failure.
+- Bind to `127.0.0.1`; network exposure is a new capability requiring an authentication threat model.
+- Validate Host/Origin for state-changing requests.
+- Block private, loopback, link-local, and metadata-service destinations at every redirect/connect step.
+- Apply bounded size/time/type limits to uploads, fetches, extraction, and queries.
+- Escape imported content; do not render active markup/scripts.
+- Do not log content, sensitive queries, filesystem details, tokens, or secrets.
+- Enable cloud/provider traffic only through explicit configuration and report degraded/failure states clearly.
+
+## Implementation gap
+
+- Redirect-aware SSRF protection, bounded parsers, Origin/Host validation, log redaction, and security-focused health tests remain partial or absent.
+- Provider traffic is a future/conditional boundary and has no release evidence.
+
+## Owning work
+
+Epic 13 owns bounded source handling; epic 17 owns application/network/render/log controls; epic 19 owns safe diagnostics; post-MVP provider work remains behind discovery gates.
+
+## Evidence required
+
+Private-network and redirect fixtures, upload/fetch/query limit tests, Origin/Host rejection, active-markup escaping, log-redaction tests, and explicit provider-consent evidence when applicable.

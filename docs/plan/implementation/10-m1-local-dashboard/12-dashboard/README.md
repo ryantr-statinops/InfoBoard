@@ -4,7 +4,7 @@
 
 The epic delivers the simple-mode local dashboard for capture, retrieval, organization, notes, and safe soft deletion.
 
-**Requirements:** `PR-CAP-01`, `PR-ORG-*`, `PR-UX-01`, `RQ-001…003`, `RQ-010`  
+**Requirements:** `PR-CAP-01`, `PR-ORG-01`, `PR-ORG-02`, `PR-ORG-03`, `PR-UX-01`, `PR-UX-02`, `PR-UX-03`, `PR-UX-04`, `PR-REC-04`, `RQ-001`, `RQ-002`, `RQ-003`, `RQ-013`
 **Dependencies:** 10, 11
 
 ## Reading order

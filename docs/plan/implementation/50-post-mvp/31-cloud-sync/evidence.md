@@ -1,5 +1,7 @@
 # Evidence log — Cloud sync and multi-device
 
+<a id="d31-001"></a><a id="d31-002"></a><a id="d31-003"></a>
+
 | Task | Experiment/decision | Review | Status |
 | --- | --- | --- | --- |
 | [D31-001](tasks.md#d31-001) | — | — | pending |

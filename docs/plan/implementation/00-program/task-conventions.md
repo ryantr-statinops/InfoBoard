@@ -22,12 +22,14 @@ Use `blocked` when a concrete dependency prevents progress, and record the unblo
 Each task must include:
 
 1. Outcome and scope.
-2. Product requirement and implementation evidence requirement references.
+2. Product requirement and implementation evidence requirement references. List every
+   applicable ID explicitly; do not use wildcards or ranges such as `PR-SEC-*` or
+   `RQ-007…009` in task fields.
 3. Dependencies on earlier task IDs or approved decisions.
 4. Code, interface, schema, or documentation areas affected.
 5. Verification command, test case, or manual scenario.
 6. Acceptance condition and expected commit boundary.
-7. Evidence anchor to the task's entry in `execution.md`.
+7. Evidence anchor to the task's entry in `execution.md` for M1–M4 or `evidence.md` for M5+ discovery packages.
 
 ## Checklist format
 
@@ -43,7 +45,7 @@ Each task must include:
   - Evidence log: [T10-001](../10-m1-local-dashboard/10-application-foundation/execution.md#t10-001)
 ```
 
-Planned paths must be labelled `target` until they exist. Do not turn a code example or target path into evidence.
+Planned paths must be labelled `target` until they exist. Do not turn a code example or target path into evidence. A link to an execution/evidence entry must resolve to an explicit task anchor in that file.
 
 ## Commit and review rules
 
@@ -51,4 +53,4 @@ Planned paths must be labelled `target` until they exist. Do not turn a code exa
 - A task may have one or more commits only when the plan explains the boundary.
 - Run the narrowest relevant test after each commit and the required lint/check suite before review.
 - Do not mark a task verified from a plan, target diagram, or unmerged branch.
-- Record command, result, commit hash, reviewer, and known limitation in `execution.md`.
+- Record command, result, commit hash, reviewer, and known limitation in `execution.md` or `evidence.md`, according to the package type.

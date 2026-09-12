@@ -4,8 +4,8 @@
 
 The epic protects SQLite data through backup, safe restore, migration, derived-index rebuild, and crash-recovery verification.
 
-**Requirements:** `PR-REC-01…05`, `RQ-012`  
-**Dependencies:** 11, 14, 17, 19
+**Requirements:** `PR-REC-01`, `PR-REC-02`, `PR-REC-03`, `PR-REC-04`, `PR-REC-05`, `RQ-012`, `RQ-013`
+**Dependencies:** 11, 14
 
 ## Reading order
 

@@ -4,7 +4,7 @@
 **Delivery status:** `not_started`  
 **Baseline coverage:** `partial`  
 **Milestone:** M2  
-**Dependencies:** 10, 11, 17  
+**Dependencies:** 10, 11
 **Inputs:** text, Markdown, TXT, PDF, public URL
 
 ## Outcome

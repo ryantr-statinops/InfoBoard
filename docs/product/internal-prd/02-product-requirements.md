@@ -1,11 +1,5 @@
 # Internal PRD — Product requirements
 
-Các requirement được đọc theo ba lớp:
-
-- Core release: phải hoạt động trong simple/core mode mà không cần full-mode dependency.
-- Conditional full mode: chỉ trở thành acceptance khi release chủ động công bố full mode.
-- Future boundary: định hướng hoặc trust boundary cho capability chưa thuộc MVP.
-
 ## Capture và persistence
 
 - `PR-CAP-01`: Tạo item từ text, URL công khai hoặc file được hỗ trợ.
@@ -25,7 +19,7 @@ Các requirement được đọc theo ba lớp:
 
 - `PR-RET-01`: Lọc theo collection, source, status và khoảng thời gian.
 - `PR-RET-02`: Keyword search hoạt động độc lập với semantic dependencies.
-- `PR-RET-03` *(conditional full mode)*: Full mode có thể bổ sung semantic/hybrid search và related items.
+- `PR-RET-03`: Full mode có thể bổ sung semantic/hybrid search và related items; capability này không bắt buộc để core MVP hoặc M3 được release.
 - `PR-RET-04`: Kết quả theo item có title, source và excerpt đủ để nhận biết.
 - `PR-RET-05`: Search không trả content version hoặc item đã bị xóa.
 - `PR-RET-06`: Dashboard KPI/analytics dùng cùng filter semantics và có degraded fallback khi analytics engine không khả dụng.
@@ -52,7 +46,7 @@ UI state `processing` tổng hợp các job state kỹ thuật `extracting`, `ch
 - `PR-SEC-01`: Input được giới hạn, normalize và escape.
 - `PR-SEC-02`: URL ingestion chặn private-network access và redirect không an toàn.
 - `PR-SEC-03`: Log không chứa raw content, credential hoặc secret.
-- `PR-SEC-04` *(future boundary)*: Cloud provider chỉ nhận nội dung sau cấu hình chủ động của người dùng.
+- `PR-SEC-04` *(future provider boundary)*: Cloud provider chỉ nhận nội dung sau cấu hình chủ động của người dùng. Requirement này thuộc Next Plan và không phải acceptance của M1–M4.
 
 ## Operability và release
 

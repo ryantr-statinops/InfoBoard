@@ -4,8 +4,8 @@
 
 The epic unifies text, file, PDF, and public URL extraction behind a bounded `ExtractedDocument` contract.
 
-**Requirements:** `PR-CAP-01…03`, `PR-SEC-01…02`, `RQ-004`, `RQ-005`, `RQ-011`  
-**Dependencies:** 10, 11, 17
+**Requirements:** `PR-CAP-01`, `PR-CAP-02`, `PR-CAP-03`, `PR-SEC-01`, `PR-SEC-02`, `RQ-004`, `RQ-005`, `RQ-011`
+**Dependencies:** 10, 11
 
 ## Reading order
 

@@ -2,9 +2,9 @@
 
 ## Current state
 
-FastAPI/Uvicorn, SQLite/FTS5, server-rendered dashboard và các service cơ bản đã có ở mức partial. Keyword search và ingestion tối thiểu hoạt động; worker, semantic index, analytics và recovery chưa hoàn thiện theo target contract.
+FastAPI/Uvicorn, SQLite/FTS5, the server-rendered dashboard, and basic services exist at partial coverage. Minimal keyword search and ingestion work; the worker, semantic index, analytics, and recovery do not yet meet the target contract.
 
-## Target state
+## Target contract
 
 ```mermaid
 flowchart LR
@@ -16,19 +16,34 @@ flowchart LR
     Services --> Analytics[Analytics service]
     Ingest --> SQLite[(SQLite + snapshots<br/>system of record)]
     Ingest --> Worker[Index worker]
-    Worker --> Rocks[(RocksDB cache)]
-    Worker --> Embed[Embedding provider]
-    Embed --> Chroma[(ChromaDB vectors)]
+    Worker --> SQLite
+    Worker -. full mode .-> Rocks[(RocksDB cache)]
+    Worker -. full mode .-> Embed[Embedding provider]
+    Embed -. full mode .-> Chroma[(ChromaDB vectors)]
     Retrieval --> SQLite
-    Retrieval --> Chroma
-    Analytics --> Duck[(DuckDB read-only)]
+    Retrieval -. full mode .-> Chroma
+    Analytics --> SQLite
+    Analytics -. full mode .-> Duck[(DuckDB read-only)]
     Duck --> SQLite
 ```
 
 ## Boundaries
 
-- Routes parse/validate và điều phối; nghiệp vụ nằm trong services.
-- Storage adapters là ranh giới duy nhất với database.
-- SQLite và stored snapshots là nguồn dữ liệu có thẩm quyền.
-- ChromaDB, RocksDB và DuckDB là derived stores, có fallback hoặc rebuild path.
-- Core mode không phụ thuộc semantic/analytics native dependencies.
+- Routes parse, validate, and coordinate; business behavior lives in services.
+- Storage adapters are the only boundary to the database.
+- SQLite and stored snapshots are the authoritative data sources.
+- ChromaDB, RocksDB, and DuckDB are derived stores with fallback or rebuild paths.
+- Core mode does not depend on native semantic/analytics dependencies.
+
+## Implementation gap
+
+- Route, service, storage, and background-work boundaries exist only at partial coverage.
+- Optional adapters and component-aware health do not yet satisfy the target boundaries.
+
+## Owning work
+
+Epics 10–11 establish application/data boundaries; epics 14–16 add worker, retrieval, and analytics adapters; epic 19 owns component health.
+
+## Evidence required
+
+Module-boundary tests, isolated application startup, core-only integration tests, and enabled-optional-component failure tests.

@@ -12,7 +12,7 @@
 }
 ```
 
-The response is a target contract example. It must be reconciled with the shared API contract and verified by [T12-002](tasks.md#t12-002).
+The response is a target contract example. It must conform to the canonical [Architecture interface contract](../../../../architecture/09-interface-contracts.md) and be verified by [T12-002](tasks.md#t12-002).
 
 ## Current contract: local smoke command
 
