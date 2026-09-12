@@ -25,7 +25,7 @@ The foundational decisions have a canonical Architecture index. Runtime delivery
 
 ## Implementation gap
 
-- The API/interface target is currently duplicated in the implementation workspace and has not been converged on by runtime evidence.
+- The implementation workspace retains compatibility examples and task-specific projections, but Architecture interface contracts are the only canonical target; runtime evidence has not yet converged on them.
 - Proposed implementation decisions remain unimplemented until their owners record evidence.
 
 ## Owning work

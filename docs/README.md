@@ -3,7 +3,7 @@
 Tài liệu InfoBoard được tổ chức theo chuỗi quyết định từ sản phẩm đến thực thi:
 
 ```text
-Product → Architecture → Design → Quality/Operations → Implementation
+Product → Design → Architecture → Quality → Operations → Plan
 ```
 
 ## Đọc theo vai trò
