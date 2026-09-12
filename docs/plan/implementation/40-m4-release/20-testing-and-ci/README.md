@@ -1,6 +1,6 @@
 # 20 — Testing, performance, and CI
 
-**Plan status:** `ready` · **Delivery status:** `not_started` · **Baseline coverage:** `partial`
+**Plan status:** `ready` · **Delivery status:** `not_started` · **Baseline coverage:** `missing`
 
 The epic builds repeatable test layers, retrieval/analytics benchmarks, and CI gates for the MVP release.
 

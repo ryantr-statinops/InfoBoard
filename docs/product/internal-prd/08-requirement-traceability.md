@@ -19,18 +19,18 @@ Bảng này nối product requirement với tài liệu thiết kế hệ thốn
 
 | Epic | Requirement source | Canonical supporting docs |
 | --- | --- | --- |
-| 10 Foundation | `PR-CAP-05`, `PR-REC-03…04` | System overview, tech stack |
-| 11 Data/migrations | `PR-CAP-02…05`, `PR-ORG-01…04` | Data model/ERD, lifecycle/recovery |
-| 12 Dashboard | `PR-ORG-*`, `PR-UX-*` | Design IA, core flows, UI states |
-| 13 Ingestion | `PR-CAP-01…04`, `PR-SEC-01…02` | Ingestion pipeline, security boundaries |
-| 14 Index worker | `PR-CAP-05`, `PR-REC-01…03` | Indexing pipeline |
-| 15 Search | `PR-RET-01…05` | Search and analytics architecture |
-| 16 Analytics | `PR-RET-01`, `PR-RET-06`, `PR-REC-03…04` | Search and analytics architecture |
-| 17 Security | `PR-SEC-01…03` | Privacy/trust, security boundaries |
-| 18 Reliability | `PR-REC-02…05` | Lifecycle/recovery, operations |
-| 19 Observability | `PR-REC-01…04` | Quality attributes, diagnostics operations |
-| 20 Testing/CI | `PR-OPS-02` và acceptance của mọi `PR-*` | Test strategy, MVP quality gates |
-| 21 Packaging | `PR-CAP-05`, `PR-REC-05`, `PR-OPS-01` | Setup, upgrade/release/rollback |
+| 10 Foundation | `PR-UX-01`, `PR-REC-04`, `PR-OPS-01` | System overview, tech stack |
+| 11 Data/migrations | `PR-CAP-02`, `PR-CAP-04`, `PR-ORG-01`, `PR-ORG-02`, `PR-ORG-04`, `PR-REC-01`, `PR-REC-02`, `PR-REC-03` | Data model/ERD, lifecycle/recovery |
+| 12 Dashboard | `PR-CAP-01`, `PR-CAP-04`, `PR-ORG-01`, `PR-ORG-02`, `PR-ORG-03`, `PR-ORG-04`, `PR-UX-01`, `PR-UX-02`, `PR-UX-03`, `PR-UX-04`, `PR-REC-04` | Design IA, core flows, UI states |
+| 13 Ingestion | `PR-CAP-01`, `PR-CAP-02`, `PR-CAP-03`, `PR-SEC-01`, `PR-SEC-02` | Ingestion pipeline, security boundaries |
+| 14 Index worker | `PR-CAP-05`, `PR-REC-01`, `PR-REC-02`, `PR-REC-03` | Indexing pipeline |
+| 15 Search | `PR-RET-01`, `PR-RET-02`, `PR-RET-03`, `PR-RET-04`, `PR-RET-05` | Search and analytics architecture |
+| 16 Analytics | `PR-RET-01`, `PR-RET-06`, `PR-REC-03`, `PR-REC-04` | Search and analytics architecture |
+| 17 Security | `PR-SEC-01`, `PR-SEC-02`, `PR-SEC-03` | Privacy/trust, security boundaries |
+| 18 Reliability | `PR-REC-01`, `PR-REC-02`, `PR-REC-03`, `PR-REC-04`, `PR-REC-05` | Lifecycle/recovery, operations |
+| 19 Observability | `PR-REC-04` | Quality attributes, diagnostics operations |
+| 20 Testing/CI | `PR-OPS-02` | Test strategy, MVP quality gates |
+| 21 Packaging | `PR-OPS-01`, `PR-OPS-02` | Setup, upgrade/release/rollback |
 
 ## Rules
 

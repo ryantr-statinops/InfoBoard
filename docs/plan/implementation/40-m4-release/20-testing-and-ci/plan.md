@@ -2,7 +2,7 @@
 
 **Plan status:** `ready`  
 **Delivery status:** `not_started`  
-**Baseline coverage:** `partial`  
+**Baseline coverage:** `missing`
 **Milestone:** M4  
 **Dependencies:** 15, 16, 17, 18
 **Quality commands:** `uv run pytest -q`, `uv run ruff check .`
