@@ -4,11 +4,12 @@
 
 | Decision | Outcome |
 | --- | --- |
-| Product core | Advanced Bookmark Manager: URL/snapshot, notes/collections và full-text/semantic search |
+| Product core | Advanced Bookmark Manager: URL/snapshot, notes/collections và keyword search |
 | Primary audience | Người dùng phổ thông; power user có advanced path |
 | Source scope | Text, public URL, PDF có text, Markdown và TXT |
 | System of record | SQLite và stored snapshots |
 | Retrieval baseline | Keyword luôn hoạt động; semantic là optional/full mode |
+| Optional full mode | Semantic/hybrid retrieval, related items và topic clusters chỉ bật sau explicit setup; không chặn core release |
 | Default privacy | Local processing; cloud/provider chỉ opt-in |
 | Deletion | Soft delete trước, derived cleanup sau |
 | Hậu MVP | Quản lý trong Next Plan và không chặn M1–M4 |
