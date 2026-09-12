@@ -18,4 +18,4 @@ Security boundaries and recovery contracts come first; observability supports te
 
 ## Acceptance gate
 
-Tests, lint, and benchmark pass; backup/restore/rebuild is verified; security limits pass; health/degraded states are truthful; and a clean checkout runs the supported core/full modes.
+Tests, lint, and benchmark pass; backup/restore/rebuild is verified; security limits pass; health/degraded states are truthful; and a clean checkout runs core mode. Full-mode installation and semantic evidence are required only when full mode is included in the release scope; otherwise missing full-mode dependencies must be reported clearly.

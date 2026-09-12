@@ -1,7 +1,7 @@
 # M3 — Search and insights
 
 **Outcome:** Users can retrieve saved content with keyword search, optional semantic search, and useful analytics.
-**Gate:** Keyword search is always available; semantic, related-content, and analytics failures are safe and visible.
+**Gate:** Core mode releases with keyword search, filters, analytics, and safe fallback; semantic, related-content, and cluster behavior is an optional full-mode gate.
 **Dependencies:** M2 chunks/index jobs
 
 ## Epic packages
@@ -15,4 +15,4 @@ Harden FTS first, then semantic/related/clusters; analytics uses the shared filt
 
 ## Acceptance gate
 
-Keyword fallback works when derived stores fail; full mode provides Chroma/RRF; analytics matches SQLite; Vietnamese/English queries meet the retrieval target.
+Core mode provides keyword fallback when derived stores fail; analytics matches SQLite; and Vietnamese/English keyword queries meet the retrieval target. If full mode is included in release scope, it must also provide the Chroma/RRF contract.

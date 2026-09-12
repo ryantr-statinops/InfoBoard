@@ -12,15 +12,15 @@
 
 ## M3 — Search and insights
 
-- Keyword fallback works when derived dependencies fail.
-- Full mode meets the semantic/RRF contract; analytics parity and retrieval targets pass.
+- Core gate: keyword search, retrieval filters, fallback behavior, analytics parity, and the core query-set target pass without semantic dependencies.
+- Optional full-mode gate: if full mode is included in the release scope, semantic/RRF, related-content, and cluster behavior meet their target contract. Missing full-mode dependencies do not block a core-only release.
 
 ## M4 — Hardened release
 
 - Security, backup/restore/rebuild, diagnostics, and log-redaction tests pass.
 - Full test, lint, type check, migration tests, and benchmark report pass.
 - A clean checkout runs core mode; full mode runs or clearly reports missing dependencies/models.
-- Requirement traceability is verified or has a reviewed waiver.
+- Core requirement traceability is verified or has a reviewed waiver. Conditional full-mode requirements are verified only when full mode is included in the release scope.
 
 ## Evidence rule
 

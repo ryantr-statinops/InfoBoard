@@ -17,7 +17,7 @@
   - Evidence: [execution entry](execution.md#t20-002)
 
 - [ ] <a id="t20-003"></a>**T20-003 — Add multilingual, retrieval, and security suites**
-  - Product: `PR-RET-01`, `PR-RET-02`, `PR-RET-03`, `PR-RET-04`, `PR-RET-05`, `PR-RET-06`, `PR-SEC-01`, `PR-SEC-02`, `PR-SEC-03` · Evidence: `RQ-007`, `RQ-008`, `RQ-009`, `RQ-010`, `RQ-011`
+  - Product: `PR-RET-01`, `PR-RET-02`, `PR-RET-03`, `PR-RET-04`, `PR-RET-05`, `PR-RET-06`, `PR-SEC-01`, `PR-SEC-02`, `PR-SEC-03` · Evidence: `RQ-007`, conditional `RQ-008`, conditional `RQ-009`, `RQ-010`, `RQ-011`
   - Depends on: `T15-005`, `T17-004` · Code: query/security fixtures
   - Verify: Vietnamese/English retrieval, fallback, SSRF, limits, and redaction tests
   - Accept when: core and security gates are deterministic.
@@ -25,7 +25,7 @@
   - Evidence: [execution entry](execution.md#t20-003)
 
 - [ ] <a id="t20-004"></a>**T20-004 — Add benchmark dataset and p95 report**
-  - Product: `PR-RET-01`, `PR-RET-02`, `PR-RET-03`, `PR-RET-06`, `PR-OPS-02` · Evidence: `RQ-009`, `RQ-010`, `RQ-014`
+  - Product: `PR-RET-01`, `PR-RET-02`, `PR-RET-03`, `PR-RET-06`, `PR-OPS-02` · Evidence: conditional `RQ-009`, `RQ-010`, `RQ-014`
   - Depends on: `T15-005`, `T16-004` · Code: benchmark dataset/harness
   - Verify: 1,000-item/10,000-chunk warm/cold benchmark
   - Accept when: configuration and p50/p95/p99 results are reproducible.

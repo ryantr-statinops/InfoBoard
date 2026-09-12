@@ -4,7 +4,7 @@
 
 The epic builds repeatable test layers, retrieval/analytics benchmarks, and CI gates for the MVP release.
 
-**Requirements:** `PR-OPS-02`, `RQ-014`  
+**Requirements:** `PR-OPS-02`, `RQ-014` (with conditional full-mode evidence for `RQ-008` and `RQ-009`)
 **Dependencies:** 15, 16, 17, 18
 
 ## Reading order

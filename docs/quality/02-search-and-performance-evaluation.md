@@ -5,7 +5,8 @@
 - Use a versioned query set of at least 20 Vietnamese/English queries, including synonyms and accented/unaccented forms.
 - Each query declares its target item and applied filters.
 - Evaluate core and full modes separately.
-- Release target: the target item appears in the top five for at least 16/20 queries.
+- Core release target: keyword search places the target item in the top five for at least 16/20 queries.
+- Full-mode target: semantic/hybrid retrieval is evaluated only when full mode is in release scope; its evidence is required for the full-mode claim, not for a core-only release.
 - Record retrieval mode, model ID/revision, index version, and fixture checksum.
 
 ## Performance benchmark

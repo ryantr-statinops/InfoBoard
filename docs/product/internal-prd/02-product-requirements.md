@@ -19,7 +19,7 @@
 
 - `PR-RET-01`: Lọc theo collection, source, status và khoảng thời gian.
 - `PR-RET-02`: Keyword search hoạt động độc lập với semantic dependencies.
-- `PR-RET-03`: Full mode có thể bổ sung semantic/hybrid search và related items.
+- `PR-RET-03`: Full mode có thể bổ sung semantic/hybrid search và related items; capability này không bắt buộc để core MVP hoặc M3 được release.
 - `PR-RET-04`: Kết quả theo item có title, source và excerpt đủ để nhận biết.
 - `PR-RET-05`: Search không trả content version hoặc item đã bị xóa.
 - `PR-RET-06`: Dashboard KPI/analytics dùng cùng filter semantics và có degraded fallback khi analytics engine không khả dụng.
