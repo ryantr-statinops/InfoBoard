@@ -1,14 +1,20 @@
 # Design — Mockup map
 
-| Mockup | Covers | Notes |
+Mockups are visual references for layout and responsive direction. They do not
+add product behavior or acceptance requirements beyond the written Product and
+Design documents.
+
+| Mockup | Milestone/surface | Covers | Notes |
 | --- | --- | --- |
-| [Desktop dashboard](mockups/infoboard-dashboard-desktop.png) | Navigation, filters, KPI, lists và analytics layout | Data/visual labels là minh họa |
-| [Item detail](mockups/infoboard-item-detail.png) | Content, source, notes, collections và actions | Chỉ behavior trong PRD/design docs là requirement |
-| [Mobile](mockups/infoboard-mobile.png) | Single-column responsive direction | Không ngụ ý remote/mobile-native access |
+| [Desktop dashboard](mockups/infoboard-dashboard-desktop.png) | M1 dashboard; M3 retrieval/analytics | Navigation, filters, KPI, item list, and analytics layout | Data and visual labels are illustrative |
+| [Item detail](mockups/infoboard-item-detail.png) | M1 detail/workspace | Content, source, notes, collections, status, and actions | Written Product/Design behavior is authoritative |
+| [Mobile](mockups/infoboard-mobile.png) | M1 core responsive flow | Single-column responsive direction | Does not imply remote or native-mobile access |
 
 ## Review checklist
 
-- Đối chiếu mockup với information architecture và screen inventory.
-- Kiểm tra desktop 1440 px/mobile 390 px cho core flow.
-- Không suy ra tags, image capture hoặc button ngoài MVP từ ảnh.
-- Khi mockup và PRD mâu thuẫn, Internal PRD là nguồn product canonical; cập nhật mockup trong review cycle riêng.
+- [ ] Compare every mockup with the information architecture and screen inventory.
+- [ ] Review desktop 1440 px and mobile 390 px behavior for the core flow.
+- [ ] Do not infer tags, image capture, or buttons outside the written MVP scope.
+- [ ] Treat the Internal PRD as the product authority when a mockup conflicts
+  with written requirements.
+- [ ] Update a mockup in a separate review when its visual direction changes.
