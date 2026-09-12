@@ -2,7 +2,7 @@
 
 | Type | Reference | Use |
 | --- | --- | --- |
-| Product | [Privacy and trust](../../../../product/internal-prd/05-privacy-and-trust.md), `PR-SEC-01…02` | User trust boundary |
+| Product | [Privacy and trust](../../../../product/internal-prd/05-privacy-and-trust.md), `PR-SEC-01`, `PR-SEC-02`, `PR-SEC-03` | User trust boundary |
 | Architecture | [Security boundaries](../../../../architecture/07-security-boundaries.md), [ingestion](../../../../architecture/03-ingestion-pipeline.md) | Input and network controls |
 | Quality | [Test strategy](../../../../quality/01-test-strategy.md) | Security regression layers |
 | Operations | [Health/troubleshooting](../../../../operations/02-health-and-troubleshooting.md) | Safe diagnostics |

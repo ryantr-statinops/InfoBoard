@@ -6,7 +6,7 @@ This is the execution-ready implementation workspace. It is organized by milesto
 
 ## Reading order and status
 
-Read in this order: [program roadmap](00-program/roadmap.md) → active milestone → epic `README.md` → `plan.md` → `tasks.md` → `references.md` → optional `examples.md`/`guides/` → `execution.md`.
+Read in this order: [program roadmap](00-program/roadmap.md) → active milestone → epic `README.md` → `plan.md` → `tasks.md` → `references.md` → optional `examples.md`/`guides/` → `execution.md` for M1–M4 or `evidence.md` for M5+ discovery.
 
 Every epic reports three independent values:
 
@@ -33,6 +33,6 @@ See [task conventions](00-program/task-conventions.md) for the task, evidence, a
 
 ## Package rules
 
-`plan.md` is implementation intent and may change when an approved decision changes. `tasks.md` is the actionable checklist. `execution.md` is append-only evidence and must not rewrite acceptance retroactively. A feature may contain multiple commits but has one review gate. After merge, update execution evidence before starting the next package.
+`plan.md` is implementation intent and may change when an approved decision changes. `tasks.md` is the actionable checklist. `execution.md` for M1–M4 and `evidence.md` for M5+ discovery are append-only evidence logs and must not rewrite acceptance retroactively. A feature may contain multiple commits but has one review gate. After merge, update the package evidence before starting the next package.
 
 Product, architecture, design, quality, and operations remain canonical in their own documentation layers. This workspace records how those decisions are delivered and what evidence proves them.

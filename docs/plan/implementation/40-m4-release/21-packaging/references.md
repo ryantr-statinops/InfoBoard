@@ -2,7 +2,7 @@
 
 | Type | Reference | Use |
 | --- | --- | --- |
-| Product | [Overview](../../../../product/internal-prd/00-overview.md), [success criteria](../../../../product/internal-prd/06-success-criteria.md), `PR-OPS-01…02` | Operational outcome |
+| Product | [Overview](../../../../product/internal-prd/00-overview.md), [success criteria](../../../../product/internal-prd/06-success-criteria.md), `PR-OPS-01`, `PR-OPS-02` | Operational outcome |
 | Architecture | [Tech stack](../../../../architecture/01-tech-stack.md), [lifecycle](../../../../architecture/06-lifecycle-and-recovery.md) | Runtime/dependency boundary |
 | Quality | [MVP gates](../../../../quality/03-mvp-quality-gates.md) | Release evidence |
 | Operations | [Setup/modes](../../../../operations/00-local-setup-and-modes.md), [upgrade/release](../../../../operations/03-upgrade-release-and-rollback.md) | Operator contract |

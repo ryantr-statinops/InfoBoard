@@ -2,15 +2,15 @@
 
 ## Screen inventory
 
-| Screen/surface | Primary purpose |
-| --- | --- |
-| Dashboard | Overview, filters, recent items, KPIs, and analytics |
-| Add dialog/form | Create a text, URL, or file item |
-| Item list | Browse filtered/search results |
-| Detail panel | Read content/source; edit metadata, notes, collections, and status |
-| Search results | Excerpt, score/mode, and item opening |
-| Collections | Create, rename, delete, and filter collections |
-| Settings/maintenance | Full-mode config, health, and backup/rebuild for advanced users |
+| Screen/surface | Milestone | Primary purpose |
+| --- | --- | --- |
+| Dashboard | M1; M3 extensions | Shell/list in M1; KPI and analytics surfaces in M3 |
+| Add dialog/form | M1 | Create a text, URL, or file item |
+| Item list | M1; M3 extensions | Browse items in M1; retrieval filters/search in M3 |
+| Detail panel | M1 | Read content/source; edit metadata, notes, collections, and status |
+| Search results | M3 | Excerpt, score/mode, and item opening |
+| Collections | M1 | Create, rename, delete, and filter collections |
+| Settings/maintenance | M4 | Full-mode config, health, and backup/rebuild for advanced users |
 
 ## Primary flow
 

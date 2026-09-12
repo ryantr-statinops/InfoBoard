@@ -15,6 +15,10 @@ InfoBoard
 
 ## Dashboard structure
 
+The dashboard shell, add flow, list, detail, collections, notes, and status belong
+to M1. Search controls/results and KPI/analytics surfaces are revealed in M3; health,
+backup, rebuild, and other maintenance surfaces belong to M4.
+
 ```text
 ┌──────────────┬──────────────────────────────────────────────┐
 │ Navigation   │ Search                         + Add        │
