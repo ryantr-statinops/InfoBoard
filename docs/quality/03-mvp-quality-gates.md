@@ -19,7 +19,7 @@
 
 - Security, backup/restore/rebuild, diagnostics, and log-redaction tests pass.
 - Full test, lint, type check, migration tests, and benchmark report pass.
-- A clean checkout runs core mode; full mode runs or clearly reports missing dependencies/models.
+- A clean checkout runs core mode without configuring optional components. If full mode is in release scope, its clean installation, model preparation, smoke test, and degraded fallback also pass.
 - Core requirement traceability is verified or has a reviewed waiver. Conditional full-mode requirements are verified only when full mode is included in the release scope.
 
 ## Evidence rule

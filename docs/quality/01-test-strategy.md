@@ -26,3 +26,10 @@
 4. Security and migration/recovery tests.
 5. Optional full-mode smoke.
 6. Benchmark/evaluation according to the release gate, not hidden inside the core unit suite.
+
+## Release-scope policy
+
+- Core unit, storage, service, HTTP, security, recovery, UI, and keyword-retrieval suites are mandatory for every MVP release.
+- Full-mode smoke and semantic/hybrid evaluation are mandatory only when the release explicitly claims full-mode support.
+- A core-only run verifies that optional components can remain unconfigured without warnings or degraded health.
+- A configured-full-mode failure run verifies truthful degraded status and keyword/SQLite fallback.

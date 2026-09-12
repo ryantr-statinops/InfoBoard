@@ -6,5 +6,6 @@ Quality docs define the required evidence; actual results remain in implementati
 2. [Test strategy](01-test-strategy.md)
 3. [Search and performance evaluation](02-search-and-performance-evaluation.md)
 4. [MVP quality gates](03-mvp-quality-gates.md)
+5. [Build-readiness gate](04-build-readiness-gate.md)
 
 Do not mark a capability verified merely because an adapter/mock exists or target architecture has been documented.
