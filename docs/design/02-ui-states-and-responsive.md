@@ -8,7 +8,8 @@
 | Loading | Keep the layout stable with a placeholder |
 | Processing | Show the step/job state without assuming indexing is complete |
 | Failed | Show a safe reason, affected area, and Retry when appropriate |
-| Degraded | Identify unavailable semantic/analytics capabilities; keep the core flow usable |
+| Degraded | Identify failure of an enabled optional component and keep the core flow usable; an unconfigured full mode is not degraded |
+| Unavailable | Explain that a required core component is unavailable and provide repair guidance; do not present the application as healthy |
 | Duplicate/conflict | Explain the existing item and next action |
 | Deleted | Close detail/refresh the list while preserving filter context |
 
@@ -22,6 +23,13 @@
 | `failed` | `failed` |
 
 The UI may show a detailed step label in advanced/detail view but does not create another organization status for the item.
+
+## Mode-state rules
+
+- Core mode with no full-mode configuration is `ok` when SQLite/FTS5 and required core services are healthy.
+- SQLite or FTS5 failure is `unavailable`, not degraded; list/detail may remain readable but core health is not advertised.
+- Failure of an explicitly enabled semantic/cache/analytics component is `degraded`; only the affected optional capability is disabled.
+- Successful removal or disablement of full-mode configuration returns the UI to normal core mode rather than leaving a degraded warning.
 
 ## Responsive behavior
 

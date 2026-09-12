@@ -19,6 +19,8 @@ The dashboard shell, add flow, list, detail, collections, notes, and status belo
 to M1. Search controls/results and KPI/analytics surfaces are revealed in M3; health,
 backup, rebuild, and other maintenance surfaces belong to M4.
 
+The default navigation represents core mode. Full-mode provider/model controls and semantic discovery surfaces are hidden until the user explicitly configures full mode; their absence does not create a warning or degraded badge.
+
 ```text
 ┌──────────────┬──────────────────────────────────────────────┐
 │ Navigation   │ Search                         + Add        │
@@ -41,3 +43,4 @@ Filter/search context includes `q`, collection, source, status, and date range. 
 - An item may belong to multiple collections, so collection totals may exceed the item total.
 - The application-wide job count must be labelled when a filter applies only to items/analytics.
 - Advanced maintenance must not interrupt the default capture/retrieve flow.
+- Core search remains a first-class M3 destination even when no full-mode component is installed.

@@ -9,15 +9,12 @@
 | Source scope | Text, public URL, PDF có text, Markdown và TXT |
 | System of record | SQLite và stored snapshots |
 | Retrieval baseline | Keyword luôn hoạt động; semantic/hybrid và related content là optional/full mode |
+| Experience modes | Simple/core mode là mặc định; full-mode controls chỉ xuất hiện sau explicit setup; configured full-mode failure mới là degraded |
 | Default privacy | Local processing; cloud/provider chỉ opt-in |
 | Deletion | Soft delete trước, derived cleanup sau |
 | Hậu MVP | Quản lý trong Next Plan và không chặn M1–M4 |
 
 ## Open questions by decision horizon
-
-### MVP design review
-
-- UX boundary cuối cùng giữa simple mode và advanced settings là gì? Design review sở hữu câu hỏi này; core flow không được phụ thuộc advanced setup.
 
 ### Conditional full-mode discovery
 

@@ -8,9 +8,10 @@
 | Add dialog/form | M1 | Create a text, URL, or file item |
 | Item list | M1; M3 extensions | Browse items in M1; retrieval filters/search in M3 |
 | Detail panel | M1 | Read content/source; edit metadata, notes, collections, and status |
-| Search results | M3 | Excerpt, score/mode, and item opening |
+| Keyword search results | M3 core | Excerpt, keyword mode, shared filters, and item opening |
+| Semantic/related/cluster surfaces | M3 optional full mode | Semantic score/mode and source-provenance discovery after explicit setup |
 | Collections | M1 | Create, rename, delete, and filter collections |
-| Settings/maintenance | M4 | Full-mode config, health, and backup/rebuild for advanced users |
+| Settings/maintenance | M4 | Explicit full-mode setup, health, diagnostics, and backup/rebuild for advanced users |
 
 ## Primary flow
 
@@ -32,3 +33,10 @@ flowchart LR
 - Delete always requires confirmation and hides the item immediately after success.
 - Clicking a collection/chart opens the list with the corresponding filter.
 - Search results are item-level; users do not need to understand chunks.
+
+## Simple and advanced mode boundary
+
+- Simple mode is the default and includes capture, organization, keyword retrieval, item status, and understandable recovery guidance.
+- Advanced mode contains full-mode setup, provider/model metadata, diagnostics, backup/rebuild controls, and detailed job steps.
+- Full-mode search and discovery controls appear only after successful explicit setup.
+- A core-only installation does not show missing-full-mode warnings. If an enabled full-mode component later fails, affected optional surfaces show degraded state and keyword retrieval remains available.
