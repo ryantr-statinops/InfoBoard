@@ -4,7 +4,7 @@
 
 The SQLite schema and FTS5 exist at partial coverage; migration history and the complete content-version schema are not implemented. The runtime currently uses `items.status DEFAULT 'active'`, `chunks.position`, one `item_contents` row per item, and `index_jobs.attempts`. The target below changes the default to `inbox`, the content key to `(item_id, content_version)`, and `attempts` to `retry_count` through epic 11.
 
-## Target state
+## Target contract
 
 ```mermaid
 erDiagram
@@ -87,3 +87,17 @@ erDiagram
 - Reindexing does not overwrite notes or organization state.
 - Schema changes use numbered migrations, backups before upgrade, and upgrade tests.
 - FTS reflects only current, non-deleted content and is kept transactionally synchronized.
+
+## Implementation gap
+
+- Runtime content storage is not version-addressable and has no numbered migration history.
+- Runtime still defaults new items to `active` and stores job attempts under `attempts`.
+- Derived cleanup and stale-version enforcement are incomplete.
+
+## Owning work
+
+Epic 11 owns schema and migration convergence; epic 14 owns job/version enforcement; epic 18 owns cleanup and recovery behavior.
+
+## Evidence required
+
+Schema introspection, migration tests from the current database, foreign-key/FTS invariants, restart tests, and backup-before-upgrade evidence.

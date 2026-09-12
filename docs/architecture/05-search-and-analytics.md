@@ -4,7 +4,7 @@
 
 FTS5 keyword search and the RRF utility exist at a basic level but are not fully connected; Chroma semantic search is not implemented. Analytics has a minimal SQLite fallback and DuckDB adapter.
 
-## Target state — search and analytics pipelines
+## Target contract — search and analytics pipelines
 
 ```mermaid
 flowchart LR
@@ -37,4 +37,18 @@ flowchart LR
 - Chroma returns only chunk IDs/scores; content and metadata are hydrated from SQLite.
 - Deleted or stale-version candidates are removed before the response.
 - Analytics uses the same filter semantics as the item list.
-- DuckDB/Chroma failure reports degraded mode without failing the entire dashboard/search experience.
+- Full mode not configured is a normal core-mode state and is not reported as degraded.
+- Failure of an enabled DuckDB/Chroma component reports degraded mode without failing the core dashboard/search experience.
+
+## Implementation gap
+
+- FTS filters/excerpts and RRF are not connected to the complete target response pipeline.
+- Persistent Chroma indexing is absent; analytics filter parity and optional-component state reporting are incomplete.
+
+## Owning work
+
+Epic 15 owns keyword retrieval and conditional semantic/hybrid behavior; epic 16 owns analytics and SQLite fallback; epic 19 owns component status reporting.
+
+## Evidence required
+
+Core multilingual retrieval tests, deleted/stale-version filtering, analytics parity fixtures, core-only health behavior, and conditional full-mode evaluation when enabled.

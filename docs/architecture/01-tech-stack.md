@@ -4,7 +4,7 @@
 
 The baseline uses Python, FastAPI, Jinja2, and SQLite/FTS5. Some full-mode adapters exist minimally; dependency smoke tests, lockfile verification, and degraded behavior are incomplete. `pypdf` and the extraction/full-mode dependencies are not declared in `pyproject.toml`; this is an implementation gap, not an installed capability.
 
-## Target state
+## Target contract
 
 | Layer | Technology | Responsibility | Mode |
 | --- | --- | --- | --- |
@@ -26,3 +26,16 @@ The baseline uses Python, FastAPI, Jinja2, and SQLite/FTS5. Some full-mode adapt
 - Full mode is provided through optional dependencies and reports a clear degraded state when they are missing.
 - Models are downloaded only through an explicit preparation action; record model ID, revision, and dimension.
 - Do not use a runtime CDN; static assets must work offline.
+
+## Implementation gap
+
+- `pypdf`, complete extraction dependencies, and optional full-mode extras are not represented by a release-verified dependency manifest.
+- Clean core/full installation and model-preparation workflows have no execution evidence.
+
+## Owning work
+
+Epic 13 owns extraction dependencies; epic 15 owns semantic adapters; epic 16 owns optional analytics acceleration; epic 21 owns packaging and install verification.
+
+## Evidence required
+
+Clean-checkout install transcripts, dependency smoke tests, lockfile verification, core-only startup, and conditional full-mode setup evidence.
