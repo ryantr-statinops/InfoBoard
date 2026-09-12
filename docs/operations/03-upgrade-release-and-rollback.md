@@ -2,31 +2,31 @@
 
 ## Current state
 
-Packaging, upgrade và rollback plans đang ở draft; chưa có tagged MVP release hoặc clean-checkout evidence.
+Packaging, upgrade, and rollback plans are draft; there is no tagged MVP release or clean-checkout evidence yet.
 
 ## Target release artifact
 
-- App version, lockfile, complete migration set và compatibility matrix.
-- Setup docs cho core/full modes, changelog và known limitations.
-- Backup/restore/rebuild và health/troubleshooting procedures.
+- App version, lockfile, complete migration set, and compatibility matrix.
+- Setup docs for core/full modes, changelog, and known limitations.
+- Backup/restore/rebuild and health/troubleshooting procedures.
 - Test/lint/type/migration/security/benchmark evidence.
 
 ## Upgrade flow
 
-1. Đọc release notes và compatibility requirements.
-2. Backup authoritative data và verify integrity.
-3. Cài locked dependencies/artifact.
-4. Chạy migrations transactionally.
-5. Rebuild derived indexes khi schema/model contract yêu cầu.
-6. Chạy health và core smoke test.
+1. Read the release notes and compatibility requirements.
+2. Back up authoritative data and verify integrity.
+3. Install locked dependencies/artifact.
+4. Run migrations transactionally.
+5. Rebuild derived indexes when the schema/model contract requires it.
+6. Run health and the core smoke test.
 
 ## Rollback
 
-- Code rollback qua revert/reinstall release trước, không dùng destructive worktree reset.
-- Data rollback qua verified pre-upgrade backup.
-- Không tự động down-migrate schema.
-- Failed upgrade phải giữ log/evidence an toàn và không xóa backup.
+- Roll back code by reverting/reinstalling the previous release; do not use a destructive worktree reset.
+- Roll back data through the verified pre-upgrade backup.
+- Automatic schema down-migration is not supported.
+- A failed upgrade must preserve safe logs/evidence and must not delete the backup.
 
 ## Release gate
 
-Không release khi migration, backup/restore, core-mode install, security suite hoặc requirement traceability chưa pass/được waiver rõ ràng.
+Do not release until migrations, backup/restore, core-mode installation, the security suite, and requirement traceability pass or have an explicit waiver.

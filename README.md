@@ -30,7 +30,13 @@ uv run uvicorn app.main:app --reload
 
 The application runs locally at <http://127.0.0.1:8000> by default. API documentation is available at <http://127.0.0.1:8000/docs>.
 
-Copy `.env.example` to `.env` if you need to override local data paths. Do not commit secrets or runtime data.
+The current runtime reads `INFOBOARD_DB` from the process environment. For the current supported path, export the value explicitly:
+
+```bash
+export INFOBOARD_DB=data/infoboard.db
+```
+
+Copying `.env.example` to `.env` does not auto-load these values yet; `.env` loading is a planned settings follow-up. Do not commit secrets or runtime data.
 
 ## Project map
 

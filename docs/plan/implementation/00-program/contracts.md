@@ -1,7 +1,25 @@
 # 04 — Cross-cutting contracts
 
 **Status:** `ready`
+**Contract state:** target contract for implementation; it is not runtime evidence.
 **Applies to:** core and full modes
+
+## Current versus target
+
+This document defines the contract that implementation tasks must converge on. The
+runtime snapshot is recorded separately in [current state and gap analysis](current-state.md).
+When the two differ, the current runtime is the evidence and the target contract is
+the work to be delivered by the linked epic/task.
+
+| Area | Current runtime | Target contract | Owning work |
+| --- | --- | --- | --- |
+| Health | `/api/health` returns `{"status":"ok"}` without component checks | Component status with `503 unavailable` for SQLite/FTS5 and `200 degraded` for derived-only failure | 10, 19 |
+| Item create/list | Basic create and list responses; no job/pagination wrapper | `202` job response and `{items,total,limit,offset}` list wrapper | 12, 14 |
+| Search/analytics | Minimal query and metrics responses | Shared filters, retrieval metadata, KPI data, and truthful fallback | 15, 16 |
+| Content lifecycle | Single current content row and immediate delete response | Version-aware content, soft-delete cleanup job, and reindex lifecycle | 11, 14, 18 |
+
+Do not describe a target response as implemented until its task has execution evidence
+and the corresponding milestone acceptance has passed.
 
 ## API conventions
 

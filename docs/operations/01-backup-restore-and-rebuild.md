@@ -2,30 +2,30 @@
 
 ## Current state
 
-Backup/restore/rebuild target đã được thiết kế nhưng chưa có verified release command/transcript.
+The backup/restore/rebuild target is designed, but no verified release command/transcript exists yet.
 
 ## Backup contract
 
-Backup authoritative gồm SQLite database, stored snapshots và manifest có app/schema version, timestamp và checksums. ChromaDB/RocksDB/DuckDB artifacts không bắt buộc vì có thể rebuild.
+The authoritative backup includes the SQLite database, stored snapshots, and a manifest with app/schema version, timestamp, and checksums. ChromaDB/RocksDB/DuckDB artifacts are not required because they can be rebuilt.
 
 ## Target backup flow
 
-1. Resolve và hiển thị chính xác source/destination.
-2. Đảm bảo SQLite backup nhất quán; không copy file đang ghi theo cách không an toàn.
-3. Copy snapshots và tạo manifest/checksums.
-4. Verify backup có thể mở và SQLite integrity check pass.
+1. Resolve and display the exact source/destination.
+2. Ensure the SQLite backup is consistent; do not copy a live database unsafely.
+3. Copy snapshots and create the manifest/checksums.
+4. Verify that the backup opens and the SQLite integrity check passes.
 
 ## Target restore flow
 
-1. Không ghi đè destination có dữ liệu nếu chưa tạo safety backup.
-2. Verify manifest/checksums và restore vào vị trí tạm/được xác định rõ.
-3. Chạy SQLite integrity check.
-4. Chạy migrations theo version.
-5. Rebuild FTS, vector và cache từ SQLite/snapshots.
-6. Chạy health và core smoke flow trước khi chuyển sang dữ liệu restored.
+1. Do not overwrite a populated destination without a safety backup.
+2. Verify the manifest/checksums and restore to a temporary or explicitly selected location.
+3. Run the SQLite integrity check.
+4. Run versioned migrations.
+5. Rebuild FTS, vectors, and cache from SQLite/snapshots.
+6. Run health and the core smoke flow before switching to restored data.
 
 ## Rebuild rules
 
-- Rebuild idempotent/resumable và không sửa notes, collections hoặc organization status.
-- Model/provider metadata mismatch tạo index mới, không tái sử dụng cache sai.
-- Failure giữ dữ liệu chính nguyên vẹn và cho phép retry.
+- Rebuild is idempotent/resumable and does not modify notes, collections, or organization status.
+- A model/provider metadata mismatch creates a new index rather than reusing a cache with the wrong revision/dimension.
+- Failure preserves canonical data and permits retry.
