@@ -4,7 +4,7 @@
 **Delivery status:** `not_started`  
 **Baseline coverage:** `partial`  
 **Milestone:** M4  
-**Dependencies:** 10, 14, 15, 16, 17
+**Dependencies:** 10, 14
 
 ## Outcome
 

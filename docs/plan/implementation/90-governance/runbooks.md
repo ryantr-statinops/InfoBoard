@@ -9,7 +9,7 @@
 
 1. Check Python 3.12 and `uv`.
 2. Run `uv sync` or the explicitly supported full-mode install.
-3. Copy `.env.example` to `.env` and verify paths stay within scope.
+3. Export supported variables such as `INFOBOARD_DB` and verify paths stay within scope. Copying `.env.example` alone does not load configuration in the current runtime.
 4. Run migration/health checks, then `uv run uvicorn app.main:app --reload`.
 
 ### Startup failure

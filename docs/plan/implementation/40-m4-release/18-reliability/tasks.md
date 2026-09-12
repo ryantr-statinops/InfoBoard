@@ -9,7 +9,7 @@
   - Evidence: [execution entry](execution.md#t18-001)
 
 - [ ] <a id="t18-002"></a>**T18-002 — Add safe restore and migration flow**
-  - Product: `PR-REC-01…02` · Evidence: `RQ-012`
+  - Product: `PR-REC-01`, `PR-REC-02` · Evidence: `RQ-012`
   - Depends on: `T18-001`, `T11-004` · Code: restore confirmation and migration path
   - Verify: clean-machine restore and interrupted-restore fixture
   - Accept when: active data is protected by safety copy and transactional migration.
@@ -25,7 +25,7 @@
   - Evidence: [execution entry](execution.md#t18-003)
 
 - [ ] <a id="t18-004"></a>**T18-004 — Add crash and integrity checks**
-  - Product: `PR-REC-04…05` · Evidence: `RQ-012`, `RQ-013`
+  - Product: `PR-REC-04`, `PR-REC-05` · Evidence: `RQ-012`, `RQ-013`
   - Depends on: `T18-002`, `T18-003` · Code: integrity/health checks
   - Verify: interrupted restore, deleted-item, and restart fixtures
   - Accept when: recovery detects damage before resume and keeps public data safe.
@@ -33,7 +33,7 @@
   - Evidence: [execution entry](execution.md#t18-004)
 
 - [ ] <a id="t18-005"></a>**T18-005 — Verify backup, restore, delete, and rebuild**
-  - Product: `PR-REC-01…05` · Evidence: `RQ-012`
+  - Product: `PR-REC-01`, `PR-REC-02`, `PR-REC-03`, `PR-REC-04`, `PR-REC-05` · Evidence: `RQ-012`
   - Depends on: `T18-004` · Code: recovery test suite and transcript
   - Verify: `uv run pytest -q` plus documented recovery guide
   - Accept when: recovery evidence is repeatable on a database copy.

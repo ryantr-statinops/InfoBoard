@@ -2,16 +2,17 @@
 
 ## Current state
 
-Worker lifecycle hiện là xử lý đồng bộ mô phỏng; chưa có background polling, durable lease, embedding thật hoặc persistent Chroma integration.
+The current worker lifecycle is a synchronous simulation; background polling, durable leases, real embeddings, and persistent Chroma integration are not implemented.
 
-## Target state
+## Target contract
 
 ```mermaid
 stateDiagram-v2
     [*] --> queued
     queued --> extracting
     extracting --> chunking
-    chunking --> embedding
+    chunking --> indexed: core mode
+    chunking --> embedding: full mode enabled
     embedding --> indexed
     extracting --> failed
     chunking --> failed
@@ -26,23 +27,41 @@ stateDiagram-v2
 flowchart LR
     Job[SQLite index job] --> Claim[Claim + lease]
     Claim --> Chunks[Build current-version chunks]
-    Chunks --> Cache{Embedding cache hit?}
+    Chunks --> Core[Write core FTS index]
+    Core --> Done
+    Chunks --> Mode{Full mode enabled?}
+    Mode -->|no| Done[Mark indexed in SQLite]
+    Mode -->|yes| Cache{Embedding cache hit?}
     Cache -->|yes| Upsert[Chroma upsert]
     Cache -->|no| Embed[Embedding provider]
     Embed --> Rocks[(RocksDB cache)]
     Embed --> Upsert
     Upsert --> Verify[Verify current version]
-    Verify --> Done[Mark indexed in SQLite]
+    Verify --> Done
 ```
 
 ## Invariants
 
-- Worker chỉ index current content version của non-deleted item.
-- Cache key gồm content hash, provider, model revision và dimension.
-- Retry/upsert idempotent; restart requeue job đang xử lý.
-- Quá retry limit chuyển `failed` và giữ error message an toàn.
-- Xóa hoặc đổi version trước khi hoàn tất khiến worker skip/cleanup stale output.
+- The worker indexes only the current content version of a non-deleted item.
+- Core mode completes after transactional chunk/FTS indexing; the `embedding` state is entered only when full mode is enabled.
+- The cache key includes content hash, provider, model revision, and dimension.
+- Retry/upsert is idempotent; restart requeues jobs that were in progress.
+- Exceeding the retry limit moves the job to `failed` with a safe error message.
+- Deletion or a version change before completion causes the worker to skip or clean up stale output.
 
 ## UI projection
 
-`extracting`, `chunking` và `embedding` được chiếu thành UI state `processing`. Các state `queued`, `indexed` và `failed` giữ nguyên; mapping UI không thay đổi durable job state trong SQLite.
+`extracting`, `chunking`, and `embedding` project to the UI state `processing`. `queued`, `indexed`, and `failed` remain unchanged; UI mapping does not change the durable SQLite job state.
+
+## Implementation gap
+
+- The current worker is synchronous and lacks polling, leases, durable checkpoints, restart recovery, and persistent vector/cache adapters.
+- Retry counting and stale-version cleanup do not yet use the target schema.
+
+## Owning work
+
+Epic 14 owns the durable worker lifecycle; epic 15 owns optional semantic persistence; epic 18 owns restart/rebuild recovery; epic 19 owns job diagnostics.
+
+## Evidence required
+
+Crash/requeue tests, retry-limit tests, idempotent upsert fixtures, stale-version/deletion races, and configured-full-mode adapter smoke tests.

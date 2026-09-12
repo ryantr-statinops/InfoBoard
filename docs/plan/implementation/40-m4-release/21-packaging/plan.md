@@ -4,7 +4,7 @@
 **Delivery status:** `not_started`  
 **Baseline coverage:** `missing`  
 **Milestone:** M4  
-**Dependencies:** 10, 11, 18, 20
+**Dependencies:** 10, 15, 18, 20
 
 ## Install modes
 

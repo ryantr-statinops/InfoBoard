@@ -1,5 +1,7 @@
 # Evidence log — Identity, sharing, and collaboration
 
+<a id="d32-001"></a><a id="d32-002"></a><a id="d32-003"></a>
+
 | Task | Prototype/decision | Review | Status |
 | --- | --- | --- | --- |
 | [D32-001](tasks.md#d32-001) | — | — | pending |

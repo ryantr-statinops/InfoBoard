@@ -7,6 +7,8 @@
 
 ## Task evidence
 
+<a id="t12-001"></a><a id="t12-002"></a><a id="t12-003"></a><a id="t12-004"></a><a id="t12-005"></a>
+
 | Task | Commit(s) | Verification | Review | Status |
 | --- | --- | --- | --- | --- |
 | [T12-001](tasks.md#t12-001) | — | — | — | pending |

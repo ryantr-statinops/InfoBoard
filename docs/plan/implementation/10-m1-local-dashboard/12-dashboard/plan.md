@@ -24,7 +24,11 @@ Users can capture, list, filter, open, edit, organize, annotate, and soft-delete
 2. Text capture, item detail, edit, and soft delete.
 3. Collection assignment and filtering.
 4. Notes and related detail actions.
-5. Search entry point and health/degraded messaging.
+5. Health/degraded messaging and a navigation entry point for the later M3 search experience.
+
+M1 does not accept keyword, semantic, hybrid, or analytics behavior. Those product
+behaviors are owned by M3; M1 only ensures the dashboard can present the appropriate
+navigation and unavailable/degraded guidance.
 
 ## Non-goals
 

@@ -2,16 +2,18 @@
 
 | Attribute | Product expectation | Evidence |
 | --- | --- | --- |
-| Data integrity | Restart/retry/version/delete không mất hoặc trả dữ liệu sai | Migration/recovery integration tests |
-| Availability | Core read/keyword flow sống khi derived store lỗi | Dependency failure tests |
-| Security | Input/network/render/log boundaries được kiểm soát | Security suite |
-| Usability | Core flow hoàn thành không cần advanced setup | Browser smoke test |
-| Accessibility | Keyboard, focus, labels và non-color status | Manual/automated UI checks |
-| Performance | Search/dashboard đạt target trên fixture chuẩn | Reproducible benchmark |
-| Recoverability | Backup/restore/rebuild được kiểm chứng | Recovery transcript |
-| Observability | Health/log đủ chẩn đoán mà không lộ content | Health/redaction tests |
-| Portability | Core mode chạy clean checkout, full mode degraded rõ | Install matrix |
+| Data integrity | Restart/retry/version/delete does not lose or misreport data | Migration/recovery integration tests |
+| Availability | Core read/keyword flow survives derived-store failure | Dependency failure tests |
+| Security | Input/network/render/log boundaries are controlled | Security suite |
+| Usability | Core flow completes without advanced setup | Browser smoke test |
+| Accessibility | Keyboard, focus, labels, and non-color status | Manual/automated UI checks |
+| Performance | Search/dashboard meets targets on the standard fixture | Reproducible benchmark |
+| Recoverability | Backup/restore/rebuild is verified | Recovery transcript |
+| Observability | Health/logs support diagnosis without exposing content | Health/redaction tests |
+| Installability / environment portability | Core mode runs from a clean checkout; full mode is conditional and degrades only after explicit enablement fails | Install matrix |
 
 ## Priority
 
-Data integrity và core usability ưu tiên hơn semantic recall. Fallback an toàn ưu tiên hơn dependency mới; measurement có trước optimization.
+Data integrity and core usability take priority over semantic recall. Safe fallback takes priority over new dependencies; measurement comes before optimization.
+
+An optional component that was never configured is absent, not degraded. Degraded evidence applies only after the user explicitly enables a full-mode component and that component becomes unavailable or incompatible.

@@ -4,7 +4,7 @@
 
 The epic turns extracted documents into durable chunks and derived indexes through a restartable worker lifecycle.
 
-**Requirements:** `PR-CAP-05`, `PR-REC-01…02`, `RQ-006`  
+**Requirements:** `PR-CAP-05`, `PR-REC-01`, `PR-REC-02`, `PR-REC-03`, `RQ-006`
 **Dependencies:** 11, 13
 
 ## Reading order

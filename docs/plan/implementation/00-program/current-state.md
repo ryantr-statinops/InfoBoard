@@ -3,6 +3,7 @@
 **Status:** `ready`
 **Runtime snapshot:** `f073724` — latest commit changing `app/`, tests, or runtime dependency files
 **Documentation baseline:** `b5751f5` — last synchronized docs baseline before this implementation-playbook rebuild
+**Working-tree docs:** clean after the reconciliation commits; this file describes the committed documentation baseline and is not runtime evidence
 **Delivery branch:** `dev`
 
 ## Existing baseline
@@ -29,6 +30,26 @@
 - `pypdf` and full-mode dependencies are not declared in `pyproject.toml`.
 - Runtime schema lacks complete content-version/migration history and uses `index_jobs.attempts` instead of target `retry_count`.
 - `/api/health` currently returns `{"status":"ok"}` and does not inspect SQLite/FTS5/derived components.
+
+## Current API versus target contract
+
+The [contract compatibility index](contracts.md) links to the canonical forward-looking [Architecture interface contract](../../../architecture/09-interface-contracts.md).
+The following endpoint differences are known implementation gaps, not evidence of
+completed behavior:
+
+| Endpoint/area | Current runtime | Target owner |
+| --- | --- | --- |
+| `GET /api/health` | Static `ok` response; no SQLite/FTS5/derived checks | 10, 19 |
+| `POST /api/items` | Returns the synchronous service result | 12, 14 |
+| `GET /api/items` | Basic filters and a raw list response | 12, 15 |
+| `GET /api/items/{id}` | Returns current metadata/content without full version/job projection | 11, 12, 14 |
+| `PATCH /api/items/{id}` | Updates a limited metadata set; text version behavior is not complete | 11, 12 |
+| `DELETE /api/items/{id}` | Returns an immediate delete response; derived cleanup is not queued | 18 |
+| `POST /api/search` | Minimal query response without the target filter/score contract | 15 |
+| `GET /api/analytics` | Minimal metrics without shared filters or full degraded metadata | 16 |
+
+Implementation work must update this table only when runtime evidence changes. The
+target contract remains non-evidence until the linked task is verified.
 
 ## Priority gaps
 

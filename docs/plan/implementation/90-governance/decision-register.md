@@ -15,7 +15,7 @@ Every decision has an ID, date, status, context, decision, alternatives, impact,
 | ADR-003 | accepted | UI uses Jinja2 + HTMX; no SPA/Node build. | 12, 21 |
 | ADR-004 | accepted | Core mode does not depend on semantic search; full mode is optional. | 15, 21 |
 | ADR-005 | accepted | Work on `dev`, use small commits, and stop for user review/merge. | 03, all epics |
-| ADR-006 | proposed | Normalize list responses to `{items,total,limit,offset}`. | 04, 12, 20 |
+| ADR-006 | proposed | Adopt the Architecture target list wrapper `{items,total,limit,offset}` with a verified runtime compatibility rollout. | 04, 12, 20 |
 | ADR-007 | proposed | MVP worker is sequential in-process with SQLite checkpoint/lease. | 14, 19 |
 | ADR-008 | accepted | Each implementation epic uses README/plan/tasks/references/execution; examples and guides are conditional. | all MVP epics |
 | ADR-009 | accepted | M5+ packages remain discovery-only and use `D*` IDs until implementation-ready. | 30–35 |

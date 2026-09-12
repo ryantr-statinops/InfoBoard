@@ -1,5 +1,7 @@
 # Evidence log — AI and providers
 
+<a id="d33-001"></a><a id="d33-002"></a><a id="d33-003"></a>
+
 | Task | Experiment/decision | Review | Status |
 | --- | --- | --- | --- |
 | [D33-001](tasks.md#d33-001) | — | — | pending |

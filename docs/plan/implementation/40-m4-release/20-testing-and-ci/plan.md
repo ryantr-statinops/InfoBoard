@@ -2,9 +2,9 @@
 
 **Plan status:** `ready`  
 **Delivery status:** `not_started`  
-**Baseline coverage:** `partial`  
+**Baseline coverage:** `missing`
 **Milestone:** M4  
-**Dependencies:** 10–19  
+**Dependencies:** 15, 16, 17, 18
 **Quality commands:** `uv run pytest -q`, `uv run ruff check .`
 
 ## Test layers
@@ -15,11 +15,11 @@ Unit tests cover normalization, chunking, hashing, extractors, FTS sanitization,
 
 Fixtures accept `tmp_path`, patch settings before opening connections, and never seed the real `data/` directory. Fake embeddings are deterministic by hash; network/PDF parsing uses fixtures or a local server.
 
-Benchmark data contains 1,000 items/10,000 chunks. Warm the model before measurement and report p50/p95/p99, memory, CPU, model/version, and hardware. Target search p95 is under one second after warm-up; model startup is excluded.
+Benchmark data contains 1,000 items/10,000 chunks. Warm the model before measurement and report p50/p95/p99, memory, CPU, model/version, and hardware. Core keyword search must meet the under-one-second p95 target after warm-up; full-mode results are reported separately only when full mode is in release scope. Model startup is excluded.
 
 ## CI and acceptance
 
-CI runs format/lint/type checks, core unit/HTTP tests, migration/recovery/security suites, and optional full-mode smoke. Benchmarks run manually/nightly and remain comparable across hardware.
+CI runs format/lint/type checks, core unit/HTTP tests, migration/recovery/security suites, and optional full-mode smoke. Benchmarks run manually/nightly and remain comparable across hardware; full-mode benchmark evidence is conditional on release scope.
 
 - No test uses the default database.
 - Full suite is repeatable.

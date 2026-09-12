@@ -4,8 +4,8 @@
 
 The epic enforces the MVP trust boundary for local writes, untrusted content, network fetches, rendering, secrets, and logs.
 
-**Requirements:** `PR-SEC-01…02`, `RQ-011`  
-**Dependencies:** 10, 13, 18, 19
+**Requirements:** `PR-SEC-01`, `PR-SEC-02`, `PR-SEC-03`, `RQ-011`
+**Dependencies:** 10, 13
 
 ## Reading order
 

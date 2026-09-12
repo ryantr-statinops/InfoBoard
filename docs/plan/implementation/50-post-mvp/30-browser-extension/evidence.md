@@ -1,5 +1,7 @@
 # Evidence log — Browser extension and capture
 
+<a id="d30-001"></a><a id="d30-002"></a><a id="d30-003"></a>
+
 | Task | Prototype/decision | Review | Status |
 | --- | --- | --- | --- |
 | [D30-001](tasks.md#d30-001) | — | — | pending |

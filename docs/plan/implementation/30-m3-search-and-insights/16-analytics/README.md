@@ -4,7 +4,7 @@
 
 The epic adds dashboard KPIs with shared filters and a safe SQLite fallback when optional analytics dependencies are unavailable.
 
-**Requirements:** `PR-RET-06`, `RQ-010`  
+**Requirements:** `PR-RET-01`, `PR-RET-06`, `PR-REC-03`, `PR-REC-04`, `RQ-010`
 **Dependencies:** 11, 12, 15
 
 ## Reading order

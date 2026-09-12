@@ -7,7 +7,7 @@
 
 ## Objective
 
-InfoBoard is an Advanced Bookmark Manager for one local user: it stores URLs and content snapshots, accepts text/files, organizes information with notes/collections, and supports full-text or semantic retrieval. SQLite is the system of record; indexes, caches, and analytics are rebuildable derived stores.
+InfoBoard is an Advanced Bookmark Manager for one local user: it stores URLs and content snapshots, accepts text/files, organizes information with notes/collections, and provides keyword retrieval in core mode. Full mode may add semantic retrieval. SQLite is the system of record; indexes, caches, and analytics are rebuildable derived stores.
 
 ## Outcomes
 
@@ -37,4 +37,4 @@ Browser extension, browser portability, migration assistant, cloud sync, collabo
 
 ## Program definition of done
 
-All requirements in [traceability](../90-governance/requirement-traceability.md) are verified or explicitly waived; test/lint/benchmark pass; README/runbooks match actual behavior; backup/restore is verified; and the MVP release is tagged from a clean main branch.
+All applicable core requirements in [traceability](../90-governance/requirement-traceability.md) are verified or explicitly waived; test/lint/benchmark pass; README/runbooks match actual behavior; backup/restore is verified; and the MVP release is tagged from a clean main branch. Conditional full-mode requirements are required only when full mode is included in the release scope.

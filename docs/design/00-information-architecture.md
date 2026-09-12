@@ -10,51 +10,37 @@ InfoBoard
 ├── Inbox
 ├── Active
 ├── Archived
-└── Settings / maintenance (advanced)
+└── Settings / advanced maintenance
 ```
-
-The default navigation exposes capture, organization, and retrieval without
-requiring advanced setup. Settings and maintenance remain available through an
-explicit advanced path.
 
 ## Dashboard structure
 
+The dashboard shell, add flow, list, detail, collections, notes, and status belong
+to M1. Search controls/results and KPI/analytics surfaces are revealed in M3; health,
+backup, rebuild, and other maintenance surfaces belong to M4.
+
+The default navigation represents core mode. Full-mode provider/model controls and semantic discovery surfaces are hidden until the user explicitly configures full mode; their absence does not create a warning or degraded badge.
+
 ```text
 ┌──────────────┬──────────────────────────────────────────────┐
-│ Navigation   │ Search                              + Add   │
+│ Navigation   │ Search                         + Add        │
 │              ├──────────────────────────────────────────────┤
 │              │ Collection · Source · Status · Date         │
 │              ├──────────────────────────────────────────────┤
-│              │ KPI and processing status                   │
+│              │ KPIs and processing status                  │
 │              ├────────────────────────┬─────────────────────┤
-│              │ Recent/item list       │ Analytics/insights  │
+│              │ Recent items          │ Analytics/insights  │
 └──────────────┴────────────────────────┴─────────────────────┘
                          Item → detail panel
 ```
 
-## Surface ownership by milestone
+## URL state
 
-| Surface | Milestone | Mode | Notes |
-| --- | --- | --- | --- |
-| Dashboard shell, add, list, and detail | M1 | Core | Primary user workspace |
-| Collections, notes, and status views | M1 | Core | Organization and context |
-| Keyword search and retrieval filters | M3 | Core | Must work without full mode |
-| KPI and analytics | M3 | Core | SQLite fallback remains available |
-| Semantic controls, related items, and clusters | M3 | Optional full | Visible only after explicit setup |
-| Health, backup, rebuild, and maintenance | M4 | Core/advanced | Operational actions are advanced |
-
-## URL and filter state
-
-Filter/search context includes `q`, collection, source, status, and date range.
-Opening or closing a detail panel preserves that context. The list excludes
-archived items by default and offers an explicit all-time option.
+Filter/search context includes `q`, collection, source, status, and date range. Opening/closing detail preserves the context; the list excludes archived items by default and uses a 30-day range with an all-time option.
 
 ## Information rules
 
-- An item can belong to multiple collections, so collection totals can exceed
-  the number of unique items.
-- Application-wide job counts must be labelled separately when filters apply
-  only to items or analytics.
+- An item may belong to multiple collections, so collection totals may exceed the item total.
+- The application-wide job count must be labelled when a filter applies only to items/analytics.
 - Advanced maintenance must not interrupt the default capture/retrieve flow.
-- Full-mode controls must not appear as available until full mode is explicitly
-  configured.
+- Core search remains a first-class M3 destination even when no full-mode component is installed.

@@ -7,6 +7,8 @@
 Architecture, Quality và Operations bổ sung các constraint tương ứng; `docs/plan/`
 sẽ được viết sau khi các layer này được review và khóa.
 
+Core MVP yêu cầu keyword retrieval và không phụ thuộc full mode. Semantic/hybrid retrieval là optional full-mode capability; browser portability và các hướng mở rộng khác thuộc Next Plan.
+
 ## Đọc theo thứ tự
 
 1. [Overview](00-overview.md) — mục tiêu, phạm vi và constraints.

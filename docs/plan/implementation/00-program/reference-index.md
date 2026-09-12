@@ -8,6 +8,7 @@ Use this index to find the source of a decision before editing an epic package.
 | --- | --- |
 | What are we building and why? | [Internal PRD](../../../product/internal-prd/README.md) |
 | What is the target system and data contract? | [Architecture](../../../architecture/README.md) |
+| What is the target API and service interface contract? | [Architecture interface contracts](../../../architecture/09-interface-contracts.md) |
 | What should the user see and do? | [Design](../../../design/README.md) |
 | How do we prove quality? | [Quality](../../../quality/README.md) |
 | How do we run, repair, and release it? | [Operations](../../../operations/README.md) |
