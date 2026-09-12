@@ -24,7 +24,7 @@ flowchart LR
     Backup[Backup SQLite + snapshots + metadata] --> Restore[Restore into validated location]
     Restore --> Integrity[SQLite integrity check]
     Integrity --> Migrate[Run versioned migrations]
-    Migrate --> Rebuild[Rebuild FTS/vector/cache]
+    Migrate --> Rebuild[Rebuild FTS; optional vector/cache]
     Rebuild --> Health[Health + smoke verification]
 ```
 
@@ -35,6 +35,7 @@ flowchart LR
 - Restore must not overwrite existing data without an explicit path/safety backup.
 - Schema rollback uses backup restore; automatic down-migration is not supported.
 - Rebuild must be resumable/idempotent and must not modify notes/collections/status.
+- Core-only recovery rebuilds required FTS; vector/cache rebuild applies only to explicitly configured full-mode components.
 
 ## Implementation gap
 

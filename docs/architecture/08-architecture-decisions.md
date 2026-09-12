@@ -11,7 +11,7 @@ The foundational decisions have a canonical Architecture index. Runtime delivery
 | SQLite is the system of record | Local, transactional, recoverable | Every derived store hydrates/rebuilds from SQLite |
 | No ORM in the MVP | Transparent SQL/schema ownership | Migrations and data-access SQL must be version-controlled |
 | Server-rendered Jinja2 + HTMX | No SPA/Node build required | Route/partial contracts need integration tests |
-| Core/full modes | Native/ML dependencies are not stable on every machine | Missing unconfigured full-mode components is normal; failure after explicit enablement is degraded |
+| Core/full modes | Native/ML dependencies are not stable on every machine | Unconfigured full-mode components are normal; failure after explicit enablement is degraded |
 | Sequential durable worker | Simplifies local consistency | Requires leases, checkpoints, retry, and restart recovery |
 | Local embedding by default | Privacy and offline operation | Explicit model preparation and revision metadata are required |
 | Architecture owns interface contracts | Product and implementation need one target contract | Implementation maps tasks/evidence to the Architecture contract instead of copying it |

@@ -27,13 +27,17 @@ stateDiagram-v2
 flowchart LR
     Job[SQLite index job] --> Claim[Claim + lease]
     Claim --> Chunks[Build current-version chunks]
-    Chunks --> Cache{Embedding cache hit?}
+    Chunks --> Core[Write core FTS index]
+    Core --> Done
+    Chunks --> Mode{Full mode enabled?}
+    Mode -->|no| Done[Mark indexed in SQLite]
+    Mode -->|yes| Cache{Embedding cache hit?}
     Cache -->|yes| Upsert[Chroma upsert]
     Cache -->|no| Embed[Embedding provider]
     Embed --> Rocks[(RocksDB cache)]
     Embed --> Upsert
     Upsert --> Verify[Verify current version]
-    Verify --> Done[Mark indexed in SQLite]
+    Verify --> Done
 ```
 
 ## Invariants

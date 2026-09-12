@@ -23,7 +23,7 @@ The baseline uses Python, FastAPI, Jinja2, and SQLite/FTS5. Some full-mode adapt
 ## Dependency policy
 
 - Core mode must install and run independently.
-- Full mode is provided through optional dependencies. Missing components before explicit enablement are normal disabled/absent state; failure after enablement reports a clear degraded state.
+- Full mode is provided through optional dependencies. Missing components before explicit enablement are a normal disabled/absent state; failure after enablement reports a clear degraded state.
 - Models are downloaded only through an explicit preparation action; record model ID, revision, and dimension.
 - Do not use a runtime CDN; static assets must work offline.
 
