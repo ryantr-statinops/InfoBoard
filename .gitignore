@@ -7,4 +7,4 @@ data/*
 !data/.gitkeep
 
 #note document of local dev env, optional to have but do not delete if it exist
-note.txt
+note.md
