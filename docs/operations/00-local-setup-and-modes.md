@@ -13,6 +13,12 @@ The current runtime reads `INFOBOARD_DB` from the process environment only. The
 configuration placeholders until their settings boundary is implemented. Copying
 `.env.example` to `.env` does not auto-load values in the current runtime.
 
+Current supported configuration:
+
+```bash
+export INFOBOARD_DB=data/infoboard.db
+```
+
 ## Target setup flow
 
 1. Install Python 3.12 and `uv`.
@@ -27,10 +33,16 @@ configuration placeholders until their settings boundary is implemented. Copying
 | Mode | Required | Failure behavior |
 | --- | --- | --- |
 | Core | FastAPI, Jinja2/HTMX assets, SQLite/FTS5, extraction dependencies | SQLite/FTS unavailable must fail startup/health |
-| Full | Embedding model, ChromaDB, RocksDB, DuckDB | Missing derived dependencies report degraded state; core mode remains available |
+| Full | Explicitly enabled embedding model, ChromaDB, RocksDB, DuckDB | Setup must succeed before full-mode claims; later component failure reports degraded state while core remains available |
+
+An unconfigured optional component is reported as disabled/absent and does not make core health degraded.
 
 ## Configuration principles
 
 - Data directory, bind address, and provider configuration have safe local defaults.
 - Model download is an explicit preparation action and never occurs during a dashboard request.
 - Health reports component readiness and remediation guidance without exposing secrets or sensitive paths.
+
+## Configuration decision boundary
+
+The target application needs one centralized settings boundary, but `.env` auto-loading versus process-environment-only configuration remains an implementation decision. Epic 10 owns the decision and must record path resolution, defaults, supported variables, and tests before release documentation advertises a `.env` copy workflow.

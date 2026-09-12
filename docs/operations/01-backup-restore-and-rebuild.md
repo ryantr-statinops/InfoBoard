@@ -21,7 +21,7 @@ The authoritative backup includes the SQLite database, stored snapshots, and a m
 2. Verify the manifest/checksums and restore to a temporary or explicitly selected location.
 3. Run the SQLite integrity check.
 4. Run versioned migrations.
-5. Rebuild FTS, vectors, and cache from SQLite/snapshots.
+5. Rebuild required FTS from SQLite/snapshots; rebuild vectors/cache only when full mode is configured for the restored installation.
 6. Run health and the core smoke flow before switching to restored data.
 
 ## Rebuild rules
@@ -29,3 +29,4 @@ The authoritative backup includes the SQLite database, stored snapshots, and a m
 - Rebuild is idempotent/resumable and does not modify notes, collections, or organization status.
 - A model/provider metadata mismatch creates a new index rather than reusing a cache with the wrong revision/dimension.
 - Failure preserves canonical data and permits retry.
+- A core-only restore is complete after canonical data, migrations, FTS, health, and core smoke verification; optional full-mode indexes do not block it.

@@ -7,7 +7,7 @@ Packaging, upgrade, and rollback plans are draft; there is no tagged MVP release
 ## Target release artifact
 
 - App version, lockfile, complete migration set, and compatibility matrix.
-- Setup docs for core/full modes, changelog, and known limitations.
+- Setup docs for core mode and conditional full mode, changelog, and known limitations.
 - Backup/restore/rebuild and health/troubleshooting procedures.
 - Test/lint/type/migration/security/benchmark evidence.
 
@@ -17,7 +17,7 @@ Packaging, upgrade, and rollback plans are draft; there is no tagged MVP release
 2. Back up authoritative data and verify integrity.
 3. Install locked dependencies/artifact.
 4. Run migrations transactionally.
-5. Rebuild derived indexes when the schema/model contract requires it.
+5. Rebuild required FTS and any explicitly enabled derived indexes when the schema/model contract requires it.
 6. Run health and the core smoke test.
 
 ## Rollback
@@ -29,4 +29,4 @@ Packaging, upgrade, and rollback plans are draft; there is no tagged MVP release
 
 ## Release gate
 
-Do not release until migrations, backup/restore, core-mode installation, the security suite, and requirement traceability pass or have an explicit waiver.
+Do not release core mode until migrations, backup/restore, core-mode installation, the security suite, and applicable core requirement traceability pass or have an explicit waiver. If full mode is in release scope, its dependency/model installation, semantic evaluation, degraded fallback, and conditional requirements must also pass.

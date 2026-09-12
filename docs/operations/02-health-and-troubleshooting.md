@@ -6,7 +6,7 @@ The basic health endpoint exists; component-level status, the diagnostics bundle
 
 ## Target health model
 
-`/api/health` reports `ok`, `degraded`, or `unavailable` for SQLite, FTS, the worker, ChromaDB, RocksDB, DuckDB, and the model. SQLite or FTS5 unavailability makes core health return HTTP 503; derived dependency unavailability returns HTTP 200 with degraded status.
+`/api/health` reports `ok`, `disabled`, `degraded`, or `unavailable` for SQLite, FTS, the worker, ChromaDB, RocksDB, DuckDB, and the model. SQLite or FTS5 unavailability makes core health return HTTP 503. An optional component that was never configured is `disabled` and does not degrade core health. Failure of an explicitly enabled optional component returns HTTP 200 with degraded status when the core fallback is safe.
 
 When FTS5 fails, list/detail may still read from SQLite, but the application must not be advertised as healthy core mode because keyword retrieval is mandatory. The UI must state that keyword search is unavailable and guide the user to check/rebuild FTS.
 
@@ -25,6 +25,7 @@ When FTS5 fails, list/detail may still read from SQLite, but the application mus
 
 ### Semantic or analytics degraded
 
+- Confirm that the affected optional component was explicitly enabled; otherwise it should be disabled rather than degraded.
 - Confirm that the core keyword/read flow still works.
 - Check dependency/model metadata, derived-store paths, and health details.
 - Rebuild the derived store from SQLite after source-data integrity is confirmed.
