@@ -3,25 +3,25 @@
 ## M1 — Local dashboard
 
 - Fresh install/migration, add text, list/filter/detail, note/collection/status/delete pass.
-- Restart giữ dữ liệu; desktop/mobile core flow không tràn layout.
+- Restart preserves data; the desktop/mobile core flow has no layout overflow.
 
 ## M2 — Reliable ingestion
 
-- Text, TXT, Markdown, PDF và public URL tạo snapshot/chunk đúng.
-- Limits/SSRF/parser failures an toàn; retry/restart không mất hoặc nhân đôi job.
+- Text, TXT, Markdown, PDF, and public URL produce correct snapshots/chunks.
+- Limits/SSRF/parser failures are safe; retry/restart does not lose or duplicate jobs.
 
 ## M3 — Search and insights
 
-- Keyword fallback hoạt động khi derived dependencies lỗi.
-- Full mode có semantic/RRF theo contract; analytics parity và retrieval target pass.
+- Keyword fallback works when derived dependencies fail.
+- Full mode meets the semantic/RRF contract; analytics parity and retrieval targets pass.
 
 ## M4 — Hardened release
 
-- Security, backup/restore/rebuild, diagnostics và log-redaction tests pass.
-- Full test, lint, type check, migration tests và benchmark report pass.
-- Clean checkout chạy core mode; full mode chạy hoặc báo dependency/model thiếu rõ ràng.
-- Requirement traceability verified hoặc có waiver được review.
+- Security, backup/restore/rebuild, diagnostics, and log-redaction tests pass.
+- Full test, lint, type check, migration tests, and benchmark report pass.
+- A clean checkout runs core mode; full mode runs or clearly reports missing dependencies/models.
+- Requirement traceability is verified or has a reviewed waiver.
 
 ## Evidence rule
 
-Mỗi gate cần command/output, commit, environment và manual result trong execution log. Tài liệu target hoặc checklist chưa chạy không được tính là evidence.
+Each gate requires the command/output, commit, environment, and manual result in the execution log. Target docs or an unrun checklist do not count as evidence.

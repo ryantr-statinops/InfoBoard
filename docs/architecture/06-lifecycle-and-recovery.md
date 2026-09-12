@@ -2,7 +2,7 @@
 
 ## Current state
 
-Soft delete và reindex endpoint tồn tại một phần; derived cleanup, versioned migrations và verified backup/restore/rebuild chưa hoàn chỉnh.
+Soft delete and the reindex endpoint exist partially; derived cleanup, versioned migrations, and verified backup/restore/rebuild are incomplete.
 
 ## Target state — delete and recovery pipelines
 
@@ -30,8 +30,8 @@ flowchart LR
 
 ## Recovery rules
 
-- Backup tối thiểu gồm SQLite, snapshots và format/version metadata.
-- Derived stores không cần nằm trong authoritative backup.
-- Restore không ghi đè dữ liệu hiện có nếu chưa có explicit path/backup.
-- Schema rollback dùng restore backup; không tự động down-migrate.
-- Rebuild phải resumable/idempotent và không sửa notes/collections/status.
+- A minimum backup includes SQLite, snapshots, and format/version metadata.
+- Derived stores do not need to be part of the authoritative backup.
+- Restore must not overwrite existing data without an explicit path/safety backup.
+- Schema rollback uses backup restore; automatic down-migration is not supported.
+- Rebuild must be resumable/idempotent and must not modify notes/collections/status.

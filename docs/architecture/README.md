@@ -1,11 +1,11 @@
 # InfoBoard — Architecture
 
-Architecture docs mô tả cấu trúc hệ thống và các invariants kỹ thuật. Mỗi tài liệu phân biệt:
+Architecture docs describe system structure and technical invariants. Each document distinguishes:
 
-- **Current state:** capability đã có theo snapshot hiện hành.
-- **Target state:** thiết kế đích; không phải bằng chứng hoàn thành.
+- **Current state:** capabilities present in the current runtime snapshot.
+- **Target state:** intended design; not evidence of completion.
 
-## Đọc theo thứ tự
+## Reading order
 
 1. [System overview](00-system-overview.md)
 2. [Tech stack](01-tech-stack.md)
@@ -17,4 +17,4 @@ Architecture docs mô tả cấu trúc hệ thống và các invariants kỹ thu
 8. [Security boundaries](07-security-boundaries.md)
 9. [Architecture decisions](08-architecture-decisions.md)
 
-Implementation status và evidence nằm tại [`docs/plan/implementation/`](../plan/implementation/), không được suy ra từ target diagrams.
+Implementation status and evidence live in [`docs/plan/implementation/`](../plan/implementation/) and must not be inferred from target diagrams.

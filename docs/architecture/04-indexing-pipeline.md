@@ -2,7 +2,7 @@
 
 ## Current state
 
-Worker lifecycle hiện là xử lý đồng bộ mô phỏng; chưa có background polling, durable lease, embedding thật hoặc persistent Chroma integration.
+The current worker lifecycle is a synchronous simulation; background polling, durable leases, real embeddings, and persistent Chroma integration are not implemented.
 
 ## Target state
 
@@ -37,12 +37,12 @@ flowchart LR
 
 ## Invariants
 
-- Worker chỉ index current content version của non-deleted item.
-- Cache key gồm content hash, provider, model revision và dimension.
-- Retry/upsert idempotent; restart requeue job đang xử lý.
-- Quá retry limit chuyển `failed` và giữ error message an toàn.
-- Xóa hoặc đổi version trước khi hoàn tất khiến worker skip/cleanup stale output.
+- The worker indexes only the current content version of a non-deleted item.
+- The cache key includes content hash, provider, model revision, and dimension.
+- Retry/upsert is idempotent; restart requeues jobs that were in progress.
+- Exceeding the retry limit moves the job to `failed` with a safe error message.
+- Deletion or a version change before completion causes the worker to skip or clean up stale output.
 
 ## UI projection
 
-`extracting`, `chunking` và `embedding` được chiếu thành UI state `processing`. Các state `queued`, `indexed` và `failed` giữ nguyên; mapping UI không thay đổi durable job state trong SQLite.
+`extracting`, `chunking`, and `embedding` project to the UI state `processing`. `queued`, `indexed`, and `failed` remain unchanged; UI mapping does not change the durable SQLite job state.

@@ -17,23 +17,23 @@ InfoBoard
 
 ```text
 ┌──────────────┬──────────────────────────────────────────────┐
-│ Navigation   │ Search                         + Thêm       │
+│ Navigation   │ Search                         + Add        │
 │              ├──────────────────────────────────────────────┤
-│              │ Collection · Nguồn · Trạng thái · Thời gian │
+│              │ Collection · Source · Status · Date         │
 │              ├──────────────────────────────────────────────┤
-│              │ KPI và trạng thái xử lý                     │
+│              │ KPIs and processing status                  │
 │              ├────────────────────────┬─────────────────────┤
-│              │ Danh sách gần đây      │ Analytics/insights  │
+│              │ Recent items          │ Analytics/insights  │
 └──────────────┴────────────────────────┴─────────────────────┘
                          Item → detail panel
 ```
 
 ## URL state
 
-Filter/search context gồm `q`, collection, source, status và date range. Mở/đóng detail không làm mất context; list mặc định loại archived và dùng khoảng 30 ngày, có lựa chọn toàn thời gian.
+Filter/search context includes `q`, collection, source, status, and date range. Opening/closing detail preserves the context; the list excludes archived items by default and uses a 30-day range with an all-time option.
 
 ## Information rules
 
-- Một item có nhiều collection nên tổng theo collection có thể lớn hơn tổng item.
-- Job count toàn ứng dụng phải được ghi rõ khi filter khác chỉ áp dụng cho items/analytics.
-- Advanced maintenance không chen vào flow capture/retrieve mặc định.
+- An item may belong to multiple collections, so collection totals may exceed the item total.
+- The application-wide job count must be labelled when a filter applies only to items/analytics.
+- Advanced maintenance must not interrupt the default capture/retrieve flow.

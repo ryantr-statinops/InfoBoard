@@ -2,27 +2,27 @@
 
 ## Layers
 
-- Unit: normalization, hashing, chunking, ranking, validation và domain rules.
-- Storage integration: migrations, foreign keys, FTS sync, version/delete semantics.
-- Service integration: ingestion, worker retry/restart, fake derived adapters và rebuild.
-- HTTP integration: API contracts, errors, pagination, partial rendering và escaping.
-- Security: URL/redirect SSRF, limits, Host/Origin, unsafe markup và log redaction.
-- Recovery: backup copy, restore, migrate, rebuild và integrity verification.
-- UI smoke: add → detail → note/collection/status → search trên desktop/mobile.
-- Full-mode smoke: real dependency/model checks tách khỏi deterministic core suite.
+- Unit: normalization, hashing, chunking, ranking, validation, and domain rules.
+- Storage integration: migrations, foreign keys, FTS sync, and version/delete semantics.
+- Service integration: ingestion, worker retry/restart, fake derived adapters, and rebuild.
+- HTTP integration: API contracts, errors, pagination, partial rendering, and escaping.
+- Security: URL/redirect SSRF, limits, Host/Origin, unsafe markup, and log redaction.
+- Recovery: backup copy, restore, migrate, rebuild, and integrity verification.
+- UI smoke: add → detail → note/collection/status → search on desktop/mobile.
+- Full-mode smoke: real dependency/model checks separate from the deterministic core suite.
 
 ## Fixture policy
 
-- Test không dùng database mặc định hoặc dữ liệu người dùng.
-- Database thật được tạo trong temporary directory cho migration/recovery tests.
-- Unit tests dùng fake embedding/provider; full model chỉ ở smoke/evaluation suite.
-- Fixtures bao phủ Việt/Anh, có/không dấu, duplicates, empty PDF, redirects và stale versions.
+- Tests do not use the default database or user data.
+- Real databases are created in a temporary directory for migration/recovery tests.
+- Unit tests use fake embedding/providers; the full model is limited to smoke/evaluation suites.
+- Fixtures cover Vietnamese/English, accented/unaccented text, duplicates, empty PDFs, redirects, and stale versions.
 
 ## CI stages
 
 1. Dependency/install validation.
-2. Ruff và type checks.
+2. Ruff and type checks.
 3. Core unit/integration/HTTP tests.
-4. Security và migration/recovery tests.
+4. Security and migration/recovery tests.
 5. Optional full-mode smoke.
-6. Benchmark/evaluation theo release gate, không chạy ngầm trong core unit suite.
+6. Benchmark/evaluation according to the release gate, not hidden inside the core unit suite.

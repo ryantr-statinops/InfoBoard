@@ -5,7 +5,7 @@
 The epic provides reliable FTS5 retrieval and optional semantic/hybrid discovery without weakening core-mode search.
 
 **Requirements:** `PR-RET-01`, `PR-RET-02`, `PR-RET-03`, `PR-RET-04`, `PR-RET-05`, `RQ-007`, `RQ-008`, `RQ-009`
-**Dependencies:** 11, 14
+**Dependencies:** 11, 12, 14
 
 ## Reading order
 

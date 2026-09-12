@@ -2,7 +2,7 @@
 
 ## Current state
 
-FTS5 keyword search và RRF utility đã có mức cơ bản nhưng chưa nối đầy đủ; Chroma semantic search chưa có. Analytics có SQLite fallback và DuckDB adapter tối thiểu.
+FTS5 keyword search and the RRF utility exist at a basic level but are not fully connected; Chroma semantic search is not implemented. Analytics has a minimal SQLite fallback and DuckDB adapter.
 
 ## Target state — search and analytics pipelines
 
@@ -33,8 +33,8 @@ flowchart LR
 
 ## Rules
 
-- Keyword search luôn usable trong core mode.
-- Chroma chỉ trả chunk IDs/scores; content và metadata được hydrate từ SQLite.
-- Deleted/stale-version candidates bị loại trước response.
-- Analytics dùng cùng filter semantics với item list.
-- DuckDB/Chroma failure trả degraded mode, không làm toàn dashboard/search lỗi.
+- Keyword search is always usable in core mode.
+- Chroma returns only chunk IDs/scores; content and metadata are hydrated from SQLite.
+- Deleted or stale-version candidates are removed before the response.
+- Analytics uses the same filter semantics as the item list.
+- DuckDB/Chroma failure reports degraded mode without failing the entire dashboard/search experience.
