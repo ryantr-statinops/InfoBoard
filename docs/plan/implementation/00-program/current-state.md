@@ -3,7 +3,7 @@
 **Status:** `ready`
 **Runtime snapshot:** `f073724` — latest commit changing `app/`, tests, or runtime dependency files
 **Documentation baseline:** `b5751f5` — last synchronized docs baseline before this implementation-playbook rebuild
-**Working-tree docs:** uncommitted reconciliation changes are present; this file is not evidence of a committed runtime state
+**Working-tree docs:** clean after the reconciliation commits; this file describes the committed documentation baseline and is not runtime evidence
 **Delivery branch:** `dev`
 
 ## Existing baseline
