@@ -27,7 +27,7 @@ See [task conventions](00-program/task-conventions.md) for the task, evidence, a
 ## Program and governance
 
 - [Charter](00-program/charter.md) · [Current state](00-program/current-state.md) · [Roadmap](00-program/roadmap.md)
-- [Workflow](00-program/delivery-workflow.md) · [Contracts](00-program/contracts.md) · [Risks](00-program/risks.md)
+- [Workflow](00-program/delivery-workflow.md) · [Contract index](00-program/contracts.md) · [Risks](00-program/risks.md)
 - [Implementation index](00-program/implementation-index.md) · [Reference index](00-program/reference-index.md)
 - [Operational runbooks](90-governance/runbooks.md) · [Decision register](90-governance/decision-register.md) · [Traceability](90-governance/requirement-traceability.md)
 

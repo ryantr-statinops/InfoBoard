@@ -42,25 +42,31 @@ HTTP mapping: `400` invalid input, `404` missing resource, `409` duplicate/confl
 
 | Endpoint | Target behavior |
 | --- | --- |
-| `GET /api/health` | Report core and enabled optional components; return `503` for SQLite/FTS5 failure and `200 degraded` for failure of an enabled optional component. |
+| `GET /api/health` | Report core and optional components as `ok`, `disabled`, `degraded`, or `unavailable`; return `503` for SQLite/FTS5 failure and `200 degraded` for failure of an enabled optional component. |
 | `POST /api/items` | Create text, deduplicate, and return `202` with `item_id`, `job_id`, and state. |
 | `POST /api/items/upload` | Accept a bounded supported file with optional title/collections and return the same job contract. |
 | `POST /api/items/url` | Validate and canonicalize a public URL before using the same job contract. |
 | `GET /api/items` | Filter by collection, status, source, date, and query with the pagination wrapper. |
 | `GET /api/items/{id}` | Return metadata, current content, collections, notes, chunks, and job projection. |
 | `PATCH /api/items/{id}` | Update title/status/collections or editable text; text changes create a content version. |
-| `DELETE /api/items/{id}` | Soft-delete immediately and queue derived cleanup. |
+| `DELETE /api/items/{id}` | Soft-delete immediately, queue derived cleanup, and return `202`. |
+| `POST /api/items/{id}/reindex` | Create or requeue a job for the current content version. |
+| `POST /api/reindex` | Rebuild or requeue items/indexes selected by the maintenance contract. |
+| Collection/note endpoints | Provide CRUD plus idempotent item attach/detach; deleting a collection never deletes its items. |
 | `POST /api/search` | Return item-level keyword results in core mode and optional semantic/hybrid metadata only when full mode is enabled. |
-| `GET /api/analytics` | Apply shared filters and use the SQLite fallback when optional DuckDB acceleration is unavailable. |
+| `GET /api/items/{id}/related` | Return up to five valid related items when full mode is enabled, excluding the current item and stale/deleted data. |
+| `GET /api/analytics` | Return KPI/activity/distribution/cluster data with shared filters and the SQLite fallback when optional DuckDB acceleration is unavailable. |
 
 ### Service interfaces
 
 ```text
 Extractor.extract(input, limits) -> ExtractedDocument
-ExtractedDocument = text + title + source_url + original_filename + metadata
+ExtractedDocument = title + text + source_type + source_url + original_filename + metadata
 VectorIndex.upsert(chunks, vectors, metadata)
 VectorIndex.query(vector, filters, limit)
 EmbeddingProvider.embed(texts, model_revision) -> vectors
+EmbeddingProvider.model_id + revision + dimension + max_tokens
+EmbeddingProvider.tokenize(text) -> tokens
 Analytics.query(filters) -> KPI result + mode metadata
 ```
 

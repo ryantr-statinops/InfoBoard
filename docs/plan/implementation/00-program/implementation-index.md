@@ -12,7 +12,7 @@ This snapshot describes the current working baseline, not completed delivery:
 | Current phase | M1 preparation |
 | Verified requirements | none |
 | Execution evidence | not started |
-| Known gaps | schema migration, API contract, dependencies, health checks |
+| Known gaps | schema migration, interface-contract adoption, dependencies, health checks |
 
 `Delivery` measures implementation progress, `Coverage` measures the runtime baseline,
 and the RQ matrix measures requirement evidence. The `execution.md` files remain

@@ -33,7 +33,7 @@
 
 ## Current API versus target contract
 
-The cross-cutting [contracts](contracts.md) page is intentionally forward-looking.
+The [contract compatibility index](contracts.md) links to the canonical forward-looking [Architecture interface contract](../../../architecture/09-interface-contracts.md).
 The following endpoint differences are known implementation gaps, not evidence of
 completed behavior:
 

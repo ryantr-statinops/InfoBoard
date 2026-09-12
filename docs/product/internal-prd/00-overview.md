@@ -50,5 +50,5 @@ Capture → Understand source → Organize → Retrieve
 
 - Thuật ngữ và entity semantics: [Domain model](04-domain-model.md).
 - Kiến trúc: [Architecture](../../architecture/README.md).
-- Dashboard/API experience: [Design](../../design/README.md); HTTP contracts chi tiết nằm trong [implementation contracts](../../plan/implementation/00-program/contracts.md).
+- Dashboard experience: [Design](../../design/README.md); API/interface contracts canonical nằm trong [Architecture interface contracts](../../architecture/09-interface-contracts.md).
 - Milestone và evidence: [Implementation plan](../../plan/implementation/README.md).

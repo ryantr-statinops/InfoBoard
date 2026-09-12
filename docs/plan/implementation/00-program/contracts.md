@@ -1,89 +1,23 @@
-# 04 — Cross-cutting contracts
+# 04 — Contract compatibility index
 
 **Status:** `ready`
-**Contract state:** target contract for implementation; it is not runtime evidence.
-**Applies to:** core and full modes
+**Role:** compatibility and implementation navigation; not a canonical contract and not runtime evidence
 
-## Current versus target
+## Canonical sources
 
-This document defines the contract that implementation tasks must converge on. The
-runtime snapshot is recorded separately in [current state and gap analysis](current-state.md).
-When the two differ, the current runtime is the evidence and the target contract is
-the work to be delivered by the linked epic/task.
+- [Architecture interface contracts](../../../architecture/09-interface-contracts.md) own API conventions, error envelopes, states, endpoint boundaries, service interfaces, core/full behavior, and HTMX boundaries.
+- [Architecture data model](../../../architecture/02-data-model-and-erd.md) owns schema and persistence invariants.
+- [Design flows and screens](../../../design/01-core-flows-and-screens.md) and [UI states](../../../design/02-ui-states-and-responsive.md) own user-visible behavior.
+- [Current state and gap analysis](current-state.md) records runtime evidence and known differences from target contracts.
 
-| Area | Current runtime | Target contract | Owning work |
-| --- | --- | --- | --- |
-| Health | `/api/health` returns `{"status":"ok"}` without component checks | Component status with `503 unavailable` for SQLite/FTS5 and `200 degraded` for derived-only failure | 10, 19 |
-| Item create/list | Basic create and list responses; no job/pagination wrapper | `202` job response and `{items,total,limit,offset}` list wrapper | 12, 14 |
-| Search/analytics | Minimal query and metrics responses | Shared filters, retrieval metadata, KPI data, and truthful fallback | 15, 16 |
-| Content lifecycle | Single current content row and immediate delete response | Version-aware content, soft-delete cleanup job, and reindex lifecycle | 11, 14, 18 |
+## Implementation ownership
 
-Do not describe a target response as implemented until its task has execution evidence
-and the corresponding milestone acceptance has passed.
-
-## API conventions
-
-- Prefix: `/api`.
-- JSON uses `Content-Type: application/json`; uploads use multipart.
-- IDs are current SQLite integers; clients do not create IDs.
-- Responses use UTC ISO-8601 timestamps; the database may store UTC text.
-- Lists use `{items, total, limit, offset}` with default limit 20 and maximum 100.
-- Default sort is `created_at DESC, id DESC`; search sorts by score then time.
-
-## Error envelope
-
-```json
-{
-  "error": {
-    "code": "duplicate_item",
-    "message": "Item with the same content already exists",
-    "details": {}
-  }
-}
-```
-
-HTTP mapping: `400` invalid input, `404` missing resource, `409` duplicate/conflict, `413` limit exceeded, `422` schema validation, and `503 unavailable` when SQLite or FTS5 cannot support core mode. Derived dependency failure returns degraded state without failing the core request.
-
-## Item and job states
-
-- Item organization: `inbox`, `active`, `archived`, `deleted` (soft delete internally).
-- Technical job states: `queued`, `extracting`, `chunking`, `embedding`, `indexed`, `failed`.
-- UI mapping: `queued → queued`, `extracting | chunking | embedding → processing`, `indexed → indexed`, `failed → failed`.
-- `deleted_at` excludes an item from public list/search/detail.
-- `content_version` increases when text changes; old chunks/vectors are not returned.
-
-## Endpoint contract
-
-| Endpoint | Contract |
+| Contract area | Owning epics |
 | --- | --- |
-| `POST /api/items` | Create text, deduplicate, and return `202` with `item_id`, `job_id`, and state. |
-| `POST /api/items/upload` | Multipart file with optional title/collections and the same job contract. |
-| `POST /api/items/url` | Validate/canonicalize a public URL and use the same job contract. |
-| `GET /api/items` | Filter by collection/status/source/date/search with pagination wrapper. |
-| `GET /api/items/{id}` | Return metadata, current content, collections, notes, chunks, and job metadata. |
-| `PATCH /api/items/{id}` | Update title/status/collections or text for text sources; text changes create a version. |
-| `DELETE /api/items/{id}` | Soft-delete immediately and enqueue cleanup; return `202`. |
-| `POST /api/items/{id}/reindex` | Create/requeue a job for the current content version. |
-| `POST /api/reindex` | Reindex items/indexes requiring maintenance. |
-| Collection/note endpoints | CRUD and idempotent attach/detach without deleting an item when a collection is removed. |
-| `POST /api/search` | Query plus shared filters; return excerpt, score, retrieval mode, and source. |
-| `GET /api/items/{id}/related` | Return up to five related items, excluding the current item. |
-| `GET /api/analytics` | Return KPI/activity/distribution/cluster data using shared filters. |
-| `GET /api/health` | Component status; `503` for SQLite/FTS5 unavailability and `200 degraded` for derived-only failure. |
+| Application lifecycle, health foundation, and settings | 10, 19 |
+| Data/version/list/detail contracts | 11, 12 |
+| Extraction and durable job response | 13, 14 |
+| Keyword, conditional full-mode retrieval, and analytics | 15, 16 |
+| Security, cleanup, recovery, verification, and packaging | 17–21 |
 
-## Provider interfaces
-
-```text
-EmbeddingProvider.embed(texts) -> vectors
-EmbeddingProvider.model_id / revision / dimension / max_tokens
-EmbeddingProvider.tokenize(text) -> tokens
-Extractor.extract(input) -> ExtractedDocument(title, text, source_type, source_url, original_filename, metadata)
-VectorIndex.upsert(chunks, vectors, metadata)
-VectorIndex.query(vector, filters, limit)
-```
-
-## Modes and HTMX
-
-Core mode requires SQLite/FTS5 and may use no semantic provider. Full mode adds optional ChromaDB, sentence-transformers, RocksDB, and DuckDB. Missing derived dependencies produce degraded state and preserve keyword fallback.
-
-Fragment routes stay outside `/api`, return HTML partials, and may use `HX-Trigger` for toast/list refresh. Errors return renderable fragments while preserving unsuccessful form input.
+Epic plans and tasks describe delivery and rollout. Their execution logs are the only implementation evidence; this index must not copy target payloads or redefine canonical behavior.
