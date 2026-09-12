@@ -4,7 +4,7 @@
 **Delivery status:** `not_started`  
 **Baseline coverage:** `partial`  
 **Milestone:** M1  
-**Dependencies:** 11, 17
+**Dependencies:** —
 
 ## Outcome
 
@@ -25,7 +25,7 @@ flowchart LR
     Lifespan --> Worker[Worker lifecycle]
 ```
 
-- `Settings` resolves `.env` values relative to the project root or from absolute paths.
+- The target `Settings` boundary resolves configuration from explicit environment values and, only after a later implementation decision, may load a project-root `.env` file. The current runtime reads `INFOBOARD_DB` from the process environment only.
 - Lifespan calls `init_db()` once, starts the configured worker, and shuts down gracefully.
 - Routes parse and validate requests; SQL stays behind the storage boundary.
 - Exception handlers map `ValueError`, `NotFound`, `Conflict`, limit errors, and storage errors to the shared response contract.

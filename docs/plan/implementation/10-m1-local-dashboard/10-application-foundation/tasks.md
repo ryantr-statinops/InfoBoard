@@ -31,3 +31,11 @@
   - Accept when: the relevant baseline suite passes and no task remains unverified.
   - Commit: `test: cover app factory and lifespan`
   - Evidence: [execution entry](execution.md#t10-004)
+
+- [ ] <a id="t10-005"></a>**T10-005 — Centralize environment-only configuration**
+  - Product: `PR-OPS-01` · Evidence: `RQ-014`
+  - Depends on: `T10-001` · Code: target settings boundary and configuration documentation
+  - Verify: exported `INFOBOARD_DB`, default-path, and unsupported-variable scenarios
+  - Accept when: supported settings resolve from explicit process environment values; MVP does not promise automatic `.env` loading.
+  - Commit: `refactor: centralize environment configuration`
+  - Evidence: [execution entry](execution.md#t10-005)

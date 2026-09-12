@@ -1,7 +1,7 @@
 # Tasks — Search and discovery
 
 - [ ] <a id="t15-001"></a>**T15-001 — Harden FTS query, filters, and excerpts**
-  - Product: `PR-RET-02`, `PR-RET-04` · Evidence: `RQ-007`
+  - Product: `PR-RET-01`, `PR-RET-02`, `PR-RET-04` · Evidence: `RQ-007`
   - Depends on: `T11-003`, `T12-005` · Code: FTS query adapter and shared filters
   - Verify: multilingual query, deleted-item, sanitize, and highlight tests
   - Accept when: core-mode keyword search is safe and deterministic.
@@ -33,7 +33,7 @@
   - Evidence: [execution entry](execution.md#t15-004)
 
 - [ ] <a id="t15-005"></a>**T15-005 — Evaluate retrieval quality and performance**
-  - Product: `PR-RET-02…05` · Evidence: `RQ-007…009`
+  - Product: `PR-RET-01`, `PR-RET-02`, `PR-RET-03`, `PR-RET-04`, `PR-RET-05` · Evidence: `RQ-007`, `RQ-008`, `RQ-009`
   - Depends on: `T15-004` · Code: query set and benchmark harness
   - Verify: Vietnamese/English top-five, warm/cold latency, and fallback report
   - Accept when: agreed retrieval and performance targets have reproducible evidence.

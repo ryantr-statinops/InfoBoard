@@ -4,8 +4,8 @@
 
 The epic establishes settings, application lifecycle, route/service boundaries, error handling, and component health while preserving `app.main:app`.
 
-**Requirements:** `PR-UX-01`, `RQ-001`, `RQ-013`  
-**Dependencies:** 11, 17
+**Requirements:** `PR-UX-01`, `PR-REC-04`, `PR-OPS-01`, `RQ-001`, `RQ-013`, `RQ-014`
+**Dependencies:** —
 
 ## Reading order
 

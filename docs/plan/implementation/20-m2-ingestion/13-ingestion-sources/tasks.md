@@ -17,7 +17,7 @@
   - Evidence: [execution entry](execution.md#t13-002)
 
 - [ ] <a id="t13-003"></a>**T13-003 — Add bounded public URL extraction**
-  - Product: `PR-CAP-02`, `PR-SEC-01…02` · Evidence: `RQ-004`, `RQ-011`
+  - Product: `PR-CAP-02`, `PR-SEC-01`, `PR-SEC-02` · Evidence: `RQ-004`, `RQ-011`
   - Depends on: `T13-001` · Code: HTTP client, redirect and destination checks
   - Verify: local HTTP fixture, timeout, response limit, and private-network redirect tests
   - Accept when: only safe bounded public HTTP(S) fetches are allowed.
@@ -33,7 +33,7 @@
   - Evidence: [execution entry](execution.md#t13-004)
 
 - [ ] <a id="t13-005"></a>**T13-005 — Verify source limits and security behavior**
-  - Product: `PR-SEC-01…02` · Evidence: `RQ-004`, `RQ-011`
+  - Product: `PR-SEC-01`, `PR-SEC-02` · Evidence: `RQ-004`, `RQ-011`
   - Depends on: `T13-004` · Code: source fixture/security suite
   - Verify: `uv run pytest tests/test_api_flow.py tests/test_core.py -q`
   - Accept when: no partial item, unsafe destination, unbounded read, or temporary-file leak remains.

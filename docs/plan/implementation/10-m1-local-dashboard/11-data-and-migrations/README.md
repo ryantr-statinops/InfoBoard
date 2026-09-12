@@ -4,7 +4,7 @@
 
 The epic makes SQLite versioned and recoverable while preserving the target item/content-version model and derived-index rebuildability.
 
-**Requirements:** `PR-ORG-01…03`, `PR-REC-01…02`, `RQ-002`, `RQ-003`, `RQ-005`  
+**Requirements:** `PR-CAP-02`, `PR-CAP-04`, `PR-ORG-01`, `PR-ORG-02`, `PR-ORG-04`, `PR-REC-01`, `PR-REC-02`, `PR-REC-03`, `RQ-002`, `RQ-005`, `RQ-006`
 **Dependencies:** 10
 
 ## Reading order

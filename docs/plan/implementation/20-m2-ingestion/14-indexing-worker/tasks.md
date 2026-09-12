@@ -17,7 +17,7 @@
   - Evidence: [execution entry](execution.md#t14-002)
 
 - [ ] <a id="t14-003"></a>**T14-003 — Add retry, stale-job recovery, and restart handling**
-  - Product: `PR-REC-01…02` · Evidence: `RQ-006`
+  - Product: `PR-REC-01`, `PR-REC-02` · Evidence: `RQ-006`
   - Depends on: `T14-001` · Code: retry counter, lease/reclaim, restart path
   - Verify: crash/requeue/restart tests
   - Accept when: restart does not lose items or create duplicate chunks.
@@ -25,7 +25,7 @@
   - Evidence: [execution entry](execution.md#t14-003)
 
 - [ ] <a id="t14-004"></a>**T14-004 — Isolate derived indexes and cache**
-  - Product: `PR-RET-02…05`, `PR-REC-01` · Evidence: `RQ-006`, `RQ-007…009`
+  - Product: `PR-REC-01`, `PR-REC-03` · Evidence: `RQ-006`
   - Depends on: `T14-002` · Code: FTS, semantic adapter, and RocksDB cache boundary
   - Verify: rebuild and dependency-unavailable tests
   - Accept when: derived-store failure leaves SQLite content recoverable.
@@ -33,7 +33,7 @@
   - Evidence: [execution entry](execution.md#t14-004)
 
 - [ ] <a id="t14-005"></a>**T14-005 — Verify indexing recovery and UI mapping**
-  - Product: `PR-CAP-05`, `PR-REC-01…02` · Evidence: `RQ-006`
+  - Product: `PR-CAP-05`, `PR-REC-01`, `PR-REC-02` · Evidence: `RQ-006`
   - Depends on: `T14-003`, `T14-004` · Code: worker tests and state mapper
   - Verify: `uv run pytest tests/test_search.py -q` plus restart fixture
   - Accept when: technical states map to `queued | processing | indexed | failed` in the UI.

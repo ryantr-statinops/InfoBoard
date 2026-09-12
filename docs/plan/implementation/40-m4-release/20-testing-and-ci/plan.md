@@ -4,7 +4,7 @@
 **Delivery status:** `not_started`  
 **Baseline coverage:** `partial`  
 **Milestone:** M4  
-**Dependencies:** 10–19  
+**Dependencies:** 15, 16, 17, 18
 **Quality commands:** `uv run pytest -q`, `uv run ruff check .`
 
 ## Test layers

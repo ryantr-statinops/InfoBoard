@@ -4,8 +4,8 @@
 
 The epic makes core/full modes, clean installation, upgrades, release artifacts, and rollback repeatable and explicit.
 
-**Requirements:** `PR-OPS-01…02`, `RQ-014`  
-**Dependencies:** 10, 11, 18, 20
+**Requirements:** `PR-OPS-01`, `PR-OPS-02`, `RQ-014`
+**Dependencies:** 10, 15, 18, 20
 
 ## Reading order
 

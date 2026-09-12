@@ -7,6 +7,8 @@
 
 ## Task evidence
 
+<a id="t17-001"></a><a id="t17-002"></a><a id="t17-003"></a><a id="t17-004"></a>
+
 | Task | Commit(s) | Verification | Review | Status |
 | --- | --- | --- | --- | --- |
 | [T17-001](tasks.md#t17-001) | — | — | — | pending |

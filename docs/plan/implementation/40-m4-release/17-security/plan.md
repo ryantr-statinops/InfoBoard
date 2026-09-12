@@ -4,7 +4,7 @@
 **Delivery status:** `not_started`  
 **Baseline coverage:** `partial`  
 **Milestone:** M4  
-**Dependencies:** 10, 13, 18, 19
+**Dependencies:** 10, 13
 
 ## Threat boundary
 

@@ -5,7 +5,7 @@
 The epic makes lifecycle events, health, degraded states, and diagnostics actionable without logging user content or secrets.
 
 **Requirements:** `PR-REC-04`, `RQ-013`  
-**Dependencies:** 10, 14, 15, 16, 17
+**Dependencies:** 10, 14
 
 ## Reading order
 
