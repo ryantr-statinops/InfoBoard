@@ -5,6 +5,8 @@
 
 Đây là nguồn sự thật cho sản phẩm đang build và nghiệm thu trong MVP hiện tại. Kế hoạch kỹ thuật, milestone và execution evidence nằm tại [`docs/plan/implementation/`](../../plan/implementation/).
 
+Core MVP yêu cầu keyword retrieval và không phụ thuộc full mode. Semantic/hybrid retrieval là optional full-mode capability; browser portability và các hướng mở rộng khác thuộc Next Plan.
+
 ## Đọc theo thứ tự
 
 1. [Overview](00-overview.md) — mục tiêu, phạm vi và constraints.

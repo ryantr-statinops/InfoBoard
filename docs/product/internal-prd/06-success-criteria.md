@@ -26,7 +26,7 @@
 ## Release acceptance
 
 - Mọi core-MVP requirement trong [Product requirements](02-product-requirements.md) có implementation evidence và test; future requirements có discovery decision riêng.
-- Requirement traceability của core release không còn `missing` hoặc `partial`, trừ waiver được ghi nhận. `PR-RET-03`, `RQ-008` và `RQ-009` chỉ trở thành điều kiện bắt buộc nếu full mode được đưa vào release scope.
+- Requirement traceability của core release không còn `missing` hoặc `partial`, trừ waiver được ghi nhận. `PR-RET-03` và implementation evidence tương ứng chỉ trở thành điều kiện bắt buộc nếu full mode được đưa vào release scope.
 - Data integrity, fallback, security, recovery, lint, test và benchmark gates pass.
 - README, runbook và behavior thực tế thống nhất.
 - Capability trong Next Plan không trở thành release blocker của M1–M4.
