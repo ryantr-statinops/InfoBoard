@@ -24,7 +24,7 @@
 
 ## Release acceptance
 
-- Mọi requirement trong [Product requirements](02-product-requirements.md) có implementation evidence và test.
+- Mọi MVP requirement trong [Product requirements](02-product-requirements.md) có implementation evidence và test; future requirements có discovery decision riêng.
 - Requirement traceability không còn `missing` hoặc `partial`, trừ waiver được ghi nhận.
 - Data integrity, fallback, security, recovery, lint, test và benchmark gates pass.
 - README, runbook và behavior thực tế thống nhất.

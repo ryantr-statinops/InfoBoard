@@ -46,7 +46,7 @@ UI state `processing` tổng hợp các job state kỹ thuật `extracting`, `ch
 - `PR-SEC-01`: Input được giới hạn, normalize và escape.
 - `PR-SEC-02`: URL ingestion chặn private-network access và redirect không an toàn.
 - `PR-SEC-03`: Log không chứa raw content, credential hoặc secret.
-- `PR-SEC-04`: Cloud provider chỉ nhận nội dung sau cấu hình chủ động của người dùng.
+- `PR-SEC-04` *(future provider boundary)*: Cloud provider chỉ nhận nội dung sau cấu hình chủ động của người dùng. Requirement này thuộc Next Plan và không phải acceptance của M1–M4.
 
 ## Operability và release
 

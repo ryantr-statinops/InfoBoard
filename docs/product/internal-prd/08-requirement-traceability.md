@@ -11,7 +11,8 @@ Bảng này nối product requirement với tài liệu thiết kế hệ thốn
 | `PR-RET-01…06` | Filter, retrieval và analytics có fallback | Search/analytics architecture | 15, 16 | M3 |
 | `PR-REC-01…05` | Feedback, retry, fallback và recovery | Indexing, lifecycle/recovery, operations | 14, 18, 19 | M2, M4 |
 | `PR-UX-01…04` | Core flow dễ dùng và responsive | Design IA, flows, UI states | 12 | M1 |
-| `PR-SEC-01…04` | Input/network/privacy boundary | Security architecture, quality strategy | 13, 17, 20 | M2, M4 |
+| `PR-SEC-01…03` | Input/network/rendering/log privacy boundary | Security architecture, quality strategy | 13, 17, 20 | M2, M4 |
+| `PR-SEC-04` | Cloud provider consent boundary | [Next Plan](../next-plan/README.md) | — | Future discovery; not an M1–M4 gate |
 | `PR-OPS-01…02` | Repeatable release, upgrade và evidence | Quality gates, operations | 20, 21 | M4 |
 
 ## Epic coverage
@@ -25,7 +26,7 @@ Bảng này nối product requirement với tài liệu thiết kế hệ thốn
 | 14 Index worker | `PR-CAP-05`, `PR-REC-01…03` | Indexing pipeline |
 | 15 Search | `PR-RET-01…05` | Search and analytics architecture |
 | 16 Analytics | `PR-RET-01`, `PR-RET-06`, `PR-REC-03…04` | Search and analytics architecture |
-| 17 Security | `PR-SEC-*` | Privacy/trust, security boundaries |
+| 17 Security | `PR-SEC-01…03` | Privacy/trust, security boundaries |
 | 18 Reliability | `PR-REC-02…05` | Lifecycle/recovery, operations |
 | 19 Observability | `PR-REC-01…04` | Quality attributes, diagnostics operations |
 | 20 Testing/CI | `PR-OPS-02` và acceptance của mọi `PR-*` | Test strategy, MVP quality gates |
@@ -36,4 +37,4 @@ Bảng này nối product requirement với tài liệu thiết kế hệ thốn
 - Không thêm epic behavior nếu chưa có product requirement hoặc decision/waiver tương ứng.
 - `Current state` là bằng chứng hiện trạng; `Target state` chỉ là thiết kế đích.
 - Khi requirement đổi, cập nhật PRD, traceability, architecture/design và epic reference trong cùng review cycle.
-- Next Plan chỉ được đưa vào bảng sau khi discovery gate pass và Internal PRD được cập nhật.
+- `PR-SEC-04` and other Next Plan capabilities stay outside M1–M4 acceptance until the discovery gate passes and the Internal PRD is updated.
