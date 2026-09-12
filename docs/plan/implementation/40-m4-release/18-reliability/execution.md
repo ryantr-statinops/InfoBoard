@@ -1,18 +1,20 @@
-# Execution log — Reliability, backup và recovery
+# Execution log — Reliability, backup, and recovery
 
-**Plan:** [plan.md](plan.md)
-**Status:** `not_started`
-**Branch:** `dev`
-**PR:** chưa có
+**Plan:** [plan.md](plan.md)  
+**Status:** `not_started`  
+**Branch:** `dev`  
+**PR:** not opened
 
-## Recovery reports
+## Task evidence
 
-| Scenario | Backup/restore evidence | Integrity result | Status |
-| --- | --- | --- | --- |
-| Clean backup/restore | — | — | pending |
-| Derived index rebuild | — | — | pending |
-| Interrupted operation | — | — | pending |
+| Task | Commit(s) | Verification | Review | Status |
+| --- | --- | --- | --- | --- |
+| [T18-001](tasks.md#t18-001) | — | — | — | pending |
+| [T18-002](tasks.md#t18-002) | — | — | — | pending |
+| [T18-003](tasks.md#t18-003) | — | — | — | pending |
+| [T18-004](tasks.md#t18-004) | — | — | — | pending |
+| [T18-005](tasks.md#t18-005) | — | — | — | pending |
 
 ## Evidence log
 
-Ghi manifest/checksum, schema/model version, before/after counts và rollback result. Không thao tác trên database active trong test.
+Record backup manifest, checksum result, restore transcript, migration/rebuild output, commit hashes, reviewer, and known limitations per task. Never use a developer's live `data/` directory for destructive tests.

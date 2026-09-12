@@ -1,22 +1,21 @@
-# 18 — Reliability, backup và recovery
+# 18 — Reliability, backup, and recovery
 
-**Status:** `draft`
-**Canonical references:** [Lifecycle/recovery](../../../../architecture/06-lifecycle-and-recovery.md) · [Backup/restore/rebuild](../../../../operations/01-backup-restore-and-rebuild.md) · [Quality gates](../../../../quality/03-mvp-quality-gates.md)
-**Milestone:** M4
+**Plan status:** `ready`  
+**Delivery status:** `not_started`  
+**Baseline coverage:** `missing`  
+**Milestone:** M4  
 **Dependencies:** 11, 14, 17, 19
 
 ## Outcome
 
-Người dùng có thể backup/restore dữ liệu chính, rebuild derived index và phục hồi sau crash mà không mất content, note, collection hoặc job cần xử lý.
+Users can back up and restore canonical data, rebuild derived indexes, and recover after a crash without losing content, notes, collections, or actionable jobs.
 
-## Backup format
+## Backup and restore contract
 
-- SQLite copy nhất quán sau checkpoint hoặc khi worker pause.
-- Source snapshots/original metadata trong thư mục backup versioned.
-- Manifest gồm app version, schema version, model/index metadata, timestamp và checksum.
-- Không backup secret/API key; quyền file backup theo user.
-
-## Restore flow
+- A consistent SQLite copy is made after checkpoint or worker pause.
+- Source snapshots and original metadata are stored in a versioned backup directory.
+- The manifest records app/schema versions, model/index metadata, timestamp, and checksums.
+- Secrets and API keys are excluded; backup files use user-only permissions.
 
 ```mermaid
 flowchart LR
@@ -28,26 +27,14 @@ flowchart LR
     Verify --> Resume[Resume worker]
 ```
 
-## Maintenance commands
+## Maintenance interface
 
-`python -m app.cli backup --output PATH`, `restore --input PATH`, `reindex`, `cleanup`, `verify`. Restore không overwrite path hiện tại nếu chưa có `--confirm` và backup safety copy.
+Target commands are `python -m app.cli backup --output PATH`, `restore --input PATH`, `reindex`, `cleanup`, and `verify`. Restore must not overwrite the active path without an explicit confirmation and safety copy.
 
-## Commit slices
+## Acceptance and review
 
-1. `feat: add sqlite backup manifest and verify command`
-2. `feat: add safe restore and migration flow`
-3. `feat: add derived index cleanup and rebuild`
-4. `feat: add crash recovery integrity checks`
-5. `test: cover backup restore delete and rebuild`
-
-## Acceptance
-
-Backup restore trên máy sạch khôi phục đúng counts/content/notes/collections; Chroma/RocksDB bị xóa vẫn rebuild được; interrupted restore không làm hỏng bản gốc; deleted item không quay lại public list.
-
-## Review gate
-
-Có checksum/manifest sample, transcript command, before/after query comparison và documented rollback. Không thao tác destructive trên `data/` của developer trong test.
-
-## Execution log
-
-Chưa có CLI backup/restore; hiện chỉ có soft delete và reindex cơ bản.
+- Clean-machine restore preserves counts, content, notes, and collections.
+- Deleted derived stores rebuild from SQLite.
+- Interrupted restore leaves the original active copy usable.
+- Deleted items do not return to public lists.
+- A checksum/manifest sample, transcript, before/after comparison, and rollback record are reviewed.

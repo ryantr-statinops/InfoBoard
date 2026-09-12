@@ -1,18 +1,20 @@
-# Execution log — Dashboard và item workspace
+# Execution log — Dashboard and item workspace
 
-**Plan:** [plan.md](plan.md)
-**Status:** `in_progress`
-**Branch:** `dev`
-**PR:** chưa có
+**Plan:** [plan.md](plan.md)  
+**Status:** `not_started`  
+**Branch:** `dev`  
+**PR:** not opened
 
-## Feature reports
+## Task evidence
 
-| Feature | Commits | Browser check | Status |
-| --- | --- | --- | --- |
-| Dashboard shell | — | 1440/390 px | pending |
-| Create/filter/search | — | desktop/mobile | pending |
-| Detail/mutation panel | — | desktop/mobile | pending |
+| Task | Commit(s) | Verification | Review | Status |
+| --- | --- | --- | --- | --- |
+| [T12-001](tasks.md#t12-001) | — | — | — | pending |
+| [T12-002](tasks.md#t12-002) | — | — | — | pending |
+| [T12-003](tasks.md#t12-003) | — | — | — | pending |
+| [T12-004](tasks.md#t12-004) | — | — | — | pending |
+| [T12-005](tasks.md#t12-005) | — | — | — | pending |
 
 ## Evidence log
 
-Ghi screenshot/manual flow, API/fragment test output, commit hash và review feedback. Giữ URL filter trước/sau khi mở detail trong evidence.
+Record API/UI test output, screenshots or manual steps, browser viewport, commit hash, reviewer, and known limitations for each task.

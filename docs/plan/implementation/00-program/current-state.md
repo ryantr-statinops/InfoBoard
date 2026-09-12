@@ -1,50 +1,48 @@
-# 01 — Current state và gap analysis
+# 01 — Current state and gap analysis
 
 **Status:** `ready`
-**Runtime snapshot:** `f073724` — commit gần nhất thay đổi `app/`, tests hoặc runtime dependency files
-**Docs baseline:** `1aa7cd0` — HEAD trước lượt đồng bộ health/current-gap này
-**Branch triển khai:** `dev`
+**Runtime snapshot:** `f073724` — latest commit changing `app/`, tests, or runtime dependency files
+**Documentation baseline:** `b5751f5` — last synchronized docs baseline before this implementation-playbook rebuild
+**Delivery branch:** `dev`
 
-## Hiện trạng đã có
+## Existing baseline
 
-| Khu vực | Mức độ | Bằng chứng |
+| Area | Coverage | Evidence |
 | --- | --- | --- |
-| FastAPI + Uvicorn + lifespan | `partial` | `app/main.py`, `/api/health`, template render. |
-| SQLite schema + FTS5 | `partial` | `app/db.py`, tạo bảng và rebuild FTS. Chưa có migration history. |
-| Text item, hash dedup, chunk | `done-basic` | `app/services.py`, chunk 200 words/overlap 30. Chưa theo tokenizer provider. |
-| Collections và notes API | `partial` | CRUD cơ bản có; UI và contract wrapper chưa hoàn chỉnh. |
-| Soft delete/reindex | `partial` | Endpoint có; cleanup derived store chưa có. |
-| TXT/Markdown/PDF/URL | `partial` | Có extractor tối thiểu; PDF/URL limit, redirect và parser cần harden. |
-| Worker | `partial` | Lifecycle đồng bộ mô phỏng; chưa có background polling/embedding thật. |
-| Keyword search | `done-basic` | FTS5 + excerpt; filter/highlight/error contract cần chuẩn hóa. |
-| Semantic search | `missing` | Provider interface có, ChromaDB chưa tích hợp. |
-| RRF | `done-basic` | Utility và unit test có; chưa nối vào search pipeline. |
-| Analytics | `partial` | SQLite fallback và DuckDB adapter tối thiểu. |
-| Dashboard | `partial` | Server-rendered form/list; thiếu HTMX, panel, filter nâng cao và KPI. |
-| Quality | `partial` | 4 test và Ruff pass; thiếu HTTP integration, benchmark và CI. |
+| FastAPI + Uvicorn + lifespan | `partial` | `app/main.py`, `/api/health`, template render |
+| SQLite schema + FTS5 | `partial` | `app/db.py`, table creation, FTS rebuild; no migration history |
+| Text item, hash dedup, chunk | `done-basic` | `app/services.py`; 200-word chunks with 30-word overlap |
+| Collections and notes API | `partial` | Basic CRUD; UI/wrapper contract incomplete |
+| Soft delete/reindex | `partial` | Endpoint exists; derived cleanup is missing |
+| TXT/Markdown/PDF/URL | `partial` | Minimal extractor; limits, redirects, and parser need hardening |
+| Worker | `partial` | Synchronous simulation; no background polling/real embedding |
+| Keyword search | `done-basic` | FTS5 + excerpt; filter/highlight/error contract needs normalization |
+| Semantic search | `missing` | Provider interface exists; ChromaDB is not integrated |
+| RRF | `done-basic` | Utility/unit test exists; not connected to search pipeline |
+| Analytics | `partial` | Minimal SQLite fallback and DuckDB adapter |
+| Dashboard | `partial` | Server-rendered form/list; HTMX, panels, advanced filters, KPI missing |
+| Quality | `partial` | Four tests and Ruff pass; HTTP integration, benchmark, and CI missing |
 
-## Known contract gaps so với target docs
+## Known contract gaps
 
-- Runtime tạo item với status mặc định `active`; target M1 là `inbox` cho item mới.
-- `pypdf` và các extraction/full-mode dependencies chưa được khai báo trong `pyproject.toml`.
-- Schema runtime chưa có content version/migration history hoàn chỉnh và còn dùng `index_jobs.attempts` thay vì target `retry_count`.
-- `/api/health` hiện chỉ trả `{"status":"ok"}` và chưa kiểm tra SQLite/FTS5/component health theo canonical contract.
+- Runtime creates new items with default `active`; target M1 is `inbox`.
+- `pypdf` and full-mode dependencies are not declared in `pyproject.toml`.
+- Runtime schema lacks complete content-version/migration history and uses `index_jobs.attempts` instead of target `retry_count`.
+- `/api/health` currently returns `{"status":"ok"}` and does not inspect SQLite/FTS5/derived components.
 
-## Khoảng cách ưu tiên
+## Priority gaps
 
-1. Chuẩn hóa foundation/data contract trước khi mở rộng UI.
-2. Hoàn thiện dashboard và item workspace để có luồng người dùng end-to-end.
-3. Thay extractor/worker tối thiểu bằng pipeline có version, retry và recovery.
-4. Nối semantic persistent index nhưng giữ FTS5 fallback.
-5. Hoàn thiện analytics, backup, security, observability và release gate.
+1. Stabilize foundation/data contracts before expanding UI.
+2. Complete dashboard and item workspace end to end.
+3. Replace minimal extractor/worker with versioned retryable pipeline.
+4. Connect persistent semantic indexing while retaining FTS fallback.
+5. Complete analytics, backup, security, observability, and release gates.
 
-## Quy tắc chuyển đổi không mất dữ liệu
+## Data-safe change rules
 
-- Mỗi thay đổi schema bắt buộc migration và backup trước khi chạy.
-- Không đổi ý nghĩa `items.id`, `content_hash`, `deleted_at` hoặc note hiện có.
-- Index mới đọc từ SQLite; không migrate dữ liệu bằng cách chỉ dựa trên Chroma/RocksDB.
-- API response mới có compatibility adapter/redirect trong một milestone nếu UI cũ còn dùng.
+- Every schema change requires a migration and backup.
+- Do not change the meaning of `items.id`, `content_hash`, `deleted_at`, or existing notes.
+- New indexes read from SQLite; never migrate data using only Chroma/RocksDB.
+- New API responses require a compatibility adapter while old UI paths remain in use.
 
-## Cách cập nhật file này
-
-Sau mỗi milestone, cập nhật runtime snapshot bằng commit gần nhất thực sự chạm runtime, cùng test command và evidence link. Docs-only HEAD được ghi riêng khi cần. Không dùng `done` cho capability mới chỉ có adapter hoặc mock.
+Update the runtime snapshot only after a commit genuinely changes runtime files. Record docs-only baselines separately. Never use `done` for a capability represented only by an adapter or mock.

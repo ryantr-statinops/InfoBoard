@@ -1,18 +1,19 @@
 # M1 — Local dashboard
 
-**Gate:** dashboard local dùng được end-to-end
+**Outcome:** A user can run InfoBoard locally, capture and organize items, and use the dashboard after restart.
+**Gate:** All M1 acceptance items pass with evidence; post-MVP portability remains out of scope.
 **Dependencies:** program contracts, current SQLite schema
 
 ## Epic packages
 
-- [10 — Application foundation](10-application-foundation/plan.md)
-- [11 — Data model và migrations](11-data-and-migrations/plan.md)
-- [12 — Dashboard và item workspace](12-dashboard/plan.md)
+- [10 — Application foundation](10-application-foundation/README.md)
+- [11 — Data model and migrations](11-data-and-migrations/README.md)
+- [12 — Dashboard and item workspace](12-dashboard/README.md)
 
-## Thứ tự
+## Delivery order
 
-`10 → 11 → 12`; có thể chạy UI spike của `12` song song nhưng không merge behavior trước contract của `10–11`.
+`10 → 11 → 12`; application boundaries must be agreed before dashboard behavior is verified.
 
 ## Acceptance gate
 
-Fresh install, thêm text, list/filter, mở detail, thêm note/collection, sửa status và soft-delete; restart không mất dữ liệu; desktop/mobile không tràn layout.
+Fresh install, text capture, list/filter, detail, notes/collections, status edit, soft-delete, restart persistence, and desktop/mobile layout must pass with evidence.

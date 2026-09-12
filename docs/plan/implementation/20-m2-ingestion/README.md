@@ -1,17 +1,18 @@
 # M2 — Reliable ingestion
 
-**Gate:** năm nguồn nhập và job durable hoạt động an toàn
+**Outcome:** Supported sources become durable items through one bounded extraction and indexing lifecycle.
+**Gate:** Source import, chunk/index, retry, and restart scenarios pass with evidence.
 **Dependencies:** M1
 
 ## Epic packages
 
-- [13 — Ingestion sources](13-ingestion-sources/plan.md)
-- [14 — Indexing worker và cache](14-indexing-worker/plan.md)
+- [13 — Ingestion sources](13-ingestion-sources/README.md)
+- [14 — Indexing worker and cache](14-indexing-worker/README.md)
 
-## Thứ tự
+## Delivery order
 
-`13 → 14`; extractor phải tạo document contract trước khi worker nhận job.
+`13 → 14`; the extractor document contract must be stable before the worker consumes jobs.
 
 ## Acceptance gate
 
-Text, TXT, Markdown, PDF và public URL tạo snapshot/chunk đúng; quá giới hạn/SSRF bị chặn; retry/restart không mất hoặc nhân đôi job.
+Text, TXT, Markdown, PDF, and public URL imports create the expected snapshot/chunks; limits and SSRF are enforced; retry/restart does not lose or duplicate jobs.

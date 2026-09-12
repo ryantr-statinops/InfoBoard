@@ -1,18 +1,20 @@
 # Execution log — Ingestion sources
 
-**Plan:** [plan.md](plan.md)
-**Status:** `not_started`
-**Branch:** `dev`
-**PR:** chưa có
+**Plan:** [plan.md](plan.md)  
+**Status:** `not_started`  
+**Branch:** `dev`  
+**PR:** not opened
 
-## Source reports
+## Task evidence
 
-| Source | Fixture | Limits/security | Tests | Status |
+| Task | Commit(s) | Verification | Review | Status |
 | --- | --- | --- | --- | --- |
-| Text/Markdown/TXT | — | — | — | pending |
-| PDF | — | — | — | pending |
-| Public URL | — | — | — | pending |
+| [T13-001](tasks.md#t13-001) | — | — | — | pending |
+| [T13-002](tasks.md#t13-002) | — | — | — | pending |
+| [T13-003](tasks.md#t13-003) | — | — | — | pending |
+| [T13-004](tasks.md#t13-004) | — | — | — | pending |
+| [T13-005](tasks.md#t13-005) | — | — | — | pending |
 
 ## Evidence log
 
-Ghi parser version, fixture checksum, job payload và rejected-input cases; không lưu raw secret/response nhạy cảm.
+Record fixtures, local-server transcript, security results, job IDs, commit hashes, and known limitations per task.

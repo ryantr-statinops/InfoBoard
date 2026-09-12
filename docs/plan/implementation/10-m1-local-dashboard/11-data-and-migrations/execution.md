@@ -1,18 +1,19 @@
-# Execution log — Data model và migrations
+# Execution log — Data model and migrations
 
-**Plan:** [plan.md](plan.md)
-**Status:** `not_started`
-**Branch:** `dev`
-**PR:** chưa có
+**Plan:** [plan.md](plan.md)  
+**Status:** `not_started`  
+**Branch:** `dev`  
+**PR:** not opened
 
-## Migration reports
+## Task evidence
 
-| Migration/feature | From → to | Backup | Tests | Status |
+| Task | Commit(s) | Verification | Review | Status |
 | --- | --- | --- | --- | --- |
-| Baseline migration | — | — | — | pending |
-| Content version/indexes | — | — | — | pending |
-| FTS transaction sync | — | — | — | pending |
+| [T11-001](tasks.md#t11-001) | — | — | — | pending |
+| [T11-002](tasks.md#t11-002) | — | — | — | pending |
+| [T11-003](tasks.md#t11-003) | — | — | — | pending |
+| [T11-004](tasks.md#t11-004) | — | — | — | pending |
 
 ## Evidence log
 
-Ghi schema diff, fixture before/after, migration output và rollback evidence. Không chạy migration trực tiếp trên database người dùng khi chưa có backup.
+Record the before/after schema snapshot, migration command, test output, backup/restore trial, commit hash, and known limitations for every task.

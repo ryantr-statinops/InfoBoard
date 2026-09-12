@@ -2,23 +2,25 @@
 
 **Status:** `active`
 
-## Quy ước
+## Convention
 
-Mỗi quyết định có ID, ngày, status, context, decision, alternatives, impact và link tới epic. Không sửa lịch sử; quyết định mới tạo record supersede record cũ.
+Every decision has an ID, date, status, context, decision, alternatives, impact, and affected epic. History is not rewritten; a new record supersedes an old one.
 
 ## Decisions
 
-| ID | Status | Quyết định | Ảnh hưởng |
+| ID | Status | Decision | Impact |
 | --- | --- | --- | --- |
-| ADR-001 | accepted | SQLite là source of truth; derived stores rebuildable. | 11, 14, 18 |
-| ADR-002 | accepted | MVP single-user local-first, bind `127.0.0.1`. | 17, 31, 32 |
-| ADR-003 | accepted | UI dùng Jinja2 + HTMX, không SPA/Node build. | 12, 21 |
-| ADR-004 | accepted | Core mode không phụ thuộc semantic; full mode là optional extra. | 05, 15, 21 |
-| ADR-005 | accepted | Feature làm trên `dev`, commit nhỏ, user review/merge từng PR. | 03, mọi epic |
-| ADR-006 | proposed | Chuẩn hóa list response thành `{items,total,limit,offset}`. | 04, 12, 20 |
-| ADR-007 | proposed | Worker MVP tuần tự trong process với SQLite checkpoint/lease. | 14, 19 |
+| ADR-001 | accepted | SQLite is the source of truth; derived stores are rebuildable. | 11, 14, 18 |
+| ADR-002 | accepted | MVP is single-user/local-first and binds to `127.0.0.1`. | 17, 31, 32 |
+| ADR-003 | accepted | UI uses Jinja2 + HTMX; no SPA/Node build. | 12, 21 |
+| ADR-004 | accepted | Core mode does not depend on semantic search; full mode is optional. | 15, 21 |
+| ADR-005 | accepted | Work on `dev`, use small commits, and stop for user review/merge. | 03, all epics |
+| ADR-006 | proposed | Normalize list responses to `{items,total,limit,offset}`. | 04, 12, 20 |
+| ADR-007 | proposed | MVP worker is sequential in-process with SQLite checkpoint/lease. | 14, 19 |
+| ADR-008 | accepted | Each implementation epic uses README/plan/tasks/references/execution; examples and guides are conditional. | all MVP epics |
+| ADR-009 | accepted | M5+ packages remain discovery-only and use `D*` IDs until implementation-ready. | 30–35 |
 
-## Template record
+## Record template
 
 ```text
 ID / date / status
@@ -32,4 +34,4 @@ Evidence and supersedes
 
 ## Review policy
 
-Decision ảnh hưởng public API, schema, security boundary hoặc dependency phải được ghi trước khi code; nếu cần user preference, chuyển epic về `draft` và hỏi trong review gate.
+Decisions affecting public API, schema, security boundaries, or dependencies are recorded before code. If user preference is required, keep the epic in `draft` until review resolves it.

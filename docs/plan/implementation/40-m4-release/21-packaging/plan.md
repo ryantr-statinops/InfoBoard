@@ -1,47 +1,38 @@
-# 21 — Packaging, release và upgrades
+# 21 — Packaging, release, and upgrades
 
-**Status:** `draft`
-**Canonical references:** [Setup/modes](../../../../operations/00-local-setup-and-modes.md) · [Upgrade/release/rollback](../../../../operations/03-upgrade-release-and-rollback.md) · [MVP gates](../../../../quality/03-mvp-quality-gates.md)
-**Milestone:** M4 release
+**Plan status:** `ready`  
+**Delivery status:** `not_started`  
+**Baseline coverage:** `missing`  
+**Milestone:** M4  
 **Dependencies:** 10, 11, 18, 20
 
 ## Install modes
 
-- Core: `uv sync`, SQLite/FTS5, ingestion cơ bản và keyword search.
-- Full: `uv sync --extra full`, ChromaDB, sentence-transformers, `rocksdict`, DuckDB và provider thật.
-- Model preparation là command explicit; request dashboard không tự tải model.
+- Core: `uv sync`, SQLite/FTS5, basic ingestion, and keyword search.
+- Full: target `uv sync --extra full`, ChromaDB, sentence-transformers, `rocksdict`, DuckDB, and real providers.
+- Model preparation is an explicit command; a dashboard request never downloads a model silently.
 
-## Release artifact
+The full extra is a target capability until it is present in the dependency manifest and verified on a clean checkout.
 
-Version app, `uv.lock`, migration set, README setup, changelog, architecture diagram, runbooks và compatibility matrix. `data/`/`.env` không commit; `.env.example` không chứa secret.
+## Release and upgrade contract
 
-## Upgrade flow
+The release artifact includes app version, `uv.lock`, migrations, setup README, changelog, architecture diagrams, runbooks, and compatibility matrix. `data/` and `.env` are excluded; `.env.example` contains no secrets.
 
-1. Stop/pause worker và tạo backup manifest.
-2. `uv sync`, verify Python/dependency versions.
-3. Run migrations transactionally.
-4. Health/integrity check; rebuild derived index nếu metadata mismatch.
-5. Smoke test dashboard/API; resume worker.
+```mermaid
+flowchart LR
+    Stop[Stop/pause worker] --> Backup[Backup + manifest]
+    Backup --> Sync[Install locked dependencies]
+    Sync --> Migrate[Run migrations]
+    Migrate --> Health[Health + integrity check]
+    Health --> Smoke[Dashboard/API smoke]
+    Smoke --> Resume[Resume worker]
+```
 
-## Rollback
+Rollback uses code revert/release rollback and data restore; automatic schema downgrade is not supported.
 
-Code rollback bằng revert release/PR; data rollback bằng restore backup. Không downgrade schema tự động; ghi rõ version tối thiểu và migration compatibility.
+## Acceptance and review
 
-## Commit slices
-
-1. `chore: define core and full dependency extras`
-2. `feat: add model preparation and environment validation`
-3. `docs: add release upgrade and rollback instructions`
-4. `ci: add release smoke verification`
-
-## Acceptance
-
-Developer mới chạy được core mode theo README; full mode báo thiếu dependency/model rõ ràng; upgrade từ current DB không mất dữ liệu; release checklist có test/lint/backup/restore evidence.
-
-## Review gate
-
-Test trên clean checkout và existing DB copy, verify `uv.lock`, `--extra full`, startup, `/api/health`, dashboard 200 và documented rollback.
-
-## Execution log
-
-README/lockfile core đã có; full extra, model preparation và release automation chưa có.
+- A new developer can run core mode from the README.
+- Full mode reports missing dependency/model clearly.
+- Upgrade from the current DB preserves data.
+- Release checklist contains test, lint, backup, restore, and rollback evidence.

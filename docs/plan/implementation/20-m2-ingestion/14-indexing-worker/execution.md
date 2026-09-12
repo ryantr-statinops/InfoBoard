@@ -1,18 +1,20 @@
-# Execution log — Indexing worker và cache
+# Execution log — Indexing worker and cache
 
-**Plan:** [plan.md](plan.md)
-**Status:** `not_started`
-**Branch:** `dev`
-**PR:** chưa có
+**Plan:** [plan.md](plan.md)  
+**Status:** `not_started`  
+**Branch:** `dev`  
+**PR:** not opened
 
-## Worker reports
+## Task evidence
 
-| Feature | Job state evidence | Crash/retry test | Status |
-| --- | --- | --- | --- |
-| Claim/checkpoint/lease | — | — | pending |
-| Retry/requeue/shutdown | — | — | pending |
-| RocksDB cache/rebuild | — | — | pending |
+| Task | Commit(s) | Verification | Review | Status |
+| --- | --- | --- | --- | --- |
+| [T14-001](tasks.md#t14-001) | — | — | — | pending |
+| [T14-002](tasks.md#t14-002) | — | — | — | pending |
+| [T14-003](tasks.md#t14-003) | — | — | — | pending |
+| [T14-004](tasks.md#t14-004) | — | — | — | pending |
+| [T14-005](tasks.md#t14-005) | — | — | — | pending |
 
 ## Evidence log
 
-Ghi job IDs, state transitions, retry count, timing và rebuild result; không ghi content vào log.
+Record job-state samples, restart/retry transcripts, index counts, test output, commit hashes, and known limitations per task.

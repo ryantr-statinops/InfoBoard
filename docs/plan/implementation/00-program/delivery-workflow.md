@@ -1,42 +1,35 @@
 # 03 — Delivery workflow
 
 **Status:** `ready`
-**Branch chính:** `main`
-**Branch làm việc:** `dev`
+**Main branch:** `main`
+**Working branch:** `dev`
 
-## Chu trình feature
+## Feature cycle
 
-1. `git fetch origin`; cập nhật local `main` theo `origin/main`.
-2. Fast-forward `dev` theo `main`; xác nhận worktree sạch.
-3. Chọn một feature trong epic đã ở `ready` và ghi mục tiêu/acceptance.
-4. Chia thành các commit nhỏ theo boundary có thể review độc lập.
-5. Sau mỗi commit chạy test liên quan và `uv run ruff check .`.
-6. Push từng commit lên `origin/dev`, không force-push và không merge vào `main`.
-7. Khi feature hoàn tất, chạy full checks, ghi execution log và report.
-8. Dừng ở trạng thái `review`; user tự tạo/review/merge PR.
-9. Sau khi user báo merge, fetch `origin/main`, fast-forward `dev`, rồi mới bắt đầu feature tiếp theo.
+1. Fetch `origin` and update local `main`.
+2. Fast-forward `dev` from `main` and confirm the worktree is clean except for acknowledged user changes.
+3. Select a `ready` feature and review its README, plan, tasks, references, and acceptance.
+4. Implement one task/commit boundary at a time.
+5. Run the narrow test and `uv run ruff check .` after each commit.
+6. Push each commit to `origin/dev`; never force-push or merge directly to `main`.
+7. Run full checks, update execution evidence, and report the result.
+8. Stop at `review`; the user reviews and merges the PR.
+9. After merge, fetch `origin/main`, fast-forward `dev`, and start the next feature.
 
-## Quy tắc commit
+## Commit rules
 
-- Một commit chỉ có một ý nghĩa chức năng hoặc tài liệu.
-- Dùng Conventional Commits: `feat`, `fix`, `test`, `docs`, `chore`, `security`, `ci`.
-- Không trộn formatting lớn với behavior change.
-- Migration phải đi cùng test nâng cấp hoặc commit test kế tiếp được ghi rõ dependency.
-- Commit message phải đủ rõ để tạo changelog.
+- One commit has one coherent behavior or documentation purpose.
+- Use Conventional Commits: `feat`, `fix`, `test`, `docs`, `chore`, `security`, `ci`.
+- Do not mix broad formatting with behavior changes.
+- A migration is paired with upgrade tests or an explicitly dependent follow-up commit.
+- Commit messages must be suitable for a changelog.
 
-## Review report tối thiểu
+## Review report
 
-- Feature/epic và acceptance đã đạt.
-- Danh sách commit hash theo thứ tự.
-- Files/API/schema bị ảnh hưởng.
-- Test, lint, benchmark và manual smoke result.
-- Known limitation và rollback command.
-- Trạng thái `git status`, remote branch và PR link nếu có.
+Include feature/epic, acceptance result, ordered commit hashes, affected files/interfaces/schema, tests/lint/benchmark/manual smoke, known limitations, rollback command, `git status`, remote branch, and PR link.
 
-## Rollback
+## Rollback and ready definition
 
-Không dùng `git reset --hard` trên worktree của user. Rollback code qua revert PR; rollback data qua backup/migration procedure trong epic `18`. Không xóa database local khi chưa xác nhận đường dẫn và backup.
+Rollback code through a revert PR and data through the backup/migration procedure in epic 18. Never delete local data without resolving the exact path and backup first.
 
-## Definition of ready cho feature
-
-Feature có owner, input/output contract, dependency, test cases, failure behavior, acceptance và commit boundaries. Nếu thiếu một mục, giữ trạng thái `draft`.
+A task is ready only when it has an owner, input/output contract, dependencies, test cases, failure behavior, acceptance, and commit boundary.

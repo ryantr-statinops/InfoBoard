@@ -1,17 +1,18 @@
 # M3 — Search and insights
 
-**Gate:** keyword luôn usable, full mode có semantic/hybrid và analytics
+**Outcome:** Users can retrieve saved content with keyword search, optional semantic search, and useful analytics.
+**Gate:** Keyword search is always available; semantic, related-content, and analytics failures are safe and visible.
 **Dependencies:** M2 chunks/index jobs
 
 ## Epic packages
 
-- [15 — Search và discovery](15-search-and-discovery/plan.md)
-- [16 — Analytics và insights](16-analytics/plan.md)
+- [15 — Search and discovery](15-search-and-discovery/README.md)
+- [16 — Analytics and insights](16-analytics/README.md)
 
-## Thứ tự
+## Delivery order
 
-Hardening FTS trước, sau đó semantic/related/clusters; analytics dùng cùng filter contract và có thể phát triển song song.
+Harden FTS first, then semantic/related/clusters; analytics uses the shared filter contract and may proceed in parallel.
 
 ## Acceptance gate
 
-Keyword fallback hoạt động khi derived store lỗi; full mode có Chroma/RRF; analytics khớp SQLite; kết quả Việt/Anh đạt retrieval target.
+Keyword fallback works when derived stores fail; full mode provides Chroma/RRF; analytics matches SQLite; Vietnamese/English queries meet the retrieval target.
