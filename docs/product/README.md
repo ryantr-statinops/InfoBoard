@@ -2,22 +2,23 @@
 
 Product docs được chia theo thời điểm ra quyết định:
 
-- [Internal PRD](internal-prd/README.md) là nguồn sự thật cho sản phẩm đang build và nghiệm thu trong MVP hiện tại.
+- [Internal PRD](internal-prd/README.md) là nguồn sự thật cho product definition và MVP scope hiện tại.
 - [Next Plan](next-plan/README.md) chứa các hướng hậu MVP còn ở discovery, chưa phải implementation requirement.
-- [`docs/plan/implementation/`](../plan/implementation/) là nguồn sự thật cho cách triển khai, milestone, test và execution evidence.
+- `docs/plan/` sẽ mô tả cách triển khai và milestone sau khi các documentation layer được khóa.
 
 ## Thứ tự đọc
 
 1. Đọc [Internal PRD](internal-prd/README.md) để hiểu goal, user, scope, requirements, workflows và acceptance.
 2. Tra [Domain model](internal-prd/04-domain-model.md) khi cần thống nhất thuật ngữ và entity semantics.
-3. Đọc [implementation current state](../plan/implementation/00-program/current-state.md) và [roadmap](../plan/implementation/00-program/roadmap.md) để biết trạng thái build.
+3. Đọc [Design](../design/README.md), [Architecture](../architecture/README.md), [Quality](../quality/README.md) và [Operations](../operations/README.md) để xem các layer hỗ trợ.
 4. Chỉ đọc [Next Plan](next-plan/README.md) khi nghiên cứu capability hậu MVP.
 
 ## Boundary
 
 ```text
 Internal PRD   = What and why we build now
-Implementation = How and in which order we build it
+Supporting docs = How the product should behave and be supported
+Plan           = How and in which order we build it later
 Next Plan      = What we may build after discovery
 ```
 

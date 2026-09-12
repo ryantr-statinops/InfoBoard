@@ -3,7 +3,9 @@
 **Status:** `active`
 **Audience:** product owner, designer và engineering team
 
-Đây là nguồn sự thật cho sản phẩm đang build và nghiệm thu trong MVP hiện tại. Kế hoạch kỹ thuật, milestone và execution evidence nằm tại [`docs/plan/implementation/`](../../plan/implementation/).
+Đây là nguồn sự thật cho product definition và MVP scope hiện tại. Design,
+Architecture, Quality và Operations bổ sung các constraint tương ứng; `docs/plan/`
+sẽ được viết sau khi các layer này được review và khóa.
 
 ## Đọc theo thứ tự
 
@@ -20,9 +22,9 @@
 ## Documentation boundary
 
 ```text
-Internal PRD   = What and why we build now
-Implementation = How and in which order we build it
-Next Plan      = What we may build after discovery
+Internal PRD = What and why we build now
+Plan         = How and in which order we build it after the documentation lock
+Next Plan    = What we may build after discovery
 ```
 
 Các hướng browser portability, extension, migration assistant, cloud sync và AI nằm trong [Next Plan](../next-plan/README.md), không phải acceptance của M1–M4.

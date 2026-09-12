@@ -24,7 +24,7 @@
 
 ## Decision process
 
-- Thay đổi MVP scope phải cập nhật Internal PRD, implementation reference và traceability trong cùng review cycle.
+- Thay đổi MVP scope phải cập nhật Internal PRD, các supporting layer bị ảnh hưởng và traceability trong cùng review cycle; `docs/plan/` chỉ được cập nhật sau khi review hoàn tất.
 - Open question chỉ đóng khi có owner, evidence và consequence rõ ràng.
 - Capability hậu MVP phải qua [Next Plan discovery gate](../next-plan/README.md) trước khi thêm requirement production.
-- Technical decision history tiếp tục nằm trong implementation governance; file này giữ product-level outcomes.
+- Technical decision history nằm trong Architecture; file này chỉ giữ product-level outcomes.
