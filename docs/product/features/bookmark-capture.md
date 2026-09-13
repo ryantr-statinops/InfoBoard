@@ -15,7 +15,7 @@ The user can submit a public web URL and immediately retain a manageable bookmar
 
 ## Duplicate behavior
 
-- The normalized URL is the URL identity for the MVP.
+- URL-normalization policy revision 1 is the URL identity contract for MVP; remote canonical hints never replace it.
 - Submitting an existing active bookmark returns it and may attach explicitly requested collections or tags.
 - Duplicate capture never overwrites notes, status, existing collections, tags, or a valid current snapshot.
 - A user may explicitly request recapture; successful recapture creates the next content version.

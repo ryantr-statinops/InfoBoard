@@ -27,11 +27,14 @@ Bookmark creation commits before network fetch. Capture completion commits one i
 
 - Accept only absolute `http` and `https` URLs.
 - Reject credentials in URLs, unsupported ports by policy, malformed hosts, and non-public destinations.
-- Lowercase scheme/host, normalize international host names, remove the default port, remove fragments, normalize path dot segments, and apply one documented query-parameter ordering/tracking policy.
+- Apply URL normalization policy revision 1: lowercase scheme and host, convert international host names to their ASCII IDNA form, remove default ports and fragments, normalize an empty path to `/`, resolve path dot segments, normalize percent encoding for unreserved characters, and preserve path case and meaningful trailing-slash differences.
+- Remove query parameters whose case-insensitive key is `fbclid`, `gclid`, `dclid`, `msclkid`, `mc_cid`, `mc_eid`, or starts with `utm_`.
+- Stable-sort remaining query pairs by normalized key and value while preserving original order for identical repeated pairs. Preserve all non-tracking query values and blank values.
 - Preserve `original_url`; use `canonical_url` only for identity.
+- Never use a remote `rel=canonical`, redirect destination, page title, or content hash as bookmark identity.
 - Resolve DNS and validate every address before connection. Validate the actual connected address and every redirect target to resist rebinding and redirect SSRF.
 
-The exact tracking-parameter allow/deny list is versioned. Changing it requires a migration/deduplication decision rather than silently changing identity.
+Persist `url_normalization_revision = 1`. Changing normalization or the tracking list requires a new revision plus an explicit collision/migration decision rather than silently changing identity.
 
 ## Fetch limits
 

@@ -15,6 +15,8 @@ The dashboard summarizes the user's saved knowledge without changing canonical d
 
 All metrics use the same collection, tag, status, domain, saved-date, and capture-date filter semantics as browse and search. Soft-deleted bookmarks are excluded.
 
+Time series default to 30 days and accept at most 366 days. All-time views provide totals and top collection/tag/domain lists only; top lists contain at most 20 rows.
+
 ## Failure behavior
 
 - DuckDB is an acceleration/projection layer, not a source of truth.

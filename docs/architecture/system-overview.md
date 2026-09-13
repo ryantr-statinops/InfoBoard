@@ -9,13 +9,12 @@ flowchart LR
     UI[Browser UI] --> HTTP[HTTP/API layer]
     HTTP --> APP[Application services]
     APP --> SQL[(SQLite + FTS)]
-    APP --> CAP[Capture worker]
-    CAP --> WEB[Public web]
-    CAP --> SQL
-    APP --> IDX[Index worker]
-    IDX --> EMB[Compatible embedding API]
-    IDX --> ROCK[(RocksDB cache)]
-    IDX --> CHROMA[(ChromaDB)]
+    APP --> WORKER[Sequential in-process worker]
+    WORKER --> WEB[Public web]
+    WORKER --> SQL
+    WORKER --> EMB[Compatible embedding API]
+    WORKER --> ROCK[(RocksDB cache)]
+    WORKER --> CHROMA[(ChromaDB)]
     APP --> ANA[Analytics service]
     ANA --> DUCK[(DuckDB)]
     ANA --> SQL
@@ -28,8 +27,7 @@ flowchart LR
 | Browser UI | Capture, organize, retrieve, settings, and maintenance interaction | HTML/JSON over loopback HTTP | Preserve user context and show safe next action | Derived from API | 3–5 |
 | HTTP/API | Validate requests, apply origin/host boundary, expose stable envelopes | Versioned request/response contracts | Reject before mutation; correlation ID for diagnosis | `ready` when app services initialize | 1 |
 | Application services | Enforce product invariants and transaction boundaries | Typed commands/queries | Roll back canonical transaction; never infer truth from derived stores | `ready` with SQLite | 1–3 |
-| Capture worker | Fetch public URLs and create versioned snapshots | Durable SQLite jobs | Retry with limits; bookmark survives failure | `ready/degraded/unavailable` | 2 |
-| Index worker | Chunk, embed, index, and checkpoint current versions | Durable SQLite jobs; derived writes | Idempotent retry and rebuild | Per component | 4–7 |
+| In-process worker | Sequentially execute capture attempts, indexing, analytics refresh, and cleanup | Durable SQLite leases; canonical/derived writes | Three bounded retries, lease recovery, manual retry | Per owned component | 2–8 |
 | Search orchestrator | Keyword, semantic, and hybrid candidate/ranking flow | Query/filter contract to bookmark results | Keyword fallback on semantic failure | `ready/degraded` | 4–6 |
 | Analytics service | Shared-filter metrics and projection refresh | Filter contract to KPI response | Bounded SQLite fallback | `ready/degraded` | 8 |
 | Maintenance service | Migration, backup, restore, rebuild, and integrity checks | Explicit local commands/actions | Fail closed with canonical data untouched | Detailed component report | 9 |
@@ -43,7 +41,7 @@ flowchart LR
 
 - HTTP handlers contain no storage-specific business logic.
 - Application services are the only writers of canonical user state.
-- Workers claim durable jobs from SQLite and report state through SQLite transactions.
+- One sequential worker starts with application lifespan, claims durable work from SQLite, and reports state through SQLite transactions.
 - Search and analytics may read derived stores but validate candidates against current canonical state.
 - Maintenance operations use explicit paths and never run as a side effect of a dashboard request.
 - The process binds to `127.0.0.1` for MVP; opening a network interface requires a new threat model and authentication decision.
