@@ -18,6 +18,7 @@ Semantic capability is required for MVP release, but provider availability is no
 - Results represent bookmarks, not chunks or snapshot versions.
 - Each result includes bookmark ID, title, canonical URL/domain, excerpt, matched mode, current status, and relevant collection/tag context.
 - Deleted bookmarks, stale versions, and the current bookmark in a related-items query are excluded.
+- Migrated legacy items participate in keyword search and, when they have migrated snapshot text, semantic/hybrid search; results identify their source as legacy.
 
 ## Provider boundary
 
