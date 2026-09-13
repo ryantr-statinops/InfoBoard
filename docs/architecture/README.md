@@ -16,4 +16,4 @@ Read in order:
 10. [Lifecycle and recovery](lifecycle-and-recovery.md)
 11. [Security and privacy](security-and-privacy.md)
 
-This is target design, not runtime evidence. Delivery status belongs only in [implementation documentation](../implementation/README.md).
+This is target design, not runtime evidence. Delivery status belongs only in [implementation documentation](../plan/implementation/README.md).
