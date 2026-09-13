@@ -10,8 +10,10 @@ Read in order:
 4. [Capture pipeline](capture-pipeline.md)
 5. [Indexing and search](indexing-and-search.md)
 6. [Analytics pipeline](analytics-pipeline.md)
-7. [API contracts](api-contracts.md)
-8. [Lifecycle and recovery](lifecycle-and-recovery.md)
-9. [Security and privacy](security-and-privacy.md)
+7. [API endpoints and conventions](api-contracts.md)
+8. [Exact API schemas](api-schemas.md)
+9. [API error registry](api-errors.md)
+10. [Lifecycle and recovery](lifecycle-and-recovery.md)
+11. [Security and privacy](security-and-privacy.md)
 
 This is target design, not runtime evidence. Delivery status belongs only in [implementation documentation](../implementation/README.md).
