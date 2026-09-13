@@ -10,8 +10,8 @@ Product -> Design -> Architecture -> Quality/Operations -> Implementation
 
 - Product work: [product vision](product/vision.md) → [MVP scope](product/mvp-scope.md) → [requirements](product/requirements.md) → [feature specifications](product/README.md).
 - UX work: [design overview](design/README.md) → [information architecture](design/information-architecture.md) → [core flows](design/core-flows.md) → [UI states](design/ui-states.md).
-- Engineering: product path → [architecture overview](architecture/README.md) → [API contracts](architecture/api-contracts.md) → [implementation roadmap](implementation/roadmap.md).
-- QA/release: [test strategy](quality/test-strategy.md) → [MVP acceptance](quality/mvp-acceptance.md) → [implementation tasks](implementation/tasks.md).
+- Engineering: product path → [architecture overview](architecture/README.md) → [API contracts](architecture/api-contracts.md) → [implementation roadmap](plan/implementation/roadmap.md).
+- QA/release: [test strategy](quality/test-strategy.md) → [MVP acceptance](quality/mvp-acceptance.md) → [implementation tasks](plan/implementation/tasks.md).
 - Maintainers: [configuration](operations/configuration.md) → [backup, restore, and rebuild](operations/backup-restore-and-rebuild.md).
 - New ideas: [idea inbox](product/ideas.md) → [product decisions](product/decisions.md); an unaccepted idea is not a requirement or roadmap commitment.
 
@@ -24,11 +24,11 @@ Product -> Design -> Architecture -> Quality/Operations -> Implementation
 | [Architecture](architecture/README.md) | System boundaries, schema, stores, pipelines, APIs, security, and recovery invariants | Claims of implemented behavior |
 | [Quality](quality/README.md) | Test strategy, evaluation, and MVP acceptance evidence required | Product commitments or target implementation |
 | [Operations](operations/README.md) | Safe configuration, backup, restore, rebuild, and health interpretation | Unsupported commands presented as verified |
-| [Implementation](implementation/README.md) | Dependency order, delivery tasks, status, and evidence links | Redefinition of upstream behavior/contracts |
+| [Implementation](plan/implementation/README.md) | Current-state gaps, dependency order, delivery tasks, status, and evidence links | Redefinition of upstream behavior/contracts |
 
 ## Architectural baseline
 
-- SQLite and FTS5 own canonical data and local keyword retrieval.
+- SQLite canonical tables own user data; FTS5 is a rebuildable keyword index stored in the same database file.
 - RocksDB through `rocksdict` is a rebuildable embedding cache.
 - ChromaDB is a rebuildable semantic vector index.
 - DuckDB is a rebuildable analytics projection with bounded SQLite fallback.

@@ -8,6 +8,7 @@ This is the only product-requirement register. IDs remain stable after publicati
 | `CAP-02` | Capture stores source metadata and a versioned content snapshot when extraction succeeds. | [Capture](features/bookmark-capture.md) |
 | `CAP-03` | Snapshot failure preserves the bookmark, exposes a safe reason, and permits idempotent retry. | [Capture](features/bookmark-capture.md) |
 | `CAP-04` | URL normalization and deduplication are deterministic and do not overwrite personal context. | [Capture](features/bookmark-capture.md) |
+| `CAP-05` | Existing text/file items survive migration as read-only legacy sources and remain readable, searchable, organizable, and soft-deletable. | [MVP scope](mvp-scope.md) |
 | `ORG-01` | A bookmark can belong to multiple collections and have multiple tags. | [Organization](features/organization.md) |
 | `ORG-02` | A bookmark supports personal notes and `inbox`, `active`, or `archived` state. | [Organization](features/organization.md) |
 | `ORG-03` | Recapture, reindex, and derived-store rebuild preserve organization and notes. | [Organization](features/organization.md) |
@@ -26,5 +27,6 @@ This is the only product-requirement register. IDs remain stable after publicati
 | `UX-01` | The capture-organize-retrieve loop works without exposing storage or indexing terminology. | [Core flows](../design/core-flows.md) |
 | `UX-02` | Empty, processing, failed, unconfigured, and degraded states explain the next safe action. | [UI states](../design/ui-states.md) |
 | `UX-03` | Core workflows do not overflow horizontally at 1440 px or 390 px. | [UI states](../design/ui-states.md) |
+| `UX-04` | The MVP interface and its canonical user-facing messages are English-first. | [Users and jobs](users-and-jobs.md) |
 
 All requirements are mandatory for the MVP unless an accepted decision explicitly marks one deferred and updates scope, acceptance, and roadmap together.

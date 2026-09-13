@@ -24,7 +24,7 @@ Changing any component creates a new revision. The old revision is never mixed i
 6. Validate response count, numeric values, model metadata, and vector dimension.
 7. Cache validated embeddings in RocksDB.
 8. Upsert deterministic chunk IDs and metadata into the revision's ChromaDB namespace.
-9. Mark the durable job indexed only after all current chunks are present.
+9. Mark the durable job `succeeded` only after all current chunks are present.
 10. Remove stale version entries through an idempotent cleanup job.
 
 Provider requests are bounded by batch size, text length, timeout, concurrency, and retry policy. Partial batches remain retryable and never activate an incomplete revision.

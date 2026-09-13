@@ -19,7 +19,9 @@ The user can add durable personal context to a bookmark without coupling that co
 - Notes are created, edited, and deleted independently of snapshots.
 - Archive hides a bookmark from the default list without deleting it.
 - Soft delete immediately excludes a bookmark from lists, public detail, search, related results, and analytics.
+- Soft-deleted canonical rows and snapshots are retained indefinitely in MVP; there is no restore, purge, or permanent-delete action.
 - Recapture, retry, reindex, provider changes, and derived-store rebuild do not mutate organization data.
+- Migrated text/file items support the same collections, tags, notes, status, and soft-delete behavior as URL bookmarks.
 
 ## Acceptance
 

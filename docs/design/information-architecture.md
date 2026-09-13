@@ -31,6 +31,8 @@ Detail presents canonical data before enrichment:
 4. Capture and indexing status with retry actions.
 5. Edit, recapture, archive, and soft-delete actions.
 
+For a migrated legacy text/file item, detail shows a `Legacy source` label and omits capture/recapture actions. Read, organization, search, archive, and soft-delete remain available.
+
 Storage names such as SQLite, RocksDB, ChromaDB, and DuckDB appear only in settings or diagnostics, never in the core workflow.
 
 ## URL state

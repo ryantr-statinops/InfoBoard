@@ -12,26 +12,29 @@ sequenceDiagram
 
     U->>A: Submit URL and optional organization
     A->>A: Parse, validate, normalize
-    A->>S: Transaction: create/find bookmark + capture job
-    A-->>U: 202 bookmark and job state
-    W->>S: Lease queued job
+    A->>S: Transaction: create/find bookmark + capture attempt
+    A-->>U: 202 bookmark and attempt state
+    W->>S: Lease queued attempt
     W->>P: Resolve, validate and fetch with bounds
     P-->>W: Response/redirect/content
     W->>W: Extract and normalize snapshot
-    W->>S: Transaction: snapshot ready + current version + downstream jobs
+    W->>S: Transaction: immutable snapshot + current pointer + downstream jobs
 ```
 
-Bookmark creation commits before network fetch. Capture completion commits the immutable snapshot, advances `current_snapshot_version`, and queues keyword, semantic, and analytics jobs in one canonical transaction.
+Bookmark creation commits before network fetch. Capture completion commits one immutable successful snapshot, links it to the attempt, advances `current_snapshot_id`, and queues keyword, semantic, and analytics jobs in one canonical transaction. Pending and failed attempts never create snapshot rows.
 
 ## URL validation and normalization
 
 - Accept only absolute `http` and `https` URLs.
 - Reject credentials in URLs, unsupported ports by policy, malformed hosts, and non-public destinations.
-- Lowercase scheme/host, normalize international host names, remove the default port, remove fragments, normalize path dot segments, and apply one documented query-parameter ordering/tracking policy.
+- Apply URL normalization policy revision 1: lowercase scheme and host, convert international host names to their ASCII IDNA form, remove default ports and fragments, normalize an empty path to `/`, resolve path dot segments, normalize percent encoding for unreserved characters, and preserve path case and meaningful trailing-slash differences.
+- Remove query parameters whose case-insensitive key is `fbclid`, `gclid`, `dclid`, `msclkid`, `mc_cid`, `mc_eid`, or starts with `utm_`.
+- Stable-sort remaining query pairs by normalized key and value while preserving original order for identical repeated pairs. Preserve all non-tracking query values and blank values.
 - Preserve `original_url`; use `canonical_url` only for identity.
+- Never use a remote `rel=canonical`, redirect destination, page title, or content hash as bookmark identity.
 - Resolve DNS and validate every address before connection. Validate the actual connected address and every redirect target to resist rebinding and redirect SSRF.
 
-The exact tracking-parameter allow/deny list is versioned. Changing it requires a migration/deduplication decision rather than silently changing identity.
+Persist `url_normalization_revision = 1`. Changing normalization or the tracking list requires a new revision plus an explicit collision/migration decision rather than silently changing identity.
 
 ## Fetch limits
 
@@ -43,7 +46,7 @@ The exact tracking-parameter allow/deny list is versioned. Changing it requires 
 
 ## Snapshot commit
 
-- A capture attempt reserves the next candidate version but does not advance the bookmark until extraction and managed-file persistence succeed.
+- A capture attempt has its own monotonically increasing attempt number. The next snapshot content version is allocated only inside the successful commit.
 - Raw/extracted files are written to a temporary path, checksummed, and atomically moved into a versioned managed location before the SQLite commit references them.
 - Extraction produces normalized title/description candidates and text. User-overridden metadata remains authoritative.
 - Identical content checksum may complete the job without creating a redundant current version; capture provenance may be recorded separately.
@@ -56,10 +59,10 @@ The exact tracking-parameter allow/deny list is versioned. Changing it requires 
 | Duplicate URL | Existing bookmark returned | Explicit recapture only |
 | DNS/redirect/SSRF rejection | Bookmark retained; snapshot attempt failed | Allowed after source/config changes |
 | Timeout/size/type/extraction failure | Bookmark retained; current ready snapshot unchanged | Requeue same logical capture operation |
-| Process crash before commit | Lease expires; temporary files cleaned | Worker safely resumes/retries |
+| Process crash before commit | Attempt lease expires; temporary files cleaned | Worker safely resumes/retries |
 | Downstream index failure | Snapshot remains current and readable | Downstream job retries independently |
 
-Retry increments a bounded counter, clears expired lease metadata, and never mutates notes, collections, tags, or status. After the retry limit, a user action or full rebuild is required.
+Retry increments a bounded counter, clears expired lease metadata, and never mutates notes, collections, tags, status, or the current snapshot. Automatic retries use 1-, 5-, and 30-second delays for a maximum of three attempts. After exhaustion, manual retry starts one new three-attempt retry cycle on the same logical capture attempt.
 
 ## Outputs
 

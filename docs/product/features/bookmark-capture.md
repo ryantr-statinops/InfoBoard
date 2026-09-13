@@ -15,7 +15,7 @@ The user can submit a public web URL and immediately retain a manageable bookmar
 
 ## Duplicate behavior
 
-- The normalized URL is the URL identity for the MVP.
+- URL-normalization policy revision 1 is the URL identity contract for MVP; remote canonical hints never replace it.
 - Submitting an existing active bookmark returns it and may attach explicitly requested collections or tags.
 - Duplicate capture never overwrites notes, status, existing collections, tags, or a valid current snapshot.
 - A user may explicitly request recapture; successful recapture creates the next content version.
@@ -23,7 +23,7 @@ The user can submit a public web URL and immediately retain a manageable bookmar
 ## Failure behavior
 
 - Invalid or unsafe input creates no bookmark.
-- Fetch, redirect, content-type, size, timeout, or extraction failure preserves a successfully created bookmark and marks snapshot capture `failed`.
+- Fetch, redirect, content-type, size, timeout, or extraction failure preserves a successfully created bookmark and marks the capture attempt `failed`; no failed snapshot row is created.
 - A failed bookmark remains editable, organizable, and discoverable by URL/title metadata.
 - Retry reuses the bookmark, creates no duplicate job for the same active attempt, and only advances the current version after snapshot persistence succeeds.
 

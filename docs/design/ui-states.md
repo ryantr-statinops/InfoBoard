@@ -12,8 +12,12 @@
 | Indexing | Current snapshot is being indexed. | Keyword metadata retrieval may remain available. |
 | Ready | Current snapshot and required indexes are current. | Offer normal browse/search actions. |
 | Semantic unconfigured | Provider or consent is missing. | Link to setup; do not label as an outage. |
+| API key missing | Provider endpoint is configured but `INFOBOARD_SEMANTIC_API_KEY` is absent. | Explain environment setup; never offer a key input field. |
+| Consent required | Endpoint/model/key verification passed but external transfer is not authorized. | Show disclosure and explicit consent action. |
 | Semantic degraded | A configured component is unavailable or incompatible. | Use keyword fallback and offer diagnostics/retry. |
 | Analytics degraded | Current projection cannot be used safely. | Show bounded fallback or analytics-only error. |
+| Legacy item | Migrated text/file content is available under compatibility mode. | Allow read/search/organize/delete; hide capture and recapture. |
+| Stale edit | The item changed after this view was loaded. | Preserve the attempted input and offer reload/reapply; do not overwrite silently. |
 | Validation error | Submitted input is invalid or unsafe. | Preserve input when safe and explain correction. |
 
 Color is never the only state signal. Status has text, icon/shape, accessible name, and programmatic semantics.
@@ -30,3 +34,5 @@ Color is never the only state signal. Status has text, icon/shape, accessible na
 ## Confirmation and destructive actions
 
 Soft delete requires confirmation naming the bookmark. Provider-consent revocation explains that external calls stop and semantic retrieval becomes unavailable until re-enabled. Backup restore and derived rebuild actions live in maintenance settings and show exact target/status before execution.
+
+All canonical user-facing labels and messages are English in MVP. Localization does not belong to the release acceptance matrix.

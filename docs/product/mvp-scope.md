@@ -15,6 +15,7 @@
 - Basic dashboard analytics using filters shared with browse and search.
 - Backup, restore, migration, health, and rebuild paths for canonical and derived stores.
 - Responsive core workflows for 1440 px and 390 px viewports.
+- Preserve pre-MVP text and file items as read-only legacy sources that remain readable, searchable, organizable, and soft-deletable.
 
 ## MVP release boundary
 
@@ -22,7 +23,7 @@ Semantic search is required release functionality. The release must prove a conf
 
 ## Out of scope
 
-- Manual text, PDF, Markdown, TXT, image, audio, or video ingestion.
+- Creating or recapturing manual text, PDF, Markdown, TXT, image, audio, or video items. Existing text/file items are retained under the legacy compatibility contract.
 - Browser extension, automatic browser bookmark import, profile migration, cookies, sessions, localStorage, or IndexedDB portability.
 - Cloud synchronization, accounts, collaboration, sharing, or multi-tenant operation.
 - AI summaries, chat, recommendations, generated tags, or autonomous research.
@@ -31,3 +32,10 @@ Semantic search is required release functionality. The release must prove a conf
 - OCR, citation management, and annotation inside page content.
 
 Out-of-scope capabilities may enter [the idea inbox](ideas.md), but they must not appear in MVP requirements or implementation tasks until accepted.
+
+## Compatibility boundary
+
+- `/api/v1/*` is the canonical MVP API.
+- Existing `/api/*` routes remain behavior-preserving adapters for one release only and expose deprecation metadata.
+- Existing integer identifiers remain stable through migration.
+- Compatibility preserves user data and transition time; it does not keep legacy creation behavior in the new product surface.

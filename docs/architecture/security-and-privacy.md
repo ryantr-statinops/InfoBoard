@@ -25,6 +25,11 @@ Untrusted inputs include submitted URLs, DNS answers, redirects, remote headers/
 
 Endpoint/model/key configuration and consent are separate actions. Verification may send only the minimal compatibility request documented by the UI; it cannot index a snapshot or semantic query and cannot grant consent.
 
+- Remote provider endpoints require HTTPS.
+- HTTP is accepted only when the normalized host resolves and connects exclusively to loopback addresses.
+- Unlike public-page capture, a configured provider is allowed to target loopback deliberately; private non-loopback HTTP endpoints remain rejected in MVP.
+- Redirects are disabled for provider requests. Endpoint changes require verification again.
+
 Before consent, the disclosure names:
 
 - Snapshot text sent for document embeddings.
@@ -37,10 +42,12 @@ Consent records disclosure version and time. Revocation takes effect before the 
 
 ## Secrets
 
-- API keys are write-only and stored through a dedicated local secret-storage boundary; SQLite stores only an opaque reference and key-presence metadata.
-- If no acceptable OS/keyring/file-permission-backed mechanism is implemented, setup must fail closed rather than store plaintext in SQLite or logs.
+- `INFOBOARD_SEMANTIC_API_KEY` is the only MVP source of the provider key.
+- The API and UI expose only `api_key_present`; they never accept, return, persist, or edit the key.
+- SQLite, RocksDB, ChromaDB, DuckDB, snapshot files, and backup manifests contain no API-key value or secret reference.
+- Missing key state is `unconfigured`, even when endpoint/model fields exist.
 - Responses, exceptions, diagnostics, command output, and backups redact keys, authorization headers, raw provider responses, URL credentials, and sensitive local paths.
-- Key replacement is atomic; failed verification does not destroy the last valid reference unless explicitly removed.
+- Key rotation occurs outside InfoBoard by changing the environment and restarting; provider verification must run again before semantic jobs resume.
 
 ## Data minimization
 

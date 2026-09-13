@@ -5,11 +5,11 @@
 | Layer | Required coverage |
 | --- | --- |
 | Domain unit | URL normalization, deduplication, state transitions, filters, chunk identity, ranking, consent, and retry rules. |
-| SQLite integration | Versioned migrations, foreign keys, organization relations, snapshot/current-version invariants, leases, FTS rebuild, and soft delete. |
+| SQLite integration | Integer-ID migration, legacy mapping, foreign keys, organization relations, attempt/snapshot invariants, versions/leases, FTS rebuild, and soft delete. |
 | Capture integration | Public fetch fixtures, redirects, DNS/address checks, limits, extraction, atomic files, restart, and retry. |
 | Derived storage integration | RocksDB cache compatibility/corruption, Chroma upsert/query/revision isolation, and DuckDB projection/fallback. |
 | Provider contract | OpenAI-compatible request/response validation using a controlled fake plus a configured real endpoint smoke test. |
-| HTTP contract | All `/api/v1` envelopes, pagination, filters, conflicts, safe errors, provider write-only fields, and component states. |
+| HTTP contract | All `/api/v1` schemas, limits, pagination, filters, `If-Match`, stable errors, API-key absence/presence, component states, and one-release adapter parity. |
 | Security | SSRF/rebinding/redirect, Host/Origin/CSRF, XSS, resource limits, secret/content redaction, consent, revocation, and archive safety. |
 | Recovery | Backup, checksum, restore, migration, rebuild order, interrupted rebuild, and canonical preservation. |
 | UI | Capture-organize-retrieve, failed snapshot retry, semantic setup/degradation, keyboard/focus, and 1440/390 px layouts. |
@@ -21,7 +21,7 @@
 - Storage tests use explicit temporary paths for SQLite, RocksDB, ChromaDB, DuckDB, and snapshots.
 - Provider unit/integration tests use a deterministic local fake and assert that no request occurs before consent.
 - Real compatible-provider smoke tests use dedicated credentials and non-sensitive fixture text.
-- Fixtures include canonically equivalent URLs, unsafe destinations, redirects, changed/deleted snapshots, Unicode/English text, collection/tag combinations, provider dimension mismatch, and stale analytics checkpoints.
+- Fixtures include normalization-v1 tracker/query cases, unsafe destinations, redirects, migrated legacy text/files, changed/deleted snapshots, Unicode/English text, stale versions, collection/tag combinations, provider dimension mismatch, and stale analytics checkpoints.
 
 ## Retrieval evaluation
 

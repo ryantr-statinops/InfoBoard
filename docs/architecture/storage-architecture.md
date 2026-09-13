@@ -4,14 +4,15 @@
 
 | Store | Purpose | Authority | Writes | Reads | Failure behavior |
 | --- | --- | --- | --- | --- | --- |
-| SQLite + FTS5 | Canonical bookmarks, snapshots, organization, jobs, settings metadata, and keyword search | Authoritative | Application services and durable workers | All services | Core health unavailable when SQLite cannot be read safely; FTS failure makes retrieval unavailable until rebuilt. |
+| SQLite canonical tables | Bookmarks, successful snapshots, capture attempts, organization, jobs, and settings metadata | Authoritative | Application services and durable worker | All services | Core health unavailable when canonical tables cannot be read safely. |
+| SQLite FTS5 tables | Local keyword index stored in the canonical database file | Derived index | Index worker and rebuild service | Search orchestrator | Keyword retrieval unavailable until rebuilt; canonical list/detail remain readable. |
 | RocksDB through `rocksdict` | Reusable document/query embedding cache and provider-result metadata | Derived cache | Semantic index/search services | Semantic index/search services | Treat as cache miss, recreate store, and re-embed as necessary. |
 | ChromaDB | Persistent semantic chunk vectors and metadata filters | Derived index | Semantic index worker | Search orchestrator | Semantic degrades; keyword and canonical workflows remain available. |
 | DuckDB | Analytics projection and aggregate acceleration | Derived analytical store | Projection refresh worker | Analytics service, read-only | Use bounded SQLite fallback or report analytics-only degradation. |
 
 ## Shared derived identity
 
-Every RocksDB cache entry, ChromaDB vector, and DuckDB projection row is namespaced by a deterministic compatibility identity containing:
+Every FTS row, RocksDB cache entry, ChromaDB vector, and DuckDB projection row is namespaced or joined through a deterministic compatibility identity containing:
 
 ```text
 bookmark_id
@@ -22,13 +23,15 @@ schema_version
 
 Embedding entries additionally include provider endpoint identity, model ID, vector dimension, normalized input checksum, and embedding request revision. Chroma chunk records include chunk ID, chunk position, chunk checksum, and deleted/current-version metadata. DuckDB projection metadata includes source watermark and projection checksum.
 
-## SQLite and FTS5
+## SQLite canonical tables and derived FTS5
 
-- SQLite transactions commit canonical entities and durable jobs atomically where the workflow requires both.
-- FTS indexes only current, non-deleted bookmark metadata and snapshot text.
-- FTS content can be rebuilt from canonical rows and managed snapshot files.
+- SQLite transactions commit canonical entities, capture attempts, and durable jobs atomically where the workflow requires them.
+- FTS5 resides in the same SQLite file for transactional locality but is not authoritative user data.
+- FTS indexes only current, non-deleted bookmark metadata and successful current snapshot text, including migrated legacy snapshots.
+- FTS content is always rebuildable from canonical rows and managed snapshot files.
 - List/detail may continue during an isolated FTS failure, but core retrieval health is unavailable rather than falsely healthy.
 - Migrations are versioned, transactional where SQLite permits, and preceded by a verified backup during upgrade.
+- A backup may physically include FTS pages because they share the database file; restore validates/rebuilds FTS instead of trusting those pages as canonical evidence.
 
 ## RocksDB cache
 
@@ -56,8 +59,8 @@ Embedding entries additionally include provider endpoint identity, model ID, vec
 
 ## Consistency and backup
 
-- Canonical backup contains SQLite, managed snapshot files, schema/app version, timestamps, and checksums.
+- Canonical backup contains the SQLite file, managed snapshot files, schema/app version, timestamps, and checksums; only canonical tables and referenced files are required recovery inputs.
 - RocksDB, ChromaDB, and DuckDB are excluded from required backup because they are rebuildable.
 - Restore validates canonical integrity before any derived component starts.
 - Derived cleanup and rebuild are idempotent, resumable, scoped to explicit paths, and recorded as durable jobs.
-- No derived store may repair, create, undelete, or change a canonical bookmark.
+- FTS5, RocksDB, ChromaDB, and DuckDB rebuild in that order and may not repair, create, undelete, or change a canonical bookmark.

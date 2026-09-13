@@ -16,6 +16,10 @@ The projection contains only the canonical identifiers, dimensions, timestamps, 
 
 Analytics, browse, and search share normalized collection IDs, tag IDs, bookmark status, source domain, saved date range, and capture date range. Empty filter arrays mean no restriction. Date ranges are UTC half-open intervals `[from, to)`. Soft-deleted bookmarks are always excluded and cannot be reintroduced by filters.
 
+- Time-series requests default to the previous 30 complete/partial UTC days and may span at most 366 days.
+- All-time requests return aggregate totals and top collection/tag/domain lists only; they do not return an unbounded time series.
+- Every top list is limited to 20 rows with deterministic count-descending then label/ID tie-breaking.
+
 ## Refresh flow
 
 1. Read the last successful SQLite source watermark from `analytics_checkpoints`.
@@ -35,7 +39,7 @@ A full rebuild creates a new projection beside the active one, verifies it, then
 
 ## Fallback
 
-When DuckDB is missing, stale, corrupt, or incompatible, the service runs equivalent bounded SQLite aggregates for the supported MVP range. The response reports `actual_backend: sqlite` and any safe degradation code. If fallback exceeds its bound or SQLite is unavailable, analytics alone returns unavailable; it never serves known-stale metrics as current.
+When DuckDB is missing, stale, corrupt, or incompatible, the service runs equivalent SQLite aggregates under the same 366-day, all-time-total, and top-20 bounds. The response reports `actual_backend: sqlite` and any safe degradation code. If SQLite is unavailable, analytics returns unavailable; it never serves known-stale metrics as current.
 
 ## Consistency evidence
 
