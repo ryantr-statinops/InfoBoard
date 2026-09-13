@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for ORG-UI. Evidence is mandatory before checking a task.
 
-## ORG-UI-001 — Build library and detail information architecture
+## ORG-UI-001
+
+**Title:** Build library and detail information architecture
 
 - [ ] **ORG-UI-001: Build library and detail information architecture**
 - Outcome: Build library and detail information architecture.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for ORG-UI. Evidence is mandatory befor
 - Complete when: code, tests, documentation impact, and [evidence](execution.md#org-ui-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## ORG-UI-002 — Project asynchronous and degraded states safely
+## ORG-UI-002
+
+**Title:** Project asynchronous and degraded states safely
 
 - [ ] **ORG-UI-002: Project asynchronous and degraded states safely**
 - Outcome: Project asynchronous and degraded states safely.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for ORG-UI. Evidence is mandatory befor
 - Complete when: code, tests, documentation impact, and [evidence](execution.md#org-ui-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## ORG-UI-003 — Represent legacy and destructive behavior
+## ORG-UI-003
+
+**Title:** Represent legacy and destructive behavior
 
 - [ ] **ORG-UI-003: Represent legacy and destructive behavior**
 - Outcome: Represent legacy and destructive behavior.

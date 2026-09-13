@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for RELEASE-TEST.
 
-## RELEASE-TEST-001 — Complete deterministic unit and integration layers
+## RELEASE-TEST-001
+
+**Title:** Complete deterministic unit and integration layers
 
 - [ ] **RELEASE-TEST-001: Complete deterministic unit and integration layers**
 - Outcome: Complete deterministic unit and integration layers.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for RELEASE-TEST.
 - Complete when: artifacts and [evidence](execution.md#release-test-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## RELEASE-TEST-002 — Add contract, browser, relevance, and performance gates
+## RELEASE-TEST-002
+
+**Title:** Add contract, browser, relevance, and performance gates
 
 - [ ] **RELEASE-TEST-002: Add contract, browser, relevance, and performance gates**
 - Outcome: Add contract, browser, relevance, and performance gates.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for RELEASE-TEST.
 - Complete when: artifacts and [evidence](execution.md#release-test-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## RELEASE-TEST-003 — Enforce CI and evidence publication
+## RELEASE-TEST-003
+
+**Title:** Enforce CI and evidence publication
 
 - [ ] **RELEASE-TEST-003: Enforce CI and evidence publication**
 - Outcome: Enforce CI and evidence publication.

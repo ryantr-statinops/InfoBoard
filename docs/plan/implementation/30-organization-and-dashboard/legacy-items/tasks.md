@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for ORG-LEGACY. Evidence is mandatory before checking a task.
 
-## ORG-LEGACY-001 — Project legacy sources through bookmark reads
+## ORG-LEGACY-001
+
+**Title:** Project legacy sources through bookmark reads
 
 - [ ] **ORG-LEGACY-001: Project legacy sources through bookmark reads**
 - Outcome: Project legacy sources through bookmark reads.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for ORG-LEGACY. Evidence is mandatory b
 - Complete when: code, tests, documentation impact, and [evidence](execution.md#org-legacy-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## ORG-LEGACY-002 — Disable unsupported legacy creation and capture
+## ORG-LEGACY-002
+
+**Title:** Disable unsupported legacy creation and capture
 
 - [ ] **ORG-LEGACY-002: Disable unsupported legacy creation and capture**
 - Outcome: Disable unsupported legacy creation and capture.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for ORG-LEGACY. Evidence is mandatory b
 - Complete when: code, tests, documentation impact, and [evidence](execution.md#org-legacy-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## ORG-LEGACY-003 — Preserve organization and soft-delete behavior
+## ORG-LEGACY-003
+
+**Title:** Preserve organization and soft-delete behavior
 
 - [ ] **ORG-LEGACY-003: Preserve organization and soft-delete behavior**
 - Outcome: Preserve organization and soft-delete behavior.

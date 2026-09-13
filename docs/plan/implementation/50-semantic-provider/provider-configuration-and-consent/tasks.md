@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for SEM-CONFIG.
 
-## SEM-CONFIG-001 — Implement environment-only secret and settings projection
+## SEM-CONFIG-001
+
+**Title:** Implement environment-only secret and settings projection
 
 - [ ] **SEM-CONFIG-001: Implement environment-only secret and settings projection**
 - Outcome: Implement environment-only secret and settings projection.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for SEM-CONFIG.
 - Complete when: implementation and tests pass and [evidence](execution.md#sem-config-001) is reviewed.
 - Commit boundary: one to three scoped commits.
 
-## SEM-CONFIG-002 — Validate endpoint and verification boundaries
+## SEM-CONFIG-002
+
+**Title:** Validate endpoint and verification boundaries
 
 - [ ] **SEM-CONFIG-002: Validate endpoint and verification boundaries**
 - Outcome: Validate endpoint and verification boundaries.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for SEM-CONFIG.
 - Complete when: implementation and tests pass and [evidence](execution.md#sem-config-002) is reviewed.
 - Commit boundary: one to three scoped commits.
 
-## SEM-CONFIG-003 — Implement explicit consent and revocation
+## SEM-CONFIG-003
+
+**Title:** Implement explicit consent and revocation
 
 - [ ] **SEM-CONFIG-003: Implement explicit consent and revocation**
 - Outcome: Implement explicit consent and revocation.

@@ -2,7 +2,9 @@
 
 This file is the sole authoritative checklist for CAP-URL. Do not check an item until its evidence anchor contains real results.
 
-## CAP-URL-001 — Implement normalization policy version 1
+## CAP-URL-001
+
+**Title:** Implement normalization policy version 1
 
 - [ ] **CAP-URL-001: Implement normalization policy version 1**
 - Outcome: Implement normalization policy version 1.
@@ -19,7 +21,9 @@ This file is the sole authoritative checklist for CAP-URL. Do not check an item 
 - Complete when: implementation, tests, documentation impact, and [evidence](execution.md#cap-url-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## CAP-URL-002 — Enforce SSRF and redirect boundaries
+## CAP-URL-002
+
+**Title:** Enforce SSRF and redirect boundaries
 
 - [ ] **CAP-URL-002: Enforce SSRF and redirect boundaries**
 - Outcome: Enforce SSRF and redirect boundaries.
@@ -36,7 +40,9 @@ This file is the sole authoritative checklist for CAP-URL. Do not check an item 
 - Complete when: implementation, tests, documentation impact, and [evidence](execution.md#cap-url-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## CAP-URL-003 — Bound fetch and parsing resources
+## CAP-URL-003
+
+**Title:** Bound fetch and parsing resources
 
 - [ ] **CAP-URL-003: Bound fetch and parsing resources**
 - Outcome: Bound fetch and parsing resources.

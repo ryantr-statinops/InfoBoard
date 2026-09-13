@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for REL-RECOVERY.
 
-## REL-RECOVERY-001 — Create consistent canonical backup and manifest
+## REL-RECOVERY-001
+
+**Title:** Create consistent canonical backup and manifest
 
 - [ ] **REL-RECOVERY-001: Create consistent canonical backup and manifest**
 - Outcome: Create consistent canonical backup and manifest.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for REL-RECOVERY.
 - Complete when: implementation, tests, operational evidence, and [task evidence](execution.md#rel-recovery-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## REL-RECOVERY-002 — Restore to a safe location and validate canonical state
+## REL-RECOVERY-002
+
+**Title:** Restore to a safe location and validate canonical state
 
 - [ ] **REL-RECOVERY-002: Restore to a safe location and validate canonical state**
 - Outcome: Restore to a safe location and validate canonical state.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for REL-RECOVERY.
 - Complete when: implementation, tests, operational evidence, and [task evidence](execution.md#rel-recovery-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## REL-RECOVERY-003 — Rebuild derived stores in documented order
+## REL-RECOVERY-003
+
+**Title:** Rebuild derived stores in documented order
 
 - [ ] **REL-RECOVERY-003: Rebuild derived stores in documented order**
 - Outcome: Rebuild derived stores in documented order.

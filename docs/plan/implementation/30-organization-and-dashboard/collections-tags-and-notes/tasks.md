@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for ORG-CONTEXT. Evidence is mandatory before checking a task.
 
-## ORG-CONTEXT-001 — Implement collection and tag resources
+## ORG-CONTEXT-001
+
+**Title:** Implement collection and tag resources
 
 - [ ] **ORG-CONTEXT-001: Implement collection and tag resources**
 - Outcome: Implement collection and tag resources.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for ORG-CONTEXT. Evidence is mandatory 
 - Complete when: code, tests, documentation impact, and [evidence](execution.md#org-context-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## ORG-CONTEXT-002 — Implement versioned bookmark memberships and status
+## ORG-CONTEXT-002
+
+**Title:** Implement versioned bookmark memberships and status
 
 - [ ] **ORG-CONTEXT-002: Implement versioned bookmark memberships and status**
 - Outcome: Implement versioned bookmark memberships and status.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for ORG-CONTEXT. Evidence is mandatory 
 - Complete when: code, tests, documentation impact, and [evidence](execution.md#org-context-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## ORG-CONTEXT-003 — Implement independent personal notes
+## ORG-CONTEXT-003
+
+**Title:** Implement independent personal notes
 
 - [ ] **ORG-CONTEXT-003: Implement independent personal notes**
 - Outcome: Implement independent personal notes.

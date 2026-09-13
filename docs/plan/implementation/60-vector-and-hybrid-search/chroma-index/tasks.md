@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for VEC-CHROMA.
 
-## VEC-CHROMA-001 — Implement revision-scoped collections and idempotent upserts
+## VEC-CHROMA-001
+
+**Title:** Implement revision-scoped collections and idempotent upserts
 
 - [ ] **VEC-CHROMA-001: Implement revision-scoped collections and idempotent upserts**
 - Outcome: Implement revision-scoped collections and idempotent upserts.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for VEC-CHROMA.
 - Complete when: implementation and tests pass and [evidence](execution.md#vec-chroma-001) is reviewed.
 - Commit boundary: one to three scoped commits.
 
-## VEC-CHROMA-002 — Validate semantic candidates against SQLite
+## VEC-CHROMA-002
+
+**Title:** Validate semantic candidates against SQLite
 
 - [ ] **VEC-CHROMA-002: Validate semantic candidates against SQLite**
 - Outcome: Validate semantic candidates against SQLite.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for VEC-CHROMA.
 - Complete when: implementation and tests pass and [evidence](execution.md#vec-chroma-002) is reviewed.
 - Commit boundary: one to three scoped commits.
 
-## VEC-CHROMA-003 — Implement cleanup, health, and rebuild
+## VEC-CHROMA-003
+
+**Title:** Implement cleanup, health, and rebuild
 
 - [ ] **VEC-CHROMA-003: Implement cleanup, health, and rebuild**
 - Outcome: Implement cleanup, health, and rebuild.

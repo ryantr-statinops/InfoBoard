@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for REL-HEALTH.
 
-## REL-HEALTH-001 — Implement component and overall health semantics
+## REL-HEALTH-001
+
+**Title:** Implement component and overall health semantics
 
 - [ ] **REL-HEALTH-001: Implement component and overall health semantics**
 - Outcome: Implement component and overall health semantics.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for REL-HEALTH.
 - Complete when: implementation, tests, operational evidence, and [task evidence](execution.md#rel-health-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## REL-HEALTH-002 — Add correlation and redacted structured diagnostics
+## REL-HEALTH-002
+
+**Title:** Add correlation and redacted structured diagnostics
 
 - [ ] **REL-HEALTH-002: Add correlation and redacted structured diagnostics**
 - Outcome: Add correlation and redacted structured diagnostics.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for REL-HEALTH.
 - Complete when: implementation, tests, operational evidence, and [task evidence](execution.md#rel-health-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## REL-HEALTH-003 — Expose maintenance job progress safely
+## REL-HEALTH-003
+
+**Title:** Expose maintenance job progress safely
 
 - [ ] **REL-HEALTH-003: Expose maintenance job progress safely**
 - Outcome: Expose maintenance job progress safely.

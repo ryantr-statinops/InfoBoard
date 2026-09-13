@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for SEM-EMBED.
 
-## SEM-EMBED-001 — Create immutable index revision identity
+## SEM-EMBED-001
+
+**Title:** Create immutable index revision identity
 
 - [ ] **SEM-EMBED-001: Create immutable index revision identity**
 - Outcome: Create immutable index revision identity.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for SEM-EMBED.
 - Complete when: implementation and tests pass and [evidence](execution.md#sem-embed-001) is reviewed.
 - Commit boundary: one to three scoped commits.
 
-## SEM-EMBED-002 — Chunk and submit bounded snapshot content
+## SEM-EMBED-002
+
+**Title:** Chunk and submit bounded snapshot content
 
 - [ ] **SEM-EMBED-002: Chunk and submit bounded snapshot content**
 - Outcome: Chunk and submit bounded snapshot content.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for SEM-EMBED.
 - Complete when: implementation and tests pass and [evidence](execution.md#sem-embed-002) is reviewed.
 - Commit boundary: one to three scoped commits.
 
-## SEM-EMBED-003 — Validate provider responses and durable outcomes
+## SEM-EMBED-003
+
+**Title:** Validate provider responses and durable outcomes
 
 - [ ] **SEM-EMBED-003: Validate provider responses and durable outcomes**
 - Outcome: Validate provider responses and durable outcomes.

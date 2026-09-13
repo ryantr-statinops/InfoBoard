@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for RELEASE-PACKAGE.
 
-## RELEASE-PACKAGE-001 — Lock dependencies and clean-install workflow
+## RELEASE-PACKAGE-001
+
+**Title:** Lock dependencies and clean-install workflow
 
 - [ ] **RELEASE-PACKAGE-001: Lock dependencies and clean-install workflow**
 - Outcome: Lock dependencies and clean-install workflow.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for RELEASE-PACKAGE.
 - Complete when: artifacts and [evidence](execution.md#release-package-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## RELEASE-PACKAGE-002 — Verify upgrade, backup, rollback, and rebuild
+## RELEASE-PACKAGE-002
+
+**Title:** Verify upgrade, backup, rollback, and rebuild
 
 - [ ] **RELEASE-PACKAGE-002: Verify upgrade, backup, rollback, and rebuild**
 - Outcome: Verify upgrade, backup, rollback, and rebuild.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for RELEASE-PACKAGE.
 - Complete when: artifacts and [evidence](execution.md#release-package-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## RELEASE-PACKAGE-003 — Assemble and approve MVP release evidence
+## RELEASE-PACKAGE-003
+
+**Title:** Assemble and approve MVP release evidence
 
 - [ ] **RELEASE-PACKAGE-003: Assemble and approve MVP release evidence**
 - Outcome: Assemble and approve MVP release evidence.

@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for RET-KEYWORD. Evidence is mandatory before checking a task.
 
-## RET-KEYWORD-001 — Generate bounded keyword candidates
+## RET-KEYWORD-001
+
+**Title:** Generate bounded keyword candidates
 
 - [ ] **RET-KEYWORD-001: Generate bounded keyword candidates**
 - Outcome: Generate bounded keyword candidates.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for RET-KEYWORD. Evidence is mandatory 
 - Complete when: code, tests, documentation impact, and [evidence](execution.md#ret-keyword-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## RET-KEYWORD-002 — Project ranked bookmark results and excerpts
+## RET-KEYWORD-002
+
+**Title:** Project ranked bookmark results and excerpts
 
 - [ ] **RET-KEYWORD-002: Project ranked bookmark results and excerpts**
 - Outcome: Project ranked bookmark results and excerpts.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for RET-KEYWORD. Evidence is mandatory 
 - Complete when: code, tests, documentation impact, and [evidence](execution.md#ret-keyword-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## RET-KEYWORD-003 — Integrate API and UI without provider coupling
+## RET-KEYWORD-003
+
+**Title:** Integrate API and UI without provider coupling
 
 - [ ] **RET-KEYWORD-003: Integrate API and UI without provider coupling**
 - Outcome: Integrate API and UI without provider coupling.

@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for REL-SECURITY.
 
-## REL-SECURITY-001 — Harden local HTTP and browser mutation boundaries
+## REL-SECURITY-001
+
+**Title:** Harden local HTTP and browser mutation boundaries
 
 - [ ] **REL-SECURITY-001: Harden local HTTP and browser mutation boundaries**
 - Outcome: Harden local HTTP and browser mutation boundaries.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for REL-SECURITY.
 - Complete when: implementation, tests, operational evidence, and [task evidence](execution.md#rel-security-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## REL-SECURITY-002 — Harden content, provider, and resource handling
+## REL-SECURITY-002
+
+**Title:** Harden content, provider, and resource handling
 
 - [ ] **REL-SECURITY-002: Harden content, provider, and resource handling**
 - Outcome: Harden content, provider, and resource handling.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for REL-SECURITY.
 - Complete when: implementation, tests, operational evidence, and [task evidence](execution.md#rel-security-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## REL-SECURITY-003 — Harden backup, maintenance, and filesystem boundaries
+## REL-SECURITY-003
+
+**Title:** Harden backup, maintenance, and filesystem boundaries
 
 - [ ] **REL-SECURITY-003: Harden backup, maintenance, and filesystem boundaries**
 - Outcome: Harden backup, maintenance, and filesystem boundaries.

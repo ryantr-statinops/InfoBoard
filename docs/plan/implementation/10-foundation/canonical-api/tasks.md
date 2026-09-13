@@ -2,7 +2,9 @@
 
 This file is the sole authoritative checklist for API-CANONICAL. Do not check an item until its evidence anchor contains real results.
 
-## API-CANONICAL-001 — Build shared API schemas, validation, cursors, and error handling
+## API-CANONICAL-001
+
+**Title:** Build shared API schemas, validation, cursors, and error handling
 
 - [ ] **API-CANONICAL-001: Build shared API schemas, validation, cursors, and error handling**
 - Outcome: Build shared API schemas, validation, cursors, and error handling.
@@ -19,7 +21,9 @@ This file is the sole authoritative checklist for API-CANONICAL. Do not check an
 - Complete when: implementation, tests, documentation impact, and [evidence](execution.md#api-canonical-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## API-CANONICAL-002 — Implement optimistic mutation conventions
+## API-CANONICAL-002
+
+**Title:** Implement optimistic mutation conventions
 
 - [ ] **API-CANONICAL-002: Implement optimistic mutation conventions**
 - Outcome: Implement optimistic mutation conventions.
@@ -36,7 +40,9 @@ This file is the sole authoritative checklist for API-CANONICAL. Do not check an
 - Complete when: implementation, tests, documentation impact, and [evidence](execution.md#api-canonical-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## API-CANONICAL-003 — Separate canonical routers from compatibility adapters
+## API-CANONICAL-003
+
+**Title:** Separate canonical routers from compatibility adapters
 
 - [ ] **API-CANONICAL-003: Separate canonical routers from compatibility adapters**
 - Outcome: Separate canonical routers from compatibility adapters.

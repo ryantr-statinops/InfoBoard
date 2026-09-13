@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for RELEASE-COMPAT.
 
-## RELEASE-COMPAT-001 — Implement behavior-preserving compatibility adapters
+## RELEASE-COMPAT-001
+
+**Title:** Implement behavior-preserving compatibility adapters
 
 - [ ] **RELEASE-COMPAT-001: Implement behavior-preserving compatibility adapters**
 - Outcome: Implement behavior-preserving compatibility adapters.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for RELEASE-COMPAT.
 - Complete when: artifacts and [evidence](execution.md#release-compat-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## RELEASE-COMPAT-002 — Emit deprecation and retirement guidance
+## RELEASE-COMPAT-002
+
+**Title:** Emit deprecation and retirement guidance
 
 - [ ] **RELEASE-COMPAT-002: Emit deprecation and retirement guidance**
 - Outcome: Emit deprecation and retirement guidance.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for RELEASE-COMPAT.
 - Complete when: artifacts and [evidence](execution.md#release-compat-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## RELEASE-COMPAT-003 — Remove adapters only after the compatibility release
+## RELEASE-COMPAT-003
+
+**Title:** Remove adapters only after the compatibility release
 
 - [ ] **RELEASE-COMPAT-003: Remove adapters only after the compatibility release**
 - Outcome: Remove adapters only after the compatibility release.

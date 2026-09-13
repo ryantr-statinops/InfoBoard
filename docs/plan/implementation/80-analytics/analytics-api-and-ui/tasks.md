@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for ANA-API.
 
-## ANA-API-001 — Implement analytics request and response contracts
+## ANA-API-001
+
+**Title:** Implement analytics request and response contracts
 
 - [ ] **ANA-API-001: Implement analytics request and response contracts**
 - Outcome: Implement analytics request and response contracts.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for ANA-API.
 - Complete when: implementation, tests, operational evidence, and [task evidence](execution.md#ana-api-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## ANA-API-002 — Apply shared filters and backend metadata
+## ANA-API-002
+
+**Title:** Apply shared filters and backend metadata
 
 - [ ] **ANA-API-002: Apply shared filters and backend metadata**
 - Outcome: Apply shared filters and backend metadata.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for ANA-API.
 - Complete when: implementation, tests, operational evidence, and [task evidence](execution.md#ana-api-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## ANA-API-003 — Build bounded dashboard analytics states
+## ANA-API-003
+
+**Title:** Build bounded dashboard analytics states
 
 - [ ] **ANA-API-003: Build bounded dashboard analytics states**
 - Outcome: Build bounded dashboard analytics states.

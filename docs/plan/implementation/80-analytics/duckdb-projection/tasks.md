@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for ANA-PROJECTION.
 
-## ANA-PROJECTION-001 — Define the analytics projection and checkpoint
+## ANA-PROJECTION-001
+
+**Title:** Define the analytics projection and checkpoint
 
 - [ ] **ANA-PROJECTION-001: Define the analytics projection and checkpoint**
 - Outcome: Define the analytics projection and checkpoint.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for ANA-PROJECTION.
 - Complete when: implementation, tests, operational evidence, and [task evidence](execution.md#ana-projection-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## ANA-PROJECTION-002 — Implement atomic refresh and stale detection
+## ANA-PROJECTION-002
+
+**Title:** Implement atomic refresh and stale detection
 
 - [ ] **ANA-PROJECTION-002: Implement atomic refresh and stale detection**
 - Outcome: Implement atomic refresh and stale detection.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for ANA-PROJECTION.
 - Complete when: implementation, tests, operational evidence, and [task evidence](execution.md#ana-projection-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## ANA-PROJECTION-003 — Implement bounded SQLite fallback and rebuild
+## ANA-PROJECTION-003
+
+**Title:** Implement bounded SQLite fallback and rebuild
 
 - [ ] **ANA-PROJECTION-003: Implement bounded SQLite fallback and rebuild**
 - Outcome: Implement bounded SQLite fallback and rebuild.

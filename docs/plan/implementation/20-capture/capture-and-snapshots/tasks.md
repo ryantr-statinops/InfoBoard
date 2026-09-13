@@ -2,7 +2,9 @@
 
 This file is the sole authoritative checklist for CAP-SNAPSHOT. Do not check an item until its evidence anchor contains real results.
 
-## CAP-SNAPSHOT-001 — Create or resolve the canonical bookmark and durable attempt
+## CAP-SNAPSHOT-001
+
+**Title:** Create or resolve the canonical bookmark and durable attempt
 
 - [ ] **CAP-SNAPSHOT-001: Create or resolve the canonical bookmark and durable attempt**
 - Outcome: Create or resolve the canonical bookmark and durable attempt.
@@ -19,7 +21,9 @@ This file is the sole authoritative checklist for CAP-SNAPSHOT. Do not check an 
 - Complete when: implementation, tests, documentation impact, and [evidence](execution.md#cap-snapshot-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## CAP-SNAPSHOT-002 — Persist successful content as an immutable snapshot
+## CAP-SNAPSHOT-002
+
+**Title:** Persist successful content as an immutable snapshot
 
 - [ ] **CAP-SNAPSHOT-002: Persist successful content as an immutable snapshot**
 - Outcome: Persist successful content as an immutable snapshot.
@@ -36,7 +40,9 @@ This file is the sole authoritative checklist for CAP-SNAPSHOT. Do not check an 
 - Complete when: implementation, tests, documentation impact, and [evidence](execution.md#cap-snapshot-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## CAP-SNAPSHOT-003 — Expose safe failure and idempotent retry
+## CAP-SNAPSHOT-003
+
+**Title:** Expose safe failure and idempotent retry
 
 - [ ] **CAP-SNAPSHOT-003: Expose safe failure and idempotent retry**
 - Outcome: Expose safe failure and idempotent retry.

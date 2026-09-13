@@ -2,7 +2,9 @@
 
 This file is the sole authoritative checklist for DB-MIGRATION. Do not check an item until its evidence anchor contains real results.
 
-## DB-MIGRATION-001 — Create a versioned migration runner and target canonical schema
+## DB-MIGRATION-001
+
+**Title:** Create a versioned migration runner and target canonical schema
 
 - [ ] **DB-MIGRATION-001: Create a versioned migration runner and target canonical schema**
 - Outcome: Create a versioned migration runner and target canonical schema.
@@ -19,7 +21,9 @@ This file is the sole authoritative checklist for DB-MIGRATION. Do not check an 
 - Complete when: implementation, tests, documentation impact, and [evidence](execution.md#db-migration-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## DB-MIGRATION-002 — Forward-migrate existing items and relationships
+## DB-MIGRATION-002
+
+**Title:** Forward-migrate existing items and relationships
 
 - [ ] **DB-MIGRATION-002: Forward-migrate existing items and relationships**
 - Outcome: Forward-migrate existing items and relationships.
@@ -36,7 +40,9 @@ This file is the sole authoritative checklist for DB-MIGRATION. Do not check an 
 - Complete when: implementation, tests, documentation impact, and [evidence](execution.md#db-migration-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## DB-MIGRATION-003 — Validate activation and rebuild derived state
+## DB-MIGRATION-003
+
+**Title:** Validate activation and rebuild derived state
 
 - [ ] **DB-MIGRATION-003: Validate activation and rebuild derived state**
 - Outcome: Validate activation and rebuild derived state.

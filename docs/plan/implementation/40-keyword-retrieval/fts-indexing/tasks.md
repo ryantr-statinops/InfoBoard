@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for RET-FTS. Evidence is mandatory before checking a task.
 
-## RET-FTS-001 — Define the current-version FTS projection
+## RET-FTS-001
+
+**Title:** Define the current-version FTS projection
 
 - [ ] **RET-FTS-001: Define the current-version FTS projection**
 - Outcome: Define the current-version FTS projection.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for RET-FTS. Evidence is mandatory befo
 - Complete when: code, tests, documentation impact, and [evidence](execution.md#ret-fts-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## RET-FTS-002 — Process idempotent keyword index jobs
+## RET-FTS-002
+
+**Title:** Process idempotent keyword index jobs
 
 - [ ] **RET-FTS-002: Process idempotent keyword index jobs**
 - Outcome: Process idempotent keyword index jobs.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for RET-FTS. Evidence is mandatory befo
 - Complete when: code, tests, documentation impact, and [evidence](execution.md#ret-fts-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## RET-FTS-003 — Validate and rebuild FTS independently
+## RET-FTS-003
+
+**Title:** Validate and rebuild FTS independently
 
 - [ ] **RET-FTS-003: Validate and rebuild FTS independently**
 - Outcome: Validate and rebuild FTS independently.

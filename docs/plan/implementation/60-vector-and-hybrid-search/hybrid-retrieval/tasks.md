@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for VEC-HYBRID.
 
-## VEC-HYBRID-001 — Implement semantic query execution
+## VEC-HYBRID-001
+
+**Title:** Implement semantic query execution
 
 - [ ] **VEC-HYBRID-001: Implement semantic query execution**
 - Outcome: Implement semantic query execution.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for VEC-HYBRID.
 - Complete when: implementation and tests pass and [evidence](execution.md#vec-hybrid-001) is reviewed.
 - Commit boundary: one to three scoped commits.
 
-## VEC-HYBRID-002 — Implement deterministic hybrid rank fusion
+## VEC-HYBRID-002
+
+**Title:** Implement deterministic hybrid rank fusion
 
 - [ ] **VEC-HYBRID-002: Implement deterministic hybrid rank fusion**
 - Outcome: Implement deterministic hybrid rank fusion.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for VEC-HYBRID.
 - Complete when: implementation and tests pass and [evidence](execution.md#vec-hybrid-002) is reviewed.
 - Commit boundary: one to three scoped commits.
 
-## VEC-HYBRID-003 — Project explicit degradation and fallback
+## VEC-HYBRID-003
+
+**Title:** Project explicit degradation and fallback
 
 - [ ] **VEC-HYBRID-003: Project explicit degradation and fallback**
 - Outcome: Project explicit degradation and fallback.

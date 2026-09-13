@@ -2,7 +2,9 @@
 
 This file is the sole authoritative checklist for CAP-WORKER. Do not check an item until its evidence anchor contains real results.
 
-## CAP-WORKER-001 — Implement sequential durable claim and lease semantics
+## CAP-WORKER-001
+
+**Title:** Implement sequential durable claim and lease semantics
 
 - [ ] **CAP-WORKER-001: Implement sequential durable claim and lease semantics**
 - Outcome: Implement sequential durable claim and lease semantics.
@@ -19,7 +21,9 @@ This file is the sole authoritative checklist for CAP-WORKER. Do not check an it
 - Complete when: implementation, tests, documentation impact, and [evidence](execution.md#cap-worker-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## CAP-WORKER-002 — Add bounded retry and safe checkpoint recovery
+## CAP-WORKER-002
+
+**Title:** Add bounded retry and safe checkpoint recovery
 
 - [ ] **CAP-WORKER-002: Add bounded retry and safe checkpoint recovery**
 - Outcome: Add bounded retry and safe checkpoint recovery.
@@ -36,7 +40,9 @@ This file is the sole authoritative checklist for CAP-WORKER. Do not check an it
 - Complete when: implementation, tests, documentation impact, and [evidence](execution.md#cap-worker-002) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## CAP-WORKER-003 — Integrate worker lifecycle and graceful shutdown
+## CAP-WORKER-003
+
+**Title:** Integrate worker lifecycle and graceful shutdown
 
 - [ ] **CAP-WORKER-003: Integrate worker lifecycle and graceful shutdown**
 - Outcome: Integrate worker lifecycle and graceful shutdown.

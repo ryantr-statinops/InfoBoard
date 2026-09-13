@@ -2,7 +2,9 @@
 
 This is the sole authoritative checklist for CACHE-ROCKS.
 
-## CACHE-ROCKS-001 — Define versioned cache keys and validated values
+## CACHE-ROCKS-001
+
+**Title:** Define versioned cache keys and validated values
 
 - [ ] **CACHE-ROCKS-001: Define versioned cache keys and validated values**
 - Outcome: Define versioned cache keys and validated values.
@@ -19,7 +21,9 @@ This is the sole authoritative checklist for CACHE-ROCKS.
 - Complete when: implementation and tests pass and [evidence](execution.md#cache-rocks-001) is reviewed.
 - Commit boundary: one to three scoped commits.
 
-## CACHE-ROCKS-002 — Integrate safe hit, miss, and bypass behavior
+## CACHE-ROCKS-002
+
+**Title:** Integrate safe hit, miss, and bypass behavior
 
 - [ ] **CACHE-ROCKS-002: Integrate safe hit, miss, and bypass behavior**
 - Outcome: Integrate safe hit, miss, and bypass behavior.
@@ -36,7 +40,9 @@ This is the sole authoritative checklist for CACHE-ROCKS.
 - Complete when: implementation and tests pass and [evidence](execution.md#cache-rocks-002) is reviewed.
 - Commit boundary: one to three scoped commits.
 
-## CACHE-ROCKS-003 — Implement revocation cleanup and rebuild semantics
+## CACHE-ROCKS-003
+
+**Title:** Implement revocation cleanup and rebuild semantics
 
 - [ ] **CACHE-ROCKS-003: Implement revocation cleanup and rebuild semantics**
 - Outcome: Implement revocation cleanup and rebuild semantics.

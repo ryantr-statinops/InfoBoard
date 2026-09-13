@@ -2,7 +2,9 @@
 
 This file is the sole authoritative checklist for APP-LIFECYCLE. Do not check an item until its evidence anchor contains real results.
 
-## APP-LIFECYCLE-001 — Introduce typed settings and validated local data paths
+## APP-LIFECYCLE-001
+
+**Title:** Introduce typed settings and validated local data paths
 
 - [ ] **APP-LIFECYCLE-001: Introduce typed settings and validated local data paths**
 - Outcome: Introduce typed settings and validated local data paths.
@@ -19,7 +21,9 @@ This file is the sole authoritative checklist for APP-LIFECYCLE. Do not check an
 - Complete when: implementation, tests, documentation impact, and [evidence](execution.md#app-lifecycle-001) are reviewed.
 - Commit boundary: one to three scoped commits.
 
-## APP-LIFECYCLE-002 — Own startup and shutdown ordering in the FastAPI lifespan
+## APP-LIFECYCLE-002
+
+**Title:** Own startup and shutdown ordering in the FastAPI lifespan
 
 - [ ] **APP-LIFECYCLE-002: Own startup and shutdown ordering in the FastAPI lifespan**
 - Outcome: Own startup and shutdown ordering in the FastAPI lifespan.
