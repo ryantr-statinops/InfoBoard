@@ -1,30 +1,38 @@
-# InfoBoard — Documentation
+# InfoBoard documentation
 
-Tài liệu InfoBoard được tổ chức theo chuỗi quyết định từ sản phẩm đến thực thi:
+InfoBoard is a private, local-first knowledge bookmark manager. The documentation follows the decision flow from product intent to verified delivery:
 
 ```text
-Product → Design → Architecture → Quality → Operations → Plan
+Product -> Design -> Architecture -> Quality/Operations -> Implementation
 ```
 
-## Đọc theo vai trò
+## Reading paths
 
-- Product/design: bắt đầu tại [Internal PRD](product/internal-prd/README.md), sau đó đọc [Design](design/README.md).
-- Engineering: đọc [Internal PRD](product/internal-prd/README.md), [Architecture](architecture/README.md) và [Implementation](plan/implementation/README.md).
-- QA/reviewer: đọc [Quality](quality/README.md), [traceability](product/internal-prd/08-requirement-traceability.md) và milestone acceptance.
-- Maintainer/operator: đọc [Operations](operations/README.md) và implementation execution logs.
-- Future discovery: đọc [Next Plan](product/next-plan/README.md); nội dung này không phải MVP commitment.
+- Product work: [product vision](product/vision.md) → [MVP scope](product/mvp-scope.md) → [requirements](product/requirements.md) → [feature specifications](product/README.md).
+- UX work: [design overview](design/README.md) → [information architecture](design/information-architecture.md) → [core flows](design/core-flows.md) → [UI states](design/ui-states.md).
+- Engineering: product path → [architecture overview](architecture/README.md) → [API contracts](architecture/api-contracts.md) → [implementation roadmap](implementation/roadmap.md).
+- QA/release: [test strategy](quality/test-strategy.md) → [MVP acceptance](quality/mvp-acceptance.md) → [implementation tasks](implementation/tasks.md).
+- Maintainers: [configuration](operations/configuration.md) → [backup, restore, and rebuild](operations/backup-restore-and-rebuild.md).
+- New ideas: [idea inbox](product/ideas.md) → [product decisions](product/decisions.md); an unaccepted idea is not a requirement or roadmap commitment.
 
-## Nguồn sự thật
+## Source-of-truth boundaries
 
-| Layer | Câu hỏi | Nội dung canonical |
+| Layer | Owns | Must not own |
 | --- | --- | --- |
-| Product | Xây gì, cho ai, thành công là gì? | `docs/product/` |
-| Architecture | Hệ thống, dữ liệu và interface contract vận hành thế nào? | `docs/architecture/` |
-| Design | Người dùng tương tác thế nào? | `docs/design/` |
-| Quality | Điều kiện nào chứng minh đủ tốt? | `docs/quality/` |
-| Operations | Cài đặt, phục hồi và nâng cấp thế nào? | `docs/operations/` |
-| Implementation | Chia việc, trạng thái và evidence ở đâu? | `docs/plan/implementation/` |
+| [Product](product/README.md) | Goal, user, scope, requirements, feature behavior, and decisions | Storage/API implementation or delivery status |
+| [Design](design/README.md) | Navigation, user flows, visible states, and responsive/accessibility behavior | Product scope or database contracts |
+| [Architecture](architecture/README.md) | System boundaries, schema, stores, pipelines, APIs, security, and recovery invariants | Claims of implemented behavior |
+| [Quality](quality/README.md) | Test strategy, evaluation, and MVP acceptance evidence required | Product commitments or target implementation |
+| [Operations](operations/README.md) | Safe configuration, backup, restore, rebuild, and health interpretation | Unsupported commands presented as verified |
+| [Implementation](implementation/README.md) | Dependency order, delivery tasks, status, and evidence links | Redefinition of upstream behavior/contracts |
 
-Các file `docs/plan/00–04` chỉ là compatibility entry points và không còn là nguồn nội dung canonical.
+## Architectural baseline
 
-Trước khi bắt đầu delivery, kiểm tra [build-readiness gate](quality/04-build-readiness-gate.md). Tài liệu target không tự động trở thành runtime evidence.
+- SQLite and FTS5 own canonical data and local keyword retrieval.
+- RocksDB through `rocksdict` is a rebuildable embedding cache.
+- ChromaDB is a rebuildable semantic vector index.
+- DuckDB is a rebuildable analytics projection with bounded SQLite fallback.
+- A self-hosted OpenAI-compatible endpoint supplies embeddings after explicit installation-level consent.
+- Semantic retrieval is required for MVP release; runtime provider failure degrades safely to local keyword retrieval.
+
+Documentation is a target contract, not runtime evidence. A capability is complete only when its implementation task and required quality evidence are verified.
