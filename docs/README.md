@@ -10,8 +10,8 @@ Product -> Design -> Architecture -> Quality/Operations -> Implementation
 
 - Product work: [product vision](product/vision.md) → [MVP scope](product/mvp-scope.md) → [requirements](product/requirements.md) → [feature specifications](product/README.md).
 - UX work: [design overview](design/README.md) → [information architecture](design/information-architecture.md) → [core flows](design/core-flows.md) → [UI states](design/ui-states.md).
-- Engineering: product path → [architecture overview](architecture/README.md) → [API contracts](architecture/api-contracts.md) → [implementation roadmap](plan/implementation/roadmap.md).
-- QA/release: [test strategy](quality/test-strategy.md) → [MVP acceptance](quality/mvp-acceptance.md) → [implementation tasks](plan/implementation/tasks.md).
+- Engineering: product path → [architecture overview](architecture/README.md) → [API contracts](architecture/api-contracts.md) → [implementation roadmap](plan/implementation/00-program/roadmap.md).
+- QA/release: [test strategy](quality/test-strategy.md) → [MVP acceptance](quality/mvp-acceptance.md) → [implementation review index](plan/implementation/index.md).
 - Maintainers: [configuration](operations/configuration.md) → [backup, restore, and rebuild](operations/backup-restore-and-rebuild.md).
 - New ideas: [idea inbox](product/ideas.md) → [product decisions](product/decisions.md); an unaccepted idea is not a requirement or roadmap commitment.
 
