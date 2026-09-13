@@ -28,7 +28,7 @@ Product -> Design -> Architecture -> Quality/Operations -> Implementation
 
 ## Architectural baseline
 
-- SQLite and FTS5 own canonical data and local keyword retrieval.
+- SQLite canonical tables own user data; FTS5 is a rebuildable keyword index stored in the same database file.
 - RocksDB through `rocksdict` is a rebuildable embedding cache.
 - ChromaDB is a rebuildable semantic vector index.
 - DuckDB is a rebuildable analytics projection with bounded SQLite fallback.

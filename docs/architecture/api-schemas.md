@@ -52,6 +52,7 @@ Sort = saved_desc | updated_desc | title_asc
 | Field | Limit |
 | --- | --- |
 | URL | 8,192 Unicode characters before parsing |
+| Provider model ID | 1–200 characters |
 | Title | 1–500 characters after trim/normalization |
 | Description | 0–2,000 characters |
 | Collection name | 1–100 characters |
@@ -248,7 +249,7 @@ Analytics meta contains `actual_backend: duckdb | sqlite`, `source_watermark`, a
 }
 ```
 
-Update request accepts exactly `{endpoint, model_id, timeout_ms}` with timeout 1,000–120,000 ms. Verify has an empty `{}` request and returns `{verified, model_id, vector_dimension, state}`. Consent accepts `{granted: true, disclosure_version: "1"}`. No request or response contains `api_key`.
+Update request accepts exactly `{endpoint, model_id, timeout_ms}`. Endpoint uses the 8,192-character URL limit and the HTTPS/loopback-HTTP policy; model ID is 1–200 characters; timeout is 1,000–120,000 ms. Verify has an empty `{}` request and returns `{verified, model_id, vector_dimension, state}`. Consent accepts `{granted: true, disclosure_version: "1"}`. No request or response contains `api_key`.
 
 ## Health and maintenance
 

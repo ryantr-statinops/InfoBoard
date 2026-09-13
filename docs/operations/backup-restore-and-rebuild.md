@@ -7,7 +7,7 @@
 3. Copy only snapshot files referenced by the backup transaction.
 4. Write a manifest with app/schema version, UTC time, relative paths, sizes, and checksums.
 5. Open the backup read-only; run SQLite integrity/foreign-key checks and verify every referenced snapshot/checksum.
-6. Mark backup complete only after verification. Derived stores are not required backup content.
+6. Mark backup complete only after verification. The SQLite file may contain FTS pages, but only canonical tables and referenced snapshot files are required recovery inputs; every derived index is rebuilt or revalidated.
 
 ## Restore procedure contract
 
