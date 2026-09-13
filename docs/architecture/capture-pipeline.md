@@ -12,16 +12,16 @@ sequenceDiagram
 
     U->>A: Submit URL and optional organization
     A->>A: Parse, validate, normalize
-    A->>S: Transaction: create/find bookmark + capture job
-    A-->>U: 202 bookmark and job state
-    W->>S: Lease queued job
+    A->>S: Transaction: create/find bookmark + capture attempt
+    A-->>U: 202 bookmark and attempt state
+    W->>S: Lease queued attempt
     W->>P: Resolve, validate and fetch with bounds
     P-->>W: Response/redirect/content
     W->>W: Extract and normalize snapshot
-    W->>S: Transaction: snapshot ready + current version + downstream jobs
+    W->>S: Transaction: immutable snapshot + current pointer + downstream jobs
 ```
 
-Bookmark creation commits before network fetch. Capture completion commits the immutable snapshot, advances `current_snapshot_version`, and queues keyword, semantic, and analytics jobs in one canonical transaction.
+Bookmark creation commits before network fetch. Capture completion commits one immutable successful snapshot, links it to the attempt, advances `current_snapshot_id`, and queues keyword, semantic, and analytics jobs in one canonical transaction. Pending and failed attempts never create snapshot rows.
 
 ## URL validation and normalization
 
@@ -43,7 +43,7 @@ The exact tracking-parameter allow/deny list is versioned. Changing it requires 
 
 ## Snapshot commit
 
-- A capture attempt reserves the next candidate version but does not advance the bookmark until extraction and managed-file persistence succeed.
+- A capture attempt has its own monotonically increasing attempt number. The next snapshot content version is allocated only inside the successful commit.
 - Raw/extracted files are written to a temporary path, checksummed, and atomically moved into a versioned managed location before the SQLite commit references them.
 - Extraction produces normalized title/description candidates and text. User-overridden metadata remains authoritative.
 - Identical content checksum may complete the job without creating a redundant current version; capture provenance may be recorded separately.
@@ -56,10 +56,10 @@ The exact tracking-parameter allow/deny list is versioned. Changing it requires 
 | Duplicate URL | Existing bookmark returned | Explicit recapture only |
 | DNS/redirect/SSRF rejection | Bookmark retained; snapshot attempt failed | Allowed after source/config changes |
 | Timeout/size/type/extraction failure | Bookmark retained; current ready snapshot unchanged | Requeue same logical capture operation |
-| Process crash before commit | Lease expires; temporary files cleaned | Worker safely resumes/retries |
+| Process crash before commit | Attempt lease expires; temporary files cleaned | Worker safely resumes/retries |
 | Downstream index failure | Snapshot remains current and readable | Downstream job retries independently |
 
-Retry increments a bounded counter, clears expired lease metadata, and never mutates notes, collections, tags, or status. After the retry limit, a user action or full rebuild is required.
+Retry increments a bounded counter, clears expired lease metadata, and never mutates notes, collections, tags, status, or the current snapshot. Automatic retries use 1-, 5-, and 30-second delays for a maximum of three attempts. After exhaustion, manual retry starts one new three-attempt retry cycle on the same logical capture attempt.
 
 ## Outputs
 
