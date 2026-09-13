@@ -1,25 +1,14 @@
-# InfoBoard — Product documentation
+# InfoBoard product documentation
 
-Product docs được chia theo thời điểm ra quyết định:
+This section is the source of truth for what InfoBoard is, who it serves, and what the MVP must deliver. Technical documents may explain how a requirement is implemented, but they must not redefine product behavior.
 
-- [Internal PRD](internal-prd/README.md) là nguồn sự thật cho product definition và MVP scope hiện tại.
-- [Next Plan](next-plan/README.md) chứa các hướng hậu MVP còn ở discovery, chưa phải implementation requirement.
-- `docs/plan/` sẽ mô tả cách triển khai và milestone sau khi các documentation layer được khóa.
+Read in this order:
 
-## Thứ tự đọc
+1. [Vision](vision.md)
+2. [Users and jobs](users-and-jobs.md)
+3. [MVP scope](mvp-scope.md)
+4. [Requirements](requirements.md)
+5. Feature specifications: [capture](features/bookmark-capture.md), [organization](features/organization.md), [retrieval](features/retrieval.md), and [analytics](features/analytics.md)
+6. [Decisions](decisions.md) and [idea inbox](ideas.md)
 
-1. Đọc [Internal PRD](internal-prd/README.md) để hiểu goal, user, scope, requirements, workflows và acceptance.
-2. Tra [Domain model](internal-prd/04-domain-model.md) khi cần thống nhất thuật ngữ và entity semantics.
-3. Đọc [Design](../design/README.md), [Architecture](../architecture/README.md), [Quality](../quality/README.md) và [Operations](../operations/README.md) để xem các layer hỗ trợ.
-4. Chỉ đọc [Next Plan](next-plan/README.md) khi nghiên cứu capability hậu MVP.
-
-## Boundary
-
-```text
-Internal PRD   = What and why we build now
-Supporting docs = How the product should behave and be supported
-Plan           = How and in which order we build it later
-Next Plan      = What we may build after discovery
-```
-
-Một capability trong Next Plan không được coi là MVP commitment nếu chưa đi qua discovery gate và được đưa chính thức vào Internal PRD cùng implementation roadmap.
+An idea is not a commitment. It becomes part of the product only after an accepted decision updates the MVP scope, requirements, relevant feature specification, architecture impact, and roadmap.
