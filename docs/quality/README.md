@@ -1,11 +1,8 @@
-# InfoBoard — Quality
+# InfoBoard quality
 
-Quality docs define the required evidence; actual results remain in implementation execution logs.
+Quality documentation defines how accepted product and architecture contracts are proven. A written target, unchecked list, adapter, or mock is not implementation evidence.
 
-1. [Quality attributes](00-quality-attributes.md)
-2. [Test strategy](01-test-strategy.md)
-3. [Search and performance evaluation](02-search-and-performance-evaluation.md)
-4. [MVP quality gates](03-mvp-quality-gates.md)
-5. [Build-readiness gate](04-build-readiness-gate.md)
+1. [Test strategy](test-strategy.md)
+2. [MVP acceptance](mvp-acceptance.md)
 
-Do not mark a capability verified merely because an adapter/mock exists or target architecture has been documented.
+Evidence must identify commit, command/scenario, environment, fixture/version, result, and any reviewed waiver.
