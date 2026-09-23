@@ -1,20 +1,21 @@
-# InfoBoard implementation workspace
+# InfoBoard implementation plans
 
-This workspace translates accepted product and architecture contracts into executable delivery packages. It owns sequencing, implementation checklists, status, and evidence; it never redefines canonical behavior.
+This directory is the implementation control plane for the current InfoBoard product contract.
 
-Read in order:
+InfoBoard is a Chrome/Edge desktop extension for Linux, macOS, and Windows. The extension owns browser APIs, tab observation, the focused search surface, and tab activation. A local Go Native Messaging host owns the framed protocol, current-profile projection reconciliation, in-memory lexical search, deterministic ranking, bounded SQLite persistence, health, and diagnostics.
 
-1. Open the [implementation index](index.md) for delivery and review status.
-2. Read [program control](00-program/README.md), especially the [conventions](00-program/conventions.md).
-3. Follow the [roadmap](00-program/roadmap.md) and [dependency map](00-program/dependency-map.md).
-4. Enter a milestone through its README, then use each package in the order README → plan → tasks → examples → references → execution.
+## Source of truth
 
-## Document authority
+The binding product contract is in [`docs/plan/refactor/README.md`](../refactor/README.md), [`architecture.md`](../refactor/architecture.md), [`requirements.md`](../refactor/requirements.md), [`runtime-protocol.md`](../refactor/runtime-protocol.md), and [`verification-and-acceptance.md`](../refactor/verification-and-acceptance.md). If an implementation plan conflicts with those documents, update the plan before implementation begins.
 
-Package `tasks.md` files contain the only authoritative checkboxes. Root and milestone tables are review rollups. Product, design, architecture, quality, and operations documentation remain canonical when implementation examples or plans differ.
+## Workspace contract
 
-Package status is `not_started`, `in_progress`, `blocked`, or `done`. No task is complete without matching, non-fabricated evidence.
+- [`index.md`](index.md) is the inventory, dependency DAG, requirement ownership map, logical target layout, and execution protocol.
+- `phase-01` through `phase-20` are standalone implementation plans. Each has its own scope, prerequisites, deliverables, skill references, commit plan, acceptance checks, risks, and references outside `docs/`.
+- Implementation targets are currently logical `to-create` paths under `extension/`, `host/`, `packaging/`, `fixtures/`, and `tests/`.
+- Phase branches are created from the latest `dev`, contain one assigned phase file, and merge back to `dev`. `main` is read-only for this work.
+- Do not add unrelated product areas, browser data sources, remote services, or unbounded persistence.
 
-## Change rule
+## Execution order
 
-When implementation exposes a contract gap, stop the affected task and update the upstream decision or specification first. Keep runtime evidence, target contract, and delivery state separate. Work on `dev`, push scoped commits to `origin/dev`, and do not merge `main`.
+Follow the waves and dependencies in [`index.md`](index.md). The control owner creates the structural cutover and root-control commits; phase owners author only their assigned phase file. Revalidate the corpus after every merge and push every accepted commit to its configured remote branch.
