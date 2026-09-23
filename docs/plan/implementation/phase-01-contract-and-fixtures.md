@@ -6,7 +6,7 @@
 > Dependencies: Canonical refactor documents
 > Parallel boundary: None; this phase establishes shared contracts
 > Requirement IDs: FR-001..FR-015, NFR-001..NFR-010, operational rules
-> Owned paths: `fixtures/` (to-create), `tests/` (to-create), `extension/` (to-create), `host/` (to-create), `packaging/` (to-create)
+> Owned paths: `fixtures/catalog.schema.json`, `fixtures/catalog.json`; phase-specific `fixtures/` and `tests/` roots remain `to-create`; `extension/`, `host/`, and `packaging/` remain `to-create`
 
 ## 1. Mục tiêu
 
