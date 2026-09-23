@@ -1,52 +1,54 @@
-# Browser landscape
+# Browser and platform boundary
 
-## Initial platform boundary
+## Supported product matrix
 
-| Stage | Platform | Reason |
+| Browser | OS | Support target | Notes |
+| --- | --- | --- | --- |
+| Chrome desktop | Linux, macOS, Windows | Supported | Manifest V3 extension and registered Native Messaging host. |
+| Edge desktop | Linux, macOS, Windows | Supported | Chrome-compatible extension surface with Edge packaging and host registration checks. |
+| Other Chromium browsers | Any | Not supported by the product contract | May be tested separately; no compatibility promise. |
+| Firefox, Safari, mobile browsers | Any | Excluded | Separate extension, UX, packaging, and permission contracts would be required. |
+
+## Browser data policy
+
+| Data surface | Product use | Policy |
 | --- | --- | --- |
-| 1 | Chromium desktop: Chrome and Edge | Shared extension model and strong API coverage |
-| 2 | Other Chromium browsers | Validate API behavior individually after the core works |
-| 3 | Firefox desktop | WebExtensions compatibility with browser-specific differences |
-| 4 | Safari | Additional packaging, distribution, and platform constraints |
-| Later | Mobile browsers | Separate UX and extension capability constraints |
-
-## Useful browser data surfaces
-
-| Data | Value | Initial policy |
-| --- | --- | --- |
-| Current tab URL/title | Core search fields | Use |
-| Rendered page title/text | Optional richer matching | Defer until needed |
-| Selected text | Useful command-palette action | Candidate feature |
-| Open tabs/windows | Core dataset | Use |
-| Tab groups/pinned state | Ranking and context | Use |
-| Recent activation order | Recency ranking | Use |
-| Browser history | Powerful but sensitive | Defer |
-| Browser bookmarks/downloads | Separate product direction | Defer |
-| Cookies/local storage/network data | High-risk credentials/session data | Exclude from initial scope |
+| Open tabs and windows | Search dataset and activation target | Required. |
+| Title, URL, domain | Lexical fields and display context | Required; URL display may be redacted in privacy mode. |
+| Window ID and label | Context and activation | Required where the API exposes it. |
+| Tab group ID and label | Context and ranking | Use when supported; degrade to no-group state. |
+| Pinned state | Context and ranking | Use. |
+| Recent activation order | Recency ranking | Local bounded metadata only. |
+| Browser history | Broader recall | Excluded. |
+| Bookmarks and downloads | Different search product | Excluded. |
+| Page DOM, rendered text, selected text | Richer semantic search | Excluded from the product contract. |
+| Cookies, local storage, session data | Credentials and private state | Excluded. |
+| Network interception | Broad sensitive access | Excluded. |
 
 ## Extension model
 
-The extension can receive browser events, maintain the current tab projection, and invoke a user-configured command. The Go runtime must not assume that the extension service worker remains loaded forever; reconnect and index refresh are required.
+The extension owns the command, search surface, browser event listeners, profile boundary, tab activation, and user-visible state. The service worker may be suspended or restarted, so it MUST persist only what is necessary and MUST reconcile from browser APIs after reconnect.
 
-A user action such as a toolbar click, context-menu item, or keyboard command is preferred over persistent access to every page. `activeTab` and `scripting` are suitable for optional current-page actions without making full-site access the default.
+The search surface is an extension-owned focused window or page rather than a transient content-script overlay. It does not require access to every page. Page scripting is not part of the product contract.
 
-## Product implications
+## Profile and private-window rules
 
-The most promising first data boundary is:
+- Each browser profile has an isolated InfoBoard configuration, runtime session, and tab projection.
+- Normal and private/incognito contexts MUST remain separate.
+- Private-window support is enabled only when the browser grants the required extension access; otherwise the UI explains that the context is unavailable.
+- No tab projection is copied between profiles or uploaded to a service.
 
-```text
-open tabs + title + URL + domain + window + group + pinned state + recent activation
-```
+## Permissions principle
 
-This supports a useful product without reading full history, cookies, local storage, or network requests.
+Permission requests MUST map to a named requirement. The implementation should prefer tab/window/group APIs and command registration over broad host permissions. Permission review is a release gate, not a post-release cleanup task.
 
 ## Sources
 
 - Chrome Tabs API: https://developer.chrome.com/docs/extensions/reference/api/tabs
-- Chrome Scripting API: https://developer.chrome.com/docs/extensions/reference/api/scripting
-- Chrome `activeTab`: https://developer.chrome.com/docs/extensions/develop/concepts/activeTab
-- Chrome Sessions API: https://developer.chrome.com/docs/extensions/reference/api/sessions
+- Chrome Commands API: https://developer.chrome.com/docs/extensions/reference/api/commands
+- Chrome Windows API: https://developer.chrome.com/docs/extensions/reference/api/windows
 - Chrome Tab Groups API: https://developer.chrome.com/docs/extensions/reference/api/tabGroups
-- Firefox WebExtensions permissions: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions
-- Safari Web Extensions: https://developer.apple.com/documentation/safariservices/safari-web-extensions
+- Chrome Native Messaging: https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging
+- Chrome extension service-worker lifecycle: https://developer.chrome.com/docs/extensions/develop/concepts/service-workers/lifecycle
+- Edge native messaging: https://learn.microsoft.com/en-us/microsoft-edge/extensions/developer-guide/native-messaging
 - Porting Chrome extensions to Edge: https://learn.microsoft.com/en-us/microsoft-edge/extensions/developer-guide/port-chrome-extension
