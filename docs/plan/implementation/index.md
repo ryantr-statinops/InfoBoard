@@ -122,3 +122,10 @@ The required commit sequence is the structural cutover, one phase-file commit fo
 ## Final corpus checks
 
 The throwaway validator must prove from repository root that `dev` is clean and equals `origin/dev`; exactly 22 Markdown files exist directly here; no old stage or auxiliary package file remains; all phase metadata, headings, IDs, dependencies, owned paths, skill links, canonical links, commit plans, and section 10 references exist; local links resolve; primary requirement ownership matches this table; owned paths do not overlap without an explicit contract owner; current browser/runtime/privacy terms are present; excluded historical scope terms are absent; only `docs/plan/implementation/**` changed from baseline; and the remote `dev` SHA equals local `dev` after the final push.
+
+## Finalized corpus
+
+- The final workspace contains exactly 22 Markdown files directly under `docs/plan/implementation/`: `README.md`, `index.md`, and `phase-01` through `phase-20`.
+- Each phase is standalone, uses the ten-section contract, names its dependencies and owned paths, links canonical refactor documents and real skills, and has a future commit/acceptance plan.
+- The phase DAG is complete: authoring waves are finished through IP-20; implementation work must start from the latest `dev` tip and preserve the single-owner requirement map above.
+- Final validation must run from a clean checkout, prove local links and metadata, reject excluded historical scope, verify only this directory changed for this rebuild, and compare local `dev` with `origin/dev`.
