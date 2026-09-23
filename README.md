@@ -6,7 +6,7 @@ The extension owns browser permissions, tab observation, the focused search surf
 
 ## Project status
 
-The product contract and 20 implementation phase plans are ready. Product implementation has not started. **IP-01 is the kickoff phase** for shared fixtures, path map, verification seams, and requirements traceability.
+The product contract is ready and IP-01 is complete in `dev`: shared fixtures, path map, verification contracts, invariants, and acceptance seams are in place. **IP-02 and IP-03 are the next independent phases**, subject to the dependency DAG.
 
 - [Canonical product specification](docs/plan/refactor/README.md)
 - [Implementation execution dashboard](docs/plan/implementation/README.md)
