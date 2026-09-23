@@ -5,7 +5,8 @@
       "fixture_id": "FX-SHORTCUT-FOCUS",
       "owner_phase": "IP-03",
       "requirement_ids": [
-        "FR-001"
+        "FR-001",
+        "FR-002"
       ],
       "category": "extension",
       "input": {
@@ -33,7 +34,8 @@
       "fixture_id": "FX-QUERY-LIVE",
       "owner_phase": "IP-12",
       "requirement_ids": [
-        "FR-004"
+        "FR-004",
+        "NFR-010"
       ],
       "category": "query",
       "input": {
@@ -390,6 +392,255 @@
       "id": "INV-007",
       "statement": "Reset and uninstall remove only InfoBoard-owned local state and never mutate browser tabs, history, or unrelated user data.",
       "observable_guard": "Owned records are absent after cleanup while unrelated sentinels and browser state remain unchanged; repeating cleanup is idempotent."
+    }
+  ],
+  "phase_seams": [
+    {
+      "phase": "IP-02",
+      "fixture_ids": [
+        "FX-TAB-EVENTS"
+      ],
+      "requirement_ids": [
+        "FR-009"
+      ],
+      "ownership_relation": "supporting",
+      "fixture_signal": "final_projection_ids",
+      "acceptance_signal": "Eligible identity set is stable and equals the event fixture's snapshot oracle.",
+      "handoff_note": "Shared convergence baseline only; IP-02's profile/identity fixtures remain mandatory."
+    },
+    {
+      "phase": "IP-03",
+      "fixture_ids": [
+        "FX-SHORTCUT-FOCUS"
+      ],
+      "requirement_ids": [
+        "FR-001"
+      ],
+      "ownership_relation": "primary",
+      "fixture_signal": "query_input_focused_before_text",
+      "acceptance_signal": "The extension-owned search surface opens and input is focused before text entry.",
+      "handoff_note": "IP-03 owns this shared command/focus fixture."
+    },
+    {
+      "phase": "IP-04",
+      "fixture_ids": [
+        "FX-TAB-EVENTS"
+      ],
+      "requirement_ids": [
+        "FR-009"
+      ],
+      "ownership_relation": "primary",
+      "fixture_signal": "matches_snapshot_oracle",
+      "acceptance_signal": "Normalized browser events converge to the eligible full-snapshot oracle without duplicate identities.",
+      "handoff_note": "IP-04 owns this shared browser-event fixture."
+    },
+    {
+      "phase": "IP-05",
+      "fixture_ids": [
+        "FX-TAB-EVENTS"
+      ],
+      "requirement_ids": [
+        "FR-009"
+      ],
+      "ownership_relation": "supporting",
+      "fixture_signal": "matches_snapshot_oracle",
+      "acceptance_signal": "Projection handoff exposes the exact committed eligible identity set.",
+      "handoff_note": "Baseline only; IP-05 revision, atomicity, and recovery fixtures extend this seam."
+    },
+    {
+      "phase": "IP-06",
+      "fixture_ids": [
+        "FX-HOST-DOWN"
+      ],
+      "requirement_ids": [
+        "FR-012"
+      ],
+      "ownership_relation": "supporting",
+      "fixture_signal": "surface_status",
+      "acceptance_signal": "Unavailable host is visible and retryable without claiming query results.",
+      "handoff_note": "Baseline failure signal; IP-06 owns process lifecycle and fresh-session acceptance."
+    },
+    {
+      "phase": "IP-07",
+      "fixture_ids": [
+        "FX-RECONNECT"
+      ],
+      "requirement_ids": [
+        "FR-010"
+      ],
+      "ownership_relation": "supporting",
+      "fixture_signal": "snapshot_requested_after_reconnect",
+      "acceptance_signal": "Reconnect requests an authoritative snapshot before declaring ready.",
+      "handoff_note": "Baseline only; protocol framing, limits, and typed errors remain IP-07-owned."
+    },
+    {
+      "phase": "IP-08",
+      "fixture_ids": [
+        "FX-RESET-OWNED-DATA"
+      ],
+      "requirement_ids": [
+        "FR-015"
+      ],
+      "ownership_relation": "supporting",
+      "fixture_signal": "owned_records_after_reset",
+      "acceptance_signal": "Reset removes owned records and leaves external/browser sentinels unchanged.",
+      "handoff_note": "Baseline only; IP-08 migration, corruption, and retention fixtures extend storage coverage."
+    },
+    {
+      "phase": "IP-09",
+      "fixture_ids": [
+        "FX-RECONNECT"
+      ],
+      "requirement_ids": [
+        "FR-010"
+      ],
+      "ownership_relation": "primary",
+      "fixture_signal": "ready_after_snapshot_and_index_revision_match",
+      "acceptance_signal": "Ready is published only after authoritative snapshot and index revisions match.",
+      "handoff_note": "IP-09 owns reconnect convergence for this shared fixture."
+    },
+    {
+      "phase": "IP-10",
+      "fixture_ids": [
+        "FX-QUERY-LIVE"
+      ],
+      "requirement_ids": [
+        "FR-004"
+      ],
+      "ownership_relation": "supporting",
+      "fixture_signal": "rendered_revision_matches_latest_accepted",
+      "acceptance_signal": "Only the latest accepted query revision is reflected in the live result state.",
+      "handoff_note": "Shared query handoff only; IP-10 owns normalizer/index-specific fixtures."
+    },
+    {
+      "phase": "IP-11",
+      "fixture_ids": [
+        "FX-RANKING-DETERMINISTIC"
+      ],
+      "requirement_ids": [
+        "FR-005"
+      ],
+      "ownership_relation": "primary",
+      "fixture_signal": "repeat_run_order_and_scores_equal",
+      "acceptance_signal": "Repeated identical ranking inputs produce the same ordered identities and scores.",
+      "handoff_note": "IP-11 owns deterministic ranking behavior and extends this fixture."
+    },
+    {
+      "phase": "IP-12",
+      "fixture_ids": [
+        "FX-QUERY-LIVE"
+      ],
+      "requirement_ids": [
+        "FR-004"
+      ],
+      "ownership_relation": "primary",
+      "fixture_signal": "rendered_query_revision",
+      "acceptance_signal": "Rendered results correspond to the latest accepted query revision.",
+      "handoff_note": "IP-12 owns the query API and live-query fixture."
+    },
+    {
+      "phase": "IP-13",
+      "fixture_ids": [
+        "FX-SHORTCUT-FOCUS"
+      ],
+      "requirement_ids": [
+        "FR-002"
+      ],
+      "ownership_relation": "primary",
+      "fixture_signal": "query_input_focused_before_text",
+      "acceptance_signal": "Keyboard journey begins with the query input focused before text is accepted.",
+      "handoff_note": "Shared baseline only; IP-13 owns UI keyboard, semantic, and accessibility extensions."
+    },
+    {
+      "phase": "IP-14",
+      "fixture_ids": [
+        "FX-STALE-ACTIVATION"
+      ],
+      "requirement_ids": [
+        "FR-011"
+      ],
+      "ownership_relation": "primary",
+      "fixture_signal": "activation_calls",
+      "acceptance_signal": "Stale result produces zero browser activation calls and no silent replacement.",
+      "handoff_note": "IP-14 owns stale-reference activation handling."
+    },
+    {
+      "phase": "IP-15",
+      "fixture_ids": [
+        "FX-RESET-OWNED-DATA"
+      ],
+      "requirement_ids": [
+        "FR-015"
+      ],
+      "ownership_relation": "primary",
+      "fixture_signal": "external_sentinel_preserved",
+      "acceptance_signal": "Reset removes InfoBoard-owned records while preserving unrelated data and open tabs.",
+      "handoff_note": "IP-15 owns reset/uninstall lifecycle; broader cleanup scenarios remain phase-specific."
+    },
+    {
+      "phase": "IP-16",
+      "fixture_ids": [
+        "FX-HOST-DOWN"
+      ],
+      "requirement_ids": [
+        "FR-012"
+      ],
+      "ownership_relation": "primary",
+      "fixture_signal": "retryable",
+      "acceptance_signal": "Host failure is surfaced as bounded, actionable, retryable status.",
+      "handoff_note": "IP-16 owns health and diagnostics; its full transition suite extends this baseline."
+    },
+    {
+      "phase": "IP-17",
+      "fixture_ids": [
+        "FX-PERMISSION-DENIED"
+      ],
+      "requirement_ids": [
+        "NFR-009"
+      ],
+      "ownership_relation": "primary",
+      "fixture_signal": "tab_data_accepted",
+      "acceptance_signal": "Denied capability fails closed; excluded browser data is not accepted or emitted.",
+      "handoff_note": "IP-17 owns privacy/permission policy; its abuse matrix extends this baseline."
+    },
+    {
+      "phase": "IP-18",
+      "fixture_ids": [
+        "FX-QUERY-LIVE"
+      ],
+      "requirement_ids": [
+        "NFR-010"
+      ],
+      "ownership_relation": "supporting",
+      "fixture_signal": "rendered_revision_matches_latest_accepted",
+      "acceptance_signal": "The packaged compatible pair preserves the shared live-query result contract.",
+      "handoff_note": "Baseline only; IP-18's artifact and installer lifecycle fixtures are required for packaging acceptance."
+    },
+    {
+      "phase": "IP-19",
+      "fixture_ids": [
+        "FX-QUERY-LIVE"
+      ],
+      "requirement_ids": [
+        "NFR-010"
+      ],
+      "ownership_relation": "primary",
+      "fixture_signal": "rendered_query_revision",
+      "acceptance_signal": "The same accepted query result is observed in each declared compatibility cell.",
+      "handoff_note": "Baseline only; six-cell hardware, performance, privacy, and accessibility evidence remains required."
+    },
+    {
+      "phase": "IP-20",
+      "fixture_ids": [
+        "FX-QUERY-LIVE"
+      ],
+      "requirement_ids": [
+        "NFR-010"
+      ],
+      "ownership_relation": "supporting",
+      "fixture_signal": "rendered_query_revision",
+      "acceptance_signal": "Release evidence refers to a result contract reproduced by the candidate artifacts.",
+      "handoff_note": "Aggregation baseline only; IP-20 release gates and rollback evidence remain mandatory."
     }
   ]
 }

@@ -85,7 +85,10 @@
           "phase",
           "fixture_ids",
           "requirement_ids",
-          "acceptance_signal"
+          "ownership_relation",
+          "fixture_signal",
+          "acceptance_signal",
+          "handoff_note"
         ],
         "properties": {
           "phase": {
@@ -109,6 +112,21 @@
             }
           },
           "acceptance_signal": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ownership_relation": {
+            "type": "string",
+            "enum": [
+              "primary",
+              "supporting"
+            ]
+          },
+          "fixture_signal": {
+            "type": "string",
+            "minLength": 1
+          },
+          "handoff_note": {
             "type": "string",
             "minLength": 1
           }
@@ -135,7 +153,8 @@
         },
         "owner_phase": {
           "type": "string",
-          "pattern": "^IP-[0-9]{2}$"
+          "pattern": "^IP-[0-9]{2}$",
+          "description": "Primary phase responsible for maintaining this reusable fixture; requirement ownership remains defined by the implementation index."
         },
         "requirement_ids": {
           "type": "array",
@@ -144,7 +163,8 @@
           "items": {
             "type": "string",
             "pattern": "^(FR|NFR)-[0-9]{3}$"
-          }
+          },
+          "description": "Requirements observed or supported by this fixture; the implementation index remains the primary-owner source."
         },
         "category": {
           "type": "string",

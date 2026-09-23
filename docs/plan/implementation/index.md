@@ -22,7 +22,7 @@ fixtures/<phase>/            # to-create: phase-owned fixtures
  tests/                      # to-create: unit, integration, browser, accessibility and performance tests
 ```
 
-IP-01 owns the exact package/module naming map. The shared catalog files above are established; runtime roots and phase-specific fixture/test roots remain `to-create`. A phase author must reread the implementation scaffold if it appears and replace a logical path with the exact observed path before committing.
+IP-01 owns the exact package/module naming map. The shared [`fixture catalog`](../../../fixtures/catalog.json) and [`catalog schema`](../../../fixtures/catalog.schema.json) define nine reusable observable cases plus future checks, invariants, and one traceable acceptance seam for every later phase. Runtime roots and phase-specific fixture/test roots remain `to-create`; phase-specific acceptance suites still extend, rather than inherit as complete, the shared baseline. A phase author must reread the implementation scaffold if it appears and replace a logical path with the exact observed path before committing.
 
 ## Phase inventory and dependency DAG
 

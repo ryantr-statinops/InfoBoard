@@ -61,7 +61,7 @@ updated_at: <UTC timestamp>
 
 | Phase | Plan | Status | Owner / agent | Work branch | PR | Latest commit SHA | Last check / evidence reference | Blocker / next action | Updated (UTC) |
 |---|---|---|---|---|---|---|---|---|---|
-| IP-01 | [Phase 01](phase-01-contract-and-fixtures.md) | Not started | — | — | — | — | — | — | — |
+| IP-01 | [Phase 01](phase-01-contract-and-fixtures.md) | Ready for dev integration | Codex | implementation/ip-01-contract-and-fixtures | — | 87a6130 | Throwaway catalog/schema/traceability validator passed; 3 negative probes rejected; git diff --check passed | `fixtures/catalog.json` and `fixtures/catalog.schema.json` | 2026-09-23 |
 | IP-02 | [Phase 02](phase-02-domain-identifiers-and-ownership.md) | Not started | — | — | — | — | — | — | — |
 | IP-03 | [Phase 03](phase-03-extension-scaffold-and-command.md) | Not started | — | — | — | — | — | — | — |
 | IP-04 | [Phase 04](phase-04-tab-observation-and-eligibility.md) | Not started | — | — | — | — | — | — | — |
