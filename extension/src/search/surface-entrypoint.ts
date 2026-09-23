@@ -1,3 +1,4 @@
+import { registerSurfaceDismissal } from './surface-dismissal.js';
 function reportFocusError(doc: Document, code: 'query-input-missing' | 'focus-unavailable'): void {
   doc.documentElement.dataset.searchError = code;
   const status = doc.querySelector<HTMLElement>('[data-surface-status]');
@@ -8,6 +9,7 @@ export function initializeSearchSurface(doc: Document = document): void {
   const input = doc.querySelector<HTMLInputElement>('[data-search-input]');
   if (!input) { reportFocusError(doc, 'query-input-missing'); return; }
   input.value = '';
+  registerSurfaceDismissal(doc);
   doc.documentElement.dataset.searchSession = crypto.randomUUID();
   const announceReady = () => {
     if (doc.activeElement !== input) { reportFocusError(doc, 'focus-unavailable'); return; }
