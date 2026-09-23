@@ -304,5 +304,55 @@
         ]
       }
     }
+  ],
+  "future_check_contracts": [
+    {
+      "check_id": "CHECK-FORMAT-LINT",
+      "scope": "Formatting and static lint by language",
+      "selection_rule": "Select formatter and linter only after each implementation module and its language toolchain are observed; do not choose a project command now.",
+      "pass_signal": "All changed source and fixture files pass the selected deterministic formatter/linter with no diagnostics."
+    },
+    {
+      "check_id": "CHECK-UNIT",
+      "scope": "Package-level unit behavior",
+      "selection_rule": "Use the test runner established by the owning language/module scaffold; exercise phase fixtures and observable contracts.",
+      "pass_signal": "Every targeted behavior and boundary assertion passes with no external service or live user data."
+    },
+    {
+      "check_id": "CHECK-INTEGRATION",
+      "scope": "Cross-component protocol and lifecycle",
+      "selection_rule": "Choose integration harness after extension/host interfaces and their fixture adapters exist; use local deterministic inputs.",
+      "pass_signal": "Handshake, snapshot, query, activation, recovery, and persistence seams report their declared states and no partial/stale result."
+    },
+    {
+      "check_id": "CHECK-BROWSER-MATRIX",
+      "scope": "Chrome and Edge user journeys",
+      "selection_rule": "Select browser binaries and runner after IP-03 establishes the adapter and supported browser harness.",
+      "pass_signal": "The same fixtures pass in Chrome and Edge with focused input, expected results, safe activation, and unchanged browser state on dismissal."
+    },
+    {
+      "check_id": "CHECK-ACCESSIBILITY",
+      "scope": "Search surface accessibility",
+      "selection_rule": "Choose automated audit and screen-reader procedures after IP-13 provides a rendered surface and browser harness.",
+      "pass_signal": "Keyboard, visible focus, semantics, contrast, reduced motion, scaling, and narrow-window acceptance all pass."
+    },
+    {
+      "check_id": "CHECK-PERFORMANCE",
+      "scope": "Hot-path latency and bounded resources",
+      "selection_rule": "Choose benchmark runner only after IP-01/phase owners declare the implementation runtime and reference hardware; retain the stated NFR budgets.",
+      "pass_signal": "Measured p95 values meet the owned NFR thresholds and reports include sample counts, environment, and allocation or memory evidence."
+    },
+    {
+      "check_id": "CHECK-PACKAGE-SMOKE",
+      "scope": "Install, update, repair, and removal",
+      "selection_rule": "Use the package entry points and disposable profiles defined by IP-18; do not invent an installer or platform command before then.",
+      "pass_signal": "Install/upgrade/repair/uninstall reach their expected health and ownership postconditions without unrelated browser-data mutation."
+    },
+    {
+      "check_id": "CHECK-CORPUS",
+      "scope": "Planning corpus traceability and fixture validation",
+      "selection_rule": "Implement the planned Python corpus validator only after its source path and invocation are selected; before then use throwaway validation without claiming a repository command exists.",
+      "pass_signal": "Requirement ownership, task/commit mappings, fixture schema, IDs, local links, and phase acceptance seams validate without duplicate owners or unowned requirements."
+    }
   ]
 }
