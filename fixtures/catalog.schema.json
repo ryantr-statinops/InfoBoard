@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:infoboard:implementation-fixture-catalog:v1",
+  "title": "InfoBoard implementation fixture catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "fixtures"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "fixtures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/fixture"
+      }
+    },
+    "global_invariants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "statement",
+          "observable_guard"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^INV-[0-9]{3}$"
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1
+          },
+          "observable_guard": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "future_check_contracts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "check_id",
+          "scope",
+          "selection_rule",
+          "pass_signal"
+        ],
+        "properties": {
+          "check_id": {
+            "type": "string",
+            "pattern": "^CHECK-[A-Z0-9-]+$"
+          },
+          "scope": {
+            "type": "string",
+            "minLength": 1
+          },
+          "selection_rule": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pass_signal": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "phase_seams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "fixture_ids",
+          "requirement_ids",
+          "acceptance_signal"
+        ],
+        "properties": {
+          "phase": {
+            "type": "string",
+            "pattern": "^IP-[0-9]{2}$"
+          },
+          "fixture_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^FX-[A-Z0-9-]+$"
+            }
+          },
+          "requirement_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^(FR|NFR)-[0-9]{3}$"
+            }
+          },
+          "acceptance_signal": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixture_id",
+        "owner_phase",
+        "requirement_ids",
+        "category",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "fixture_id": {
+          "type": "string",
+          "pattern": "^FX-[A-Z0-9]+(?:-[A-Z0-9]+)*$"
+        },
+        "owner_phase": {
+          "type": "string",
+          "pattern": "^IP-[0-9]{2}$"
+        },
+        "requirement_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^(FR|NFR)-[0-9]{3}$"
+          }
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "extension",
+            "query",
+            "ranking",
+            "projection",
+            "recovery",
+            "activation",
+            "host",
+            "lifecycle",
+            "privacy"
+          ]
+        },
+        "input": {
+          "type": "object"
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "observations",
+            "privacy_assertions"
+          ],
+          "properties": {
+            "observations": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "signal",
+                  "value"
+                ],
+                "properties": {
+                  "signal": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "value": {}
+                }
+              }
+            },
+            "failure_class": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "privacy_assertions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

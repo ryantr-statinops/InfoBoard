@@ -1,0 +1,308 @@
+{
+  "schema_version": 1,
+  "fixtures": [
+    {
+      "fixture_id": "FX-SHORTCUT-FOCUS",
+      "owner_phase": "IP-03",
+      "requirement_ids": [
+        "FR-001"
+      ],
+      "category": "extension",
+      "input": {
+        "command": "open-search",
+        "pointer_input": false,
+        "previous_surface": "closed"
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "surface_owner",
+            "value": "extension"
+          },
+          {
+            "signal": "query_input_focused_before_text",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "No selected-tab mutation is required to open the search surface."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-QUERY-LIVE",
+      "owner_phase": "IP-12",
+      "requirement_ids": [
+        "FR-004"
+      ],
+      "category": "query",
+      "input": {
+        "accepted_query_revisions": [
+          1,
+          2
+        ],
+        "superseded_revision": 1
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "rendered_query_revision",
+            "value": 2
+          },
+          {
+            "signal": "rendered_revision_matches_latest_accepted",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "A superseded query response is not rendered."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-RANKING-DETERMINISTIC",
+      "owner_phase": "IP-11",
+      "requirement_ids": [
+        "FR-005",
+        "NFR-004"
+      ],
+      "category": "ranking",
+      "input": {
+        "projection_revision": 7,
+        "ranking_timestamp": "fixed",
+        "candidate_ids": [
+          "tab-a",
+          "tab-b"
+        ],
+        "query_token_ids": [
+          "token-a"
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "repeat_run_order_and_scores_equal",
+            "value": true
+          },
+          {
+            "signal": "result_ids_are_opaque_identities",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Fixture output excludes raw query text and URL values."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-TAB-EVENTS",
+      "owner_phase": "IP-04",
+      "requirement_ids": [
+        "FR-009"
+      ],
+      "category": "projection",
+      "input": {
+        "event_sequence": [
+          "create",
+          "update",
+          "move",
+          "group",
+          "pin",
+          "activate",
+          "remove"
+        ],
+        "snapshot_oracle_ids": [
+          "tab-current"
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "final_projection_ids",
+            "value": [
+              "tab-current"
+            ]
+          },
+          {
+            "signal": "duplicate_identity_count",
+            "value": 0
+          },
+          {
+            "signal": "matches_snapshot_oracle",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Event diagnostics contain only bounded reason codes and counts."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-RECONNECT",
+      "owner_phase": "IP-09",
+      "requirement_ids": [
+        "FR-010",
+        "NFR-005",
+        "NFR-006"
+      ],
+      "category": "recovery",
+      "input": {
+        "events_missed": true,
+        "host_disconnect": true,
+        "reconnect": true,
+        "snapshot_revision": 8
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "snapshot_requested_after_reconnect",
+            "value": true
+          },
+          {
+            "signal": "ready_after_snapshot_and_index_revision_match",
+            "value": true
+          },
+          {
+            "signal": "indexed_ids_equal_snapshot_ids",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "No stale result is served before authoritative snapshot recovery."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-STALE-ACTIVATION",
+      "owner_phase": "IP-14",
+      "requirement_ids": [
+        "FR-011"
+      ],
+      "category": "activation",
+      "input": {
+        "result_revision": 4,
+        "current_projection_revision": 5,
+        "result_removed": true
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "activation_status",
+            "value": "stale"
+          },
+          {
+            "signal": "activation_calls",
+            "value": 0
+          },
+          {
+            "signal": "different_tab_activated",
+            "value": false
+          }
+        ],
+        "failure_class": "STALE_RESULT",
+        "privacy_assertions": [
+          "Rejected result references do not select a replacement tab silently."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-HOST-DOWN",
+      "owner_phase": "IP-16",
+      "requirement_ids": [
+        "FR-012",
+        "NFR-006"
+      ],
+      "category": "host",
+      "input": {
+        "host_available": false,
+        "index_ready": false
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "surface_status",
+            "value": "unavailable"
+          },
+          {
+            "signal": "retryable",
+            "value": true
+          },
+          {
+            "signal": "claims_results",
+            "value": false
+          }
+        ],
+        "failure_class": "HOST_UNAVAILABLE",
+        "privacy_assertions": [
+          "Status contains no raw tab metadata."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-RESET-OWNED-DATA",
+      "owner_phase": "IP-15",
+      "requirement_ids": [
+        "FR-015"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "owned_records": [
+          "settings",
+          "activation-metadata"
+        ],
+        "external_sentinel_present": true,
+        "open_tabs": 2
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "owned_records_after_reset",
+            "value": 0
+          },
+          {
+            "signal": "external_sentinel_preserved",
+            "value": true
+          },
+          {
+            "signal": "open_tabs_after_reset",
+            "value": 2
+          }
+        ],
+        "privacy_assertions": [
+          "Reset affects only InfoBoard-owned records and paths."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PERMISSION-DENIED",
+      "owner_phase": "IP-17",
+      "requirement_ids": [
+        "NFR-009"
+      ],
+      "category": "privacy",
+      "input": {
+        "required_browser_capability_granted": false
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "tab_data_accepted",
+            "value": false
+          },
+          {
+            "signal": "surface_status",
+            "value": "unavailable"
+          },
+          {
+            "signal": "diagnostic_is_bounded_and_redacted",
+            "value": true
+          }
+        ],
+        "failure_class": "PERMISSION_DENIED",
+        "privacy_assertions": [
+          "Denied or excluded browser data is not requested, collected, persisted, or transmitted."
+        ]
+      }
+    }
+  ]
+}
