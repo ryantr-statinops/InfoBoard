@@ -1,20 +1,26 @@
-# Refactor decision log
+# Binding decision log
 
-These are provisional decisions for discovery. They are not final product requirements until the idea is accepted and specified.
+A decision is binding when it records user value, scope, privacy impact, architecture impact, failure behavior, acceptance signal, and revisit trigger. Open proposals do not override the product contract.
 
-| ID | Status | Decision or question | Current position |
-| --- | --- | --- | --- |
-| `REF-001` | proposed | What is the first product direction? | Chromium-first instant tab search |
-| `REF-002` | proposed | Which browser family is supported first? | Chrome and Edge desktop |
-| `REF-003` | proposed | Which browser data is in the first scope? | Open tabs and lightweight tab metadata |
-| `REF-004` | open | How does the extension reach Go? | Compare warm daemon IPC with Native Messaging |
-| `REF-005` | proposed | What ranks normal searches? | In-memory lexical/fuzzy matching plus recency/context signals |
-| `REF-006` | proposed | Is ChromaDB on the hot path? | No; optional asynchronous semantic layer |
-| `REF-007` | open | Is a background Go process acceptable? | Must be explicitly accepted because instant response requires a warm runtime |
-| `REF-008` | open | What is the UI surface? | Popup, side panel, or small focused window |
-| `REF-009` | open | Are full-page contents indexed? | Not in the first scope |
-| `REF-010` | open | Which OSes are packaged first? | Decide before native host/daemon packaging |
+| ID | Status | Decision | Rationale | Revisit trigger |
+| --- | --- | --- | --- | --- |
+| `REF-001` | accepted | InfoBoard is a keyboard-first open-tab search and activation product. | Solves tab overload without broad browsing-data access. | Evidence shows a different primary problem dominates. |
+| `REF-002` | accepted | Chrome and Edge desktop are supported; Linux, macOS, and Windows are release targets. | Shared extension model with complete desktop distribution. | Browser/platform support cost prevents acceptance gates. |
+| `REF-003` | accepted | Search uses current-profile open tabs and lightweight tab metadata only. | Sufficient user value with bounded privacy surface. | Users cannot find required targets without a named new data source. |
+| `REF-004` | accepted | The local runtime is a Go Native Messaging host, not a loopback daemon. | Uses a browser-supported local boundary and avoids an application-owned port. | Installation or lifecycle measurements fail the release criteria. |
+| `REF-005` | accepted | The hot path is deterministic lexical ranking with context and recency signals. | Fast, explainable, testable, and sufficient for remembered tab fragments. | Fixed fixtures show a concrete repeated failure that lexical signals cannot solve. |
+| `REF-006` | accepted | SQLite stores configuration and bounded local activation metadata; live tabs remain rebuildable memory state. | Persistence supports continuity without making a database the source of browser truth. | Measured behavior requires another durable data class. |
+| `REF-007` | accepted | No history, page contents, cookies, local storage, network interception, cloud indexing, or telemetry-by-default. | Protects privacy and keeps permissions narrow. | A new product proposal documents value, consent, retention, and threat model. |
+| `REF-008` | accepted | Search opens an extension-owned focused window/page rather than a page overlay. | Reliable keyboard focus and no broad page access. | Browser UX or accessibility testing shows the surface is not viable. |
+| `REF-009` | accepted | Protocol and ranking versions are explicit and incompatible pairs fail closed. | Prevents silent stale results and ambiguous behavior during update. | A compatibility model with stronger safety is adopted. |
+| `REF-010` | accepted | Release requires install, update, repair, reset, uninstall, recovery, accessibility, privacy, and performance acceptance. | A complete product includes lifecycle behavior, not only the search path. | Release model or distribution channel changes. |
+| `REF-011` | deferred | Semantic search and page-content indexing are not part of the product contract. | No proven need justifies extra collection, latency, or operational complexity. | A measured user problem and privacy-approved design exist. |
+| `REF-012` | deferred | Other browsers, mobile, bookmarks, downloads, and cross-profile search are separate products. | They require different UX, permissions, and packaging contracts. | A new product boundary is approved. |
 
-## Decision rule
+## Rejected shortcuts
 
-A decision becomes binding only after it records user value, privacy impact, architecture impact, failure behavior, and an observable acceptance signal.
+- Treating the current refactor idea brief as an MVP specification.
+- Starting with a storage or database technology before user behavior is defined.
+- Spawning a Go process for every query.
+- Exposing a loopback listener without a separate authentication and threat-model decision.
+- Indexing browser history or page content to compensate for weak lexical ranking.
