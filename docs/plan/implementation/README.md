@@ -61,7 +61,7 @@ updated_at: <UTC timestamp>
 
 | Phase | Plan | Status | Owner / agent | Work branch | PR | Latest commit SHA | Last check / evidence reference | Blocker / next action | Updated (UTC) |
 |---|---|---|---|---|---|---|---|---|---|
-| IP-01 | [Phase 01](phase-01-contract-and-fixtures.md) | Complete | Codex | implementation/ip-01-contract-and-fixtures | — | 2da83f6 | On dev: `python3 tests/implementation/validate_corpus.py` passes; 6 validator negative probes rejected; phase acceptance checks and `git diff --check` pass | `fixtures/catalog.json`, `fixtures/catalog.schema.json` | 2026-09-23 |
+| IP-01 | [Phase 01](phase-01-contract-and-fixtures.md) | Complete | Codex | dev | #14 merged | a39808e | `python3 tests/implementation/validate_corpus.py`: PASS (20 phases, 232 task mappings, 25 requirements, 9 fixtures, 7 invariants, 19 seams); 6 negative probes rejected; `git diff --check`: PASS | `fixtures/catalog.json`, `fixtures/catalog.schema.json`, `tests/implementation/validate_corpus.py` | 2026-09-23 |
 | IP-02 | [Phase 02](phase-02-domain-identifiers-and-ownership.md) | Not started | — | — | — | — | — | — | — |
 | IP-03 | [Phase 03](phase-03-extension-scaffold-and-command.md) | Not started | — | — | — | — | — | — | — |
 | IP-04 | [Phase 04](phase-04-tab-observation-and-eligibility.md) | Not started | — | — | — | — | — | — | — |
