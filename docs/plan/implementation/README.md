@@ -62,8 +62,8 @@ updated_at: <UTC timestamp>
 | Phase | Plan | Status | Owner / agent | Work branch | PR | Latest commit SHA | Last check / evidence reference | Blocker / next action | Updated (UTC) |
 |---|---|---|---|---|---|---|---|---|---|
 | IP-01 | [Phase 01](phase-01-contract-and-fixtures.md) | Complete | Codex | dev | #14 merged | a39808e | `python3 tests/implementation/validate_corpus.py`: PASS (20 phases, 232 task mappings, 25 requirements, 9 fixtures, 7 invariants, 19 seams); 6 negative probes rejected; `git diff --check`: PASS | `fixtures/catalog.json`, `fixtures/catalog.schema.json`, `tests/implementation/validate_corpus.py` | 2026-09-23 |
-| IP-02 | [Phase 02](phase-02-domain-identifiers-and-ownership.md) | Not started | — | — | — | — | — | — | — |
-| IP-03 | [Phase 03](phase-03-extension-scaffold-and-command.md) | Not started | — | — | — | — | — | — | — |
+| IP-02 | [Phase 02](phase-02-domain-identifiers-and-ownership.md) | Complete | Codex | dev | — | 2074dab672f1747912556cabbbf1ca94e5950410 | Corpus, six bounded fixtures, TypeScript build/domain tests (4 pass), Go domain tests: PASS on dev | IP-02 profile/domain contracts integrated; IP-03 consumes them | 2026-09-24 |
+| IP-03 | [Phase 03](phase-03-extension-scaffold-and-command.md) | In progress | Codex | implementation/ip-03-extension-scaffold-and-command | — | — | Branch from updated dev; implement MV3 adapter/command, then Chrome+Edge browser acceptance | Browser binary/runtime checks | 2026-09-24 |
 | IP-04 | [Phase 04](phase-04-tab-observation-and-eligibility.md) | Not started | — | — | — | — | — | — | — |
 | IP-05 | [Phase 05](phase-05-profile-projection-and-reconciliation.md) | Not started | — | — | — | — | — | — | — |
 | IP-06 | [Phase 06](phase-06-host-bootstrap-and-lifecycle.md) | Not started | — | — | — | — | — | — | — |
