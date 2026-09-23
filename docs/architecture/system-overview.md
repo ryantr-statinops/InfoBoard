@@ -1,47 +1,52 @@
 # System overview
 
-## Context
+## Product shape
 
-InfoBoard is a single-user local web application. The browser connects to a process bound to loopback. Canonical data and snapshots remain on the local filesystem. The only intended external data flows are public-page capture and consented calls to a configured OpenAI-compatible embedding endpoint.
+InfoBoard is a Manifest V3 Chrome/Edge desktop extension connected to a local Go Native Messaging host.
 
-```mermaid
-flowchart LR
-    UI[Browser UI] --> HTTP[HTTP/API layer]
-    HTTP --> APP[Application services]
-    APP --> SQL[(SQLite + FTS)]
-    APP --> WORKER[Sequential in-process worker]
-    WORKER --> WEB[Public web]
-    WORKER --> SQL
-    WORKER --> EMB[Compatible embedding API]
-    WORKER --> ROCK[(RocksDB cache)]
-    WORKER --> CHROMA[(ChromaDB)]
-    APP --> ANA[Analytics service]
-    ANA --> DUCK[(DuckDB)]
-    ANA --> SQL
+```text
+Chrome or Edge profile
+  ├─ configurable command
+  ├─ focused search surface
+  ├─ browser event adapter
+  ├─ profile-scoped tab projection
+  ├─ activation controller
+  └─ Native Messaging client
+          │ framed JSON over stdin/stdout
+          ▼
+Go Native Messaging host
+  ├─ protocol and session manager
+  ├─ projection reconciler
+  ├─ in-memory lexical index
+  ├─ deterministic ranking engine
+  ├─ bounded SQLite repository
+  └─ diagnostics and health
 ```
 
-## Component contracts
+The extension owns browser authority. The host owns local indexing, ranking, protocol state, diagnostics, and the bounded persistence allowed by the product contract.
 
-| Component | Responsibility | Input/output | Failure and recovery | Health | Delivery stage |
-| --- | --- | --- | --- | --- | --- |
-| Browser UI | Capture, organize, retrieve, settings, and maintenance interaction | HTML/JSON over loopback HTTP | Preserve user context and show safe next action | Derived from API | 3–5 |
-| HTTP/API | Validate requests, apply origin/host boundary, expose stable envelopes | Versioned request/response contracts | Reject before mutation; correlation ID for diagnosis | `ready` when app services initialize | 1 |
-| Application services | Enforce product invariants and transaction boundaries | Typed commands/queries | Roll back canonical transaction; never infer truth from derived stores | `ready` with SQLite | 1–3 |
-| In-process worker | Sequentially execute capture attempts, indexing, analytics refresh, and cleanup | Durable SQLite leases; canonical/derived writes | Three bounded retries, lease recovery, manual retry | Per owned component | 2–8 |
-| Search orchestrator | Keyword, semantic, and hybrid candidate/ranking flow | Query/filter contract to bookmark results | Keyword fallback on semantic failure | `ready/degraded` | 4–6 |
-| Analytics service | Shared-filter metrics and projection refresh | Filter contract to KPI response | Bounded SQLite fallback | `ready/degraded` | 8 |
-| Maintenance service | Migration, backup, restore, rebuild, and integrity checks | Explicit local commands/actions | Fail closed with canonical data untouched | Detailed component report | 9 |
-| SQLite/FTS5 | Canonical data, jobs, configuration metadata, keyword index | Transactional SQL | Core unavailable if integrity/readiness fails | Required `ready` | 1–4 |
-| RocksDB | Embedding cache | Versioned cache keys/values | Cache miss and rebuild | Derived status | 7 |
-| ChromaDB | Current semantic vectors | Versioned upserts/queries | Semantic degradation and rebuild | Derived status | 6 |
-| DuckDB | Analytics projection | Refresh/read-only aggregate queries | SQLite fallback and rebuild | Derived status | 8 |
-| Embedding endpoint | Produce document/query vectors | OpenAI-compatible request/response | Bounded retry then semantic degradation | `unconfigured/ready/degraded` | 5 |
+## Authority boundaries
 
-## Layer rules
+| Boundary | Owns | Does not own |
+| --- | --- | --- |
+| Browser extension | Browser permissions, tab snapshots, browser events, UI, activation calls | Ranking weights, SQL, process residency policy |
+| Native Messaging client | Framing, request IDs, reconnect, compatibility, send/receive state | Direct browser mutation outside extension APIs |
+| Go host | Protocol validation, synchronization, index, ranking, health | Browser APIs, network access, page content |
+| SQLite repository | Configuration, installation state, migrations, bounded activation metadata | Current open tabs as durable truth |
+| Search surface | Input, selection, status, accessible presentation | Hidden ranking or stale activation decisions |
 
-- HTTP handlers contain no storage-specific business logic.
-- Application services are the only writers of canonical user state.
-- One sequential worker starts with application lifespan, claims durable work from SQLite, and reports state through SQLite transactions.
-- Search and analytics may read derived stores but validate candidates against current canonical state.
-- Maintenance operations use explicit paths and never run as a side effect of a dashboard request.
-- The process binds to `127.0.0.1` for MVP; opening a network interface requires a new threat model and authentication decision.
+## Product boundary
+
+Only the current profile's eligible open tabs enter the projection. The architecture does not require cookies, browser history, page contents, network interception, cloud indexing, or a loopback listening port.
+
+The current tab projection is rebuildable. Persistence improves configuration and bounded activation context; it is not a second source of truth for currently open tabs.
+
+## Design invariants
+
+- Every runtime request has a bounded payload, timeout, and typed error path.
+- Every result is tied to a known profile and projection revision.
+- Browser state changes are performed by the extension, never by the host.
+- A failed optional component cannot remove the normal lexical search path.
+- The architecture is measured at 1,000 open tabs per profile and remains correct above that envelope.
+
+See the [canonical target architecture](../plan/refactor/architecture.md) for the binding contract.
