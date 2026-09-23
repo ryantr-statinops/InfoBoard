@@ -1,7 +1,7 @@
 # Phase 13 — Search surface and accessibility
 
 > Plan ID: IP-13
-> Status: not_started
+> Status: See README.md execution tracker
 > Execution owner: extension UI owner
 > Dependencies: IP-03, IP-12
 > Parallel boundary: IP-14, IP-15, IP-16 after their listed dependencies
@@ -76,25 +76,98 @@
 
 ## 6. Công việc triển khai
 
-- [ ] Việc 1: Define the surface state machine and public seams in `extension/search/` (to-create): opening → ready/empty-query → querying → results/no-results, with explicit rebuilding, unavailable, stale, persistence-degraded and activation-failure branches. Each state exposes permitted actions and whether browser state is confirmed unchanged.
-- [ ] Việc 2: Implement command handoff from IP-03: open/focus the extension-owned surface, clear prior query/result state, focus the query input, and record command-start/focus timestamps for NFR-001. The handoff must tolerate an already-open surface and service-worker restart without creating duplicate windows.
-- [ ] Việc 3: Implement query input behavior: trim/accept input according to IP-12, issue a bounded request for every accepted revision, render only the matching response, and suppress late responses from an older revision or projection. Empty/whitespace input renders bounded recent/context results with explanatory status.
-- [ ] Việc 4: Render result rows from IP-12's bounded display metadata: title as accessible primary label; redacted domain/compact URL; disambiguating window/group context; pinned state; compact match explanation when safe; selected state and stable result reference. Never expose raw URL query strings by default.
-- [ ] Việc 5: Implement keyboard and focus semantics: input remains the predictable typing target; arrow keys update `aria-activedescendant` or an equivalent selected option; `Enter` invokes the IP-14 activation handoff with result ID and projection revision; `Esc` dismisses without activation; explicit close/dismiss controls are keyboard reachable and return focus according to the surface lifecycle.
-- [ ] Việc 6: Implement visible and semantic accessibility: stable labels/descriptions for input, result list, each row, selection, pin/context, loading, no-result, runtime failure, stale state and activation outcome; live-region announcements must be concise and must not include sensitive URL/query data. Selection, pinning, freshness and errors need text/icon/structure in addition to color.
-- [ ] Việc 7: Implement responsive and preference rules: surface remains operable at the narrow-window fixture dimensions and browser text scaling; content wraps or truncates with accessible full labels; focus rings remain visible; `prefers-reduced-motion: reduce` removes nonessential transitions; no animation is required for correctness.
-- [ ] Việc 8: Add deterministic fixtures and tests for `UI-SHORTCUT-FOCUS` (command opens, focus is input, no stale flash), `UI-LIVE-QUERY` (each revision maps to rendered revision), `UI-ARROW-ENTER` (expected result handoff), `UI-ESC-DISMISS` (browser state unchanged), duplicate-title context, empty/no-result, opening/loading, rebuilding, host-down, persistence-degraded, stale, activation failure, private unavailable, narrow width, text scaling, reduced motion and screen-reader semantics.
-- [ ] Việc 9: Measure shortcut-to-focus from command dispatch to `document.activeElement`/equivalent focused input on supported reference hardware. Capture p50/p95/p99, browser/OS/profile state and sample count; fail acceptance when p95 exceeds 100 ms in a healthy extension run. Measure query-to-render only as supporting evidence; NFR-002 remains owned by IP-12.
-- [ ] Việc 10: Verify that this phase requests no extra permission, performs no network access, does not mutate tabs on typing/dismissal, and leaves activation confirmation and stale-result validation to IP-14.
+- [ ] `IP-13-T01` Việc 1: Define the surface state machine and public seams in `extension/search/` (to-create): opening → ready/empty-query → querying → results/no-results, with explicit rebuilding, unavailable, stale, persistence-degraded and activation-failure branches. Each state exposes permitted actions and whether browser state is confirmed unchanged.
+- [ ] `IP-13-T02` Việc 2: Implement command handoff from IP-03: open/focus the extension-owned surface, clear prior query/result state, focus the query input, and record command-start/focus timestamps for NFR-001. The handoff must tolerate an already-open surface and service-worker restart without creating duplicate windows.
+- [ ] `IP-13-T03` Việc 3: Implement query input behavior: trim/accept input according to IP-12, issue a bounded request for every accepted revision, render only the matching response, and suppress late responses from an older revision or projection. Empty/whitespace input renders bounded recent/context results with explanatory status.
+- [ ] `IP-13-T04` Việc 4: Render result rows from IP-12's bounded display metadata: title as accessible primary label; redacted domain/compact URL; disambiguating window/group context; pinned state; compact match explanation when safe; selected state and stable result reference. Never expose raw URL query strings by default.
+- [ ] `IP-13-T05` Việc 5: Implement keyboard and focus semantics: input remains the predictable typing target; arrow keys update `aria-activedescendant` or an equivalent selected option; `Enter` invokes the IP-14 activation handoff with result ID and projection revision; `Esc` dismisses without activation; explicit close/dismiss controls are keyboard reachable and return focus according to the surface lifecycle.
+- [ ] `IP-13-T06` Việc 6: Implement visible and semantic accessibility: stable labels/descriptions for input, result list, each row, selection, pin/context, loading, no-result, runtime failure, stale state and activation outcome; live-region announcements must be concise and must not include sensitive URL/query data. Selection, pinning, freshness and errors need text/icon/structure in addition to color.
+- [ ] `IP-13-T07` Việc 7: Implement responsive and preference rules: surface remains operable at the narrow-window fixture dimensions and browser text scaling; content wraps or truncates with accessible full labels; focus rings remain visible; `prefers-reduced-motion: reduce` removes nonessential transitions; no animation is required for correctness.
+- [ ] `IP-13-T08` Việc 8: Add deterministic fixtures and tests for `UI-SHORTCUT-FOCUS` (command opens, focus is input, no stale flash), `UI-LIVE-QUERY` (each revision maps to rendered revision), `UI-ARROW-ENTER` (expected result handoff), `UI-ESC-DISMISS` (browser state unchanged), duplicate-title context, empty/no-result, opening/loading, rebuilding, host-down, persistence-degraded, stale, activation failure, private unavailable, narrow width, text scaling, reduced motion and screen-reader semantics.
+- [ ] `IP-13-T09` Việc 9: Measure shortcut-to-focus from command dispatch to `document.activeElement`/equivalent focused input on supported reference hardware. Capture p50/p95/p99, browser/OS/profile state and sample count; fail acceptance when p95 exceeds 100 ms in a healthy extension run. Measure query-to-render only as supporting evidence; NFR-002 remains owned by IP-12.
+- [ ] `IP-13-T10` Việc 10: Verify that this phase requests no extra permission, performs no network access, does not mutate tabs on typing/dismissal, and leaves activation confirmation and stale-result validation to IP-14.
 
 ## 7. Kế hoạch commit
 
-1. `feat(extension-search): implement focused keyboard search surface`
-   - Thay đổi: create the semantic surface/controller, command handoff seam, input/revision flow, bounded result rows, state rendering, keyboard/focus handling, responsive styles and accessibility labels under the phase-owned `to-create` paths.
-   - Cách kiểm tra: from repository root, run the focused browser fixture command `go test ./tests/browser/search-surface -run 'TestShortcutFocus|TestLiveQuery|TestKeyboardSelection|TestEscDismiss'` (or the repository's equivalent once the chosen harness exists), then exercise `UI-SHORTCUT-FOCUS` → `UI-LIVE-QUERY` → `UI-ARROW-ENTER` → `UI-ESC-DISMISS` in Chrome and Edge fixture runs.
-2. `test(extension-search): cover accessibility and responsive states`
-   - Thay đổi: add accessibility, state-boundary, narrow-window/text-scaling, reduced-motion, stale/host-down/persistence-degraded and latency evidence tests under `tests/accessibility/search-surface/` and `fixtures/ui/`.
-   - Cách kiểm tra: from repository root, run `go test ./tests/accessibility/search-surface -run 'TestAccessibleNames|TestVisibleFocus|TestReducedMotion|TestNarrowWindow'` (or the selected UI harness equivalent), run the accessibility audit for the focused surface, and record the shortcut-to-focus p95 artifact. These command paths are future implementation targets because the source tree is currently `to-create`.
+1. `feat(search): implement ip-13-t01`
+   - Task IDs: `IP-13-T01`.
+   - Owned target paths: extension/search/.
+   - Behavior: Việc 1: Define the surface state machine and public seams in `extension/search/` (to-create): opening → ready/empty-query → querying → results/no-results, with explicit rebuilding, unavailable, stale, persistence-degraded and activation-failure branches. Each state exposes permitted actions and whether browser state is confirmed unchanged.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-13 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 1: Define the surface state machine and public seams in `extension/search/` (to-create): opening → ready/empty-query → querying → results/no-results, with explicit rebuilding, unavailable, stale, persistence-degraded and activation-failure branches. Each state exposes permitted actions and whether browser state is confirmed unchanged.
+   - Dependency gate: all index.md dependencies for IP-13 have merged to dev; phase work branch starts from latest origin/dev.
+
+2. `feat(search): implement ip-13-t02`
+   - Task IDs: `IP-13-T02`.
+   - Owned target paths: `extension/search/` (to-create), `extension/manifest.json` command handoff integration (to-create), `tests/browser/search-surface/` (to-create), `tests/accessibility/search-surface/` (to-create), `fixtures/ui/` (to-create).
+   - Behavior: Việc 2: Implement command handoff from IP-03: open/focus the extension-owned surface, clear prior query/result state, focus the query input, and record command-start/focus timestamps for NFR-001. The handoff must tolerate an already-open surface and service-worker restart without creating duplicate windows.
+   - Fixture and command: IP-03, NFR-001; run `the exact phase-13 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 2: Implement command handoff from IP-03: open/focus the extension-owned surface, clear prior query/result state, focus the query input, and record command-start/focus timestamps for NFR-001. The handoff must tolerate an already-open surface and service-worker restart without creating duplicate windows.
+   - Dependency gate: all index.md dependencies for IP-13 have merged to dev; phase work branch starts from latest origin/dev.
+
+3. `feat(search): implement ip-13-t03`
+   - Task IDs: `IP-13-T03`.
+   - Owned target paths: `extension/search/` (to-create), `extension/manifest.json` command handoff integration (to-create), `tests/browser/search-surface/` (to-create), `tests/accessibility/search-surface/` (to-create), `fixtures/ui/` (to-create).
+   - Behavior: Việc 3: Implement query input behavior: trim/accept input according to IP-12, issue a bounded request for every accepted revision, render only the matching response, and suppress late responses from an older revision or projection. Empty/whitespace input renders bounded recent/context results with explanatory status.
+   - Fixture and command: IP-12; run `the exact phase-13 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 3: Implement query input behavior: trim/accept input according to IP-12, issue a bounded request for every accepted revision, render only the matching response, and suppress late responses from an older revision or projection. Empty/whitespace input renders bounded recent/context results with explanatory status.
+   - Dependency gate: all index.md dependencies for IP-13 have merged to dev; phase work branch starts from latest origin/dev.
+
+4. `feat(search): implement ip-13-t04`
+   - Task IDs: `IP-13-T04`.
+   - Owned target paths: `extension/search/` (to-create), `extension/manifest.json` command handoff integration (to-create), `tests/browser/search-surface/` (to-create), `tests/accessibility/search-surface/` (to-create), `fixtures/ui/` (to-create).
+   - Behavior: Việc 4: Render result rows from IP-12's bounded display metadata: title as accessible primary label; redacted domain/compact URL; disambiguating window/group context; pinned state; compact match explanation when safe; selected state and stable result reference. Never expose raw URL query strings by default.
+   - Fixture and command: IP-12; run `the exact phase-13 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 4: Render result rows from IP-12's bounded display metadata: title as accessible primary label; redacted domain/compact URL; disambiguating window/group context; pinned state; compact match explanation when safe; selected state and stable result reference. Never expose raw URL query strings by default.
+   - Dependency gate: all index.md dependencies for IP-13 have merged to dev; phase work branch starts from latest origin/dev.
+
+5. `feat(search): implement ip-13-t05`
+   - Task IDs: `IP-13-T05`.
+   - Owned target paths: `extension/search/` (to-create), `extension/manifest.json` command handoff integration (to-create), `tests/browser/search-surface/` (to-create), `tests/accessibility/search-surface/` (to-create), `fixtures/ui/` (to-create).
+   - Behavior: Việc 5: Implement keyboard and focus semantics: input remains the predictable typing target; arrow keys update `aria-activedescendant` or an equivalent selected option; `Enter` invokes the IP-14 activation handoff with result ID and projection revision; `Esc` dismisses without activation; explicit close/dismiss controls are keyboard reachable and return focus according to the surface lifecycle.
+   - Fixture and command: IP-14; run `the exact phase-13 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 5: Implement keyboard and focus semantics: input remains the predictable typing target; arrow keys update `aria-activedescendant` or an equivalent selected option; `Enter` invokes the IP-14 activation handoff with result ID and projection revision; `Esc` dismisses without activation; explicit close/dismiss controls are keyboard reachable and return focus according to the surface lifecycle.
+   - Dependency gate: all index.md dependencies for IP-13 have merged to dev; phase work branch starts from latest origin/dev.
+
+6. `feat(search): implement ip-13-t06`
+   - Task IDs: `IP-13-T06`.
+   - Owned target paths: `extension/search/` (to-create), `extension/manifest.json` command handoff integration (to-create), `tests/browser/search-surface/` (to-create), `tests/accessibility/search-surface/` (to-create), `fixtures/ui/` (to-create).
+   - Behavior: Việc 6: Implement visible and semantic accessibility: stable labels/descriptions for input, result list, each row, selection, pin/context, loading, no-result, runtime failure, stale state and activation outcome; live-region announcements must be concise and must not include sensitive URL/query data. Selection, pinning, freshness and errors need text/icon/structure in addition to color.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-13 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 6: Implement visible and semantic accessibility: stable labels/descriptions for input, result list, each row, selection, pin/context, loading, no-result, runtime failure, stale state and activation outcome; live-region announcements must be concise and must not include sensitive URL/query data. Selection, pinning, freshness and errors need text/icon/structure in addition to color.
+   - Dependency gate: all index.md dependencies for IP-13 have merged to dev; phase work branch starts from latest origin/dev.
+
+7. `test(search): implement ip-13-t07`
+   - Task IDs: `IP-13-T07`.
+   - Owned target paths: `extension/search/` (to-create), `extension/manifest.json` command handoff integration (to-create), `tests/browser/search-surface/` (to-create), `tests/accessibility/search-surface/` (to-create), `fixtures/ui/` (to-create).
+   - Behavior: Việc 7: Implement responsive and preference rules: surface remains operable at the narrow-window fixture dimensions and browser text scaling; content wraps or truncates with accessible full labels; focus rings remain visible; `prefers-reduced-motion: reduce` removes nonessential transitions; no animation is required for correctness.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-13 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 7: Implement responsive and preference rules: surface remains operable at the narrow-window fixture dimensions and browser text scaling; content wraps or truncates with accessible full labels; focus rings remain visible; `prefers-reduced-motion: reduce` removes nonessential transitions; no animation is required for correctness.
+   - Dependency gate: all index.md dependencies for IP-13 have merged to dev; phase work branch starts from latest origin/dev.
+
+8. `test(search): implement ip-13-t08`
+   - Task IDs: `IP-13-T08`.
+   - Owned target paths: `extension/search/` (to-create), `extension/manifest.json` command handoff integration (to-create), `tests/browser/search-surface/` (to-create), `tests/accessibility/search-surface/` (to-create), `fixtures/ui/` (to-create).
+   - Behavior: Việc 8: Add deterministic fixtures and tests for `UI-SHORTCUT-FOCUS` (command opens, focus is input, no stale flash), `UI-LIVE-QUERY` (each revision maps to rendered revision), `UI-ARROW-ENTER` (expected result handoff), `UI-ESC-DISMISS` (browser state unchanged), duplicate-title context, empty/no-result, opening/loading, rebuilding, host-down, persistence-degraded, stale, activation failure, private unavailable, narrow width, text scaling, reduced motion and screen-reader semantics.
+   - Fixture and command: UI-SHORTCUT-FOCUS, UI-LIVE-QUERY, UI-ARROW-ENTER, UI-ESC-DISMISS; run `the exact phase-13 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 8: Add deterministic fixtures and tests for `UI-SHORTCUT-FOCUS` (command opens, focus is input, no stale flash), `UI-LIVE-QUERY` (each revision maps to rendered revision), `UI-ARROW-ENTER` (expected result handoff), `UI-ESC-DISMISS` (browser state unchanged), duplicate-title context, empty/no-result, opening/loading, rebuilding, host-down, persistence-degraded, stale, activation failure, private unavailable, narrow width, text scaling, reduced motion and screen-reader semantics.
+   - Dependency gate: all index.md dependencies for IP-13 have merged to dev; phase work branch starts from latest origin/dev.
+
+9. `test(search): implement ip-13-t09`
+   - Task IDs: `IP-13-T09`.
+   - Owned target paths: `extension/search/` (to-create), `extension/manifest.json` command handoff integration (to-create), `tests/browser/search-surface/` (to-create), `tests/accessibility/search-surface/` (to-create), `fixtures/ui/` (to-create).
+   - Behavior: Việc 9: Measure shortcut-to-focus from command dispatch to `document.activeElement`/equivalent focused input on supported reference hardware. Capture p50/p95/p99, browser/OS/profile state and sample count; fail acceptance when p95 exceeds 100 ms in a healthy extension run. Measure query-to-render only as supporting evidence; NFR-002 remains owned by IP-12.
+   - Fixture and command: NFR-002, IP-12; run `the exact phase-13 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 9: Measure shortcut-to-focus from command dispatch to `document.activeElement`/equivalent focused input on supported reference hardware. Capture p50/p95/p99, browser/OS/profile state and sample count; fail acceptance when p95 exceeds 100 ms in a healthy extension run. Measure query-to-render only as supporting evidence; NFR-002 remains owned by IP-12.
+   - Dependency gate: all index.md dependencies for IP-13 have merged to dev; phase work branch starts from latest origin/dev.
+
+10. `feat(search): implement ip-13-t10`
+   - Task IDs: `IP-13-T10`.
+   - Owned target paths: `extension/search/` (to-create), `extension/manifest.json` command handoff integration (to-create), `tests/browser/search-surface/` (to-create), `tests/accessibility/search-surface/` (to-create), `fixtures/ui/` (to-create).
+   - Behavior: Việc 10: Verify that this phase requests no extra permission, performs no network access, does not mutate tabs on typing/dismissal, and leaves activation confirmation and stale-result validation to IP-14.
+   - Fixture and command: IP-14; run `the exact phase-13 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 10: Verify that this phase requests no extra permission, performs no network access, does not mutate tabs on typing/dismissal, and leaves activation confirmation and stale-result validation to IP-14.
+   - Dependency gate: all index.md dependencies for IP-13 have merged to dev; phase work branch starts from latest origin/dev.
 
 ## 8. Kiểm chứng và nghiệm thu
 

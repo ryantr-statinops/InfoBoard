@@ -1,7 +1,7 @@
 # Phase 16 — Diagnostics, health, and observability
 
 > Plan ID: IP-16
-> Status: not_started
+> Status: See README.md execution tracker
 > Execution owner: Host reliability and diagnostics implementer
 > Dependencies: IP-06, IP-07, IP-08, IP-09, IP-12
 > Parallel boundary: IP-13, IP-14, IP-15 (after their listed dependencies; no shared owned paths)
@@ -84,27 +84,27 @@
 
 ## 6. Công việc triển khai
 
-- [ ] Việc 1 — Define the health state machine in `host/diagnostics/health.go` (to-create):
+- [ ] `IP-16-T01` Việc 1 — Define the health state machine in `host/diagnostics/health.go` (to-create):
   - Record legal transitions and reason codes for `disconnected → connecting → handshaking → synchronizing → ready`.
   - Record recoverable paths `connecting/handshaking/synchronizing/ready → recovering`, `ready → degraded` for persistence-only failure, and `recovering → synchronizing` after reconnect or `recovering → disconnected` after bounded attempts.
   - Record terminal/repairable paths to `incompatible` for protocol or host-version mismatch, `stopping` for intentional shutdown, and back to `ready` only after handshake, current snapshot, and index readiness are all confirmed.
   - Reject impossible transitions without changing the public state; emit a bounded internal diagnostic with `INTERNAL_FAILURE` and a repairable outcome rather than silently accepting contradictory state.
   - Keep component status independent: host `available/unavailable`, protocol `compatible/mismatch`, projection `current/unknown/gapped`, index `empty/building/ready/stale/failed`, and storage `healthy/degraded/quarantined/upgrade_required`. Overall health must expose the worst actionable condition while preserving lexical availability when storage is degraded.
 
-- [ ] Việc 2 — Define freshness and health payload semantics at the IP-07 boundary:
+- [ ] `IP-16-T02` Việc 2 — Define freshness and health payload semantics at the IP-07 boundary:
   - Include protocol/ranking/schema versions, profile scope marker, session status, last successful handshake time, current projection revision, indexed projection revision, last sequence, index build status, storage migration status, diagnostic age, and bounded counts/durations.
   - Represent freshness with explicit `current`, `stale`, `unknown`, or `rebuilding` states and a numeric age/duration; do not infer freshness from a missing field.
   - Permit query/activation only when IP-12/IP-14's revision guards pass. A rebuilding or unknown revision returns a user-safe refresh/retry status, never a silently stale result.
   - Ensure `PERSISTENCE_DEGRADED` is visible in health while lexical query and confirmed activation continue with safe defaults where their contracts permit.
   - Emit a transition before exposing the new health snapshot and atomically update the in-memory snapshot plus event sequence so a reader cannot observe a new state with old freshness metadata.
 
-- [ ] Việc 3 — Implement the structured diagnostic event contract in `host/diagnostics/events.go` (to-create):
+- [ ] `IP-16-T03` Việc 3 — Implement the structured diagnostic event contract in `host/diagnostics/events.go` (to-create):
   - Use a versioned event schema with `event_id`, `event_time`, monotonic `duration_ms`, `component`, `from_state`, `to_state`, `reason_code`, `error_class`, `retryable`, `recommended_action`, protocol/ranking/schema versions, projection/index revisions, counts, and bounded timing counters.
   - Use a per-session opaque correlation ID and request ID only where the protocol already supplies one; do not persist raw request payloads, browser IDs, or field values.
   - Define reason codes for host start/exit, handshake success/failure, protocol rejection, snapshot accepted, delta gap, index build start/finish/failure, query timeout, storage migration/degradation/recovery, repair start/finish/exhaustion, reset, and retention eviction.
   - Ensure every state transition has exactly one transition event even when persistence is unavailable; in-memory counters and a safe `diagnostics_persistence_degraded` marker cover the path until storage recovers.
 
-- [ ] Việc 4 — Map error classes to user-safe status and retryability in `host/diagnostics/errors.go` (to-create):
+- [ ] `IP-16-T04` Việc 4 — Map error classes to user-safe status and retryability in `host/diagnostics/errors.go` (to-create):
   - Preserve these protocol classes exactly: `INVALID_FRAME`, `PROTOCOL_MISMATCH`, `PROFILE_MISMATCH`, `PAYLOAD_LIMIT`, `SNAPSHOT_REQUIRED`, `REVISION_MISMATCH`, `INDEX_REBUILDING`, `QUERY_TIMEOUT`, `PERSISTENCE_DEGRADED`, `HOST_SHUTDOWN`, and `INTERNAL_FAILURE`.
   - Use the following contract table; implementation may add internal reason detail only if it remains redacted and does not change the user-safe code:
 
@@ -125,14 +125,14 @@
   - Map local lifecycle conditions such as host missing, permission-limited context, database quarantine, and unknown future schema to statuses that state what failed, whether browser state changed, and the next safe action.
   - Make retryability a first-class boolean plus an explicit retry budget/cooldown, not a UI inference from error text.
 
-- [ ] Việc 5 — Implement redaction and privacy-safe structured logging in `host/diagnostics/redaction.go` (to-create):
+- [ ] `IP-16-T05` Việc 5 — Implement redaction and privacy-safe structured logging in `host/diagnostics/redaction.go` (to-create):
   - Serialize only an allowlist of enums, counts, durations, versions, revisions, sizes, bounded status codes, error classes, and retention counters. Unknown fields are dropped rather than recursively serialized.
   - Reject or replace values that look like full URLs, URL query/fragment material, titles, query text, page content, cookie/session material, secrets, arbitrary browser labels, or raw tab identifiers. Use a stable non-reversible local digest only when correlation is required and document its scope.
   - Ensure typed errors, health payloads, transition events, SQLite diagnostic rows, and user exports all pass the same redaction boundary. Error messages must never interpolate raw field values.
   - Add a negative test that injects representative sensitive strings into every available context slot and asserts none occurs in serialized diagnostics, exports, or UI-safe status payloads.
   - Include private-context and profile-isolation checks: diagnostics identify only the active opaque profile scope and never retain private records after the private context ends.
 
-- [ ] Việc 6 — Add bounded repair orchestration in `host/diagnostics/repair.go` (to-create):
+- [ ] `IP-16-T06` Việc 6 — Add bounded repair orchestration in `host/diagnostics/repair.go` (to-create):
   - `retry_connection`: at most three attempts for one incident with bounded backoff (100 ms, 500 ms, 1,000 ms), a five-second total reconnect budget, and one in-flight repair per session.
   - `resync_projection`: request one full snapshot when a sequence/revision gap is detected; cancel an older request when a newer profile revision is known; respect IP-07 payload/count limits and report `SNAPSHOT_REQUIRED`/`REVISION_MISMATCH` without applying partial state.
   - `rebuild_index`: permit one cancellable rebuild from the authoritative in-memory snapshot; publish `index_rebuilding`, then `ready` only for the same projection revision, or `recovering`/`INTERNAL_FAILURE` on deadline or cancellation.
@@ -140,14 +140,14 @@
   - Stop automatic retries after budget exhaustion, emit one `repair_exhausted` event, expose a user-triggered repair action, and apply a cooldown so repeated clicks cannot create concurrent work.
   - Return an observable result with operation, attempt count, elapsed duration, final health, retryability, and recommended action; never report repair success before the owning component confirms it.
 
-- [ ] Việc 7 — Enforce diagnostics retention in `host/diagnostics/retention.go` (to-create) through the IP-08 repository seam:
+- [ ] `IP-16-T07` Việc 7 — Enforce diagnostics retention in `host/diagnostics/retention.go` (to-create) through the IP-08 repository seam:
   - Validate event schema and serialized UTF-8 payload size before insertion; cap one record at a fixed implementation limit (for example 64 KiB) and summarize/drop oversized records without storing their source content.
   - On each insert and startup, delete records whose event time is older than seven UTC days, then evict oldest records until aggregate serialized diagnostic payload bytes are at most `10_000_000` (10 MB). Both age and byte eviction must be idempotent and transactionally observable.
   - Maintain bounded counters for inserted, rejected, age-evicted, byte-evicted, and persistence-failed records; counters themselves are subject to the same retention policy and redaction.
   - If the database is unavailable, keep an in-memory bounded diagnostic ring for the current session, expose `PERSISTENCE_DEGRADED`, and flush only records that still satisfy age/byte policy after recovery.
   - Prove that a single oversized or malformed event cannot make the store exceed the byte budget and that a failed cleanup cannot trigger an unbounded retry loop.
 
-- [ ] Việc 8 — Create the fixture and test seams:
+- [ ] `IP-16-T08` Việc 8 — Create the fixture and test seams:
   - `fixtures/diagnostics/health-transitions.jsonl` (to-create): startup, host absence, handshake, snapshot/index readiness, delta gap, reconnect, and clean shutdown; expected event order and final component freshness are explicit.
   - `fixtures/diagnostics/error-status-matrix.json` (to-create): each IP-07 class plus host missing, permission-limited, storage quarantine, and schema upgrade-required; expected safe status, retryable value, and action are exact.
   - `fixtures/diagnostics/redaction-sensitive-fields.json` (to-create): title, full URL with query/fragment, query text, token-like value, page content, browser ID, and private-context data; expected serialized output contains none of them.
@@ -157,18 +157,69 @@
 
 ## 7. Kế hoạch commit
 
-1. `feat(diagnostics): define health and freshness contract`
-   - Thay đổi: Add the planned `host/diagnostics/` state model, component freshness fields, transition reason codes, and the IP-07 health payload adapter. Keep protocol framing and SQLite schema ownership in IP-07/IP-08.
-   - Cách kiểm tra: From repository root, run `go test ./host/diagnostics/... -run 'TestHealth(Transitions|Freshness|Invariants)$'` with `fixtures/diagnostics/health-transitions.jsonl`; assert the expected final state and projection/index revisions.
-2. `feat(diagnostics): add error mapping and bounded repair`
-   - Thay đổi: Add the complete error-class/user-safe-status table, explicit retry budgets, reconnect/resync/rebuild/persistence repair orchestration, cancellation, cooldown, and terminal outcomes.
-   - Cách kiểm tra: Run `go test ./host/diagnostics/... -run 'Test(ErrorStatusMatrix|RepairBounds|RepairCancellation)$'` with `fixtures/diagnostics/error-status-matrix.json` and `fixtures/diagnostics/repair-bounds.json`; assert no attempt exceeds its count or deadline and no browser mutation is requested.
-3. `feat(diagnostics): enforce redaction and retention`
-   - Thay đổi: Add allowlist serialization, sensitive-value rejection, bounded event insertion, seven-day/10 MB eviction, startup compaction, in-memory degraded ring, and IP-08 repository integration.
-   - Cách kiểm tra: Run `go test ./host/diagnostics/... -run 'Test(Redaction|RetentionBoundaries|PersistenceDegraded)$'` with `fixtures/diagnostics/redaction-sensitive-fields.json` and `fixtures/diagnostics/retention-boundaries.json`; assert sensitive values are absent and final retained bytes are `<= 10_000_000`.
-4. `test(diagnostics): cover runtime observability acceptance`
-   - Thay đổi: Add focused regression and contract tests for every transition/error/repair/retention boundary and the extension health payload consumer seam.
-   - Cách kiểm tra: Run `go test ./host/... -run 'TestDiagnostics'` and `node --test tests/diagnostics/*.test.mjs` from repository root with `INFOBOARD_DIAGNOSTIC_FIXTURES=fixtures/diagnostics`; inspect the emitted status, retryability, and redaction assertions.
+1. `feat(diagnostics): implement ip-16-t01`
+   - Task IDs: `IP-16-T01`.
+   - Owned target paths: host/diagnostics/health.go.
+   - Behavior: Việc 1 — Define the health state machine in `host/diagnostics/health.go` (to-create):
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-16 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 1 — Define the health state machine in `host/diagnostics/health.go` (to-create):
+   - Dependency gate: all index.md dependencies for IP-16 have merged to dev; phase work branch starts from latest origin/dev.
+
+2. `feat(diagnostics): implement ip-16-t02`
+   - Task IDs: `IP-16-T02`.
+   - Owned target paths: `host/diagnostics/` (to-create), `fixtures/diagnostics/` (to-create), `tests/diagnostics/` (to-create).
+   - Behavior: Việc 2 — Define freshness and health payload semantics at the IP-07 boundary:
+   - Fixture and command: IP-07; run `the exact phase-16 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 2 — Define freshness and health payload semantics at the IP-07 boundary:
+   - Dependency gate: all index.md dependencies for IP-16 have merged to dev; phase work branch starts from latest origin/dev.
+
+3. `feat(diagnostics): implement ip-16-t03`
+   - Task IDs: `IP-16-T03`.
+   - Owned target paths: host/diagnostics/events.go.
+   - Behavior: Việc 3 — Implement the structured diagnostic event contract in `host/diagnostics/events.go` (to-create):
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-16 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 3 — Implement the structured diagnostic event contract in `host/diagnostics/events.go` (to-create):
+   - Dependency gate: all index.md dependencies for IP-16 have merged to dev; phase work branch starts from latest origin/dev.
+
+4. `feat(diagnostics): implement ip-16-t04`
+   - Task IDs: `IP-16-T04`.
+   - Owned target paths: host/diagnostics/errors.go.
+   - Behavior: Việc 4 — Map error classes to user-safe status and retryability in `host/diagnostics/errors.go` (to-create):
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-16 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 4 — Map error classes to user-safe status and retryability in `host/diagnostics/errors.go` (to-create):
+   - Dependency gate: all index.md dependencies for IP-16 have merged to dev; phase work branch starts from latest origin/dev.
+
+5. `feat(diagnostics): implement ip-16-t05`
+   - Task IDs: `IP-16-T05`.
+   - Owned target paths: host/diagnostics/redaction.go.
+   - Behavior: Việc 5 — Implement redaction and privacy-safe structured logging in `host/diagnostics/redaction.go` (to-create):
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-16 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 5 — Implement redaction and privacy-safe structured logging in `host/diagnostics/redaction.go` (to-create):
+   - Dependency gate: all index.md dependencies for IP-16 have merged to dev; phase work branch starts from latest origin/dev.
+
+6. `feat(diagnostics): implement ip-16-t06`
+   - Task IDs: `IP-16-T06`.
+   - Owned target paths: host/diagnostics/repair.go.
+   - Behavior: Việc 6 — Add bounded repair orchestration in `host/diagnostics/repair.go` (to-create):
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-16 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 6 — Add bounded repair orchestration in `host/diagnostics/repair.go` (to-create):
+   - Dependency gate: all index.md dependencies for IP-16 have merged to dev; phase work branch starts from latest origin/dev.
+
+7. `feat(diagnostics): implement ip-16-t07`
+   - Task IDs: `IP-16-T07`.
+   - Owned target paths: host/diagnostics/retention.go.
+   - Behavior: Việc 7 — Enforce diagnostics retention in `host/diagnostics/retention.go` (to-create) through the IP-08 repository seam:
+   - Fixture and command: IP-08; run `the exact phase-16 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 7 — Enforce diagnostics retention in `host/diagnostics/retention.go` (to-create) through the IP-08 repository seam:
+   - Dependency gate: all index.md dependencies for IP-16 have merged to dev; phase work branch starts from latest origin/dev.
+
+8. `test(diagnostics): implement ip-16-t08`
+   - Task IDs: `IP-16-T08`.
+   - Owned target paths: `host/diagnostics/` (to-create), `fixtures/diagnostics/` (to-create), `tests/diagnostics/` (to-create).
+   - Behavior: Việc 8 — Create the fixture and test seams:
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-16 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 8 — Create the fixture and test seams:
+   - Dependency gate: all index.md dependencies for IP-16 have merged to dev; phase work branch starts from latest origin/dev.
 
 ## 8. Kiểm chứng và nghiệm thu
 

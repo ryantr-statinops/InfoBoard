@@ -1,7 +1,7 @@
 # Phase 10 — Lexical normalization and index
 
 > Plan ID: IP-10
-> Status: not_started
+> Status: See README.md execution tracker
 > Execution owner: Go host lexical-index owner
 > Dependencies: IP-02, IP-05, IP-09
 > Parallel boundary: IP-11 and IP-12 consume this phase's index and normalized-query contracts; no shared implementation paths
@@ -69,29 +69,107 @@
 
 ## 6. Công việc triển khai
 
-- [ ] Chốt normalizer version và field limits trong one shared contract. Implement valid UTF-8 checking, NFKC, full Unicode case folding, control/whitespace policy and scalar-safe truncation before token allocation; return a bounded typed outcome for invalid input.
-- [ ] Implement separate display/search forms. Preserve sanitized display text and normalized search text independently; retain field name, token positions and source provenance without retaining unbounded raw input.
-- [ ] Implement field-aware tokenization. Split title/labels on Unicode whitespace/punctuation; emit domain labels and URL host/path segments; preserve meaningful separators as boundaries; do not apply a generic stop-word list; keep state labels explicit and stable.
-- [ ] Define and enforce the field table: title, URL, domain, window label, group label, pinned, active, eligibility. Ensure missing optional fields produce no fabricated token, while `pinned`/`active` states remain queryable and `eligible=false` cannot produce postings.
-- [ ] Implement staged index build from one authoritative snapshot. Validate profile and revision at the boundary, reject duplicate stable IDs deterministically, build sorted postings/record metadata off to the side, publish one immutable ready state, and expose counts plus normalizer/model versions.
-- [ ] Implement rebuild transitions and failure behavior. Emit `rebuilding` before work, reject queries for the incoming unknown/rebuilding revision, atomically publish `ready` or a safe failure state, and make an empty snapshot observable as `ready` with zero records rather than as host failure.
-- [ ] Implement bounded query preparation. Treat empty and whitespace-only queries equivalently; reject malformed UTF-8/control/phrase-delimiter input and overlong queries without changing the current index; return normalized tokens and phrase boundaries for IP-11/IP-12.
-- [ ] Add fixture IDs and expected outputs: `FX-LEX-UNICODE-CASE`, `FX-LEX-URL-SEGMENTS`, `FX-LEX-FIELD-BOUNDS`, `FX-LEX-STATE-PROVENANCE`, `FX-LEX-EMPTY`, `FX-LEX-MALFORMED`, `FX-LEX-REBUILD`, `FX-LEX-DETERMINISTIC`, `FX-LEX-1000-TABS`. Register these IDs in the shared fixture catalog owned by IP-01 rather than creating a second fixture naming system.
-- [ ] Add tests that repeat the same projection/query several times and compare normalized representation, postings digest, candidate IDs and rebuild status; assert map insertion order and input record order cannot change output.
-- [ ] Add a package-boundary check that the lexical index has no network client, SQL/storage, browser API, page-evaluation or process-execution dependency. Exercise the optional persistence failure seam and prove the in-memory lexical result remains available.
-- [ ] Add benchmark data for 1,000 eligible tabs and a 64-scalar query. Measure p50/p95/p99 and allocations for normalization, build and query separately; fail the query-to-render harness when p95 exceeds 50 ms on the declared reference environment.
+- [ ] `IP-10-T01` Chốt normalizer version và field limits trong one shared contract. Implement valid UTF-8 checking, NFKC, full Unicode case folding, control/whitespace policy and scalar-safe truncation before token allocation; return a bounded typed outcome for invalid input.
+- [ ] `IP-10-T02` Implement separate display/search forms. Preserve sanitized display text and normalized search text independently; retain field name, token positions and source provenance without retaining unbounded raw input.
+- [ ] `IP-10-T03` Implement field-aware tokenization. Split title/labels on Unicode whitespace/punctuation; emit domain labels and URL host/path segments; preserve meaningful separators as boundaries; do not apply a generic stop-word list; keep state labels explicit and stable.
+- [ ] `IP-10-T04` Define and enforce the field table: title, URL, domain, window label, group label, pinned, active, eligibility. Ensure missing optional fields produce no fabricated token, while `pinned`/`active` states remain queryable and `eligible=false` cannot produce postings.
+- [ ] `IP-10-T05` Implement staged index build from one authoritative snapshot. Validate profile and revision at the boundary, reject duplicate stable IDs deterministically, build sorted postings/record metadata off to the side, publish one immutable ready state, and expose counts plus normalizer/model versions.
+- [ ] `IP-10-T06` Implement rebuild transitions and failure behavior. Emit `rebuilding` before work, reject queries for the incoming unknown/rebuilding revision, atomically publish `ready` or a safe failure state, and make an empty snapshot observable as `ready` with zero records rather than as host failure.
+- [ ] `IP-10-T07` Implement bounded query preparation. Treat empty and whitespace-only queries equivalently; reject malformed UTF-8/control/phrase-delimiter input and overlong queries without changing the current index; return normalized tokens and phrase boundaries for IP-11/IP-12.
+- [ ] `IP-10-T08` Add fixture IDs and expected outputs: `FX-LEX-UNICODE-CASE`, `FX-LEX-URL-SEGMENTS`, `FX-LEX-FIELD-BOUNDS`, `FX-LEX-STATE-PROVENANCE`, `FX-LEX-EMPTY`, `FX-LEX-MALFORMED`, `FX-LEX-REBUILD`, `FX-LEX-DETERMINISTIC`, `FX-LEX-1000-TABS`. Register these IDs in the shared fixture catalog owned by IP-01 rather than creating a second fixture naming system.
+- [ ] `IP-10-T09` Add tests that repeat the same projection/query several times and compare normalized representation, postings digest, candidate IDs and rebuild status; assert map insertion order and input record order cannot change output.
+- [ ] `IP-10-T10` Add a package-boundary check that the lexical index has no network client, SQL/storage, browser API, page-evaluation or process-execution dependency. Exercise the optional persistence failure seam and prove the in-memory lexical result remains available.
+- [ ] `IP-10-T11` Add benchmark data for 1,000 eligible tabs and a 64-scalar query. Measure p50/p95/p99 and allocations for normalization, build and query separately; fail the query-to-render harness when p95 exceeds 50 ms on the declared reference environment.
 
 ## 7. Kế hoạch commit
 
-1. `feat(host-index): add bounded lexical normalization`
-   - Thay đổi: create the normalization policy, field limits, display/search forms, tokenizer, query validation and Unicode/URL fixtures under the planned `host/index/` and `fixtures/lexical/` boundaries.
-   - Cách kiểm tra: from repository root, run `go test ./host/index -run 'TestNormalize|TestTokenize|TestPrepareQuery|TestFieldBounds' -count=1` and compare fixture digests for `FX-LEX-UNICODE-CASE`, `FX-LEX-URL-SEGMENTS`, `FX-LEX-FIELD-BOUNDS` and `FX-LEX-MALFORMED`.
-2. `feat(host-index): publish atomic lexical rebuilds`
-   - Thay đổi: create immutable record/posting state, snapshot build/rebuild transitions, empty projection handling, revision/status checks and deterministic publication.
-   - Cách kiểm tra: run `go test ./host/index -run 'Test(IndexBuild|Rebuild|EmptyProjection|RevisionVisibility|Deterministic)' -count=1 -v` with `fixtures/lexical/FX-LEX-REBUILD.json` and assert `rebuilding -> ready`, zero-record empty readiness and identical digests.
-3. `test(host-index): cover bounded query performance and isolation`
-   - Thay đổi: add `tests/index/` integration/benchmark coverage, no-external-I/O boundary checks and persistence-degraded lexical-path fixture.
-   - Cách kiểm tra: run `go test ./tests/index -run 'Test(Deterministic|NoExternalIO|PersistenceDegraded|Adversarial)' -count=1`; run the 1,000-tab benchmark command in section 8 and require the documented p95 threshold.
+1. `feat(index): implement ip-10-t01`
+   - Task IDs: `IP-10-T01`.
+   - Owned target paths: `host/index/` (to-create), `fixtures/lexical/` (to-create), `tests/index/` (to-create).
+   - Behavior: Chốt normalizer version và field limits trong one shared contract. Implement valid UTF-8 checking, NFKC, full Unicode case folding, control/whitespace policy and scalar-safe truncation before token allocation; return a bounded typed outcome for invalid input.
+   - Fixture and command: UTF-8; run `go test ./host/index -run 'TestNormalize|TestTokenize|TestPrepareQuery|TestFieldBounds|TestIndexBuild|TestRebuild|TestEmptyProjection|TestRevisionVisibility|TestDeterministic' -count=1 -v`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Chốt normalizer version và field limits trong one shared contract. Implement valid UTF-8 checking, NFKC, full Unicode case folding, control/whitespace policy and scalar-safe truncation before token allocation; return a bounded typed outcome for invalid input.
+   - Dependency gate: all index.md dependencies for IP-10 have merged to dev; phase work branch starts from latest origin/dev.
+
+2. `feat(index): implement ip-10-t02`
+   - Task IDs: `IP-10-T02`.
+   - Owned target paths: `host/index/` (to-create), `fixtures/lexical/` (to-create), `tests/index/` (to-create).
+   - Behavior: Implement separate display/search forms. Preserve sanitized display text and normalized search text independently; retain field name, token positions and source provenance without retaining unbounded raw input.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/index -run 'TestNormalize|TestTokenize|TestPrepareQuery|TestFieldBounds|TestIndexBuild|TestRebuild|TestEmptyProjection|TestRevisionVisibility|TestDeterministic' -count=1 -v`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Implement separate display/search forms. Preserve sanitized display text and normalized search text independently; retain field name, token positions and source provenance without retaining unbounded raw input.
+   - Dependency gate: all index.md dependencies for IP-10 have merged to dev; phase work branch starts from latest origin/dev.
+
+3. `feat(index): implement ip-10-t03`
+   - Task IDs: `IP-10-T03`.
+   - Owned target paths: `host/index/` (to-create), `fixtures/lexical/` (to-create), `tests/index/` (to-create).
+   - Behavior: Implement field-aware tokenization. Split title/labels on Unicode whitespace/punctuation; emit domain labels and URL host/path segments; preserve meaningful separators as boundaries; do not apply a generic stop-word list; keep state labels explicit and stable.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/index -run 'TestNormalize|TestTokenize|TestPrepareQuery|TestFieldBounds|TestIndexBuild|TestRebuild|TestEmptyProjection|TestRevisionVisibility|TestDeterministic' -count=1 -v`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Implement field-aware tokenization. Split title/labels on Unicode whitespace/punctuation; emit domain labels and URL host/path segments; preserve meaningful separators as boundaries; do not apply a generic stop-word list; keep state labels explicit and stable.
+   - Dependency gate: all index.md dependencies for IP-10 have merged to dev; phase work branch starts from latest origin/dev.
+
+4. `feat(index): implement ip-10-t04`
+   - Task IDs: `IP-10-T04`.
+   - Owned target paths: `host/index/` (to-create), `fixtures/lexical/` (to-create), `tests/index/` (to-create).
+   - Behavior: Define and enforce the field table: title, URL, domain, window label, group label, pinned, active, eligibility. Ensure missing optional fields produce no fabricated token, while `pinned`/`active` states remain queryable and `eligible=false` cannot produce postings.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/index -run 'TestNormalize|TestTokenize|TestPrepareQuery|TestFieldBounds|TestIndexBuild|TestRebuild|TestEmptyProjection|TestRevisionVisibility|TestDeterministic' -count=1 -v`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Define and enforce the field table: title, URL, domain, window label, group label, pinned, active, eligibility. Ensure missing optional fields produce no fabricated token, while `pinned`/`active` states remain queryable and `eligible=false` cannot produce postings.
+   - Dependency gate: all index.md dependencies for IP-10 have merged to dev; phase work branch starts from latest origin/dev.
+
+5. `feat(index): implement ip-10-t05`
+   - Task IDs: `IP-10-T05`.
+   - Owned target paths: `host/index/` (to-create), `fixtures/lexical/` (to-create), `tests/index/` (to-create).
+   - Behavior: Implement staged index build from one authoritative snapshot. Validate profile and revision at the boundary, reject duplicate stable IDs deterministically, build sorted postings/record metadata off to the side, publish one immutable ready state, and expose counts plus normalizer/model versions.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/index -run 'TestNormalize|TestTokenize|TestPrepareQuery|TestFieldBounds|TestIndexBuild|TestRebuild|TestEmptyProjection|TestRevisionVisibility|TestDeterministic' -count=1 -v`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Implement staged index build from one authoritative snapshot. Validate profile and revision at the boundary, reject duplicate stable IDs deterministically, build sorted postings/record metadata off to the side, publish one immutable ready state, and expose counts plus normalizer/model versions.
+   - Dependency gate: all index.md dependencies for IP-10 have merged to dev; phase work branch starts from latest origin/dev.
+
+6. `feat(index): implement ip-10-t06`
+   - Task IDs: `IP-10-T06`.
+   - Owned target paths: `host/index/` (to-create), `fixtures/lexical/` (to-create), `tests/index/` (to-create).
+   - Behavior: Implement rebuild transitions and failure behavior. Emit `rebuilding` before work, reject queries for the incoming unknown/rebuilding revision, atomically publish `ready` or a safe failure state, and make an empty snapshot observable as `ready` with zero records rather than as host failure.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/index -run 'TestNormalize|TestTokenize|TestPrepareQuery|TestFieldBounds|TestIndexBuild|TestRebuild|TestEmptyProjection|TestRevisionVisibility|TestDeterministic' -count=1 -v`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Implement rebuild transitions and failure behavior. Emit `rebuilding` before work, reject queries for the incoming unknown/rebuilding revision, atomically publish `ready` or a safe failure state, and make an empty snapshot observable as `ready` with zero records rather than as host failure.
+   - Dependency gate: all index.md dependencies for IP-10 have merged to dev; phase work branch starts from latest origin/dev.
+
+7. `feat(index): implement ip-10-t07`
+   - Task IDs: `IP-10-T07`.
+   - Owned target paths: `host/index/` (to-create), `fixtures/lexical/` (to-create), `tests/index/` (to-create).
+   - Behavior: Implement bounded query preparation. Treat empty and whitespace-only queries equivalently; reject malformed UTF-8/control/phrase-delimiter input and overlong queries without changing the current index; return normalized tokens and phrase boundaries for IP-11/IP-12.
+   - Fixture and command: UTF-8, IP-11, IP-12; run `go test ./host/index -run 'TestNormalize|TestTokenize|TestPrepareQuery|TestFieldBounds|TestIndexBuild|TestRebuild|TestEmptyProjection|TestRevisionVisibility|TestDeterministic' -count=1 -v`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Implement bounded query preparation. Treat empty and whitespace-only queries equivalently; reject malformed UTF-8/control/phrase-delimiter input and overlong queries without changing the current index; return normalized tokens and phrase boundaries for IP-11/IP-12.
+   - Dependency gate: all index.md dependencies for IP-10 have merged to dev; phase work branch starts from latest origin/dev.
+
+8. `test(index): implement ip-10-t08`
+   - Task IDs: `IP-10-T08`.
+   - Owned target paths: `host/index/` (to-create), `fixtures/lexical/` (to-create), `tests/index/` (to-create).
+   - Behavior: Add fixture IDs and expected outputs: `FX-LEX-UNICODE-CASE`, `FX-LEX-URL-SEGMENTS`, `FX-LEX-FIELD-BOUNDS`, `FX-LEX-STATE-PROVENANCE`, `FX-LEX-EMPTY`, `FX-LEX-MALFORMED`, `FX-LEX-REBUILD`, `FX-LEX-DETERMINISTIC`, `FX-LEX-1000-TABS`. Register these IDs in the shared fixture catalog owned by IP-01 rather than creating a second fixture naming system.
+   - Fixture and command: FX-LEX-UNICODE-CASE, FX-LEX-URL-SEGMENTS, FX-LEX-FIELD-BOUNDS, FX-LEX-STATE-PROVENANCE, FX-LEX-EMPTY, FX-LEX-MALFORMED, FX-LEX-REBUILD, FX-LEX-DETERMINISTIC, FX-LEX-1000-TABS, IP-01; run `go test ./host/index -run 'TestNormalize|TestTokenize|TestPrepareQuery|TestFieldBounds|TestIndexBuild|TestRebuild|TestEmptyProjection|TestRevisionVisibility|TestDeterministic' -count=1 -v`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Add fixture IDs and expected outputs: `FX-LEX-UNICODE-CASE`, `FX-LEX-URL-SEGMENTS`, `FX-LEX-FIELD-BOUNDS`, `FX-LEX-STATE-PROVENANCE`, `FX-LEX-EMPTY`, `FX-LEX-MALFORMED`, `FX-LEX-REBUILD`, `FX-LEX-DETERMINISTIC`, `FX-LEX-1000-TABS`. Register these IDs in the shared fixture catalog owned by IP-01 rather than creating a second fixture naming system.
+   - Dependency gate: all index.md dependencies for IP-10 have merged to dev; phase work branch starts from latest origin/dev.
+
+9. `test(index): implement ip-10-t09`
+   - Task IDs: `IP-10-T09`.
+   - Owned target paths: `host/index/` (to-create), `fixtures/lexical/` (to-create), `tests/index/` (to-create).
+   - Behavior: Add tests that repeat the same projection/query several times and compare normalized representation, postings digest, candidate IDs and rebuild status; assert map insertion order and input record order cannot change output.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/index -run 'TestNormalize|TestTokenize|TestPrepareQuery|TestFieldBounds|TestIndexBuild|TestRebuild|TestEmptyProjection|TestRevisionVisibility|TestDeterministic' -count=1 -v`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Add tests that repeat the same projection/query several times and compare normalized representation, postings digest, candidate IDs and rebuild status; assert map insertion order and input record order cannot change output.
+   - Dependency gate: all index.md dependencies for IP-10 have merged to dev; phase work branch starts from latest origin/dev.
+
+10. `feat(index): implement ip-10-t10`
+   - Task IDs: `IP-10-T10`.
+   - Owned target paths: `host/index/` (to-create), `fixtures/lexical/` (to-create), `tests/index/` (to-create).
+   - Behavior: Add a package-boundary check that the lexical index has no network client, SQL/storage, browser API, page-evaluation or process-execution dependency. Exercise the optional persistence failure seam and prove the in-memory lexical result remains available.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/index -run 'TestNormalize|TestTokenize|TestPrepareQuery|TestFieldBounds|TestIndexBuild|TestRebuild|TestEmptyProjection|TestRevisionVisibility|TestDeterministic' -count=1 -v`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Add a package-boundary check that the lexical index has no network client, SQL/storage, browser API, page-evaluation or process-execution dependency. Exercise the optional persistence failure seam and prove the in-memory lexical result remains available.
+   - Dependency gate: all index.md dependencies for IP-10 have merged to dev; phase work branch starts from latest origin/dev.
+
+11. `test(index): implement ip-10-t11`
+   - Task IDs: `IP-10-T11`.
+   - Owned target paths: `host/index/` (to-create), `fixtures/lexical/` (to-create), `tests/index/` (to-create).
+   - Behavior: Add benchmark data for 1,000 eligible tabs and a 64-scalar query. Measure p50/p95/p99 and allocations for normalization, build and query separately; fail the query-to-render harness when p95 exceeds 50 ms on the declared reference environment.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/index -run 'TestNormalize|TestTokenize|TestPrepareQuery|TestFieldBounds|TestIndexBuild|TestRebuild|TestEmptyProjection|TestRevisionVisibility|TestDeterministic' -count=1 -v`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Add benchmark data for 1,000 eligible tabs and a 64-scalar query. Measure p50/p95/p99 and allocations for normalization, build and query separately; fail the query-to-render harness when p95 exceeds 50 ms on the declared reference environment.
+   - Dependency gate: all index.md dependencies for IP-10 have merged to dev; phase work branch starts from latest origin/dev.
 
 ## 8. Kiểm chứng và nghiệm thu
 

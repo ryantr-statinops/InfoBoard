@@ -1,7 +1,7 @@
 # Phase 20 — Release acceptance and handoff
 
 > Plan ID: IP-20
-> Status: not_started
+> Status: See README.md execution tracker
 > Execution owner: Release acceptance and handoff owner
 > Dependencies: IP-01, IP-02, IP-03, IP-04, IP-05, IP-06, IP-07, IP-08, IP-09, IP-10, IP-11, IP-12, IP-13, IP-14, IP-15, IP-16, IP-17, IP-18, IP-19
 > Parallel boundary: None; runs after IP-01 through IP-19 have produced their contracts and evidence
@@ -75,23 +75,23 @@
 
 ### 6.1 Freeze candidate identity and compatibility
 
-- [ ] Create `release-candidate.json` with `release_version`, `release_commit`, `source_tree_hash`, `extension_version`, `host_version`, `protocol_major`, `protocol_minor`, `schema_version`, `ranking_model_version`, `fixture_seed`, browser package IDs, Native Messaging host name, supported browser/OS matrix, and UTC generation time.
-- [ ] Require the candidate identity to include the exact Chrome and Edge extension IDs and the expected `allowed_origins` for each host manifest. A host must fail closed on an extension ID, browser family, profile identity, protocol major, schema version, or ranking model mismatch; a compatible additive protocol revision must be explicitly listed rather than inferred.
-- [ ] Create `compatibility-policy.json` with a matrix for every extension package × host installer × browser family × OS cell. Each row declares minimum/maximum supported browser versions, host/platform, protocol major/minor range, schema migration range, ranking model version, origin allowlist, and whether upgrade, repair, or rollback is permitted.
-- [ ] Reject a candidate when extension and host versions are not the declared compatible pair, when the host manifest is not generated from the candidate configuration, when a package hash differs from the artifact manifest, or when a required matrix cell has no evidence row. Record the exact mismatch and repair owner.
+- [ ] `IP-20-T01` Create `release-candidate.json` with `release_version`, `release_commit`, `source_tree_hash`, `extension_version`, `host_version`, `protocol_major`, `protocol_minor`, `schema_version`, `ranking_model_version`, `fixture_seed`, browser package IDs, Native Messaging host name, supported browser/OS matrix, and UTC generation time.
+- [ ] `IP-20-T02` Require the candidate identity to include the exact Chrome and Edge extension IDs and the expected `allowed_origins` for each host manifest. A host must fail closed on an extension ID, browser family, profile identity, protocol major, schema version, or ranking model mismatch; a compatible additive protocol revision must be explicitly listed rather than inferred.
+- [ ] `IP-20-T03` Create `compatibility-policy.json` with a matrix for every extension package × host installer × browser family × OS cell. Each row declares minimum/maximum supported browser versions, host/platform, protocol major/minor range, schema migration range, ranking model version, origin allowlist, and whether upgrade, repair, or rollback is permitted.
+- [ ] `IP-20-T04` Reject a candidate when extension and host versions are not the declared compatible pair, when the host manifest is not generated from the candidate configuration, when a package hash differs from the artifact manifest, or when a required matrix cell has no evidence row. Record the exact mismatch and repair owner.
 
 ### 6.2 Build the artifact and checksum manifest
 
-- [ ] Create `artifact-manifest.json` with one row for each candidate artifact: Chrome extension package, Edge extension package, Linux host binary and installer, macOS host binary and installer, Windows host binary and installer, browser-specific Native Messaging manifests, release configuration, evidence index, and release report. Do not mark a generated artifact accepted until its bytes, path, version, source commit, and SHA-256 match the candidate.
-- [ ] Generate `SHA256SUMS` from the final bytes and verify it in a clean checkout with `sha256sum --check`. Where a platform lacks `sha256sum`, use an equivalent tool and record its version and command in the report.
-- [ ] Record signing or provenance evidence without putting private signing material in the repository. The report stores signer/key identifier, build environment identifier, provenance reference, and verification result; a missing signature is a declared policy decision, not an unrecorded assumption.
-- [ ] Check artifact ownership and package contents against IP-17 and IP-18: exact extension permissions, exact Native Messaging origins, restrictive host file permissions, no unexpected symlinks/path traversal, no extra data source, and no network or loopback requirement in the normal path.
-- [ ] Include an artifact-to-cell map so each of the six IP-19 rows names the exact extension package, host installer/binary, Native Messaging manifest, source commit, fixture hash, and checksum used. Replaying another artifact under the same cell ID is invalid.
+- [ ] `IP-20-T05` Create `artifact-manifest.json` with one row for each candidate artifact: Chrome extension package, Edge extension package, Linux host binary and installer, macOS host binary and installer, Windows host binary and installer, browser-specific Native Messaging manifests, release configuration, evidence index, and release report. Do not mark a generated artifact accepted until its bytes, path, version, source commit, and SHA-256 match the candidate.
+- [ ] `IP-20-T06` Generate `SHA256SUMS` from the final bytes and verify it in a clean checkout with `sha256sum --check`. Where a platform lacks `sha256sum`, use an equivalent tool and record its version and command in the report.
+- [ ] `IP-20-T07` Record signing or provenance evidence without putting private signing material in the repository. The report stores signer/key identifier, build environment identifier, provenance reference, and verification result; a missing signature is a declared policy decision, not an unrecorded assumption.
+- [ ] `IP-20-T08` Check artifact ownership and package contents against IP-17 and IP-18: exact extension permissions, exact Native Messaging origins, restrictive host file permissions, no unexpected symlinks/path traversal, no extra data source, and no network or loopback requirement in the normal path.
+- [ ] `IP-20-T09` Include an artifact-to-cell map so each of the six IP-19 rows names the exact extension package, host installer/binary, Native Messaging manifest, source commit, fixture hash, and checksum used. Replaying another artifact under the same cell ID is invalid.
 
 ### 6.3 Generate the final FR/NFR/operational traceability matrix
 
-- [ ] Generate one row for each FR-001 through FR-015 and NFR-001 through NFR-010. Each row contains `primary_owner` from the implementation index, `supporting_phases`, `acceptance_signal`, `evidence_ids`, `evidence_paths`, `status`, `blocking_defect_ids`, and reviewer disposition. IP-20 is the primary owner only for release aggregation; it must not overwrite the mapped phase owner.
-- [ ] Use the following release-facing acceptance signals and primary owners:
+- [ ] `IP-20-T10` Generate one row for each FR-001 through FR-015 and NFR-001 through NFR-010. Each row contains `primary_owner` from the implementation index, `supporting_phases`, `acceptance_signal`, `evidence_ids`, `evidence_paths`, `status`, `blocking_defect_ids`, and reviewer disposition. IP-20 is the primary owner only for release aggregation; it must not overwrite the mapped phase owner.
+- [ ] `IP-20-T11` Use the following release-facing acceptance signals and primary owners:
 
 | Requirement | Primary owner | IP-20 supporting evidence and final signal |
 |---|---|---|
@@ -121,47 +121,240 @@
 | NFR-009 | IP-17 | Privacy reports; excluded data sources are not requested, collected, persisted, or transmitted. |
 | NFR-010 | IP-19 | Six-row compatibility report; Chrome and Edge each pass Linux, macOS, and Windows or have a formally accepted exception. |
 
-- [ ] Add operational rows for bounded protocol timeouts and typed failures (IP-07), transactional/versioned schema changes (IP-08), diagnosable redacted transitions (IP-16), permission/retention enforcement (IP-17), idempotent installer/updater/repair/rollback/uninstaller behavior (IP-18), and release acceptance/handoff (IP-20). Every row has an observable signal and an evidence path.
-- [ ] Require `status` to be exactly `PASS`, `FAIL`, or `BLOCKED`. A `BLOCKED` row names the missing capability, owner, attempted command, decision date, and whether the block is release-blocking. A `FAIL` row names a defect and owning phase. No blank, “not run,” or aggregate-only status is accepted.
+- [ ] `IP-20-T12` Add operational rows for bounded protocol timeouts and typed failures (IP-07), transactional/versioned schema changes (IP-08), diagnosable redacted transitions (IP-16), permission/retention enforcement (IP-17), idempotent installer/updater/repair/rollback/uninstaller behavior (IP-18), and release acceptance/handoff (IP-20). Every row has an observable signal and an evidence path.
+- [ ] `IP-20-T13` Require `status` to be exactly `PASS`, `FAIL`, or `BLOCKED`. A `BLOCKED` row names the missing capability, owner, attempted command, decision date, and whether the block is release-blocking. A `FAIL` row names a defect and owning phase. No blank, “not run,” or aggregate-only status is accepted.
 
 ### 6.4 Apply release gates and defect disposition
 
-- [ ] Build a gate ledger containing: source reproducibility, artifact integrity, version/protocol/schema/ranking compatibility, requirement traceability, six-cell browser compatibility, performance, accessibility, privacy/security, recovery, install/upgrade/repair/reset/uninstall, documentation consistency, rollback rehearsal, and handoff completeness.
-- [ ] Mark each gate PASS only when its observable evidence, artifact hashes, and environment identity are present. Mark FAIL for any unmet contract or unresolved defect. Mark BLOCKED for unavailable evidence with a named owner; a blocked required gate prevents release unless a documented exception is explicitly approved by the release reviewer and policy permits exceptions.
-- [ ] Treat every unresolved in-scope correctness, security, privacy, compatibility, lifecycle, or data-boundary defect as release-blocking. A defect is resolved only when its owning phase supplies a fix, rerun evidence, and updated hash/traceability references. Cosmetic or exploratory findings are recorded separately and cannot mask a required failure.
-- [ ] Reconcile the final report with IP-19: no matrix cell may reference a different artifact, fixture seed, source commit, protocol version, schema version, or ranking model than the candidate manifest. Reconcile release notes and support text with the canonical refactor documents; terminology or behavior drift is a documentation gate failure.
+- [ ] `IP-20-T14` Build a gate ledger containing: source reproducibility, artifact integrity, version/protocol/schema/ranking compatibility, requirement traceability, six-cell browser compatibility, performance, accessibility, privacy/security, recovery, install/upgrade/repair/reset/uninstall, documentation consistency, rollback rehearsal, and handoff completeness.
+- [ ] `IP-20-T15` Mark each gate PASS only when its observable evidence, artifact hashes, and environment identity are present. Mark FAIL for any unmet contract or unresolved defect. Mark BLOCKED for unavailable evidence with a named owner; a blocked required gate prevents release unless a documented exception is explicitly approved by the release reviewer and policy permits exceptions.
+- [ ] `IP-20-T16` Treat every unresolved in-scope correctness, security, privacy, compatibility, lifecycle, or data-boundary defect as release-blocking. A defect is resolved only when its owning phase supplies a fix, rerun evidence, and updated hash/traceability references. Cosmetic or exploratory findings are recorded separately and cannot mask a required failure.
+- [ ] `IP-20-T17` Reconcile the final report with IP-19: no matrix cell may reference a different artifact, fixture seed, source commit, protocol version, schema version, or ranking model than the candidate manifest. Reconcile release notes and support text with the canonical refactor documents; terminology or behavior drift is a documentation gate failure.
 
 ### 6.5 Rehearse rollback and recovery
 
-- [ ] Run `./tests/release/phase-20/rollback-drill --candidate <id> --previous <id> --profile-fixture fixtures/release/phase-20/profile-fixture.json --artifact-manifest fixtures/release/phase-20/artifact-manifest.json --output artifacts/release/phase-20/rollback.json` on a disposable browser profile and disposable host installation for each OS class.
-- [ ] Verify rollback order: stop the candidate host session, preserve or transactionally downgrade only a compatible schema, install the previous extension/host pair, restore the previous browser-specific Native Messaging manifest and exact origins, run hello/health/snapshot smoke checks, and return to a healthy projection without closing tabs or changing unrelated browser state.
-- [ ] Verify incompatible downgrade fails closed before tab data is accepted, reports a repairable state, leaves the candidate database recoverable, and provides the documented forward-repair path. Never delete the database or broaden permissions to force a downgrade.
-- [ ] Record rollback artifact hashes, commands, before/after ownership manifests, health transitions, projection revision, result checksum, process state, and any migration/quarantine action. A successful rollback is evidence; it does not authorize release when another gate fails.
+- [ ] `IP-20-T18` Run `./tests/release/phase-20/rollback-drill --candidate <id> --previous <id> --profile-fixture fixtures/release/phase-20/profile-fixture.json --artifact-manifest fixtures/release/phase-20/artifact-manifest.json --output artifacts/release/phase-20/rollback.json` on a disposable browser profile and disposable host installation for each OS class.
+- [ ] `IP-20-T19` Verify rollback order: stop the candidate host session, preserve or transactionally downgrade only a compatible schema, install the previous extension/host pair, restore the previous browser-specific Native Messaging manifest and exact origins, run hello/health/snapshot smoke checks, and return to a healthy projection without closing tabs or changing unrelated browser state.
+- [ ] `IP-20-T20` Verify incompatible downgrade fails closed before tab data is accepted, reports a repairable state, leaves the candidate database recoverable, and provides the documented forward-repair path. Never delete the database or broaden permissions to force a downgrade.
+- [ ] `IP-20-T21` Record rollback artifact hashes, commands, before/after ownership manifests, health transitions, projection revision, result checksum, process state, and any migration/quarantine action. A successful rollback is evidence; it does not authorize release when another gate fails.
 
 ### 6.6 Complete reviewer sign-off and handoff
 
-- [ ] Create a reviewer record with release candidate ID, source commit, artifact-manifest SHA-256, gate ledger SHA-256, requirement-map SHA-256, compatibility result, rollback result, unresolved in-scope defect count, accepted exceptions, reviewer names/roles, decision (`APPROVE`, `REJECT`, or `APPROVE_WITH_EXCEPTION`), timestamp, and next action.
-- [ ] Require independent review from release/change-review, implementation/code-review, testing/verification, security/privacy, and product/operations roles. Each reviewer records inspected evidence paths, findings by severity, and explicit disposition; no self-approval by the release builder satisfies the independent review requirement.
-- [ ] Produce `handoff/README.txt` with the exact clean-checkout replay command, artifact retrieval identifiers, checksum verification command, compatibility/version table, support diagnostic collection steps, rollback command, evidence retention/expiry, known limitations, and owners. It must contain no raw tab title, URL, query, token, or secret.
-- [ ] Produce a known-limitations list distinguishing contract exclusions and non-gating environmental constraints from open in-scope defects. Every limitation states user impact, affected browser/OS cell, evidence, owner, mitigation, and whether it blocks release. No unresolved in-scope defect may appear in an approved release report.
-- [ ] Archive the final release report, manifest, checksums, traceability matrix, matrix reports, performance/accessibility/privacy/recovery evidence, rollback record, sign-offs, and source/provenance identifiers as one immutable handoff set. Record retention and deletion date for each artifact.
+- [ ] `IP-20-T22` Create a reviewer record with release candidate ID, source commit, artifact-manifest SHA-256, gate ledger SHA-256, requirement-map SHA-256, compatibility result, rollback result, unresolved in-scope defect count, accepted exceptions, reviewer names/roles, decision (`APPROVE`, `REJECT`, or `APPROVE_WITH_EXCEPTION`), timestamp, and next action.
+- [ ] `IP-20-T23` Require independent review from release/change-review, implementation/code-review, testing/verification, security/privacy, and product/operations roles. Each reviewer records inspected evidence paths, findings by severity, and explicit disposition; no self-approval by the release builder satisfies the independent review requirement.
+- [ ] `IP-20-T24` Produce `handoff/README.txt` with the exact clean-checkout replay command, artifact retrieval identifiers, checksum verification command, compatibility/version table, support diagnostic collection steps, rollback command, evidence retention/expiry, known limitations, and owners. It must contain no raw tab title, URL, query, token, or secret.
+- [ ] `IP-20-T25` Produce a known-limitations list distinguishing contract exclusions and non-gating environmental constraints from open in-scope defects. Every limitation states user impact, affected browser/OS cell, evidence, owner, mitigation, and whether it blocks release. No unresolved in-scope defect may appear in an approved release report.
+- [ ] `IP-20-T26` Archive the final release report, manifest, checksums, traceability matrix, matrix reports, performance/accessibility/privacy/recovery evidence, rollback record, sign-offs, and source/provenance identifiers as one immutable handoff set. Record retention and deletion date for each artifact.
 
 ## 7. Kế hoạch commit
 
-1. `feat(release): add candidate and compatibility manifests`
-   - Create the candidate identity, compatibility tuple, browser/OS matrix mapping, version mismatch rules, and source/artifact provenance schema under `fixtures/release/phase-20/`.
-   - Check with a deliberately mismatched extension/host/protocol fixture and a valid six-cell metadata fixture; mismatch fails closed and valid metadata passes structural validation.
-2. `feat(release): add artifact checksums and traceability ledger`
-   - Create the artifact manifest, SHA-256 generation/verification, full FR/NFR/operational requirement map, gate ledger, and evidence-reference validation under `fixtures/release/phase-20/` and `artifacts/release/phase-20/`.
-   - Check that every artifact hash, requirement ID, primary owner, evidence path, status, and blocked/failed disposition is present and that a modified byte or duplicate primary owner fails validation.
-3. `test(release): add clean replay and rollback drill`
-   - Add the clean-checkout replay wrapper and disposable-profile rollback drill with explicit candidate/previous compatibility and ownership checks under `tests/release/phase-20/`.
-   - Check valid replay and rollback end in the declared healthy state; corrupt checksum, incompatible downgrade, missing matrix row, and unresolved defect produce a non-approval result without deleting unrelated state.
-4. `docs(release): add reviewer sign-off and support handoff records`
-   - Generate the redacted release report, sign-off schema, support/rollback guide, known-limitations record, evidence retention map, and final handoff index under `artifacts/release/phase-20/handoff/`.
-   - Check a reviewer can reproduce the release gates and identify exact artifact versions and checksums from the handoff without credentials or real browser data.
+1. `test(release): implement ip-20-t01`
+   - Task IDs: `IP-20-T01`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Create `release-candidate.json` with `release_version`, `release_commit`, `source_tree_hash`, `extension_version`, `host_version`, `protocol_major`, `protocol_minor`, `schema_version`, `ranking_model_version`, `fixture_seed`, browser package IDs, Native Messaging host name, supported browser/OS matrix, and UTC generation time.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Create `release-candidate.json` with `release_version`, `release_commit`, `source_tree_hash`, `extension_version`, `host_version`, `protocol_major`, `protocol_minor`, `schema_version`, `ranking_model_version`, `fixture_seed`, browser package IDs, Native Messaging host name, supported browser/OS matrix, and UTC generation time.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
 
-The documentation change itself is committed separately as `docs(implementation): add phase 20 release acceptance and handoff` and must contain only this phase file.
+2. `feat(release): implement ip-20-t02`
+   - Task IDs: `IP-20-T02`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Require the candidate identity to include the exact Chrome and Edge extension IDs and the expected `allowed_origins` for each host manifest. A host must fail closed on an extension ID, browser family, profile identity, protocol major, schema version, or ranking model mismatch; a compatible additive protocol revision must be explicitly listed rather than inferred.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Require the candidate identity to include the exact Chrome and Edge extension IDs and the expected `allowed_origins` for each host manifest. A host must fail closed on an extension ID, browser family, profile identity, protocol major, schema version, or ranking model mismatch; a compatible additive protocol revision must be explicitly listed rather than inferred.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+3. `feat(release): implement ip-20-t03`
+   - Task IDs: `IP-20-T03`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Create `compatibility-policy.json` with a matrix for every extension package × host installer × browser family × OS cell. Each row declares minimum/maximum supported browser versions, host/platform, protocol major/minor range, schema migration range, ranking model version, origin allowlist, and whether upgrade, repair, or rollback is permitted.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Create `compatibility-policy.json` with a matrix for every extension package × host installer × browser family × OS cell. Each row declares minimum/maximum supported browser versions, host/platform, protocol major/minor range, schema migration range, ranking model version, origin allowlist, and whether upgrade, repair, or rollback is permitted.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+4. `feat(release): implement ip-20-t04`
+   - Task IDs: `IP-20-T04`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Reject a candidate when extension and host versions are not the declared compatible pair, when the host manifest is not generated from the candidate configuration, when a package hash differs from the artifact manifest, or when a required matrix cell has no evidence row. Record the exact mismatch and repair owner.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Reject a candidate when extension and host versions are not the declared compatible pair, when the host manifest is not generated from the candidate configuration, when a package hash differs from the artifact manifest, or when a required matrix cell has no evidence row. Record the exact mismatch and repair owner.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+5. `feat(release): implement ip-20-t05`
+   - Task IDs: `IP-20-T05`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Create `artifact-manifest.json` with one row for each candidate artifact: Chrome extension package, Edge extension package, Linux host binary and installer, macOS host binary and installer, Windows host binary and installer, browser-specific Native Messaging manifests, release configuration, evidence index, and release report. Do not mark a generated artifact accepted until its bytes, path, version, source commit, and SHA-256 match the candidate.
+   - Fixture and command: SHA-256; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Create `artifact-manifest.json` with one row for each candidate artifact: Chrome extension package, Edge extension package, Linux host binary and installer, macOS host binary and installer, Windows host binary and installer, browser-specific Native Messaging manifests, release configuration, evidence index, and release report. Do not mark a generated artifact accepted until its bytes, path, version, source commit, and SHA-256 match the candidate.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+6. `feat(release): implement ip-20-t06`
+   - Task IDs: `IP-20-T06`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Generate `SHA256SUMS` from the final bytes and verify it in a clean checkout with `sha256sum --check`. Where a platform lacks `sha256sum`, use an equivalent tool and record its version and command in the report.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Generate `SHA256SUMS` from the final bytes and verify it in a clean checkout with `sha256sum --check`. Where a platform lacks `sha256sum`, use an equivalent tool and record its version and command in the report.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+7. `feat(release): implement ip-20-t07`
+   - Task IDs: `IP-20-T07`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Record signing or provenance evidence without putting private signing material in the repository. The report stores signer/key identifier, build environment identifier, provenance reference, and verification result; a missing signature is a declared policy decision, not an unrecorded assumption.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Record signing or provenance evidence without putting private signing material in the repository. The report stores signer/key identifier, build environment identifier, provenance reference, and verification result; a missing signature is a declared policy decision, not an unrecorded assumption.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+8. `feat(release): implement ip-20-t08`
+   - Task IDs: `IP-20-T08`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Check artifact ownership and package contents against IP-17 and IP-18: exact extension permissions, exact Native Messaging origins, restrictive host file permissions, no unexpected symlinks/path traversal, no extra data source, and no network or loopback requirement in the normal path.
+   - Fixture and command: IP-17, IP-18; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Check artifact ownership and package contents against IP-17 and IP-18: exact extension permissions, exact Native Messaging origins, restrictive host file permissions, no unexpected symlinks/path traversal, no extra data source, and no network or loopback requirement in the normal path.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+9. `test(release): implement ip-20-t09`
+   - Task IDs: `IP-20-T09`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Include an artifact-to-cell map so each of the six IP-19 rows names the exact extension package, host installer/binary, Native Messaging manifest, source commit, fixture hash, and checksum used. Replaying another artifact under the same cell ID is invalid.
+   - Fixture and command: IP-19; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Include an artifact-to-cell map so each of the six IP-19 rows names the exact extension package, host installer/binary, Native Messaging manifest, source commit, fixture hash, and checksum used. Replaying another artifact under the same cell ID is invalid.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+10. `feat(release): implement ip-20-t10`
+   - Task IDs: `IP-20-T10`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Generate one row for each FR-001 through FR-015 and NFR-001 through NFR-010. Each row contains `primary_owner` from the implementation index, `supporting_phases`, `acceptance_signal`, `evidence_ids`, `evidence_paths`, `status`, `blocking_defect_ids`, and reviewer disposition. IP-20 is the primary owner only for release aggregation; it must not overwrite the mapped phase owner.
+   - Fixture and command: FR-001, FR-015, NFR-001, NFR-010, IP-20; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Generate one row for each FR-001 through FR-015 and NFR-001 through NFR-010. Each row contains `primary_owner` from the implementation index, `supporting_phases`, `acceptance_signal`, `evidence_ids`, `evidence_paths`, `status`, `blocking_defect_ids`, and reviewer disposition. IP-20 is the primary owner only for release aggregation; it must not overwrite the mapped phase owner.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+11. `feat(release): implement ip-20-t11`
+   - Task IDs: `IP-20-T11`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Use the following release-facing acceptance signals and primary owners:
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Use the following release-facing acceptance signals and primary owners:
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+12. `feat(release): implement ip-20-t12`
+   - Task IDs: `IP-20-T12`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Add operational rows for bounded protocol timeouts and typed failures (IP-07), transactional/versioned schema changes (IP-08), diagnosable redacted transitions (IP-16), permission/retention enforcement (IP-17), idempotent installer/updater/repair/rollback/uninstaller behavior (IP-18), and release acceptance/handoff (IP-20). Every row has an observable signal and an evidence path.
+   - Fixture and command: IP-07, IP-08, IP-16, IP-17, IP-18, IP-20; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Add operational rows for bounded protocol timeouts and typed failures (IP-07), transactional/versioned schema changes (IP-08), diagnosable redacted transitions (IP-16), permission/retention enforcement (IP-17), idempotent installer/updater/repair/rollback/uninstaller behavior (IP-18), and release acceptance/handoff (IP-20). Every row has an observable signal and an evidence path.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+13. `feat(release): implement ip-20-t13`
+   - Task IDs: `IP-20-T13`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Require `status` to be exactly `PASS`, `FAIL`, or `BLOCKED`. A `BLOCKED` row names the missing capability, owner, attempted command, decision date, and whether the block is release-blocking. A `FAIL` row names a defect and owning phase. No blank, “not run,” or aggregate-only status is accepted.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Require `status` to be exactly `PASS`, `FAIL`, or `BLOCKED`. A `BLOCKED` row names the missing capability, owner, attempted command, decision date, and whether the block is release-blocking. A `FAIL` row names a defect and owning phase. No blank, “not run,” or aggregate-only status is accepted.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+14. `feat(release): implement ip-20-t14`
+   - Task IDs: `IP-20-T14`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Build a gate ledger containing: source reproducibility, artifact integrity, version/protocol/schema/ranking compatibility, requirement traceability, six-cell browser compatibility, performance, accessibility, privacy/security, recovery, install/upgrade/repair/reset/uninstall, documentation consistency, rollback rehearsal, and handoff completeness.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Build a gate ledger containing: source reproducibility, artifact integrity, version/protocol/schema/ranking compatibility, requirement traceability, six-cell browser compatibility, performance, accessibility, privacy/security, recovery, install/upgrade/repair/reset/uninstall, documentation consistency, rollback rehearsal, and handoff completeness.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+15. `feat(release): implement ip-20-t15`
+   - Task IDs: `IP-20-T15`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Mark each gate PASS only when its observable evidence, artifact hashes, and environment identity are present. Mark FAIL for any unmet contract or unresolved defect. Mark BLOCKED for unavailable evidence with a named owner; a blocked required gate prevents release unless a documented exception is explicitly approved by the release reviewer and policy permits exceptions.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Mark each gate PASS only when its observable evidence, artifact hashes, and environment identity are present. Mark FAIL for any unmet contract or unresolved defect. Mark BLOCKED for unavailable evidence with a named owner; a blocked required gate prevents release unless a documented exception is explicitly approved by the release reviewer and policy permits exceptions.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+16. `feat(release): implement ip-20-t16`
+   - Task IDs: `IP-20-T16`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Treat every unresolved in-scope correctness, security, privacy, compatibility, lifecycle, or data-boundary defect as release-blocking. A defect is resolved only when its owning phase supplies a fix, rerun evidence, and updated hash/traceability references. Cosmetic or exploratory findings are recorded separately and cannot mask a required failure.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Treat every unresolved in-scope correctness, security, privacy, compatibility, lifecycle, or data-boundary defect as release-blocking. A defect is resolved only when its owning phase supplies a fix, rerun evidence, and updated hash/traceability references. Cosmetic or exploratory findings are recorded separately and cannot mask a required failure.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+17. `test(release): implement ip-20-t17`
+   - Task IDs: `IP-20-T17`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Reconcile the final report with IP-19: no matrix cell may reference a different artifact, fixture seed, source commit, protocol version, schema version, or ranking model than the candidate manifest. Reconcile release notes and support text with the canonical refactor documents; terminology or behavior drift is a documentation gate failure.
+   - Fixture and command: IP-19; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Reconcile the final report with IP-19: no matrix cell may reference a different artifact, fixture seed, source commit, protocol version, schema version, or ranking model than the candidate manifest. Reconcile release notes and support text with the canonical refactor documents; terminology or behavior drift is a documentation gate failure.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+18. `test(release): implement ip-20-t18`
+   - Task IDs: `IP-20-T18`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Run `./tests/release/phase-20/rollback-drill --candidate <id> --previous <id> --profile-fixture fixtures/release/phase-20/profile-fixture.json --artifact-manifest fixtures/release/phase-20/artifact-manifest.json --output artifacts/release/phase-20/rollback.json` on a disposable browser profile and disposable host installation for each OS class.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Run `./tests/release/phase-20/rollback-drill --candidate <id> --previous <id> --profile-fixture fixtures/release/phase-20/profile-fixture.json --artifact-manifest fixtures/release/phase-20/artifact-manifest.json --output artifacts/release/phase-20/rollback.json` on a disposable browser profile and disposable host installation for each OS class.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+19. `feat(release): implement ip-20-t19`
+   - Task IDs: `IP-20-T19`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Verify rollback order: stop the candidate host session, preserve or transactionally downgrade only a compatible schema, install the previous extension/host pair, restore the previous browser-specific Native Messaging manifest and exact origins, run hello/health/snapshot smoke checks, and return to a healthy projection without closing tabs or changing unrelated browser state.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Verify rollback order: stop the candidate host session, preserve or transactionally downgrade only a compatible schema, install the previous extension/host pair, restore the previous browser-specific Native Messaging manifest and exact origins, run hello/health/snapshot smoke checks, and return to a healthy projection without closing tabs or changing unrelated browser state.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+20. `feat(release): implement ip-20-t20`
+   - Task IDs: `IP-20-T20`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Verify incompatible downgrade fails closed before tab data is accepted, reports a repairable state, leaves the candidate database recoverable, and provides the documented forward-repair path. Never delete the database or broaden permissions to force a downgrade.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Verify incompatible downgrade fails closed before tab data is accepted, reports a repairable state, leaves the candidate database recoverable, and provides the documented forward-repair path. Never delete the database or broaden permissions to force a downgrade.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+21. `feat(release): implement ip-20-t21`
+   - Task IDs: `IP-20-T21`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Record rollback artifact hashes, commands, before/after ownership manifests, health transitions, projection revision, result checksum, process state, and any migration/quarantine action. A successful rollback is evidence; it does not authorize release when another gate fails.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Record rollback artifact hashes, commands, before/after ownership manifests, health transitions, projection revision, result checksum, process state, and any migration/quarantine action. A successful rollback is evidence; it does not authorize release when another gate fails.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+22. `feat(release): implement ip-20-t22`
+   - Task IDs: `IP-20-T22`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Create a reviewer record with release candidate ID, source commit, artifact-manifest SHA-256, gate ledger SHA-256, requirement-map SHA-256, compatibility result, rollback result, unresolved in-scope defect count, accepted exceptions, reviewer names/roles, decision (`APPROVE`, `REJECT`, or `APPROVE_WITH_EXCEPTION`), timestamp, and next action.
+   - Fixture and command: SHA-256; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Create a reviewer record with release candidate ID, source commit, artifact-manifest SHA-256, gate ledger SHA-256, requirement-map SHA-256, compatibility result, rollback result, unresolved in-scope defect count, accepted exceptions, reviewer names/roles, decision (`APPROVE`, `REJECT`, or `APPROVE_WITH_EXCEPTION`), timestamp, and next action.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+23. `test(release): implement ip-20-t23`
+   - Task IDs: `IP-20-T23`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Require independent review from release/change-review, implementation/code-review, testing/verification, security/privacy, and product/operations roles. Each reviewer records inspected evidence paths, findings by severity, and explicit disposition; no self-approval by the release builder satisfies the independent review requirement.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Require independent review from release/change-review, implementation/code-review, testing/verification, security/privacy, and product/operations roles. Each reviewer records inspected evidence paths, findings by severity, and explicit disposition; no self-approval by the release builder satisfies the independent review requirement.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+24. `feat(release): implement ip-20-t24`
+   - Task IDs: `IP-20-T24`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Produce `handoff/README.txt` with the exact clean-checkout replay command, artifact retrieval identifiers, checksum verification command, compatibility/version table, support diagnostic collection steps, rollback command, evidence retention/expiry, known limitations, and owners. It must contain no raw tab title, URL, query, token, or secret.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Produce `handoff/README.txt` with the exact clean-checkout replay command, artifact retrieval identifiers, checksum verification command, compatibility/version table, support diagnostic collection steps, rollback command, evidence retention/expiry, known limitations, and owners. It must contain no raw tab title, URL, query, token, or secret.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+25. `feat(release): implement ip-20-t25`
+   - Task IDs: `IP-20-T25`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Produce a known-limitations list distinguishing contract exclusions and non-gating environmental constraints from open in-scope defects. Every limitation states user impact, affected browser/OS cell, evidence, owner, mitigation, and whether it blocks release. No unresolved in-scope defect may appear in an approved release report.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Produce a known-limitations list distinguishing contract exclusions and non-gating environmental constraints from open in-scope defects. Every limitation states user impact, affected browser/OS cell, evidence, owner, mitigation, and whether it blocks release. No unresolved in-scope defect may appear in an approved release report.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
+
+26. `feat(release): implement ip-20-t26`
+   - Task IDs: `IP-20-T26`.
+   - Owned target paths: `fixtures/release/phase-20/` (to-create); `tests/release/phase-20/` (to-create); `artifacts/release/phase-20/` (to-create).
+   - Behavior: Archive the final release report, manifest, checksums, traceability matrix, matrix reports, performance/accessibility/privacy/recovery evidence, rollback record, sign-offs, and source/provenance identifiers as one immutable handoff set. Record retention and deletion date for each artifact.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-20 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Archive the final release report, manifest, checksums, traceability matrix, matrix reports, performance/accessibility/privacy/recovery evidence, rollback record, sign-offs, and source/provenance identifiers as one immutable handoff set. Record retention and deletion date for each artifact.
+   - Dependency gate: all index.md dependencies for IP-20 have merged to dev; phase work branch starts from latest origin/dev.
 
 ## 8. Kiểm chứng và nghiệm thu
 

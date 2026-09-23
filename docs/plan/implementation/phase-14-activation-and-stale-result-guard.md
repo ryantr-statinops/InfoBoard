@@ -1,7 +1,7 @@
 # Phase 14 — Activation and stale-result guard
 
 > Plan ID: IP-14
-> Status: not_started
+> Status: See README.md execution tracker
 > Execution owner: extension browser-activation owner with Go status/recency integration owner
 > Dependencies: IP-05, IP-07, IP-08, IP-12, IP-13
 > Parallel boundary: IP-15 and IP-16 may work on non-overlapping paths after their own dependencies; IP-14 consumes the IP-13 selected-row action seam and must not edit its surface implementation.
@@ -102,33 +102,89 @@
 
 ## 6. Công việc triển khai
 
-- [ ] **Reference and guard contract:** define the result-reference schema, identity comparison rules, projection-state gate, context/profile fence, typed outcomes, and zero-call invariant for every rejected request.
-- [ ] **Browser controller:** implement single-flight Enter handling, exact `tabs.get`/window-focus/tab-activation sequence, response verification, cancellation, and stage-specific browser-state accounting. Close the surface only after confirmed exact activation.
-- [ ] **Race and recovery behavior:** inject revision advance, remove, move, window close, numeric ID reuse, worker restart, permission denial, and browser shutdown at every boundary. Reject stale requests and never choose a replacement tab or older revision.
-- [ ] **Reporter and acknowledgement:** serialize the IP-07 activation status messages with profile/revision/request identity, safe error/status codes, bounded partial-state metadata, and non-blocking host/persistence degradation handling.
-- [ ] **Recency handoff:** send only the IP-08 activation metadata fields on confirmed activation, enforce source/timestamp/domain bounds, omit private durable data where required, and prove failed activation does not append recency.
-- [ ] **Surface handoff:** provide IP-13 a typed success/stale/missing/failure/degraded result with explicit `browser_state` and next action; never expose raw browser exceptions or imply an unconfirmed activation.
-- [ ] **Reset/uninstall teardown:** cancel in-flight work, discard pending reports, invoke the IP-08/IP-15 owned cleanup seam, and prove no tab/window mutation occurs during cleanup.
-- [ ] **Fixtures and tests:** implement `ACT-001` through `ACT-011` as fixture-driven tests over fake browser APIs and fake Native Messaging/storage boundaries; assert exact call logs and user-visible status models.
-- [ ] **Performance proof:** implement `ACT-012` with a monotonic clock, 20 warm-up and 200 measured iterations, separate controller and browser-scheduling measurements, and a non-zero exit on p95 failure.
+- [ ] `IP-14-T01` **Reference and guard contract:** define the result-reference schema, identity comparison rules, projection-state gate, context/profile fence, typed outcomes, and zero-call invariant for every rejected request.
+- [ ] `IP-14-T02` **Browser controller:** implement single-flight Enter handling, exact `tabs.get`/window-focus/tab-activation sequence, response verification, cancellation, and stage-specific browser-state accounting. Close the surface only after confirmed exact activation.
+- [ ] `IP-14-T03` **Race and recovery behavior:** inject revision advance, remove, move, window close, numeric ID reuse, worker restart, permission denial, and browser shutdown at every boundary. Reject stale requests and never choose a replacement tab or older revision.
+- [ ] `IP-14-T04` **Reporter and acknowledgement:** serialize the IP-07 activation status messages with profile/revision/request identity, safe error/status codes, bounded partial-state metadata, and non-blocking host/persistence degradation handling.
+- [ ] `IP-14-T05` **Recency handoff:** send only the IP-08 activation metadata fields on confirmed activation, enforce source/timestamp/domain bounds, omit private durable data where required, and prove failed activation does not append recency.
+- [ ] `IP-14-T06` **Surface handoff:** provide IP-13 a typed success/stale/missing/failure/degraded result with explicit `browser_state` and next action; never expose raw browser exceptions or imply an unconfirmed activation.
+- [ ] `IP-14-T07` **Reset/uninstall teardown:** cancel in-flight work, discard pending reports, invoke the IP-08/IP-15 owned cleanup seam, and prove no tab/window mutation occurs during cleanup.
+- [ ] `IP-14-T08` **Fixtures and tests:** implement `ACT-001` through `ACT-011` as fixture-driven tests over fake browser APIs and fake Native Messaging/storage boundaries; assert exact call logs and user-visible status models.
+- [ ] `IP-14-T09` **Performance proof:** implement `ACT-012` with a monotonic clock, 20 warm-up and 200 measured iterations, separate controller and browser-scheduling measurements, and a non-zero exit on p95 failure.
 
 ## 7. Kế hoạch commit
 
-1. `feat(activation): add exact result-reference guard`
-   - Thay đổi: Add `activation-guard.ts`, strict profile/context/tab/window/epoch/revision checks, stale/missing outcomes, and the no-fallback invariant under `extension/src/browser/` (to-create).
-   - Cách kiểm tra: From repository root, run `npm test -- --runInBand tests/activation/phase-14/activation-guard.test.ts` once the extension test harness exists; `ACT-002` through `ACT-006` MUST show zero activation calls.
-2. `feat(activation): add browser-owned activation controller`
-   - Thay đổi: Add `activation-controller.ts` with single-flight Enter handling, exact window focus/tab activation, response verification, race cancellation, partial-state outcomes, and success-only surface close.
-   - Cách kiểm tra: From the extension root, run `npm test -- --runInBand tests/activation/phase-14/activation-controller.test.ts` with `ACT-001`, `ACT-004`, `ACT-005`, `ACT-007`, and `ACT-009`.
-3. `feat(activation): report observed status and bounded recency`
-   - Thay đổi: Add `activation-reporter.ts`, IP-07 status payloads, non-blocking host acknowledgement, persistence-degraded session fallback, and reset/uninstall teardown integration.
-   - Cách kiểm tra: From repository root, run `go test ./tests/activation/phase-14/... -run 'TestActivationFixture' -count=1` with `ACT-008`, `ACT-010`, and `ACT-011`; assert no raw title/URL/query fields in reporter payloads.
-4. `test(activation): add stale-result race fixtures`
-   - Thay đổi: Add `fixtures/activation/phase-14/` and focused tests for profile/context mismatch, revision fencing, tab removal/reuse, multi-window targeting, duplicate Enter, browser failure, recency, and teardown.
-   - Cách kiểm tra: From repository root, run `go test ./tests/activation/phase-14/... -run 'TestActivationFixture|TestNoFallback|TestProfileIsolation' -count=1` and compare browser call logs, status, and browser-state claims to every fixture.
-5. `perf(activation): add selection-to-activation benchmark`
-   - Thay đổi: Add the `ACT-012` benchmark harness and timing artifact with p50/p95/p99, environment, iteration settings, browser-scheduling exclusion, and call/status counts.
-   - Cách kiểm tra: From repository root, run `GOMAXPROCS=1 go run ./tests/activation/phase-14/cmd/selection-to-activation-benchmark --fixture fixtures/activation/phase-14/ACT-012-selection-to-activation-100ms.json --warmup 20 --iterations 200 --p95-budget-ms 100`; require `status=pass`, `p95_ms<=100`, and no stale-fixture activation calls.
+1. `feat(activation): implement ip-14-t01`
+   - Task IDs: `IP-14-T01`.
+   - Owned target paths: `extension/src/browser/activation-controller.ts` (to-create), `extension/src/browser/activation-guard.ts` (to-create), `extension/src/runtime/activation-reporter.ts` (to-create), `fixtures/activation/phase-14/` (to-create), `tests/activation/phase-14/` (to-create).
+   - Behavior: **Reference and guard contract:** define the result-reference schema, identity comparison rules, projection-state gate, context/profile fence, typed outcomes, and zero-call invariant for every rejected request.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./tests/activation/phase-14/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Reference and guard contract:** define the result-reference schema, identity comparison rules, projection-state gate, context/profile fence, typed outcomes, and zero-call invariant for every rejected request.
+   - Dependency gate: all index.md dependencies for IP-14 have merged to dev; phase work branch starts from latest origin/dev.
+
+2. `feat(activation): implement ip-14-t02`
+   - Task IDs: `IP-14-T02`.
+   - Owned target paths: `extension/src/browser/activation-controller.ts` (to-create), `extension/src/browser/activation-guard.ts` (to-create), `extension/src/runtime/activation-reporter.ts` (to-create), `fixtures/activation/phase-14/` (to-create), `tests/activation/phase-14/` (to-create).
+   - Behavior: **Browser controller:** implement single-flight Enter handling, exact `tabs.get`/window-focus/tab-activation sequence, response verification, cancellation, and stage-specific browser-state accounting. Close the surface only after confirmed exact activation.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./tests/activation/phase-14/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Browser controller:** implement single-flight Enter handling, exact `tabs.get`/window-focus/tab-activation sequence, response verification, cancellation, and stage-specific browser-state accounting. Close the surface only after confirmed exact activation.
+   - Dependency gate: all index.md dependencies for IP-14 have merged to dev; phase work branch starts from latest origin/dev.
+
+3. `feat(activation): implement ip-14-t03`
+   - Task IDs: `IP-14-T03`.
+   - Owned target paths: `extension/src/browser/activation-controller.ts` (to-create), `extension/src/browser/activation-guard.ts` (to-create), `extension/src/runtime/activation-reporter.ts` (to-create), `fixtures/activation/phase-14/` (to-create), `tests/activation/phase-14/` (to-create).
+   - Behavior: **Race and recovery behavior:** inject revision advance, remove, move, window close, numeric ID reuse, worker restart, permission denial, and browser shutdown at every boundary. Reject stale requests and never choose a replacement tab or older revision.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./tests/activation/phase-14/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Race and recovery behavior:** inject revision advance, remove, move, window close, numeric ID reuse, worker restart, permission denial, and browser shutdown at every boundary. Reject stale requests and never choose a replacement tab or older revision.
+   - Dependency gate: all index.md dependencies for IP-14 have merged to dev; phase work branch starts from latest origin/dev.
+
+4. `feat(activation): implement ip-14-t04`
+   - Task IDs: `IP-14-T04`.
+   - Owned target paths: `extension/src/browser/activation-controller.ts` (to-create), `extension/src/browser/activation-guard.ts` (to-create), `extension/src/runtime/activation-reporter.ts` (to-create), `fixtures/activation/phase-14/` (to-create), `tests/activation/phase-14/` (to-create).
+   - Behavior: **Reporter and acknowledgement:** serialize the IP-07 activation status messages with profile/revision/request identity, safe error/status codes, bounded partial-state metadata, and non-blocking host/persistence degradation handling.
+   - Fixture and command: IP-07; run `go test ./tests/activation/phase-14/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Reporter and acknowledgement:** serialize the IP-07 activation status messages with profile/revision/request identity, safe error/status codes, bounded partial-state metadata, and non-blocking host/persistence degradation handling.
+   - Dependency gate: all index.md dependencies for IP-14 have merged to dev; phase work branch starts from latest origin/dev.
+
+5. `feat(activation): implement ip-14-t05`
+   - Task IDs: `IP-14-T05`.
+   - Owned target paths: `extension/src/browser/activation-controller.ts` (to-create), `extension/src/browser/activation-guard.ts` (to-create), `extension/src/runtime/activation-reporter.ts` (to-create), `fixtures/activation/phase-14/` (to-create), `tests/activation/phase-14/` (to-create).
+   - Behavior: **Recency handoff:** send only the IP-08 activation metadata fields on confirmed activation, enforce source/timestamp/domain bounds, omit private durable data where required, and prove failed activation does not append recency.
+   - Fixture and command: IP-08; run `go test ./tests/activation/phase-14/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Recency handoff:** send only the IP-08 activation metadata fields on confirmed activation, enforce source/timestamp/domain bounds, omit private durable data where required, and prove failed activation does not append recency.
+   - Dependency gate: all index.md dependencies for IP-14 have merged to dev; phase work branch starts from latest origin/dev.
+
+6. `feat(activation): implement ip-14-t06`
+   - Task IDs: `IP-14-T06`.
+   - Owned target paths: `extension/src/browser/activation-controller.ts` (to-create), `extension/src/browser/activation-guard.ts` (to-create), `extension/src/runtime/activation-reporter.ts` (to-create), `fixtures/activation/phase-14/` (to-create), `tests/activation/phase-14/` (to-create).
+   - Behavior: **Surface handoff:** provide IP-13 a typed success/stale/missing/failure/degraded result with explicit `browser_state` and next action; never expose raw browser exceptions or imply an unconfirmed activation.
+   - Fixture and command: IP-13; run `go test ./tests/activation/phase-14/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Surface handoff:** provide IP-13 a typed success/stale/missing/failure/degraded result with explicit `browser_state` and next action; never expose raw browser exceptions or imply an unconfirmed activation.
+   - Dependency gate: all index.md dependencies for IP-14 have merged to dev; phase work branch starts from latest origin/dev.
+
+7. `feat(activation): implement ip-14-t07`
+   - Task IDs: `IP-14-T07`.
+   - Owned target paths: `extension/src/browser/activation-controller.ts` (to-create), `extension/src/browser/activation-guard.ts` (to-create), `extension/src/runtime/activation-reporter.ts` (to-create), `fixtures/activation/phase-14/` (to-create), `tests/activation/phase-14/` (to-create).
+   - Behavior: **Reset/uninstall teardown:** cancel in-flight work, discard pending reports, invoke the IP-08/IP-15 owned cleanup seam, and prove no tab/window mutation occurs during cleanup.
+   - Fixture and command: IP-08, IP-15; run `go test ./tests/activation/phase-14/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Reset/uninstall teardown:** cancel in-flight work, discard pending reports, invoke the IP-08/IP-15 owned cleanup seam, and prove no tab/window mutation occurs during cleanup.
+   - Dependency gate: all index.md dependencies for IP-14 have merged to dev; phase work branch starts from latest origin/dev.
+
+8. `test(activation): implement ip-14-t08`
+   - Task IDs: `IP-14-T08`.
+   - Owned target paths: `extension/src/browser/activation-controller.ts` (to-create), `extension/src/browser/activation-guard.ts` (to-create), `extension/src/runtime/activation-reporter.ts` (to-create), `fixtures/activation/phase-14/` (to-create), `tests/activation/phase-14/` (to-create).
+   - Behavior: **Fixtures and tests:** implement `ACT-001` through `ACT-011` as fixture-driven tests over fake browser APIs and fake Native Messaging/storage boundaries; assert exact call logs and user-visible status models.
+   - Fixture and command: ACT-001, ACT-011; run `go test ./tests/activation/phase-14/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Fixtures and tests:** implement `ACT-001` through `ACT-011` as fixture-driven tests over fake browser APIs and fake Native Messaging/storage boundaries; assert exact call logs and user-visible status models.
+   - Dependency gate: all index.md dependencies for IP-14 have merged to dev; phase work branch starts from latest origin/dev.
+
+9. `test(activation): implement ip-14-t09`
+   - Task IDs: `IP-14-T09`.
+   - Owned target paths: `extension/src/browser/activation-controller.ts` (to-create), `extension/src/browser/activation-guard.ts` (to-create), `extension/src/runtime/activation-reporter.ts` (to-create), `fixtures/activation/phase-14/` (to-create), `tests/activation/phase-14/` (to-create).
+   - Behavior: **Performance proof:** implement `ACT-012` with a monotonic clock, 20 warm-up and 200 measured iterations, separate controller and browser-scheduling measurements, and a non-zero exit on p95 failure.
+   - Fixture and command: ACT-012; run `go test ./tests/activation/phase-14/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Performance proof:** implement `ACT-012` with a monotonic clock, 20 warm-up and 200 measured iterations, separate controller and browser-scheduling measurements, and a non-zero exit on p95 failure.
+   - Dependency gate: all index.md dependencies for IP-14 have merged to dev; phase work branch starts from latest origin/dev.
 
 ## 8. Kiểm chứng và nghiệm thu
 
