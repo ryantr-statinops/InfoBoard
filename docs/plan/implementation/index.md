@@ -13,14 +13,16 @@ Canonical contract: [`README.md`](../refactor/README.md), [`architecture.md`](..
 The repository currently has no implementation source tree. Until implementation creates it, the following paths are logical `to-create` targets:
 
 ```text
-extension/   # Manifest V3 boundary, browser adapter, focused search surface
-host/        # Go Native Messaging host, projection, index, persistence, diagnostics
-packaging/   # browser package, native manifest, installer and lifecycle artifacts
-fixtures/    # browser, protocol, projection, ranking and failure fixtures
-tests/       # unit, integration, browser, accessibility and performance tests
+extension/   # to-create: Manifest V3 boundary, browser adapter, focused search surface
+host/        # to-create: Go Native Messaging host, projection, index, persistence, diagnostics
+packaging/   # to-create: browser package, native manifest, installer and lifecycle artifacts
+fixtures/catalog.schema.json # shared fixture envelope schema (IP-01)
+fixtures/catalog.json        # shared fixture catalog (IP-01)
+fixtures/<phase>/            # to-create: phase-owned fixtures
+ tests/                      # to-create: unit, integration, browser, accessibility and performance tests
 ```
 
-IP-01 owns the exact package/module naming map. A phase author must reread the implementation scaffold if it appears and replace a logical path with the exact observed path before committing.
+IP-01 owns the exact package/module naming map. The shared [`fixture catalog`](../../../fixtures/catalog.json) and [`catalog schema`](../../../fixtures/catalog.schema.json) define nine reusable observable cases plus future checks, invariants, and one traceable acceptance seam for every later phase. Runtime roots and phase-specific fixture/test roots remain `to-create`; phase-specific acceptance suites still extend, rather than inherit as complete, the shared baseline. A phase author must reread the implementation scaffold if it appears and replace a logical path with the exact observed path before committing.
 
 ## Phase inventory and dependency DAG
 

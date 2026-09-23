@@ -5,7 +5,7 @@ The documentation keeps the existing folder names while separating canonical pro
 ## Source of truth
 
 - [`plan/refactor/`](plan/refactor/README.md) — binding product specification. It is the authority for product behavior, requirements, browser/platform boundaries, privacy, UX, ranking, architecture, runtime, persistence, operations, verification, decisions, and roadmap.
-- [`plan/implementation/`](plan/implementation/README.md) — existing implementation-planning tree. It is retained unchanged and has no new scope in this rebuild.
+- [`plan/implementation/`](plan/implementation/README.md) — active implementation plans, dependency DAG, commit mappings, and execution tracker. IP-01 is the kickoff phase.
 
 The detailed documents in the folders below explain the same contracts for different review concerns. They must link back to the canonical source and must not create conflicting behavior.
 
@@ -26,4 +26,4 @@ The detailed documents in the folders below explain the same contracts for diffe
 1. Update the canonical refactor document before adding a capability or weakening a boundary.
 2. Update the relevant detailed view only as a synchronized explanation of that canonical decision.
 3. Every new data source documents value, privacy impact, retention, removal, ownership, and acceptance.
-4. Keep implementation planning separate; this documentation structure does not authorize implementation edits.
+4. Implement only work authorized by the assigned phase plan after its dependencies are integrated. Use the README tracker and index branch protocol.
