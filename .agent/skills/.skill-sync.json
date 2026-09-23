@@ -1,0 +1,984 @@
+{
+  "schema_version": 1,
+  "source": "/tmp/infoboard-skills-main",
+  "bundle": null,
+  "skills": [
+    "common/agent/context-loading",
+    "common/agent/failure-recovery",
+    "common/data/data-cleaning",
+    "common/data/data-inspection",
+    "common/data/reproducible-analysis",
+    "common/data/schema-validation",
+    "common/delivery/change-review",
+    "common/delivery/release",
+    "common/engineering/code-review",
+    "common/engineering/debugging",
+    "common/engineering/dependency-management",
+    "common/engineering/documentation",
+    "common/engineering/git-workflow",
+    "common/engineering/refactoring",
+    "common/engineering/testing",
+    "common/foundation/context-management",
+    "common/foundation/repository-onboarding",
+    "common/foundation/requirements-analysis",
+    "common/foundation/task-planning",
+    "common/research/comparison",
+    "common/research/research",
+    "common/security/secure-development",
+    "common/security/security-review",
+    "common/workflow/bug-fixing",
+    "common/workflow/data-analysis",
+    "common/workflow/feature-delivery",
+    "common/workflow/research-decision",
+    "meta/skill-authoring",
+    "meta/skill-discovery",
+    "meta/skill-evaluation",
+    "meta/skill-intake",
+    "meta/skill-maintenance",
+    "personal/engineering/ai",
+    "personal/engineering/ai/core",
+    "personal/engineering/backend/api-design",
+    "personal/engineering/backend/core",
+    "personal/engineering/backend/nodejs",
+    "personal/engineering/backend/service-architecture",
+    "personal/engineering/data/core",
+    "personal/decision/architecture-tradeoff",
+    "personal/decision/scope-control",
+    "personal/decision/technology-selection",
+    "personal/education",
+    "personal/education/latex",
+    "personal/education/r",
+    "personal/engineering/backend",
+    "personal/engineering/core",
+    "personal/engineering/data",
+    "personal/engineering/data/databases",
+    "personal/engineering/infrastructure/docker",
+    "personal/engineering",
+    "personal/engineering/frontend",
+    "personal/engineering/backend/go",
+    "personal/engineering/infrastructure",
+    "personal/engineering/frontend/lightweight-web",
+    "personal/engineering/infrastructure/linux",
+    "personal/engineering/infrastructure/networking",
+    "personal/engineering/data/orchestration",
+    "personal/engineering/data/pipelines",
+    "personal/engineering/backend/python",
+    "personal/product/architecture-review",
+    "personal/product/mvp-design",
+    "personal/product/project-scoping",
+    "personal/quant/production-workflow",
+    "personal/quant",
+    "personal/quant/research",
+    "personal/statistics",
+    "personal/workflow/brainstorming",
+    "personal/workflow/personal-debugging",
+    "personal/workflow/personal-research",
+    "personal/workflow/project-init"
+  ],
+  "files": [
+    {
+      "path": "common/agent/context-loading/SKILL.md",
+      "sha256": "df9339495d61a2ea50689dfab1e2f03b0de3fde2bdd67896584cb70a3a17b57b"
+    },
+    {
+      "path": "common/agent/context-loading/examples/evaluation.md",
+      "sha256": "bc596ab948de432f741532ba145c1dd5ad1bf3e20cc0986237bf739e500b6fd0"
+    },
+    {
+      "path": "common/agent/failure-recovery/SKILL.md",
+      "sha256": "a45d7c11f739fb9952b280f7b68928e9b3fe49025f3122dbeb30b8019deec5d4"
+    },
+    {
+      "path": "common/agent/failure-recovery/examples/evaluation.md",
+      "sha256": "0d22e465464fe7ff493ee366461e034584392634e223a8697328776e7c1e5b4b"
+    },
+    {
+      "path": "common/data/data-cleaning/SKILL.md",
+      "sha256": "a96b5ba5d210c8770b24911ef50587f403e85b346ed06f0679c3d2eec23332c3"
+    },
+    {
+      "path": "common/data/data-cleaning/examples/evaluation.md",
+      "sha256": "022e163d9b784f432769d1efa85fa48a057292377fde31c451334b7c1c807abd"
+    },
+    {
+      "path": "common/data/data-inspection/SKILL.md",
+      "sha256": "82c209aeaaf886f9d2f20198ed14737b28986542c93e1a32b0c789ac086eb0c6"
+    },
+    {
+      "path": "common/data/data-inspection/examples/evaluation.md",
+      "sha256": "04d7dc0d2b8926e609b2f5fffd1bd317e6b07a662f1a88c8f8a3ad38f74f5420"
+    },
+    {
+      "path": "common/data/reproducible-analysis/SKILL.md",
+      "sha256": "319f482a6cccaf65efad5f28d684e056bb4ddd96cc66f808d36eaaa6bfa4c234"
+    },
+    {
+      "path": "common/data/reproducible-analysis/examples/evaluation.md",
+      "sha256": "8b5359b73f7adf31abeae7e04889438557a3e8f7d763a024c3c2531c3fd23292"
+    },
+    {
+      "path": "common/data/schema-validation/SKILL.md",
+      "sha256": "4c02bf0712614273e3c1cf062db499033affda749e3a6870853b053b69340d00"
+    },
+    {
+      "path": "common/data/schema-validation/examples/evaluation.md",
+      "sha256": "61cc53b96e2ff28af7e288f7d4207b3f4c5754cfebe624b474060714c2df205f"
+    },
+    {
+      "path": "common/delivery/change-review/SKILL.md",
+      "sha256": "e4c63f4b0353e4bfbb9b502c16db212393ebd97203d71438a6fc188d85098e70"
+    },
+    {
+      "path": "common/delivery/change-review/examples/evaluation.md",
+      "sha256": "f7c2c5d95af310c5e81854934f1df3adb97ecff60473e03283bcd77e486169fd"
+    },
+    {
+      "path": "common/delivery/release/SKILL.md",
+      "sha256": "ef938c84f14a83340eaad4cce0da9ee4cd50c0bea996da3afa2e845d80ef9db5"
+    },
+    {
+      "path": "common/delivery/release/examples/evaluation.md",
+      "sha256": "90ed29632c107a8d1604b2b41546554f7f2f0c9695c845a8fe101a471acf380a"
+    },
+    {
+      "path": "common/engineering/code-review/SKILL.md",
+      "sha256": "bd93ab6ad4140c6c875266d6a07555a6638228ac801fc3f4c2ae5953fc721a97"
+    },
+    {
+      "path": "common/engineering/code-review/examples/evaluation.md",
+      "sha256": "d8d280bd668a796958f225307944b54379c1c35fe0a379f0637d06ac38328bb4"
+    },
+    {
+      "path": "common/engineering/debugging/SKILL.md",
+      "sha256": "c16dacb45afdb58a030df04ec9cd4d68d2e61bc24b5af025bad6b17dcb9861c1"
+    },
+    {
+      "path": "common/engineering/debugging/examples/evaluation.md",
+      "sha256": "0d0911bcf43a401873c9f0111df15b4e068f25120d7d8b4d76bd00241b374b71"
+    },
+    {
+      "path": "common/engineering/dependency-management/SKILL.md",
+      "sha256": "2d529599f5d459fc19280bfd50268acae9c5eaeb7116091f91e78080f6b1341a"
+    },
+    {
+      "path": "common/engineering/dependency-management/examples/evaluation.md",
+      "sha256": "a9d132d2056fa35b248e2c5fd864a45536612addc140b284453224289f8bf1ef"
+    },
+    {
+      "path": "common/engineering/documentation/SKILL.md",
+      "sha256": "bbf45aceb554524889ea78dca60042be227584e117901585d24918b39f11934b"
+    },
+    {
+      "path": "common/engineering/documentation/examples/evaluation.md",
+      "sha256": "e3aaf69d391b158f5bd0f10dbbddfb3fbd53c25f892f98735e6173483e22fee9"
+    },
+    {
+      "path": "common/engineering/git-workflow/SKILL.md",
+      "sha256": "61161db62ac5dff660d8c5b3f5c3365a256f9397e6b66a803d952e38f5348fde"
+    },
+    {
+      "path": "common/engineering/git-workflow/examples/evaluation.md",
+      "sha256": "1498c905d088f390b83215280e24d17360ea969b7e33b7624f23e076db141c95"
+    },
+    {
+      "path": "common/engineering/refactoring/SKILL.md",
+      "sha256": "01ec648e15d8ac2e5cb7837a3c17d548906570b15636d0d4f877ec7020b36d29"
+    },
+    {
+      "path": "common/engineering/refactoring/examples/evaluation.md",
+      "sha256": "54d5752ad5975610a575bb402c96974faf43e75aec2ec85ebfb7300055f66373"
+    },
+    {
+      "path": "common/engineering/testing/SKILL.md",
+      "sha256": "d327c4c027f1ef7462ac3ed66318244330cee78707d7c4c28afcba4672ae010a"
+    },
+    {
+      "path": "common/engineering/testing/examples/evaluation.md",
+      "sha256": "d2f17f8c89c6685b27b007e01cd9b65a857c94b2d978d0ca014593ebde6cee05"
+    },
+    {
+      "path": "common/foundation/context-management/SKILL.md",
+      "sha256": "830ea73d30316f2e6078a187f2e8ae78b7f4c886c557d52be371a63ed59230bc"
+    },
+    {
+      "path": "common/foundation/context-management/examples/evaluation.md",
+      "sha256": "95449851444f69d7a6fbf77abb8201c1f9e561aec65de80c7fbaeacb6d0b18f5"
+    },
+    {
+      "path": "common/foundation/repository-onboarding/SKILL.md",
+      "sha256": "346c4a72b50eefe8234abbbd9105dcd677108f2b4252b7db21a4b08fbfdc07d0"
+    },
+    {
+      "path": "common/foundation/repository-onboarding/examples/evaluation.md",
+      "sha256": "21272776a36b1aeda60570b9c82ce8b546265078874d41e8031ba2767d3f353c"
+    },
+    {
+      "path": "common/foundation/requirements-analysis/SKILL.md",
+      "sha256": "862ba76bd5e52548cf380c496f7689322f92c42be584b0bfe19aa9109198f3fc"
+    },
+    {
+      "path": "common/foundation/requirements-analysis/examples/evaluation.md",
+      "sha256": "2115b39bfb0aaa2231444522f70a00e7c4bf932f6bb1e7f0568fc1105b04e9b7"
+    },
+    {
+      "path": "common/foundation/task-planning/SKILL.md",
+      "sha256": "62576cc74a0438e77fc63c6adb70ff0b8da8901afb093e4eb9c6bd9a5270585f"
+    },
+    {
+      "path": "common/foundation/task-planning/examples/evaluation.md",
+      "sha256": "121dceec90502d33acf71d9ad6d81c888f94681be6316b5beae43412812b553d"
+    },
+    {
+      "path": "common/research/comparison/SKILL.md",
+      "sha256": "4fb7bd657ff3b6d5b6685879a3771bec7b0ab86d030bb482153cb061d184fa74"
+    },
+    {
+      "path": "common/research/comparison/examples/evaluation.md",
+      "sha256": "917ba3ff227d10292d9798741cd22f45c67fa9653025aa01fe482d28d0183ef6"
+    },
+    {
+      "path": "common/research/research/SKILL.md",
+      "sha256": "bbe367466da3bbb26d5487a236d1843c84ade0d060541fc6f5b274b993409326"
+    },
+    {
+      "path": "common/research/research/examples/evaluation.md",
+      "sha256": "fc13c44f8efbaba4cacd3b03896fceeee91972dcc99260f0a68d672585460a1c"
+    },
+    {
+      "path": "common/security/secure-development/SKILL.md",
+      "sha256": "2075e9ae26ed2daee79e0b7d9cf4f10ed64b98eda2d5d6ea369092ae82b1a1d5"
+    },
+    {
+      "path": "common/security/secure-development/examples/evaluation.md",
+      "sha256": "b018010bb8827fe2f2a7af706cbe0d1b0280390cb239edba7e178a983a359d71"
+    },
+    {
+      "path": "common/security/security-review/SKILL.md",
+      "sha256": "3bc848416499bfcfda41e23c607271172a88b062fbe210a6223eb7dc9d57bd97"
+    },
+    {
+      "path": "common/security/security-review/examples/evaluation.md",
+      "sha256": "ff0a966189040827e8fa3a6eb4a54b00eb73926aedfea79b4bf524c685ab8772"
+    },
+    {
+      "path": "common/workflow/bug-fixing/SKILL.md",
+      "sha256": "ad96498dc76d712fc04af0fd3172b403c949354d3f73e471df1e0e7111f8b152"
+    },
+    {
+      "path": "common/workflow/bug-fixing/examples/evaluation.md",
+      "sha256": "81ed9347ac72d51ef1280196fa5fb695764aeaffb833eccdabcc1403a9ea1463"
+    },
+    {
+      "path": "common/workflow/data-analysis/SKILL.md",
+      "sha256": "93523f577bbc7ef57ca17ea6b0caa043361d13fbbbb4ac8167ca85943b107c47"
+    },
+    {
+      "path": "common/workflow/data-analysis/examples/evaluation.md",
+      "sha256": "c90ce2a761c0cceeefb1c50205cfb01d48233dbfb9c83053efeb9486b632a9eb"
+    },
+    {
+      "path": "common/workflow/feature-delivery/SKILL.md",
+      "sha256": "6dcfc5a3bc95745713f9631e905da0e17a597b579bc335cb1edbafb5e8a3417f"
+    },
+    {
+      "path": "common/workflow/feature-delivery/examples/evaluation.md",
+      "sha256": "f2d784839f6f2ad807e1d35f5110fc021a925b67a7d677f6bd712b74dfb91237"
+    },
+    {
+      "path": "common/workflow/research-decision/SKILL.md",
+      "sha256": "6b85fb454a3aa7a655d6e86d6d292c1bfcd14423026dbfe98660d7a28cae1b65"
+    },
+    {
+      "path": "common/workflow/research-decision/examples/evaluation.md",
+      "sha256": "36d7bc626299b14c6825bd1acda1c13838874986db9a8f5670f7542dc2273428"
+    },
+    {
+      "path": "meta/skill-authoring/SKILL.md",
+      "sha256": "855895a6ab3f9df0e991c5b7e51dd0aabbc676f0ca7ecc829c7d71786e6baea6"
+    },
+    {
+      "path": "meta/skill-discovery/SKILL.md",
+      "sha256": "63526110e8eb5bf7dde22108f066b4fc366ab9be866cbd68c39af283296c6eb9"
+    },
+    {
+      "path": "meta/skill-discovery/examples/evaluation.md",
+      "sha256": "e01a42250b3b37488a9d0eaab4a4e3de9b6aa3d1891098ab159dd842623ff9aa"
+    },
+    {
+      "path": "meta/skill-evaluation/SKILL.md",
+      "sha256": "d0769e224e9d05816a3ec4511b483749809b709baf2df5596921642e36ab6f2e"
+    },
+    {
+      "path": "meta/skill-intake/SKILL.md",
+      "sha256": "677c7f70612edb8eb45cb1120343fe6e275685b0cc2acfe29cabce72ce1cc98d"
+    },
+    {
+      "path": "meta/skill-maintenance/SKILL.md",
+      "sha256": "d9a58e7db820ca491c08e083ff1c911deb0fd1d87acecb842532895d10e4f0a1"
+    },
+    {
+      "path": "personal/decision/architecture-tradeoff/SKILL.md",
+      "sha256": "3decae34402c68468ac42d409363d842904fe00b9da05e93f62dcdd139917734"
+    },
+    {
+      "path": "personal/decision/architecture-tradeoff/examples/evaluation.md",
+      "sha256": "37fd083b288d29f549173f312892f3b9b52d16cb37919b7bc2f2a3c28e154da5"
+    },
+    {
+      "path": "personal/decision/scope-control/SKILL.md",
+      "sha256": "29bf9dcbeee34202bb73d4231739da215b2fae8994ae0bec82165a4d0a721bb3"
+    },
+    {
+      "path": "personal/decision/scope-control/examples/evaluation.md",
+      "sha256": "228bc796ec84eaa6be48fa62c6a9d9e739cae9126b057a5dc3aad31019bdb821"
+    },
+    {
+      "path": "personal/decision/technology-selection/SKILL.md",
+      "sha256": "48d8a2559ef3b8cdc68bd4909d26e7e64881ace7dd58b98ad8929cd2bafba0cd"
+    },
+    {
+      "path": "personal/decision/technology-selection/examples/evaluation.md",
+      "sha256": "f2d109732e6e63a8e64b879fffea86210ae23a4a256f3c4514913b3e09a0bb35"
+    },
+    {
+      "path": "personal/education/SKILL.md",
+      "sha256": "a9891eebbe7065b34c0a2f4934b6d83e897bf957b613b0fcabd16326090f8945"
+    },
+    {
+      "path": "personal/education/examples/evaluation.md",
+      "sha256": "5d6ff81ebd2b2f35c05f1b3b8b89f0c6b6bad020224b9e182789a516bf65a21a"
+    },
+    {
+      "path": "personal/education/latex/SKILL.md",
+      "sha256": "4a65200c9a08e75c2ea055a8d78749ac3819a9adbfbf54dd3fbd6b94a4e687b6"
+    },
+    {
+      "path": "personal/education/latex/SKILL.md",
+      "sha256": "4a65200c9a08e75c2ea055a8d78749ac3819a9adbfbf54dd3fbd6b94a4e687b6"
+    },
+    {
+      "path": "personal/education/latex/examples/evaluation.md",
+      "sha256": "eeb529efdc9cdc16f4483ffdd6dec32df8eca4a82c74315ad1df33428ae86628"
+    },
+    {
+      "path": "personal/education/latex/examples/evaluation.md",
+      "sha256": "eeb529efdc9cdc16f4483ffdd6dec32df8eca4a82c74315ad1df33428ae86628"
+    },
+    {
+      "path": "personal/education/r/SKILL.md",
+      "sha256": "41bc8dc36f74e2d9f8e1353359998cf43dbffb8a9c982f305401277a2849a9f2"
+    },
+    {
+      "path": "personal/education/r/SKILL.md",
+      "sha256": "41bc8dc36f74e2d9f8e1353359998cf43dbffb8a9c982f305401277a2849a9f2"
+    },
+    {
+      "path": "personal/education/r/examples/evaluation.md",
+      "sha256": "5ab80ed76f8198c46ec61bc53cde4059eb49d9104e335e5c4ebe6d4f9d16020e"
+    },
+    {
+      "path": "personal/education/r/examples/evaluation.md",
+      "sha256": "5ab80ed76f8198c46ec61bc53cde4059eb49d9104e335e5c4ebe6d4f9d16020e"
+    },
+    {
+      "path": "personal/engineering/SKILL.md",
+      "sha256": "fa4326719c5835948ccc1d49e2f4d6d9b2e641b009ce2f5e5e8b843eb38a584b"
+    },
+    {
+      "path": "personal/engineering/ai/SKILL.md",
+      "sha256": "5b0c4b2fea74810e36467d1314e2fa225e6a7b6f382f8d34c23eefb853086073"
+    },
+    {
+      "path": "personal/engineering/ai/SKILL.md",
+      "sha256": "5b0c4b2fea74810e36467d1314e2fa225e6a7b6f382f8d34c23eefb853086073"
+    },
+    {
+      "path": "personal/engineering/ai/core/SKILL.md",
+      "sha256": "c5e7cf8f1830f73887546e50a84490f1a85a9baf5c25f0d4182de149e3deb05a"
+    },
+    {
+      "path": "personal/engineering/ai/core/SKILL.md",
+      "sha256": "c5e7cf8f1830f73887546e50a84490f1a85a9baf5c25f0d4182de149e3deb05a"
+    },
+    {
+      "path": "personal/engineering/ai/core/SKILL.md",
+      "sha256": "c5e7cf8f1830f73887546e50a84490f1a85a9baf5c25f0d4182de149e3deb05a"
+    },
+    {
+      "path": "personal/engineering/ai/core/examples/evaluation.md",
+      "sha256": "71a3e6e325c26d81a701f25a29f191f0d44e3cb78af47a228ed0afba24831242"
+    },
+    {
+      "path": "personal/engineering/ai/core/examples/evaluation.md",
+      "sha256": "71a3e6e325c26d81a701f25a29f191f0d44e3cb78af47a228ed0afba24831242"
+    },
+    {
+      "path": "personal/engineering/ai/core/examples/evaluation.md",
+      "sha256": "71a3e6e325c26d81a701f25a29f191f0d44e3cb78af47a228ed0afba24831242"
+    },
+    {
+      "path": "personal/engineering/ai/examples/evaluation.md",
+      "sha256": "d03c707290f6f4734c975e8e2f5e9f86a5df2856b818c343577af86fe9273a76"
+    },
+    {
+      "path": "personal/engineering/ai/examples/evaluation.md",
+      "sha256": "d03c707290f6f4734c975e8e2f5e9f86a5df2856b818c343577af86fe9273a76"
+    },
+    {
+      "path": "personal/engineering/backend/SKILL.md",
+      "sha256": "1b3f0c26f55523e112b1584de77aafaeb37cc8034fd16270677e85d708c66bfc"
+    },
+    {
+      "path": "personal/engineering/backend/SKILL.md",
+      "sha256": "1b3f0c26f55523e112b1584de77aafaeb37cc8034fd16270677e85d708c66bfc"
+    },
+    {
+      "path": "personal/engineering/backend/api-design/SKILL.md",
+      "sha256": "da00f21638712271d97f8572bb26db9f2a93663d30f9bce30ca463ae014c80cc"
+    },
+    {
+      "path": "personal/engineering/backend/api-design/SKILL.md",
+      "sha256": "da00f21638712271d97f8572bb26db9f2a93663d30f9bce30ca463ae014c80cc"
+    },
+    {
+      "path": "personal/engineering/backend/api-design/SKILL.md",
+      "sha256": "da00f21638712271d97f8572bb26db9f2a93663d30f9bce30ca463ae014c80cc"
+    },
+    {
+      "path": "personal/engineering/backend/api-design/examples/evaluation.md",
+      "sha256": "a12a17f4c4d176b5d1e09990ef6591abaca2ed3bc92930a315e6c9a6ff9fb0f3"
+    },
+    {
+      "path": "personal/engineering/backend/api-design/examples/evaluation.md",
+      "sha256": "a12a17f4c4d176b5d1e09990ef6591abaca2ed3bc92930a315e6c9a6ff9fb0f3"
+    },
+    {
+      "path": "personal/engineering/backend/api-design/examples/evaluation.md",
+      "sha256": "a12a17f4c4d176b5d1e09990ef6591abaca2ed3bc92930a315e6c9a6ff9fb0f3"
+    },
+    {
+      "path": "personal/engineering/backend/core/SKILL.md",
+      "sha256": "c4efdf281fc28d8695a9a3263da8aa3285c31e690eb1cd7ad3f335b364c8887d"
+    },
+    {
+      "path": "personal/engineering/backend/core/SKILL.md",
+      "sha256": "c4efdf281fc28d8695a9a3263da8aa3285c31e690eb1cd7ad3f335b364c8887d"
+    },
+    {
+      "path": "personal/engineering/backend/core/SKILL.md",
+      "sha256": "c4efdf281fc28d8695a9a3263da8aa3285c31e690eb1cd7ad3f335b364c8887d"
+    },
+    {
+      "path": "personal/engineering/backend/core/examples/evaluation.md",
+      "sha256": "942312624fb9b30553f8397aab5fb58fff56016ea099501c81c398e6bb02bc3c"
+    },
+    {
+      "path": "personal/engineering/backend/core/examples/evaluation.md",
+      "sha256": "942312624fb9b30553f8397aab5fb58fff56016ea099501c81c398e6bb02bc3c"
+    },
+    {
+      "path": "personal/engineering/backend/core/examples/evaluation.md",
+      "sha256": "942312624fb9b30553f8397aab5fb58fff56016ea099501c81c398e6bb02bc3c"
+    },
+    {
+      "path": "personal/engineering/backend/examples/evaluation.md",
+      "sha256": "f0d5c372f4c9dc76632a0c8ed535a64f9fb67ad1023e7a8173d095f0e233c7f9"
+    },
+    {
+      "path": "personal/engineering/backend/examples/evaluation.md",
+      "sha256": "f0d5c372f4c9dc76632a0c8ed535a64f9fb67ad1023e7a8173d095f0e233c7f9"
+    },
+    {
+      "path": "personal/engineering/backend/go/SKILL.md",
+      "sha256": "140bcf5aad18dd76b0bb4126363a4b0107d2524d7e6777c4c35a6e515ffc3b09"
+    },
+    {
+      "path": "personal/engineering/backend/go/SKILL.md",
+      "sha256": "140bcf5aad18dd76b0bb4126363a4b0107d2524d7e6777c4c35a6e515ffc3b09"
+    },
+    {
+      "path": "personal/engineering/backend/go/SKILL.md",
+      "sha256": "140bcf5aad18dd76b0bb4126363a4b0107d2524d7e6777c4c35a6e515ffc3b09"
+    },
+    {
+      "path": "personal/engineering/backend/go/examples/evaluation.md",
+      "sha256": "caa9394c0afcea740351bd56da1fd17198ecda38060f27762c0ab002962416bc"
+    },
+    {
+      "path": "personal/engineering/backend/go/examples/evaluation.md",
+      "sha256": "caa9394c0afcea740351bd56da1fd17198ecda38060f27762c0ab002962416bc"
+    },
+    {
+      "path": "personal/engineering/backend/go/examples/evaluation.md",
+      "sha256": "caa9394c0afcea740351bd56da1fd17198ecda38060f27762c0ab002962416bc"
+    },
+    {
+      "path": "personal/engineering/backend/nodejs/SKILL.md",
+      "sha256": "fb280b21437fcbb0fd0680a984440a0a7908c6f65eeee9e6c315c14a7c21256e"
+    },
+    {
+      "path": "personal/engineering/backend/nodejs/SKILL.md",
+      "sha256": "fb280b21437fcbb0fd0680a984440a0a7908c6f65eeee9e6c315c14a7c21256e"
+    },
+    {
+      "path": "personal/engineering/backend/nodejs/SKILL.md",
+      "sha256": "fb280b21437fcbb0fd0680a984440a0a7908c6f65eeee9e6c315c14a7c21256e"
+    },
+    {
+      "path": "personal/engineering/backend/nodejs/examples/evaluation.md",
+      "sha256": "637c691a7fd11935d09df851ade13243c7029833d490ee8d26effaa7635ab677"
+    },
+    {
+      "path": "personal/engineering/backend/nodejs/examples/evaluation.md",
+      "sha256": "637c691a7fd11935d09df851ade13243c7029833d490ee8d26effaa7635ab677"
+    },
+    {
+      "path": "personal/engineering/backend/nodejs/examples/evaluation.md",
+      "sha256": "637c691a7fd11935d09df851ade13243c7029833d490ee8d26effaa7635ab677"
+    },
+    {
+      "path": "personal/engineering/backend/python/SKILL.md",
+      "sha256": "2baff8ba533bbf09f601e2d74f4fc01b59660fe9a36a3943229e5db9bacb9e8a"
+    },
+    {
+      "path": "personal/engineering/backend/python/SKILL.md",
+      "sha256": "2baff8ba533bbf09f601e2d74f4fc01b59660fe9a36a3943229e5db9bacb9e8a"
+    },
+    {
+      "path": "personal/engineering/backend/python/SKILL.md",
+      "sha256": "2baff8ba533bbf09f601e2d74f4fc01b59660fe9a36a3943229e5db9bacb9e8a"
+    },
+    {
+      "path": "personal/engineering/backend/python/examples/evaluation.md",
+      "sha256": "a11ba597dae83f15f124e11b03718a89ab18ea47f76b8419a482fe0a6939c575"
+    },
+    {
+      "path": "personal/engineering/backend/python/examples/evaluation.md",
+      "sha256": "a11ba597dae83f15f124e11b03718a89ab18ea47f76b8419a482fe0a6939c575"
+    },
+    {
+      "path": "personal/engineering/backend/python/examples/evaluation.md",
+      "sha256": "a11ba597dae83f15f124e11b03718a89ab18ea47f76b8419a482fe0a6939c575"
+    },
+    {
+      "path": "personal/engineering/backend/service-architecture/SKILL.md",
+      "sha256": "49859da8eaa9176fba3622c36c139d2ef8beea14f260a93c0c90c85a0002588d"
+    },
+    {
+      "path": "personal/engineering/backend/service-architecture/SKILL.md",
+      "sha256": "49859da8eaa9176fba3622c36c139d2ef8beea14f260a93c0c90c85a0002588d"
+    },
+    {
+      "path": "personal/engineering/backend/service-architecture/SKILL.md",
+      "sha256": "49859da8eaa9176fba3622c36c139d2ef8beea14f260a93c0c90c85a0002588d"
+    },
+    {
+      "path": "personal/engineering/backend/service-architecture/examples/evaluation.md",
+      "sha256": "97b262c7c0f05a3c7efe871095f1b5c37dcfb1db4650bcdc6e7c4c253ea4cfb6"
+    },
+    {
+      "path": "personal/engineering/backend/service-architecture/examples/evaluation.md",
+      "sha256": "97b262c7c0f05a3c7efe871095f1b5c37dcfb1db4650bcdc6e7c4c253ea4cfb6"
+    },
+    {
+      "path": "personal/engineering/backend/service-architecture/examples/evaluation.md",
+      "sha256": "97b262c7c0f05a3c7efe871095f1b5c37dcfb1db4650bcdc6e7c4c253ea4cfb6"
+    },
+    {
+      "path": "personal/engineering/core/SKILL.md",
+      "sha256": "d1bebd4ddbcc4a0ce2068a2afc5d94edc2516275382086c6c0b25f9af9a5ac17"
+    },
+    {
+      "path": "personal/engineering/core/SKILL.md",
+      "sha256": "d1bebd4ddbcc4a0ce2068a2afc5d94edc2516275382086c6c0b25f9af9a5ac17"
+    },
+    {
+      "path": "personal/engineering/core/examples/evaluation.md",
+      "sha256": "5d6d3f7c6550493a29a422fd894bc11faf89d26f315f5c483ce8b2bc433a5e69"
+    },
+    {
+      "path": "personal/engineering/core/examples/evaluation.md",
+      "sha256": "5d6d3f7c6550493a29a422fd894bc11faf89d26f315f5c483ce8b2bc433a5e69"
+    },
+    {
+      "path": "personal/engineering/data/SKILL.md",
+      "sha256": "7e279ad2dcb31dce1adfbb3b909a691789cf16268f28dff7a3d8930456784068"
+    },
+    {
+      "path": "personal/engineering/data/SKILL.md",
+      "sha256": "7e279ad2dcb31dce1adfbb3b909a691789cf16268f28dff7a3d8930456784068"
+    },
+    {
+      "path": "personal/engineering/data/core/SKILL.md",
+      "sha256": "42199c191a9ee9622d0096c991f6881e147926d8fef0ffcbd2e42281962799ac"
+    },
+    {
+      "path": "personal/engineering/data/core/SKILL.md",
+      "sha256": "42199c191a9ee9622d0096c991f6881e147926d8fef0ffcbd2e42281962799ac"
+    },
+    {
+      "path": "personal/engineering/data/core/SKILL.md",
+      "sha256": "42199c191a9ee9622d0096c991f6881e147926d8fef0ffcbd2e42281962799ac"
+    },
+    {
+      "path": "personal/engineering/data/core/examples/evaluation.md",
+      "sha256": "e968b1a99a65ffac27a9b40b52aace643b8be347ecaa42535abf7befc3d41a54"
+    },
+    {
+      "path": "personal/engineering/data/core/examples/evaluation.md",
+      "sha256": "e968b1a99a65ffac27a9b40b52aace643b8be347ecaa42535abf7befc3d41a54"
+    },
+    {
+      "path": "personal/engineering/data/core/examples/evaluation.md",
+      "sha256": "e968b1a99a65ffac27a9b40b52aace643b8be347ecaa42535abf7befc3d41a54"
+    },
+    {
+      "path": "personal/engineering/data/databases/SKILL.md",
+      "sha256": "53b7fb81870ad5bfe121a9896e1dc928b3a4fcecf094546332c2603b3b182f89"
+    },
+    {
+      "path": "personal/engineering/data/databases/SKILL.md",
+      "sha256": "53b7fb81870ad5bfe121a9896e1dc928b3a4fcecf094546332c2603b3b182f89"
+    },
+    {
+      "path": "personal/engineering/data/databases/SKILL.md",
+      "sha256": "53b7fb81870ad5bfe121a9896e1dc928b3a4fcecf094546332c2603b3b182f89"
+    },
+    {
+      "path": "personal/engineering/data/databases/examples/evaluation.md",
+      "sha256": "cb65f878cc3a3341ecb0a25511443ddeb8eb6489b5d1da364e9bbdaf12f97383"
+    },
+    {
+      "path": "personal/engineering/data/databases/examples/evaluation.md",
+      "sha256": "cb65f878cc3a3341ecb0a25511443ddeb8eb6489b5d1da364e9bbdaf12f97383"
+    },
+    {
+      "path": "personal/engineering/data/databases/examples/evaluation.md",
+      "sha256": "cb65f878cc3a3341ecb0a25511443ddeb8eb6489b5d1da364e9bbdaf12f97383"
+    },
+    {
+      "path": "personal/engineering/data/examples/evaluation.md",
+      "sha256": "9e4c40f66ba8cdeb50fe6a3092727ecb43dae3fadb23a0f3be74a9b62521bbca"
+    },
+    {
+      "path": "personal/engineering/data/examples/evaluation.md",
+      "sha256": "9e4c40f66ba8cdeb50fe6a3092727ecb43dae3fadb23a0f3be74a9b62521bbca"
+    },
+    {
+      "path": "personal/engineering/data/orchestration/SKILL.md",
+      "sha256": "e9ddc58209b2d0a95caf846bbe24f566e5503f813f08ed4a8a14ee2a742948b9"
+    },
+    {
+      "path": "personal/engineering/data/orchestration/SKILL.md",
+      "sha256": "e9ddc58209b2d0a95caf846bbe24f566e5503f813f08ed4a8a14ee2a742948b9"
+    },
+    {
+      "path": "personal/engineering/data/orchestration/SKILL.md",
+      "sha256": "e9ddc58209b2d0a95caf846bbe24f566e5503f813f08ed4a8a14ee2a742948b9"
+    },
+    {
+      "path": "personal/engineering/data/orchestration/examples/evaluation.md",
+      "sha256": "cb17bcfefe749900e96d4fc6cea216b8d30a97e3e56c703230661dfdca15451c"
+    },
+    {
+      "path": "personal/engineering/data/orchestration/examples/evaluation.md",
+      "sha256": "cb17bcfefe749900e96d4fc6cea216b8d30a97e3e56c703230661dfdca15451c"
+    },
+    {
+      "path": "personal/engineering/data/orchestration/examples/evaluation.md",
+      "sha256": "cb17bcfefe749900e96d4fc6cea216b8d30a97e3e56c703230661dfdca15451c"
+    },
+    {
+      "path": "personal/engineering/data/pipelines/SKILL.md",
+      "sha256": "578987dbeb1638ea245a052a0915d6ef60757c82a31dfeef49af019b928ea48c"
+    },
+    {
+      "path": "personal/engineering/data/pipelines/SKILL.md",
+      "sha256": "578987dbeb1638ea245a052a0915d6ef60757c82a31dfeef49af019b928ea48c"
+    },
+    {
+      "path": "personal/engineering/data/pipelines/SKILL.md",
+      "sha256": "578987dbeb1638ea245a052a0915d6ef60757c82a31dfeef49af019b928ea48c"
+    },
+    {
+      "path": "personal/engineering/data/pipelines/examples/evaluation.md",
+      "sha256": "4494f5c6f90f2a767cefa7fce2122c9ea27731126cab3da8a28e557abf52b077"
+    },
+    {
+      "path": "personal/engineering/data/pipelines/examples/evaluation.md",
+      "sha256": "4494f5c6f90f2a767cefa7fce2122c9ea27731126cab3da8a28e557abf52b077"
+    },
+    {
+      "path": "personal/engineering/data/pipelines/examples/evaluation.md",
+      "sha256": "4494f5c6f90f2a767cefa7fce2122c9ea27731126cab3da8a28e557abf52b077"
+    },
+    {
+      "path": "personal/engineering/examples/evaluation.md",
+      "sha256": "8569cfb24f67ba2f72b8a4a35efd40c8bc71ca468689d8878481b850925ebd28"
+    },
+    {
+      "path": "personal/engineering/frontend/SKILL.md",
+      "sha256": "b1059c1515f2b7863673b06c6bde5980caeaac43c597749c9fd83491d4d61a5d"
+    },
+    {
+      "path": "personal/engineering/frontend/SKILL.md",
+      "sha256": "b1059c1515f2b7863673b06c6bde5980caeaac43c597749c9fd83491d4d61a5d"
+    },
+    {
+      "path": "personal/engineering/frontend/examples/evaluation.md",
+      "sha256": "015d90086782bd9db1f5d0b5337329dd1472d44b22c0507b3ebf6d8594fc06c2"
+    },
+    {
+      "path": "personal/engineering/frontend/examples/evaluation.md",
+      "sha256": "015d90086782bd9db1f5d0b5337329dd1472d44b22c0507b3ebf6d8594fc06c2"
+    },
+    {
+      "path": "personal/engineering/frontend/lightweight-web/SKILL.md",
+      "sha256": "5c5407edbe8445442ea77027b51f87897c111033455255c7aed39fe6ba603848"
+    },
+    {
+      "path": "personal/engineering/frontend/lightweight-web/SKILL.md",
+      "sha256": "5c5407edbe8445442ea77027b51f87897c111033455255c7aed39fe6ba603848"
+    },
+    {
+      "path": "personal/engineering/frontend/lightweight-web/SKILL.md",
+      "sha256": "5c5407edbe8445442ea77027b51f87897c111033455255c7aed39fe6ba603848"
+    },
+    {
+      "path": "personal/engineering/frontend/lightweight-web/examples/evaluation.md",
+      "sha256": "b54a306dfca2264a3e8bba4e4f3d1c416e1618f3c207b06a883c25d1eb78f5ce"
+    },
+    {
+      "path": "personal/engineering/frontend/lightweight-web/examples/evaluation.md",
+      "sha256": "b54a306dfca2264a3e8bba4e4f3d1c416e1618f3c207b06a883c25d1eb78f5ce"
+    },
+    {
+      "path": "personal/engineering/frontend/lightweight-web/examples/evaluation.md",
+      "sha256": "b54a306dfca2264a3e8bba4e4f3d1c416e1618f3c207b06a883c25d1eb78f5ce"
+    },
+    {
+      "path": "personal/engineering/infrastructure/SKILL.md",
+      "sha256": "40ac67f032ce2edc9b08a650c6f791c752360e87c6a9168ac3725bbd5714f410"
+    },
+    {
+      "path": "personal/engineering/infrastructure/SKILL.md",
+      "sha256": "40ac67f032ce2edc9b08a650c6f791c752360e87c6a9168ac3725bbd5714f410"
+    },
+    {
+      "path": "personal/engineering/infrastructure/docker/SKILL.md",
+      "sha256": "73288fb57a10362856510e019c35d8b327c0a97e06fa08982e1c7b56d9825692"
+    },
+    {
+      "path": "personal/engineering/infrastructure/docker/SKILL.md",
+      "sha256": "73288fb57a10362856510e019c35d8b327c0a97e06fa08982e1c7b56d9825692"
+    },
+    {
+      "path": "personal/engineering/infrastructure/docker/SKILL.md",
+      "sha256": "73288fb57a10362856510e019c35d8b327c0a97e06fa08982e1c7b56d9825692"
+    },
+    {
+      "path": "personal/engineering/infrastructure/docker/examples/evaluation.md",
+      "sha256": "f2b253d6b91a65a2b4e7e2b658a50e092a0a771ffa7155d54ed541dd39cdbd5b"
+    },
+    {
+      "path": "personal/engineering/infrastructure/docker/examples/evaluation.md",
+      "sha256": "f2b253d6b91a65a2b4e7e2b658a50e092a0a771ffa7155d54ed541dd39cdbd5b"
+    },
+    {
+      "path": "personal/engineering/infrastructure/docker/examples/evaluation.md",
+      "sha256": "f2b253d6b91a65a2b4e7e2b658a50e092a0a771ffa7155d54ed541dd39cdbd5b"
+    },
+    {
+      "path": "personal/engineering/infrastructure/examples/evaluation.md",
+      "sha256": "9bca26df67bde2d463c79ab22383106612c38ca76fb28ded9ad78d5bce41fbd2"
+    },
+    {
+      "path": "personal/engineering/infrastructure/examples/evaluation.md",
+      "sha256": "9bca26df67bde2d463c79ab22383106612c38ca76fb28ded9ad78d5bce41fbd2"
+    },
+    {
+      "path": "personal/engineering/infrastructure/linux/SKILL.md",
+      "sha256": "bcbe89ca7a853f6f89295fe095dbabfad32d1653292b2a976763aa8a5dc01f02"
+    },
+    {
+      "path": "personal/engineering/infrastructure/linux/SKILL.md",
+      "sha256": "bcbe89ca7a853f6f89295fe095dbabfad32d1653292b2a976763aa8a5dc01f02"
+    },
+    {
+      "path": "personal/engineering/infrastructure/linux/SKILL.md",
+      "sha256": "bcbe89ca7a853f6f89295fe095dbabfad32d1653292b2a976763aa8a5dc01f02"
+    },
+    {
+      "path": "personal/engineering/infrastructure/linux/examples/evaluation.md",
+      "sha256": "cd1739234940daa8a891f580fc32fce34650023dfa8afd4125014b442b8ebc83"
+    },
+    {
+      "path": "personal/engineering/infrastructure/linux/examples/evaluation.md",
+      "sha256": "cd1739234940daa8a891f580fc32fce34650023dfa8afd4125014b442b8ebc83"
+    },
+    {
+      "path": "personal/engineering/infrastructure/linux/examples/evaluation.md",
+      "sha256": "cd1739234940daa8a891f580fc32fce34650023dfa8afd4125014b442b8ebc83"
+    },
+    {
+      "path": "personal/engineering/infrastructure/networking/SKILL.md",
+      "sha256": "33c3ed92419095f7849b102b9c58fa7730bcaf67bfaf6185031d7004aed2245d"
+    },
+    {
+      "path": "personal/engineering/infrastructure/networking/SKILL.md",
+      "sha256": "33c3ed92419095f7849b102b9c58fa7730bcaf67bfaf6185031d7004aed2245d"
+    },
+    {
+      "path": "personal/engineering/infrastructure/networking/SKILL.md",
+      "sha256": "33c3ed92419095f7849b102b9c58fa7730bcaf67bfaf6185031d7004aed2245d"
+    },
+    {
+      "path": "personal/engineering/infrastructure/networking/examples/evaluation.md",
+      "sha256": "dd3648d51cb452c4531462947d56f83c51ccfe9ff4249edfe506c4090bddac5d"
+    },
+    {
+      "path": "personal/engineering/infrastructure/networking/examples/evaluation.md",
+      "sha256": "dd3648d51cb452c4531462947d56f83c51ccfe9ff4249edfe506c4090bddac5d"
+    },
+    {
+      "path": "personal/engineering/infrastructure/networking/examples/evaluation.md",
+      "sha256": "dd3648d51cb452c4531462947d56f83c51ccfe9ff4249edfe506c4090bddac5d"
+    },
+    {
+      "path": "personal/product/architecture-review/SKILL.md",
+      "sha256": "fb79dd48edaaf50d2e4507a565408a49fd5a81feaa2ed4271862259a1bf5038f"
+    },
+    {
+      "path": "personal/product/architecture-review/examples/evaluation.md",
+      "sha256": "735111e8c1fe935ea038ab9233c34869b5f0459da25b0694d013dd86e65ea2de"
+    },
+    {
+      "path": "personal/product/mvp-design/SKILL.md",
+      "sha256": "65412fee626980658eb1b54a560a359ba6ff795b46d36f68f0b9a496b8b15c3e"
+    },
+    {
+      "path": "personal/product/mvp-design/examples/evaluation.md",
+      "sha256": "71e661530d90f308a5588b799f803a15217ded9b71ff1ae0889997bbe981b82a"
+    },
+    {
+      "path": "personal/product/project-scoping/SKILL.md",
+      "sha256": "1daf566db212efa3b0d55beb14dcbac099be0941e43c9b946af9121fe8ed0e0e"
+    },
+    {
+      "path": "personal/product/project-scoping/examples/evaluation.md",
+      "sha256": "72f165aff90406126b482ba6112b5a90e4719d94a5167dfc125a6d041c5f492c"
+    },
+    {
+      "path": "personal/quant/SKILL.md",
+      "sha256": "a8bb21b0fab6f00e6e61ec1bc98034b9469cb21429bf6a3ab09e352661a31130"
+    },
+    {
+      "path": "personal/quant/examples/evaluation.md",
+      "sha256": "d209a17c45f3aafd83e3f48c1df52721afd279a6ff7f2c7c2645b6466b334726"
+    },
+    {
+      "path": "personal/quant/production-workflow/SKILL.md",
+      "sha256": "4709497d83aa2f62ce5190d4799b1fa4b9382e612fbe77fd2fc4ab134ccf0eed"
+    },
+    {
+      "path": "personal/quant/production-workflow/SKILL.md",
+      "sha256": "4709497d83aa2f62ce5190d4799b1fa4b9382e612fbe77fd2fc4ab134ccf0eed"
+    },
+    {
+      "path": "personal/quant/production-workflow/examples/evaluation.md",
+      "sha256": "11a0159d3b729d2a8ff205f2b329a9176000594bc9a273f52e445f18930cb3e9"
+    },
+    {
+      "path": "personal/quant/production-workflow/examples/evaluation.md",
+      "sha256": "11a0159d3b729d2a8ff205f2b329a9176000594bc9a273f52e445f18930cb3e9"
+    },
+    {
+      "path": "personal/quant/research/SKILL.md",
+      "sha256": "838eabdfb2578af1be69c1a2e0edc73968e5c088695f4fecfa089a2febe6db5a"
+    },
+    {
+      "path": "personal/quant/research/SKILL.md",
+      "sha256": "838eabdfb2578af1be69c1a2e0edc73968e5c088695f4fecfa089a2febe6db5a"
+    },
+    {
+      "path": "personal/quant/research/examples/evaluation.md",
+      "sha256": "0a52521f0a454d6581623af9ff1d486f301434b079bb6791be80f237b5a6cf42"
+    },
+    {
+      "path": "personal/quant/research/examples/evaluation.md",
+      "sha256": "0a52521f0a454d6581623af9ff1d486f301434b079bb6791be80f237b5a6cf42"
+    },
+    {
+      "path": "personal/statistics/SKILL.md",
+      "sha256": "170df2f3d034b4c66544a18afe33427ba0208d5677c54084189a3b5615955e46"
+    },
+    {
+      "path": "personal/statistics/SKILL.md",
+      "sha256": "170df2f3d034b4c66544a18afe33427ba0208d5677c54084189a3b5615955e46"
+    },
+    {
+      "path": "personal/statistics/examples/evaluation.md",
+      "sha256": "21feb665a24bd55d1b90685e3039243b0444118c136dbcf9451597c91aadb8ea"
+    },
+    {
+      "path": "personal/workflow/brainstorming/SKILL.md",
+      "sha256": "4e1d02f81a1b0c2227e2003235244550ee1119eef7cc8565708e9e33c3051b6a"
+    },
+    {
+      "path": "personal/workflow/brainstorming/examples/evaluation.md",
+      "sha256": "9d6da1e17fb340e74f6b112186167f255414f7cd3024dd4cf358221eae1a2455"
+    },
+    {
+      "path": "personal/workflow/personal-debugging/SKILL.md",
+      "sha256": "ff809c2c7e0fb9e488fe33c58dca25ca7d583b342d7c60f8284744a15dcc7224"
+    },
+    {
+      "path": "personal/workflow/personal-debugging/examples/evaluation.md",
+      "sha256": "7df20921930a1f7f93ac23378836135e577eff2178c2cbac8ff44fe4f29363aa"
+    },
+    {
+      "path": "personal/workflow/personal-research/SKILL.md",
+      "sha256": "603a7c558573c4bd3915cbd3b40eaeaf2ce5cbb8330eb80b31ec305366459a3b"
+    },
+    {
+      "path": "personal/workflow/personal-research/examples/evaluation.md",
+      "sha256": "094a62dd0f57eb5959b3ef079f5a7c2e104a1a57730e8180178a335285b78c66"
+    },
+    {
+      "path": "personal/workflow/project-init/SKILL.md",
+      "sha256": "ae89d4321757e583027f9b29da756da8a374502242c2d8251f0cc95107e52b86"
+    },
+    {
+      "path": "personal/workflow/project-init/examples/evaluation.md",
+      "sha256": "4a3f1c4eaeae7ac8838f6e2559902f3a39d6beb82463e9e43ab2e358e373b0b9"
+    },
+    {
+      "path": "templates/CONTEXT.md",
+      "sha256": "a4f94ea92389d311561dd66a788dd61589293edee361de75f8e0dd83c227b320"
+    },
+    {
+      "path": "templates/bug-diagnosis.md",
+      "sha256": "ccee3cc252fcd78b17ffa5db986f87977f6d65449c20e13fa579e6b044571c14"
+    },
+    {
+      "path": "templates/code-review-report.md",
+      "sha256": "38c5f75b176880c078281fcbada5c5e23ce35f51ce93bd08bd151150fa3c5ef6"
+    },
+    {
+      "path": "templates/data-analysis-report.md",
+      "sha256": "c1313d886bdfd25fdd1f8b5e229222214b788299117d57e0edfee50e2c29a9f3"
+    },
+    {
+      "path": "templates/feature-spec.md",
+      "sha256": "ca71349ba9bae22652f5610b1ebca95fa69c34731fc17fc5ad404374a4ae4d31"
+    },
+    {
+      "path": "templates/handoff.md",
+      "sha256": "a410dd99fc5fc580f4cfe9becbe53634a5f58c534fc09d487142d92a141b2879"
+    },
+    {
+      "path": "templates/research-decision.md",
+      "sha256": "a3d4589fcfc34bcea2095cdb70fe10f75690aae4b3f227843366d1d3bb1d60a0"
+    }
+  ]
+}
