@@ -353,8 +353,8 @@
     {
       "check_id": "CHECK-CORPUS",
       "scope": "Planning corpus traceability and fixture validation",
-      "selection_rule": "Implement the planned Python corpus validator only after its source path and invocation are selected; before then use throwaway validation without claiming a repository command exists.",
-      "pass_signal": "Requirement ownership, task/commit mappings, fixture schema, IDs, local links, and phase acceptance seams validate without duplicate owners or unowned requirements."
+      "selection_rule": "Run `python3 tests/implementation/validate_corpus.py` from repository root. The stdlib-only validator is established by IP-01; extend it only when the catalog or phase contract changes.",
+      "pass_signal": "Exit zero only when requirement ownership, task/commit mappings, fixture schema shape, stable IDs, local links, and all phase acceptance seams validate; a malformed corpus exits nonzero."
     }
   ],
   "global_invariants": [

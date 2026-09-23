@@ -38,7 +38,7 @@ This file is the shared language and operating context for agents working in thi
 
 - Primary test seams: Browser event reconciliation, shortcut/search/activation journeys, deterministic ranking fixtures, Native Messaging protocol and recovery, lifecycle/packaging, privacy boundaries, accessibility, and cross-platform compatibility.
 - Required checks: Every binding requirement must have a test seam and observable acceptance signal. The hot path must remain local, bounded, and measurable.
-- Test commands: Use implementation-specific commands once runtime code exists. Documentation validation uses local-link checking, `git diff --check`, requirements traceability, and the acceptance criteria in `docs/plan/refactor/verification-and-acceptance.md`.
+- Test commands: Run `python3 tests/implementation/validate_corpus.py` for phase-plan/fixture traceability; use implementation-specific runtime commands once the owning phase creates their toolchain. Documentation review also runs `git diff --check` and the acceptance criteria in `docs/plan/refactor/verification-and-acceptance.md`.
 - Independent sources of expected results: Chrome and Edge APIs, browser fixtures, measured latency and memory, protocol contracts, privacy review, and the rebuilt refactor documents.
 
 ## Issue tracking and decisions

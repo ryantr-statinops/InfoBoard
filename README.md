@@ -19,11 +19,13 @@ The product contract is ready and IP-01 is complete in `dev`: shared fixtures, p
 | --- | --- |
 | [`docs/plan/refactor/`](docs/plan/refactor/README.md) | Binding product behavior, requirements, privacy, architecture, runtime, and acceptance |
 | [`docs/plan/implementation/`](docs/plan/implementation/README.md) | Phase plans, commit-to-task mapping, execution status, and evidence tracking |
+| [`fixtures/`](fixtures/catalog.json) | Shared contract fixture catalog and schema |
+| [`tests/implementation/validate_corpus.py`](tests/implementation/validate_corpus.py) | Standard-library phase, ownership, link, and fixture-contract validator |
 | [`docs/architecture/`](docs/architecture/README.md), [`docs/design/`](docs/design/README.md), [`docs/quality/`](docs/quality/README.md), [`docs/operations/`](docs/operations/README.md) | Preserved detailed views and supporting design/quality/operations references |
 | [`.agent/skills/`](.agent/skills/) | Repository agent skills and templates |
 
 ## Starting implementation
 
-Follow the dependency waves in `docs/plan/implementation/index.md`. Start from the latest `origin/dev` on a dedicated phase branch, follow Section 6 task IDs and Section 7 commit instructions, and run Section 8 acceptance checks. The coordinator alone updates the README execution dashboard. No implementation source scaffold or setup/test command is declared until its owning phase establishes it.
+Follow the dependency waves in `docs/plan/implementation/index.md`. Start from the latest `origin/dev` on a dedicated phase branch, follow Section 6 task IDs and Section 7 commit instructions, and run Section 8 acceptance checks. The coordinator alone updates the README execution dashboard. IP-01 provides the corpus check `python3 tests/implementation/validate_corpus.py`; runtime source scaffolds and their setup/test commands are established by their owning phases.
 
 Implementation work integrates into `dev` only after dependencies and phase acceptance checks pass. The release PR from `dev` to `main` stays open for the user to merge manually.

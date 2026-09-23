@@ -2,11 +2,11 @@
 
 > Plan ID: IP-01
 > Status: See README.md execution tracker
-> Execution owner: control owner / contract-plan agent
+> Execution owner: coordinator / Codex
 > Dependencies: Canonical refactor documents
 > Parallel boundary: None; this phase establishes shared contracts
 > Requirement IDs: FR-001..FR-015, NFR-001..NFR-010, operational rules
-> Owned paths: `fixtures/catalog.schema.json`, `fixtures/catalog.json`; phase-specific `fixtures/` and `tests/` roots remain `to-create`; `extension/`, `host/`, and `packaging/` remain `to-create`
+> Owned paths: `fixtures/catalog.schema.json`, `fixtures/catalog.json`, `tests/implementation/validate_corpus.py`; phase-specific `fixtures/` and `tests/` roots remain `to-create`; `extension/`, `host/`, and `packaging/` remain `to-create`
 
 ## 1. Mục tiêu
 
@@ -30,12 +30,12 @@
 
 - Read [`docs/plan/refactor/README.md`](../refactor/README.md), [`architecture.md`](../refactor/architecture.md), [`requirements.md`](../refactor/requirements.md), [`runtime-protocol.md`](../refactor/runtime-protocol.md), and [`verification-and-acceptance.md`](../refactor/verification-and-acceptance.md).
 - Read [`CONTEXT.md`](../../../CONTEXT.md) and the repository onboarding and requirements-analysis skills.
-- Confirm the repository has no implementation source tree; if one appears, replace every logical path below with the observed path before merging this plan.
+- Confirm runtime source roots `extension/`, `host/`, and `packaging/` are still absent; replace only those logical `to-create` paths if a scaffold appears. The shared fixture catalog and corpus validator are observed IP-01 artifacts.
 
 ## 4. Đầu ra cần bàn giao
 
-- [ ] A requirement matrix in `index.md` with exactly one primary phase owner for every FR and NFR ID.
-- [ ] A fixture catalog under `fixtures/` with stable IDs and expected observable results:
+- [x] A requirement matrix in `index.md` with exactly one primary phase owner for every FR and NFR ID.
+- [x] A fixture catalog under `fixtures/` with stable IDs and expected observable results:
   - `FX-SHORTCUT-FOCUS`: configured command opens the focused surface and focuses the input.
   - `FX-QUERY-LIVE`: each accepted query revision renders the matching result set in order.
   - `FX-RANKING-DETERMINISTIC`: identical projection/query inputs produce identical ordered output and explanations.
@@ -45,8 +45,8 @@
   - `FX-HOST-DOWN`: unavailable host yields a visible bounded error and retry state.
   - `FX-RESET-OWNED-DATA`: reset removes only InfoBoard-owned data.
   - `FX-PERMISSION-DENIED`: unsupported or denied browser access fails closed and is diagnosable.
-- [ ] Exact logical module map for the five target roots, with each path marked `to-create` until source exists.
-- [ ] Shared acceptance vocabulary for profile IDs, tab IDs, projection revisions, protocol envelopes, health states, and bounded limits.
+- [x] Logical module map for all five target roots; observed catalog and validator paths are listed, and absent runtime/phase-owned paths remain `to-create`.
+- [x] Shared acceptance vocabulary for profile IDs, tab IDs, projection revisions, protocol envelopes, health states, and bounded limits is linked to the canonical contract and catalog invariants.
 
 ## 5. Skill và tài liệu áp dụng
 
@@ -64,70 +64,69 @@
 
 ## 6. Công việc triển khai
 
-- [ ] `IP-01-T01` Build the requirement matrix from the canonical requirements document. Record the exact primary owner in `index.md`; supporting plans must cite the ID without claiming ownership.
-- [ ] `IP-01-T02` Define the logical target map: extension browser boundary and UI; Go host lifecycle, protocol, projection, index, persistence and diagnostics; packaging; fixtures; tests. Mark all absent paths `to-create`.
-- [ ] `IP-01-T03` Define fixture input/output schemas for focused activation, live query, rank ordering, event convergence, full snapshot, reconnect, stale activation, host failure, reset, and permission denial.
-- [ ] `IP-01-T04` Define global commands as future contracts: formatting/linting per language, unit/integration/browser checks, accessibility audit, performance benchmark, package/install smoke test, and the Python corpus validator. Do not invent a command before its source toolchain exists.
-- [ ] `IP-01-T05` Define global invariants: current profile only, monotonic projection revisions, deterministic output, no raw title/URL diagnostics, bounded payloads/timeouts, fail-closed activation, and ownership-safe reset.
-- [ ] `IP-01-T06` Record acceptance seams so each later phase can point to one fixture, one observable output, and one requirement ID.
+- [x] `IP-01-T01` Build the requirement matrix from the canonical requirements document. Record the exact primary owner in `index.md`; supporting plans must cite the ID without claiming ownership.
+- [x] `IP-01-T02` Define the logical target map: extension browser boundary and UI; Go host lifecycle, protocol, projection, index, persistence and diagnostics; packaging; fixtures; tests. Mark all absent paths `to-create`.
+- [x] `IP-01-T03` Define fixture input/output schemas for focused activation, live query, rank ordering, event convergence, full snapshot, reconnect, stale activation, host failure, reset, and permission denial.
+- [x] `IP-01-T04` Define future formatting/linting, unit/integration/browser, accessibility, performance, and package/install checks without selecting commands until their source toolchains exist. Implement the stdlib-only Python corpus validator at `tests/implementation/validate_corpus.py` and use its exact root command.
+- [x] `IP-01-T05` Define global invariants: current profile only, monotonic projection revisions, deterministic output, no raw title/URL diagnostics, bounded payloads/timeouts, fail-closed activation, and ownership-safe reset.
+- [x] `IP-01-T06` Record acceptance seams so each later phase can point to one fixture, one observable output, and one requirement ID.
 
 ## 7. Kế hoạch commit
 
-1. `docs(implementation): implement ip-01-t01`
+1. `test(implementation): add IP-01 corpus validator`
    - Task IDs: `IP-01-T01`.
-   - Owned target paths: `fixtures/` (to-create), `tests/` (to-create), `extension/` (to-create), `host/` (to-create), `packaging/` (to-create).
-   - Behavior: Build the requirement matrix from the canonical requirements document. Record the exact primary owner in `index.md`; supporting plans must cite the ID without claiming ownership.
-   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-01 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
-   - Observable result before commit: Build the requirement matrix from the canonical requirements document. Record the exact primary owner in `index.md`; supporting plans must cite the ID without claiming ownership.
-   - Dependency gate: all index.md dependencies for IP-01 have merged to dev; phase work branch starts from latest origin/dev.
+   - Owned target paths: `tests/implementation/validate_corpus.py`.
+   - Behavior: validate the canonical 25-row FR/NFR owner matrix and the 20-phase plan corpus; reject missing/duplicate owners, task IDs without exactly one commit owner, invalid tracker states, missing phase rows, broken local links, and catalog/seam inconsistencies.
+   - Fixture and command: owner-matrix and in-memory negative probes; run `python3 tests/implementation/validate_corpus.py` from repository root.
+   - Observable result before commit: exit 0 with counts for phases, task mappings, requirement IDs, fixtures, invariants, and seams; malformed corpus mutations return validation errors and nonzero status.
+   - Dependency gate: canonical refactor requirements and the implementation index are present; this branch is based on latest `origin/dev`.
 
 2. `docs(implementation): implement ip-01-t02`
    - Task IDs: `IP-01-T02`.
-   - Owned target paths: `fixtures/` (to-create), `tests/` (to-create), `extension/` (to-create), `host/` (to-create), `packaging/` (to-create).
-   - Behavior: Define the logical target map: extension browser boundary and UI; Go host lifecycle, protocol, projection, index, persistence and diagnostics; packaging; fixtures; tests. Mark all absent paths `to-create`.
-   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-01 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
-   - Observable result before commit: Define the logical target map: extension browser boundary and UI; Go host lifecycle, protocol, projection, index, persistence and diagnostics; packaging; fixtures; tests. Mark all absent paths `to-create`.
-   - Dependency gate: all index.md dependencies for IP-01 have merged to dev; phase work branch starts from latest origin/dev.
+   - Owned target paths: `docs/plan/implementation/index.md`, `docs/plan/implementation/phase-01-contract-and-fixtures.md`.
+   - Behavior: record the observed shared fixture/catalog and validator paths; keep absent extension, Go host, packaging, and phase-specific test paths marked `to-create`.
+   - Fixture and command: logical target-map assertions; run `python3 tests/implementation/validate_corpus.py`.
+   - Observable result before commit: every target is either an observed path or explicitly `to-create`; the index and phase metadata agree.
+   - Dependency gate: canonical refactor requirements are available; runtime source roots remain absent.
 
 3. `docs(implementation): implement ip-01-t03`
    - Task IDs: `IP-01-T03`.
-   - Owned target paths: `fixtures/` (to-create), `tests/` (to-create), `extension/` (to-create), `host/` (to-create), `packaging/` (to-create).
-   - Behavior: Define fixture input/output schemas for focused activation, live query, rank ordering, event convergence, full snapshot, reconnect, stale activation, host failure, reset, and permission denial.
-   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-01 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
-   - Observable result before commit: Define fixture input/output schemas for focused activation, live query, rank ordering, event convergence, full snapshot, reconnect, stale activation, host failure, reset, and permission denial.
-   - Dependency gate: all index.md dependencies for IP-01 have merged to dev; phase work branch starts from latest origin/dev.
+   - Owned target paths: `fixtures/catalog.schema.json`, `fixtures/catalog.json`.
+   - Behavior: define the versioned fixture envelope and nine synthetic cases for shortcut focus, live query, deterministic ranking, event convergence, reconnect, stale activation, host unavailable, owned-data reset, and denied permission.
+   - Fixture and command: `FX-SHORTCUT-FOCUS`, `FX-QUERY-LIVE`, `FX-RANKING-DETERMINISTIC`, `FX-TAB-EVENTS`, `FX-RECONNECT`, `FX-STALE-ACTIVATION`, `FX-HOST-DOWN`, `FX-RESET-OWNED-DATA`, `FX-PERMISSION-DENIED`; run `python3 tests/implementation/validate_corpus.py`.
+   - Observable result before commit: nine unique IDs have input, requirement references, expected observable outputs, and privacy assertions; catalog conforms to its declared schema contract.
+   - Dependency gate: IP-01-T02 target map is established; runtime test harnesses remain future phase work.
 
 4. `docs(implementation): implement ip-01-t04`
    - Task IDs: `IP-01-T04`.
-   - Owned target paths: `fixtures/` (to-create), `tests/` (to-create), `extension/` (to-create), `host/` (to-create), `packaging/` (to-create).
-   - Behavior: Define global commands as future contracts: formatting/linting per language, unit/integration/browser checks, accessibility audit, performance benchmark, package/install smoke test, and the Python corpus validator. Do not invent a command before its source toolchain exists.
-   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-01 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
-   - Observable result before commit: Define global commands as future contracts: formatting/linting per language, unit/integration/browser checks, accessibility audit, performance benchmark, package/install smoke test, and the Python corpus validator. Do not invent a command before its source toolchain exists.
-   - Dependency gate: all index.md dependencies for IP-01 have merged to dev; phase work branch starts from latest origin/dev.
+   - Owned target paths: `fixtures/catalog.json`, `fixtures/catalog.schema.json`.
+   - Behavior: record future verification contracts for language-specific formatting/linting, unit/integration, browser matrix, accessibility, performance, package smoke, and corpus checks without fabricating unavailable runtime commands.
+   - Fixture and command: `CHECK-FORMAT-LINT`, `CHECK-UNIT`, `CHECK-INTEGRATION`, `CHECK-BROWSER-MATRIX`, `CHECK-ACCESSIBILITY`, `CHECK-PERFORMANCE`, `CHECK-PACKAGE-SMOKE`, `CHECK-CORPUS`; run `python3 tests/implementation/validate_corpus.py`.
+   - Observable result before commit: each future check names its selection rule and pass signal; the corpus validator has a runnable exact command.
+   - Dependency gate: shared catalog schema exists; runtime commands remain unselected until their owning toolchains exist.
 
 5. `docs(implementation): implement ip-01-t05`
    - Task IDs: `IP-01-T05`.
-   - Owned target paths: `fixtures/` (to-create), `tests/` (to-create), `extension/` (to-create), `host/` (to-create), `packaging/` (to-create).
-   - Behavior: Define global invariants: current profile only, monotonic projection revisions, deterministic output, no raw title/URL diagnostics, bounded payloads/timeouts, fail-closed activation, and ownership-safe reset.
-   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-01 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
-   - Observable result before commit: Define global invariants: current profile only, monotonic projection revisions, deterministic output, no raw title/URL diagnostics, bounded payloads/timeouts, fail-closed activation, and ownership-safe reset.
-   - Dependency gate: all index.md dependencies for IP-01 have merged to dev; phase work branch starts from latest origin/dev.
+   - Owned target paths: `fixtures/catalog.json`, `fixtures/catalog.schema.json`.
+   - Behavior: define profile isolation, revision safety, deterministic ranking, diagnostics redaction, bounded inputs, fail-closed activation, and ownership-safe reset invariants.
+   - Fixture and command: `INV-001` through `INV-007`; run `python3 tests/implementation/validate_corpus.py`.
+   - Observable result before commit: every invariant has an observable guard and the validator checks the invariant catalog shape and IDs.
+   - Dependency gate: fixture envelope and base cases exist; detailed runtime assertions remain owned by dependent phases.
 
 6. `docs(implementation): implement ip-01-t06`
    - Task IDs: `IP-01-T06`.
-   - Owned target paths: `fixtures/` (to-create), `tests/` (to-create), `extension/` (to-create), `host/` (to-create), `packaging/` (to-create).
-   - Behavior: Record acceptance seams so each later phase can point to one fixture, one observable output, and one requirement ID.
-   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-01 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
-   - Observable result before commit: Record acceptance seams so each later phase can point to one fixture, one observable output, and one requirement ID.
-   - Dependency gate: all index.md dependencies for IP-01 have merged to dev; phase work branch starts from latest origin/dev.
-
+   - Owned target paths: `fixtures/catalog.json`, `fixtures/catalog.schema.json`, `docs/plan/implementation/index.md`, `docs/plan/implementation/README.md`.
+   - Behavior: connect each later phase IP-02..IP-20 to a shared fixture, observed signal, requirement, ownership relation, and phase-specific extension note.
+   - Fixture and command: `phase_seams` entries for IP-02..IP-20; run `python3 tests/implementation/validate_corpus.py`.
+   - Observable result before commit: all 19 later phases have exactly one shared acceptance seam and no seam claims primary ownership contrary to the index.
+   - Dependency gate: the owner matrix and shared fixture IDs are established; the coordinator owns tracker updates.
 ## 8. Kiểm chứng và nghiệm thu
 
-- [ ] Run the future corpus validator from repository root against `docs/plan/implementation/`; it must find one primary owner for all 25 FR/NFR IDs, unique Plan IDs, valid links, and all ten section headings.
-- [ ] Run fixture-schema validation once `fixtures/` exists; each fixture must specify input, expected observable output, failure class where relevant, and owning requirement.
-- [ ] Manually trace `FX-SHORTCUT-FOCUS`, `FX-QUERY-LIVE`, `FX-RANKING-DETERMINISTIC`, `FX-TAB-EVENTS`, `FX-RECONNECT`, `FX-STALE-ACTIVATION`, `FX-HOST-DOWN`, `FX-RESET-OWNED-DATA`, and `FX-PERMISSION-DENIED` to exactly one primary phase.
-- [ ] Confirm no target path is presented as an observed source path while the implementation tree is absent.
-- [ ] Acceptance signal: every FR/NFR and operational rule has a named owner, fixture or evidence seam, and later-phase dependency path.
+- [x] Run the future corpus validator from repository root against `docs/plan/implementation/`; it must find one primary owner for all 25 FR/NFR IDs, unique Plan IDs, valid links, and all ten section headings.
+- [x] Run fixture-schema validation once `fixtures/` exists; each fixture must specify input, expected observable output, failure class where relevant, and owning requirement.
+- [x] Manually trace `FX-SHORTCUT-FOCUS`, `FX-QUERY-LIVE`, `FX-RANKING-DETERMINISTIC`, `FX-TAB-EVENTS`, `FX-RECONNECT`, `FX-STALE-ACTIVATION`, `FX-HOST-DOWN`, `FX-RESET-OWNED-DATA`, and `FX-PERMISSION-DENIED` to exactly one primary phase.
+- [x] Confirm no target path is presented as an observed source path while the implementation tree is absent.
+- [x] Acceptance signal: every FR/NFR and operational rule has a named owner, fixture or evidence seam, and later-phase dependency path.
 
 ## 9. Rủi ro và quyết định còn mở
 
@@ -140,5 +139,5 @@
 
 - Skill: [`task-planning`](../../../.agent/skills/common/foundation/task-planning/SKILL.md), [`testing`](../../../.agent/skills/common/engineering/testing/SKILL.md), [`requirements-analysis`](../../../.agent/skills/common/foundation/requirements-analysis/SKILL.md), [`documentation`](../../../.agent/skills/common/engineering/documentation/SKILL.md)
 - Project context: [`CONTEXT.md`](../../../CONTEXT.md)
-- Source/config/test path ngoài `docs/`: `extension/`, `host/`, `packaging/`, `fixtures/`, `tests/` (all `to-create`)
-- Fixture/tool/artifact ngoài `docs/`: `fixtures/FX-*` catalog (to-create); future repository-root corpus validator (to-create)
+- Source/config/test path ngoài `docs/`: `fixtures/catalog.schema.json`, `fixtures/catalog.json`, `tests/implementation/validate_corpus.py` (observed); `extension/`, `host/`, `packaging/`, and phase-specific fixture/test roots remain `to-create`
+- Fixture/tool/artifact ngoài `docs/`: shared fixture catalog/schema at `fixtures/catalog.json` and `fixtures/catalog.schema.json`; run `python3 tests/implementation/validate_corpus.py` from repository root
