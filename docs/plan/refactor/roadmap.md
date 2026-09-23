@@ -1,50 +1,61 @@
-# Refactor roadmap
+# Complete product delivery roadmap
 
-This is a discovery roadmap, not an implementation commitment.
+This roadmap sequences implementation dependencies for the complete product contract. It is not an MVP ladder and does not redefine the product as a series of reduced products. Each stage produces a coherent, testable part of the final system.
 
-## Phase 0 — Product boundary
+## Stage 1 — Contract and fixtures
 
-- Confirm tab search as the first product direction.
-- Define the primary user and the exact tab-switching problem.
-- Decide whether a warm Go process is acceptable.
-- Define Chromium desktop and OS support boundaries.
+- Freeze the product contract, requirements, data boundary, privacy rules, and decision log.
+- Create browser, projection, ranking, protocol, and failure fixtures from the acceptance criteria.
+- Define reference environments and measurement harnesses.
 
-## Phase 1 — Browser interaction proof
+**Exit:** every binding requirement has an owner, test seam, and documented acceptance signal.
 
-- Register a configurable command shortcut.
-- Read the current open-tab set.
-- Open and focus the search UI.
-- Switch to a selected tab.
-- Handle tab creation, update, activation, and removal.
+## Stage 2 — Extension browser boundary
 
-## Phase 2 — Fast lexical search
+- Implement Manifest V3 command registration and focused search surface shell.
+- Implement profile-scoped tab projection and all declared browser events.
+- Implement activation, stale-result handling, multi-window behavior, and private-context rules.
 
-- Build the Go runtime boundary.
-- Add in-memory indexing and fuzzy matching.
-- Add recency/window/group/pinned ranking.
-- Measure hot-path latency and memory usage.
-- Add reconnect and full-index rebuild behavior.
+**Exit:** the extension can reconcile browser state and complete the UX journey with a local fixture/runtime seam.
 
-## Phase 3 — Persistence and packaging
+## Stage 3 — Go host and protocol
 
-- Decide whether SQLite persistence is needed.
-- Implement daemon or Native Messaging installation.
-- Define startup, shutdown, update, crash recovery, and uninstall behavior.
-- Test multiple windows and browser profiles.
+- Implement the Native Messaging host, handshake, limits, request IDs, sync messages, health, errors, reconnect, and full snapshot rebuild.
+- Implement in-memory projection and deterministic lexical ranking.
+- Connect the extension to the host and measure hot-path latency.
 
-## Phase 4 — Optional semantic layer
+**Exit:** protocol, runtime failure, convergence, and ranking acceptance tests pass at the declared tab envelope.
 
-- Define a user problem that lexical search cannot solve.
-- Benchmark whether ChromaDB improves that behavior.
-- Add asynchronous embeddings and revisioned semantic index only if evidence supports it.
-- Keep semantic failure isolated from normal tab switching.
+## Stage 4 — Complete UX and configuration
 
-## Phase 5 — Release hardening
+- Implement all UI states, keyboard behavior, accessibility, display privacy rules, settings, status, repair, and reset flows.
+- Add ranking explanations and diagnostics controls without exposing sensitive fields by default.
 
-- Permission review.
-- Security review for local IPC.
-- Chromium compatibility matrix.
-- UI customization boundary.
-- Performance regression benchmark.
+**Exit:** all user journeys and accessibility criteria pass in Chrome and Edge.
 
-No database or feature is promoted into the core stack without passing through the product boundary and a measured acceptance signal.
+## Stage 5 — Persistence and lifecycle
+
+- Implement SQLite schema, migrations, bounded activation metadata, diagnostics retention, degraded persistence, reset, and uninstall cleanup.
+- Verify restart, crash, migration failure, and recovery behavior.
+
+**Exit:** local data lifecycle and recovery acceptance pass without affecting browser state.
+
+## Stage 6 — Cross-platform packaging
+
+- Build Chrome and Edge packages plus Linux, macOS, and Windows host installers.
+- Implement origin allowlists, integrity checks, update/rollback, repair, and uninstall verification.
+- Run the complete compatibility matrix.
+
+**Exit:** clean install, update, repair, reset, uninstall, and rollback scenarios pass on every supported pair.
+
+## Stage 7 — Release hardening
+
+- Complete security/privacy/permission review.
+- Run performance regression and resource-bound benchmarks.
+- Validate diagnostics redaction, accessibility, release artifacts, documentation, and support procedures.
+
+**Exit:** all release gates in [verification and acceptance](verification-and-acceptance.md) pass.
+
+## Explicitly deferred proposals
+
+Semantic retrieval, page-content indexing, whole-history search, cloud synchronization, other browsers, and a standalone loopback daemon are separate proposals. They cannot be added as implementation shortcuts; each requires a product, privacy, architecture, and acceptance decision.
