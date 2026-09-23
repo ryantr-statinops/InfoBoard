@@ -1,10 +1,12 @@
-# InfoBoard design
+# Design
 
-Design documentation translates accepted product behavior into user-visible navigation, flows, and states. It does not define storage, provider, or API implementation.
+This folder explains how the product behaves from the user's perspective. The binding contracts are [`user-experience.md`](../plan/refactor/user-experience.md) and [`search-and-ranking.md`](../plan/refactor/search-and-ranking.md); these documents make the journey, states, and visual responsibilities easier to review without creating a second contract.
 
-1. [Information architecture](information-architecture.md)
-2. [Core flows](core-flows.md)
-3. [UI states and responsive behavior](ui-states.md)
-4. [Illustrative mockups](mockups/README.md)
+## Reading order
 
-Mockups are illustrative references, not canonical product or architecture contracts. A future visual pass must implement the written contracts and may not introduce product behavior that is absent from the product specifications.
+1. [Product surface](product-surface.md) — invocation, layout, result rows, and configuration.
+2. [Interaction states](interaction-states.md) — opening, searching, failure, recovery, and dismissal.
+3. [Search behavior](search-behavior.md) — query handling, ranking explanation, and activation safety.
+4. [Mockups](mockups/README.md) — optional visual references only.
+
+The surface must remain keyboard-first, local-only, deterministic, accessible, and explicit about runtime or activation failures.
