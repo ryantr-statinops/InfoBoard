@@ -1,14 +1,13 @@
-# InfoBoard product documentation
+# Product
 
-This section is the source of truth for what InfoBoard is, who it serves, and what the MVP must deliver. Technical documents may explain how a requirement is implemented, but they must not redefine product behavior.
+This folder is the reader-oriented product view. The binding source is [`docs/plan/refactor/`](../plan/refactor/README.md); these documents organize the same decisions by product concern and must remain consistent with the canonical contracts.
 
-Read in this order:
+## Reading order
 
-1. [Vision](vision.md)
-2. [Users and jobs](users-and-jobs.md)
-3. [MVP scope](mvp-scope.md)
-4. [Requirements](requirements.md)
-5. Feature specifications: [capture](features/bookmark-capture.md), [organization](features/organization.md), [retrieval](features/retrieval.md), and [analytics](features/analytics.md)
-6. [Decisions](decisions.md) and [idea inbox](ideas.md)
+1. [Product contract](product-contract.md) — user, problem, outcome, capabilities, and exclusions.
+2. [Domain and data](domain-and-data.md) — tab projection, lifecycle, privacy, and ownership.
+3. [Requirements](requirements.md) — functional, quality, compatibility, privacy, and operational obligations.
+4. [Decision log](decision-log.md) — accepted boundaries and rejected directions.
+5. [Roadmap](roadmap.md) — dependency order for future delivery.
 
-An idea is not a commitment. It becomes part of the product only after an accepted decision updates the MVP scope, requirements, relevant feature specification, architecture impact, and roadmap.
+The product is complete in target scope even when implementation delivery is staged. No implementation slice may silently change this contract.

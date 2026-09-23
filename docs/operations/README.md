@@ -1,8 +1,11 @@
-# InfoBoard operations
+# Operations
 
-Operations documentation describes the target safe operating contract. Commands become supported only after implementation evidence is attached to the relevant delivery task.
+This folder explains how a complete product is installed, updated, repaired, diagnosed, reset, and removed. Binding sources are [`packaging-and-operations.md`](../plan/refactor/packaging-and-operations.md), [`persistence-and-lifecycle.md`](../plan/refactor/persistence-and-lifecycle.md), and [`verification-and-acceptance.md`](../plan/refactor/verification-and-acceptance.md).
 
-1. [Configuration](configuration.md)
-2. [Backup, restore, and rebuild](backup-restore-and-rebuild.md)
+## Reading order
 
-Never run a restore, replacement, or derived-store cleanup until exact resolved paths and the canonical safety backup have been verified.
+1. [Packaging and installation](packaging-and-installation.md)
+2. [Updates, rollback, and repair](updates-rollback-and-repair.md)
+3. [Diagnostics, reset, and uninstall](diagnostics-reset-and-uninstall.md)
+
+Operations must remain local, idempotent, recoverable, privacy-preserving, and explicit about what data is owned by InfoBoard.

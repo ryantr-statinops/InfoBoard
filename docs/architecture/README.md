@@ -1,19 +1,17 @@
-# InfoBoard architecture
+# Architecture
 
-These documents define the target MVP technical contract. They are intentionally more detailed than the product specifications so implementation work does not need to invent data ownership, state transitions, interfaces, or recovery behavior.
+This folder explains how the product contract is realized as cooperating boundaries. The binding source remains [`docs/plan/refactor/architecture.md`](../plan/refactor/architecture.md); these documents provide a reader-oriented breakdown and must not introduce alternate ownership.
 
-Read in order:
+## Reading order
 
-1. [System overview](system-overview.md)
-2. [Canonical data model](data-model.md)
-3. [Storage architecture](storage-architecture.md)
-4. [Capture pipeline](capture-pipeline.md)
-5. [Indexing and search](indexing-and-search.md)
-6. [Analytics pipeline](analytics-pipeline.md)
-7. [API endpoints and conventions](api-contracts.md)
-8. [Exact API schemas](api-schemas.md)
-9. [API error registry](api-errors.md)
-10. [Lifecycle and recovery](lifecycle-and-recovery.md)
-11. [Security and privacy](security-and-privacy.md)
+1. [System overview](system-overview.md) — process shape and authority boundaries.
+2. [Component ownership](components-and-ownership.md) — responsibilities and forbidden coupling.
+3. [Runtime lifecycle](runtime-lifecycle.md) — connection, synchronization, readiness, and recovery.
+4. [Data and failure boundaries](data-and-failure-boundaries.md) — data flow, failure isolation, and scale envelope.
 
-This is target design, not runtime evidence. Delivery status belongs only in the implementation workspace.
+Related contracts:
+
+- [Runtime protocol](../plan/refactor/runtime-protocol.md)
+- [Persistence and lifecycle](../plan/refactor/persistence-and-lifecycle.md)
+- [Domain and privacy](../plan/refactor/domain-and-privacy.md)
+- [Browser landscape](../plan/refactor/browser-landscape.md)
