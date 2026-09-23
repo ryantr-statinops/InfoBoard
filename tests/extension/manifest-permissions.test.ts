@@ -1,0 +1,2 @@
+import {test,expect} from '@playwright/test';import {readFile} from 'node:fs/promises';
+test('built manifest contains only the current phase permissions and one command',async()=>{const m=JSON.parse(await readFile('extension/manifest.json','utf8'));expect(m.manifest_version).toBe(3);expect([...m.permissions].sort()).toEqual(['storage','tabs','windows']);expect(m.host_permissions).toBeUndefined();expect(Object.keys(m.commands)).toEqual(['open-search']);expect(m.background.service_worker).toBe('dist/src/background/service-worker.js');});
