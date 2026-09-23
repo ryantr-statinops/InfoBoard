@@ -29,26 +29,34 @@ export interface EligibleTabRecord {
 export interface ProjectionState { profile_id: ProfileID; context_kind: ContextKind; epoch: ProjectionEpoch | null; revision: ProjectionRevision; records: Map<string, EligibleTabRecord>; sequences: Map<number, string> }
 export type ProjectionOutcome = 'APPLIED' | 'DUPLICATE' | 'SNAPSHOT_REQUIRED' | 'REVISION_MISMATCH';
 export function emptyProjection(profile_id: ProfileID, context_kind: ContextKind): ProjectionState { return {profile_id,context_kind,epoch:null,revision:parseRevision(0),records:new Map(),sequences:new Map()}; }
-const boundedString=(v:unknown,max:number,scalars=false): v is string => typeof v === 'string' && (scalars ? [...v].length : new TextEncoder().encode(v).length) <= max;
-export function validateTab(record: EligibleTabRecord, profile: ProfileID, context: ContextKind, epoch: ProjectionEpoch): boolean {
- const i=record.tab_identity; return record.profile_id===profile && record.context_kind===context && i.profile_id===profile && i.context_kind===context && Number.isSafeInteger(i.tab_id) && i.tab_id>=0 && Number.isSafeInteger(record.window_id) && record.window_id>=0 && (record.group_id===null || (Number.isSafeInteger(record.group_id)&&record.group_id>=0)) && boundedString(record.title_display,512,true) && boundedString(record.title_search,512,true) && boundedString(record.url_search,2048) && boundedString(record.url_display,2048) && boundedString(record.domain_display,255) && boundedString(record.domain_search,255) && typeof record.pinned==='boolean' && typeof record.active==='boolean' && record.eligible===true && record.projection_epoch===epoch && Number.isSafeInteger(record.observed_at);
+const boundedString=(value:unknown,maxBytes:number,maxScalars?:number):value is string => typeof value==='string'&&new TextEncoder().encode(value).length<=maxBytes&&(maxScalars===undefined||[...value].length<=maxScalars);
+export function validateTab(record:EligibleTabRecord,profile:ProfileID,context:ContextKind,epoch:ProjectionEpoch):boolean {
+ const i=record.tab_identity;
+ return record.profile_id===profile&&record.context_kind===context&&i.profile_id===profile&&i.context_kind===context&&Number.isSafeInteger(i.tab_id)&&i.tab_id>=0&&Number.isSafeInteger(record.window_id)&&record.window_id>=0&&(record.group_id===null||(Number.isSafeInteger(record.group_id)&&record.group_id>=0))&&boundedString(record.title_display,2048,512)&&boundedString(record.title_search,2048,512)&&boundedString(record.url_search,2048)&&boundedString(record.url_display,2048)&&boundedString(record.domain_display,255)&&boundedString(record.domain_search,255)&&(record.window_label_display===undefined||boundedString(record.window_label_display,2048,512))&&(record.window_label_search===undefined||boundedString(record.window_label_search,2048,512))&&(record.group_label_display===undefined||boundedString(record.group_label_display,2048,512))&&(record.group_label_search===undefined||boundedString(record.group_label_search,2048,512))&&typeof record.pinned==='boolean'&&typeof record.active==='boolean'&&record.eligible===true&&record.projection_epoch===epoch&&Number.isSafeInteger(record.projection_revision)&&record.projection_revision>=0&&Number.isSafeInteger(record.observed_at)&&record.observed_at>=0;
 }
-export function acceptSnapshot(state: ProjectionState, epoch: ProjectionEpoch, rows: EligibleTabRecord[]): ProjectionOutcome {
- if (rows.length>10000) return 'SNAPSHOT_REQUIRED'; const next=new Map<string,EligibleTabRecord>();
- for (const row of rows) { if(!validateTab(row,state.profile_id,state.context_kind,epoch)) return 'SNAPSHOT_REQUIRED'; const key=tabIdentityKey(row.tab_identity); if(next.has(key)) return 'SNAPSHOT_REQUIRED'; next.set(key,{...row}); }
- state.epoch=epoch; state.revision=parseRevision(1); state.records=next; state.sequences.clear(); return 'APPLIED';
+export function acceptSnapshot(state:ProjectionState,epoch:ProjectionEpoch,rows:EligibleTabRecord[]):ProjectionOutcome {
+ try{parseProjectionEpoch(epoch)}catch{return 'SNAPSHOT_REQUIRED'}
+ if(rows.length>10000)return 'SNAPSHOT_REQUIRED';
+ const next=new Map<string,EligibleTabRecord>();
+ for(const row of rows){if(!validateTab(row,state.profile_id,state.context_kind,epoch))return 'SNAPSHOT_REQUIRED';const key=tabIdentityKey(row.tab_identity);if(next.has(key))return 'SNAPSHOT_REQUIRED';next.set(key,{...row});}
+ state.epoch=epoch;state.revision=parseRevision(1);state.records=next;state.sequences.clear();return 'APPLIED';
 }
-export interface ProjectionEvent { profile_id: ProfileID; context_kind: ContextKind; epoch: ProjectionEpoch; sequence: number; previous_revision: number; operation:'upsert'|'remove'; tab_identity:TabIdentity; record?:EligibleTabRecord }
+export interface ProjectionEvent {profile_id:ProfileID;context_kind:ContextKind;epoch:ProjectionEpoch;sequence:number;previous_revision:number;operation:'upsert'|'remove';tab_identity:TabIdentity;record?:EligibleTabRecord}
 export function applyEvent(state:ProjectionState,event:ProjectionEvent):ProjectionOutcome {
- if(event.profile_id!==state.profile_id||event.context_kind!==state.context_kind||!state.epoch||event.epoch!==state.epoch)return 'SNAPSHOT_REQUIRED';
- const key=tabIdentityKey(event.tab_identity), old=state.sequences.get(event.sequence), signature=JSON.stringify(event); if(old!==undefined)return old===signature?'DUPLICATE':'REVISION_MISMATCH';
- if(event.sequence!==Number(state.revision)+1||event.previous_revision!==Number(state.revision))return 'SNAPSHOT_REQUIRED';
+ if(event.profile_id!==state.profile_id||event.context_kind!==state.context_kind||!state.epoch||event.epoch!==state.epoch||!Number.isSafeInteger(event.sequence)||event.sequence<=0||!Number.isSafeInteger(event.previous_revision))return 'SNAPSHOT_REQUIRED';
+ const key=tabIdentityKey(event.tab_identity),old=state.sequences.get(event.sequence),signature=JSON.stringify(event);
+ if(old!==undefined)return old===signature?'DUPLICATE':'REVISION_MISMATCH';
+ const revision=Number(state.revision);
+ if(revision>=Number.MAX_SAFE_INTEGER)return 'REVISION_MISMATCH';
+ if(event.sequence!==revision+1||event.previous_revision!==revision)return 'SNAPSHOT_REQUIRED';
  if(event.operation==='upsert'&&(!event.record||!validateTab(event.record,state.profile_id,state.context_kind,state.epoch)||tabIdentityKey(event.record.tab_identity)!==key))return 'SNAPSHOT_REQUIRED';
  if(event.operation==='remove'&&!state.records.has(key))return 'SNAPSHOT_REQUIRED';
- const next=new Map(state.records); if(event.operation==='remove')next.delete(key);else next.set(key,{...event.record!}); state.records=next;state.revision=parseRevision(Number(state.revision)+1);state.sequences.set(event.sequence,signature);return 'APPLIED';
+ if(event.operation!=='upsert'&&event.operation!=='remove')return 'SNAPSHOT_REQUIRED';
+ const next=new Map(state.records);if(event.operation==='remove')next.delete(key);else next.set(key,{...event.record!});
+ state.records=next;state.revision=parseRevision(revision+1);state.sequences.set(event.sequence,signature);return 'APPLIED';
 }
 export interface ProfileIDStore { read():Promise<unknown|null>; write(id:ProfileID):Promise<void>; removeAfterDisconnect():Promise<void> }
-export async function loadProfileID(store:ProfileIDStore):Promise<ProfileID> { const raw=await store.read(); if(raw===null){const id=createProfileID();await store.write(id);return id;} return parseProfileID(raw); }
+export async function loadProfileID(store:ProfileIDStore,firstInstall:boolean):Promise<ProfileID> { const raw=await store.read(); if(raw===null){if(!firstInstall)throw new Error('PROFILE_ID_MISSING');const id=createProfileID();await store.write(id);return id;} return parseProfileID(raw); }
 export interface ActivationReference {profile_id:ProfileID;context_kind:ContextKind;tab_id:number;projection_epoch:ProjectionEpoch;projection_revision:ProjectionRevision;result_id:string}
 export interface ActivationMetadata {profile_id:ProfileID;context_kind:'normal';tab_identity:TabIdentity;domain:string;activated_at:number;source:'keyboard_enter'|'surface_select';storage_sequence:number}
-export function retainActivations(rows:ActivationMetadata[],now:number):ActivationMetadata[] {return rows.filter(x=>x.context_kind==='normal'&&x.activated_at>=now-30*86400000&&x.activated_at<=now).sort((a,b)=>a.activated_at-b.activated_at||a.storage_sequence-b.storage_sequence).slice(-500);}
+export function retainActivations(rows:ActivationMetadata[],now:number):ActivationMetadata[] {return rows.filter(x=>x.context_kind==='normal'&&x.tab_identity.profile_id===x.profile_id&&x.tab_identity.context_kind==='normal'&&boundedString(x.domain,255)&&Number.isSafeInteger(x.activated_at)&&x.activated_at>=now-30*86400000&&x.activated_at<=now&&(x.source==='keyboard_enter'||x.source==='surface_select')&&Number.isSafeInteger(x.storage_sequence)&&x.storage_sequence>=0).sort((a,b)=>a.activated_at-b.activated_at||a.storage_sequence-b.storage_sequence).slice(-500);}
