@@ -2,7 +2,7 @@
 
 ## Product specification
 
-[`refactor/`](refactor/README.md) is the canonical and complete InfoBoard product specification. It defines the product contract before implementation work begins.
+[`refactor/`](refactor/README.md) is the canonical and complete InfoBoard product specification. Its contract is ready for implementation.
 
 Its documents cover:
 
@@ -18,6 +18,6 @@ Detailed reader views live in [`../architecture/`](../architecture/README.md), [
 
 ## Implementation plans
 
-[`implementation/`](implementation/README.md) contains the existing implementation-planning tree. It is retained unchanged by this rebuild and has no new scope from the refactor documents.
+[`implementation/`](implementation/README.md) contains the active 20-phase implementation plans, dependency DAG, commit mappings, execution dashboard, and branch protocol. Start with IP-01; implementation status is tracked in its README.
 
-Do not mix product decisions into implementation slices. A product or boundary change belongs in `refactor/` first; implementation planning can be revisited only through an explicit future decision.
+Do not mix product decisions into implementation slices. A product or boundary change belongs in `refactor/` first; implement the approved contract by following `implementation/index.md` and its phase acceptance gates.

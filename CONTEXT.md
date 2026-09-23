@@ -7,7 +7,7 @@ This file is the shared language and operating context for agents working in thi
 - Name: InfoBoard.
 - Purpose: A complete Chromium desktop product for keyboard-first search and activation of open browser tabs.
 - Primary users or consumers: Desktop users who keep many tabs across windows and need fast, predictable tab switching.
-- Current priority: Rebuild and complete the product specification in `docs/plan/refactor/` before implementation.
+- Current priority: Begin implementation with IP-01; the binding product specification in `docs/plan/refactor/` is complete.
 
 ## Domain vocabulary
 
@@ -32,7 +32,7 @@ This file is the shared language and operating context for agents working in thi
 - Naming conventions: Use product terms from this file; name artifacts under `docs/agent/` by decision or workflow purpose.
 - Preferred patterns: Explicit requirements, bounded local data, deterministic behavior, versioned protocols, measurable acceptance criteria, and recoverable failure states.
 - Patterns to avoid: MVP-first scope reduction, database-first design, broad browser permissions, cloud indexing, page-content collection, and copying retired InfoBoard contracts into the rebuilt product.
-- Relevant project instructions: The product source of truth is `docs/plan/refactor/`. Historical material remains under `docs/product/`, `docs/architecture/`, and `docs/plan/implementation/` and is not an active product contract.
+- Relevant project instructions: The product source of truth is `docs/plan/refactor/`; implementation scope, dependencies, and execution status are maintained in `docs/plan/implementation/`. Detailed views under `docs/product/` and `docs/architecture/` are supporting references, not independent product contracts.
 
 ## Testing and verification
 
@@ -63,7 +63,7 @@ This file is the shared language and operating context for agents working in thi
 - Compatibility requirements: Chrome and Edge desktop are supported. Other browsers and mobile are separate product proposals.
 - Security or privacy constraints: Initial and complete product data is limited to open tabs, title, URL, domain, window, tab group, pinned state, and bounded recent activation metadata. Do not collect cookies, local storage, network-interception data, page content, whole history, or cloud copies.
 - Resource or cost constraints: The hot path uses in-memory lexical search. SQLite is bounded local storage. Semantic retrieval is not a normal-path dependency.
-- Known assumptions: The full product specification is being rebuilt before implementation; all installed SKILLS entries are available for discovery, but only the smallest task-matching skill set should be activated.
+- Known assumptions: The product specification is complete and implementation begins at IP-01; all installed SKILLS entries are available for discovery, but only the smallest task-matching skill set should be activated.
 
 ## Preferred language
 

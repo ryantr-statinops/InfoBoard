@@ -1,1 +1,0 @@
-"""InfoBoard application package."""
