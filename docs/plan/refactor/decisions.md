@@ -16,7 +16,7 @@ A decision is binding when it records user value, scope, privacy impact, archite
 | `REF-010` | accepted | Release requires install, update, repair, reset, uninstall, recovery, accessibility, privacy, and performance acceptance. | A complete product includes lifecycle behavior, not only the search path. | Release model or distribution channel changes. |
 | `REF-011` | deferred | Semantic search and page-content indexing are not part of the product contract. | No proven need justifies extra collection, latency, or operational complexity. | A measured user problem and privacy-approved design exist. |
 | `REF-012` | deferred | Other browsers, mobile, bookmarks, downloads, and cross-profile search are separate products. | They require different UX, permissions, and packaging contracts. | A new product boundary is approved. |
-
+| `REF-013` | accepted | The extension MAY persist only its locally generated opaque `profile_id` in `chrome.storage.local`, under the single key `profile_id`, so profile identity survives browser/service-worker restarts. | The extension must preserve a stable profile partition without relying on page storage or an account/path identifier; the value is never synced, uploaded, derived from account/path data, or used for any other setting, control, or content. It is deleted only after sessions disconnect during explicit reset or uninstall. Page `window.localStorage`, page/session storage, cookies, `storage.sync`, history, page content, network, and cross-profile data remain prohibited. | A browser API or lifecycle change prevents identity-only local persistence without expanding the stored data class. |
 ## Rejected shortcuts
 
 - Treating the current refactor idea brief as an MVP specification.

@@ -50,7 +50,7 @@ IP-01 owns the exact package/module naming map. The shared [`fixture catalog`](.
 | IP-19 | [`phase-19-cross-platform-browser-verification.md`](phase-19-cross-platform-browser-verification.md) | Browser/platform matrix, performance, accessibility, recovery evidence | IP-13, IP-14, IP-15, IP-16, IP-17, IP-18 | 8 | testing, change-review, release, lightweight-web |
 | IP-20 | [`phase-20-release-acceptance-and-handoff.md`](phase-20-release-acceptance-and-handoff.md) | Final traceability, artifacts, compatibility, rollback, handoff | IP-01..IP-19 | 9 | release, change-review, code-review, testing, git-workflow |
 
-Execution waves: `IP-01`; then `IP-02 + IP-03`; then `IP-04 + IP-06 + IP-07 + IP-08`; then `IP-05 + IP-09 + IP-10`; then `IP-11 + IP-12`; then `IP-13 + IP-14 + IP-15 + IP-16`; then `IP-17 + IP-18`; then `IP-19`; finally `IP-20`.
+Execution waves: `IP-01`; then `IP-02`; then `IP-03 + IP-06`; then `IP-04 + IP-07 + IP-08`; then `IP-05`; then `IP-09`; then `IP-10`; then `IP-11`; then `IP-12`; then `IP-13 + IP-16`; then `IP-14`; then `IP-15`; then `IP-17`; then `IP-18`; then `IP-19`; finally `IP-20`.
 
 ## Requirement ownership
 

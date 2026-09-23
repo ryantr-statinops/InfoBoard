@@ -1,17 +1,4 @@
-# Local secrets and machine-specific files
-.env
-.DS_Store
-
-# Reproducible build/install outputs
-.venv/
-**/node_modules/
-**/dist/
-**/build/
-**/target/
-
-# Generated test and runtime artifacts
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.ruff_cache/
-*.log
+node_modules/
+extension/dist/
+playwright-report/
+test-results/

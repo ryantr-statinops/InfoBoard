@@ -43,7 +43,7 @@
 
 ## Permission requirements
 
-The extension MUST request only permissions required by the product contract. Any permission for history, bookmarks, downloads, page content, cookies, storage beyond the declared local store, or broad host access requires a new decision record and updated privacy documentation.
+The extension MUST request only permissions required by the product contract. The sole approved extension-owned storage use is `chrome.storage.local` with the single key `profile_id` as specified by REF-013; this does not permit page `window.localStorage`, page/session storage, `storage.sync`, cookies, history, bookmarks, downloads, page content, or broad host access. Any other storage/data permission requires a new decision record and updated privacy documentation.
 
 ## Operational requirements
 

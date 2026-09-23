@@ -22,8 +22,8 @@
 | Browser history | Broader recall | Excluded. |
 | Bookmarks and downloads | Different search product | Excluded. |
 | Page DOM, rendered text, selected text | Richer semantic search | Excluded from the product contract. |
-| Cookies, local storage, session data | Credentials and private state | Excluded. |
-| Network interception | Broad sensitive access | Excluded. |
+| Cookies, page local/session storage | Credentials and private state | Excluded; the extension never reads page storage. |
+| Extension-owned `chrome.storage.local` | Stable opaque profile identity only | Allowed only for one locally generated `profile_id` at key `profile_id`, per REF-013. No other values, sync, page storage, or content. |
 
 ## Extension model
 

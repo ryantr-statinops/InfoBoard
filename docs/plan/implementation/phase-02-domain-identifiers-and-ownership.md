@@ -4,7 +4,7 @@
 > Status: See README.md execution tracker
 > Execution owner: domain-model / architecture agent
 > Dependencies: IP-01
-> Parallel boundary: IP-03 (independent after IP-01; no shared implementation files)
+> Parallel boundary: IP-03 starts only after IP-02 acceptance is integrated in dev; its browser scaffold consumes this phase's profile identity and ownership contracts.
 > Requirement IDs: None primary; supporting FR-003, FR-009, FR-010, FR-011, FR-014, FR-015, NFR-004, NFR-005, NFR-009
 > Owned paths: `extension/domain/profile_id` (to-create), `extension/domain/tab_identity` (to-create), `extension/domain/tab_projection` (to-create), `extension/domain/activation` (to-create), `host/internal/domain/profile_id` (to-create), `host/internal/domain/tab_identity` (to-create), `host/internal/domain/tab_projection` (to-create), `host/internal/domain/activation` (to-create), `fixtures/domain/phase-02` (to-create), `tests/domain/phase-02` (to-create)
 

@@ -1,0 +1,1 @@
+{"name":"infoboard","private":true,"type":"module","workspaces":["extension"],"scripts":{"build:extension":"tsc -p extension/tsconfig.json && node scripts/copy-extension-assets.mjs","test:domain":"npm run build:extension && node --test tests/domain/phase-02/*.test.mjs"},"devDependencies":{"typescript":"^5.9.2"}}
