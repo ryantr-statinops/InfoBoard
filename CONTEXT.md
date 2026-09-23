@@ -7,7 +7,7 @@ This file is the shared language and operating context for agents working in thi
 - Name: InfoBoard.
 - Purpose: A complete Chromium desktop product for keyboard-first search and activation of open browser tabs.
 - Primary users or consumers: Desktop users who keep many tabs across windows and need fast, predictable tab switching.
-- Current priority: Begin implementation with IP-01; the binding product specification in `docs/plan/refactor/` is complete.
+- Current priority: Start IP-02 and IP-03 according to the implementation DAG; IP-01 contract and fixture work is complete in `dev`.
 
 ## Domain vocabulary
 
@@ -38,7 +38,7 @@ This file is the shared language and operating context for agents working in thi
 
 - Primary test seams: Browser event reconciliation, shortcut/search/activation journeys, deterministic ranking fixtures, Native Messaging protocol and recovery, lifecycle/packaging, privacy boundaries, accessibility, and cross-platform compatibility.
 - Required checks: Every binding requirement must have a test seam and observable acceptance signal. The hot path must remain local, bounded, and measurable.
-- Test commands: Use implementation-specific commands once runtime code exists. Documentation validation uses local-link checking, `git diff --check`, requirements traceability, and the acceptance criteria in `docs/plan/refactor/verification-and-acceptance.md`.
+- Test commands: Run `python3 tests/implementation/validate_corpus.py` for phase-plan/fixture traceability; use implementation-specific runtime commands once the owning phase creates their toolchain. Documentation review also runs `git diff --check` and the acceptance criteria in `docs/plan/refactor/verification-and-acceptance.md`.
 - Independent sources of expected results: Chrome and Edge APIs, browser fixtures, measured latency and memory, protocol contracts, privacy review, and the rebuilt refactor documents.
 
 ## Issue tracking and decisions
@@ -63,7 +63,7 @@ This file is the shared language and operating context for agents working in thi
 - Compatibility requirements: Chrome and Edge desktop are supported. Other browsers and mobile are separate product proposals.
 - Security or privacy constraints: Initial and complete product data is limited to open tabs, title, URL, domain, window, tab group, pinned state, and bounded recent activation metadata. Do not collect cookies, local storage, network-interception data, page content, whole history, or cloud copies.
 - Resource or cost constraints: The hot path uses in-memory lexical search. SQLite is bounded local storage. Semantic retrieval is not a normal-path dependency.
-- Known assumptions: The product specification is complete and implementation begins at IP-01; all installed SKILLS entries are available for discovery, but only the smallest task-matching skill set should be activated.
+- Known assumptions: The product specification and IP-01 contract/fixture phase are complete; implementation proceeds through the remaining DAG. All installed SKILLS entries are available for discovery, but only the smallest task-matching skill set should be activated.
 
 ## Preferred language
 
