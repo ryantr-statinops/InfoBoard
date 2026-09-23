@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { parseProfileID, parseProjectionEpoch, emptyProjection, acceptSnapshot, applyEvent, tabIdentityKey, retainActivations } from '../../../extension/dist/domain/index.js';
+import { parseProfileID, parseProjectionEpoch, emptyProjection, acceptSnapshot, applyEvent, applyBatch, validateActivationReference, tabIdentityKey, retainActivations } from '../../../extension/dist/domain/index.js';
 
 const epoch = parseProjectionEpoch('123e4567-e89b-42d3-a456-426614174001');
 function record(profile_id, tab_id, projection_epoch = epoch) {
@@ -24,6 +24,7 @@ test('snapshot, ordered upsert, duplicate, and remove converge atomically', () =
   const profile = parseProfileID('123e4567-e89b-42d3-a456-426614174000');
   const state = emptyProjection(profile, 'normal');
   const first = record(profile, 7), second = record(profile, 8);
+  second.projection_revision = 2;
   assert.equal(acceptSnapshot(state, epoch, [first]), 'APPLIED');
   const add = { profile_id: profile, context_kind: 'normal', epoch, sequence: 2, previous_revision: 1, operation: 'upsert', tab_identity: second.tab_identity, record: second };
   assert.equal(applyEvent(state, add), 'APPLIED');

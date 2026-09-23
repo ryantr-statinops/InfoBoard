@@ -90,7 +90,7 @@ func (state *ProjectionState) Snapshot(epoch string, rows []EligibleTabRecord) e
 	}
 	next := make(map[TabIdentity]EligibleTabRecord, len(rows))
 	for _, row := range rows {
-		if !row.Valid(state.ProfileID, state.ContextKind, epoch) {
+		if !row.Valid(state.ProfileID, state.ContextKind, epoch) || row.ProjectionRevision != 1 {
 			return errors.New("SNAPSHOT_REQUIRED")
 		}
 		if _, exists := next[row.TabIdentity]; exists {
@@ -137,7 +137,7 @@ func (state *ProjectionState) Apply(event ProjectionEvent) string {
 	if event.Identity.ProfileID != state.ProfileID || event.Identity.ContextKind != state.ContextKind || event.Identity.TabID < 0 || uint64(event.Identity.TabID) > MaxProjectionRevision {
 		return "SNAPSHOT_REQUIRED"
 	}
-	if event.Operation == "upsert" && (event.Record == nil || !event.Record.Valid(state.ProfileID, state.ContextKind, state.Epoch) || event.Record.TabIdentity != event.Identity) {
+	if event.Operation == "upsert" && (event.Record == nil || !event.Record.Valid(state.ProfileID, state.ContextKind, state.Epoch) || event.Record.ProjectionRevision != state.Revision+1 || event.Record.TabIdentity != event.Identity) {
 		return "SNAPSHOT_REQUIRED"
 	}
 	if event.Operation == "remove" {
@@ -162,6 +162,50 @@ func (state *ProjectionState) Apply(event ProjectionEvent) string {
 		delete(state.Seen, event.Sequence-maxRememberedEvents)
 	}
 	return "APPLIED"
+}
+func (state *ProjectionState) ApplyBatch(events []ProjectionEvent) string {
+	if len(events) > 1000 {
+		return "SNAPSHOT_REQUIRED"
+	}
+	staged := *state
+	staged.Records = make(map[TabIdentity]EligibleTabRecord, len(state.Records))
+	for identity, row := range state.Records {
+		staged.Records[identity] = row
+	}
+	staged.Seen = make(map[uint64]string, len(state.Seen))
+	for sequence, signature := range state.Seen {
+		staged.Seen[sequence] = signature
+	}
+	applied := false
+	for _, event := range events {
+		outcome := staged.Apply(event)
+		if outcome == "SNAPSHOT_REQUIRED" || outcome == "REVISION_MISMATCH" {
+			return outcome
+		}
+		if outcome == "APPLIED" {
+			applied = true
+		}
+	}
+	if !applied {
+		return "DUPLICATE"
+	}
+	state.Epoch, state.Revision, state.Records, state.Seen = staged.Epoch, staged.Revision, staged.Records, staged.Seen
+	return "APPLIED"
+}
+
+type ActivationReference struct {
+	ProfileID          ProfileID   `json:"profile_id"`
+	ContextKind        ContextKind `json:"context_kind"`
+	TabID              int64       `json:"tab_id"`
+	ProjectionEpoch    string      `json:"projection_epoch"`
+	ProjectionRevision uint64      `json:"projection_revision"`
+	ResultID           string      `json:"result_id"`
+}
+
+func (reference ActivationReference) Valid(state *ProjectionState) bool {
+	identity := TabIdentity{ProfileID: reference.ProfileID, ContextKind: reference.ContextKind, TabID: reference.TabID}
+	_, exists := state.Records[identity]
+	return state.Epoch != "" && reference.ProfileID == state.ProfileID && reference.ContextKind == state.ContextKind && reference.ProjectionEpoch == state.Epoch && reference.ProjectionRevision == state.Revision && reference.TabID >= 0 && uint64(reference.TabID) <= MaxProjectionRevision && boundedText(reference.ResultID, 128, 0) && exists
 }
 
 type ActivationSource string
