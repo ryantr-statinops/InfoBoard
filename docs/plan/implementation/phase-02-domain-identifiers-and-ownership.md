@@ -1,7 +1,7 @@
 # Phase 02 — Domain identifiers và ownership
 
 > Plan ID: IP-02
-> Status: not_started
+> Status: See README.md execution tracker
 > Execution owner: domain-model / architecture agent
 > Dependencies: IP-01
 > Parallel boundary: IP-03 (independent after IP-01; no shared implementation files)
@@ -125,34 +125,98 @@ Final result ordering is defined for equal ranking outputs without claiming rank
 
 ## 6. Công việc triển khai
 
-- [ ] Add the extension domain value objects at `extension/domain/profile_id`, `extension/domain/tab_identity`, `extension/domain/tab_projection`, and `extension/domain/activation` (all `to-create`): parse bounded profile IDs, model context and tab identity, distinguish stable identity from epoch/revision references, and reject malformed/cross-profile values before indexing or activation.
-- [ ] Add matching host domain types at `host/internal/domain/profile_id`, `host/internal/domain/tab_identity`, `host/internal/domain/tab_projection`, and `host/internal/domain/activation` (all `to-create`): validate the extension contract without assigning browser IDs or trusting host-generated substitutes.
-- [ ] Implement the profile-control lifecycle: generate one opaque profile ID on first install, retain it in profile-scoped extension control state, carry it through hello/snapshot/delta/query/activation messages, fail closed on loss or mismatch, and allow identity replacement only as part of an explicit reset after session shutdown.
-- [ ] Implement the eligibility boundary consumed by IP-04: validate profile/context/tab/window identity, bound all text and URL-derived fields before allocation, keep optional group/label fields explicitly absent, and emit exclusion reasons only as redacted counts or bounded error classes.
-- [ ] Implement projection transitions: initialize revision `0`, atomically accept an authoritative revision-`1` snapshot, apply only expected ordered events, suppress matching duplicates, preserve state on conflicts/gaps, and produce `SNAPSHOT_REQUIRED`/`REVISION_MISMATCH` outcomes without returning partial indexes.
-- [ ] Add runtime epoch fencing and result references: create a new epoch for a fresh runtime/snapshot lineage, invalidate older references on reconnect or replacement, and ensure UI references contain identity plus epoch/revision rather than mutable title/URL data.
-- [ ] Define the ownership seams consumed by later phases: extension writes authoritative projection and invokes browser activation; host validates, mirrors, indexes, ranks, and emits status; SQLite repository stores only profile-scoped configuration and bounded successful activation metadata; UI renders bounded fields and submits references but cannot mutate projection or call browser APIs directly.
-- [ ] Add the activation-observed path and retention hooks: write only confirmed normal-context activations when the user setting permits, purge by age then count deterministically, keep private/failed activations session-only, and expose reset/uninstall deletion hooks without deleting browser state.
-- [ ] Add the phase fixtures and test seam under `fixtures/domain/phase-02` and `tests/domain/phase-02`: assert exact map contents, identity keys, epoch/revision transitions, cross-profile rejection, stale activation outcomes, tie-break order, retention counts/ages, and ownership violations. Do not assert field-copy plumbing or internal function names.
-- [ ] Record all cross-phase handoffs in the implementation index: IP-04 owns browser event/eligibility wiring, IP-05 owns reconciliation, IP-07 owns wire validation/error literals, IP-08 owns schema/migrations, IP-11 owns score components, IP-14 owns browser activation execution, and IP-15/IP-18 own reset/uninstall execution. This phase remains the domain contract owner.
+- [ ] `IP-02-T01` Add the extension domain value objects at `extension/domain/profile_id`, `extension/domain/tab_identity`, `extension/domain/tab_projection`, and `extension/domain/activation` (all `to-create`): parse bounded profile IDs, model context and tab identity, distinguish stable identity from epoch/revision references, and reject malformed/cross-profile values before indexing or activation.
+- [ ] `IP-02-T02` Add matching host domain types at `host/internal/domain/profile_id`, `host/internal/domain/tab_identity`, `host/internal/domain/tab_projection`, and `host/internal/domain/activation` (all `to-create`): validate the extension contract without assigning browser IDs or trusting host-generated substitutes.
+- [ ] `IP-02-T03` Implement the profile-control lifecycle: generate one opaque profile ID on first install, retain it in profile-scoped extension control state, carry it through hello/snapshot/delta/query/activation messages, fail closed on loss or mismatch, and allow identity replacement only as part of an explicit reset after session shutdown.
+- [ ] `IP-02-T04` Implement the eligibility boundary consumed by IP-04: validate profile/context/tab/window identity, bound all text and URL-derived fields before allocation, keep optional group/label fields explicitly absent, and emit exclusion reasons only as redacted counts or bounded error classes.
+- [ ] `IP-02-T05` Implement projection transitions: initialize revision `0`, atomically accept an authoritative revision-`1` snapshot, apply only expected ordered events, suppress matching duplicates, preserve state on conflicts/gaps, and produce `SNAPSHOT_REQUIRED`/`REVISION_MISMATCH` outcomes without returning partial indexes.
+- [ ] `IP-02-T06` Add runtime epoch fencing and result references: create a new epoch for a fresh runtime/snapshot lineage, invalidate older references on reconnect or replacement, and ensure UI references contain identity plus epoch/revision rather than mutable title/URL data.
+- [ ] `IP-02-T07` Define the ownership seams consumed by later phases: extension writes authoritative projection and invokes browser activation; host validates, mirrors, indexes, ranks, and emits status; SQLite repository stores only profile-scoped configuration and bounded successful activation metadata; UI renders bounded fields and submits references but cannot mutate projection or call browser APIs directly.
+- [ ] `IP-02-T08` Add the activation-observed path and retention hooks: write only confirmed normal-context activations when the user setting permits, purge by age then count deterministically, keep private/failed activations session-only, and expose reset/uninstall deletion hooks without deleting browser state.
+- [ ] `IP-02-T09` Add the phase fixtures and test seam under `fixtures/domain/phase-02` and `tests/domain/phase-02`: assert exact map contents, identity keys, epoch/revision transitions, cross-profile rejection, stale activation outcomes, tie-break order, retention counts/ages, and ownership violations. Do not assert field-copy plumbing or internal function names.
+- [ ] `IP-02-T10` Record all cross-phase handoffs in the implementation index: IP-04 owns browser event/eligibility wiring, IP-05 owns reconciliation, IP-07 owns wire validation/error literals, IP-08 owns schema/migrations, IP-11 owns score components, IP-14 owns browser activation execution, and IP-15/IP-18 own reset/uninstall execution. This phase remains the domain contract owner.
 
 ## 7. Kế hoạch commit
 
-1. `feat(domain): add profile and tab identity contracts`
-   - Thay đổi: create the profile/context/tab identity value objects, bounded parsers, stable identity equality, and epoch/revision reference types under the owned extension and host domain paths.
-   - Cách kiểm tra: run the phase-02 identity fixture suite; equal browser IDs in different profiles/contexts remain unequal, malformed IDs fail closed, and no mutable display field can activate a record.
-2. `feat(projection): enforce eligible records and revision lifecycle`
-   - Thay đổi: add eligible-tab records, atomic snapshot replacement, ordered delta state transitions, duplicate/conflict handling, runtime epoch fencing, and identity-based deterministic tie-break output.
-   - Cách kiểm tra: run `FX-PROJECTION-LIFECYCLE`, `FX-REVISION-FENCE`, and `FX-IDENTITY-TIEBREAK`; compare exact indexed IDs and revision/epoch outcomes.
-3. `feat(activation): add bounded metadata ownership seam`
-   - Thay đổi: add the confirmed-activation contract, profile/context partitioning, optional persistence switch, deterministic 500/30-day retention hook, private-context disposal, and reset/uninstall deletion hooks for IP-08/IP-15/IP-18.
-   - Cách kiểm tra: run `FX-ACTIVATION-RETENTION` and `FX-OWNERSHIP-BOUNDARY`; inspect that only successful normal-context metadata is durable and no browser state is mutated by host/SQLite/UI.
-4. `test(domain): cover profile isolation and lifecycle boundaries`
-   - Thay đổi: add the cross-profile, duplicate-ID, stale-reference, reconnect, private-context, missing-field, and retention fixtures/tests without pinning implementation details.
-   - Cách kiểm tra: run the fixture runner from a clean checkout and require exact observable outputs for every phase-02 fixture.
-5. `docs(implementation): add phase 02 domain identifiers and ownership`
-   - Thay đổi: publish this standalone phase file only; this is the documentation commit for the current branch, not an implementation commit.
-   - Cách kiểm tra: `git diff --check`; validate exactly ten numbered headings, one metadata block, resolving canonical/skill/context links, and no staged path outside this file.
+1. `feat(domain): implement ip-02-t01`
+   - Task IDs: `IP-02-T01`.
+   - Owned target paths: extension/domain/profile_id, extension/domain/tab_identity, extension/domain/tab_projection, extension/domain/activation.
+   - Behavior: Add the extension domain value objects at `extension/domain/profile_id`, `extension/domain/tab_identity`, `extension/domain/tab_projection`, and `extension/domain/activation` (all `to-create`): parse bounded profile IDs, model context and tab identity, distinguish stable identity from epoch/revision references, and reject malformed/cross-profile values before indexing or activation.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/domain/phase-02/run_fixtures.py --suite phase-02`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Add the extension domain value objects at `extension/domain/profile_id`, `extension/domain/tab_identity`, `extension/domain/tab_projection`, and `extension/domain/activation` (all `to-create`): parse bounded profile IDs, model context and tab identity, distinguish stable identity from epoch/revision references, and reject malformed/cross-profile values before indexing or activation.
+   - Dependency gate: all index.md dependencies for IP-02 have merged to dev; phase work branch starts from latest origin/dev.
+
+2. `feat(domain): implement ip-02-t02`
+   - Task IDs: `IP-02-T02`.
+   - Owned target paths: host/internal/domain/profile_id, host/internal/domain/tab_identity, host/internal/domain/tab_projection, host/internal/domain/activation.
+   - Behavior: Add matching host domain types at `host/internal/domain/profile_id`, `host/internal/domain/tab_identity`, `host/internal/domain/tab_projection`, and `host/internal/domain/activation` (all `to-create`): validate the extension contract without assigning browser IDs or trusting host-generated substitutes.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/domain/phase-02/run_fixtures.py --suite phase-02`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Add matching host domain types at `host/internal/domain/profile_id`, `host/internal/domain/tab_identity`, `host/internal/domain/tab_projection`, and `host/internal/domain/activation` (all `to-create`): validate the extension contract without assigning browser IDs or trusting host-generated substitutes.
+   - Dependency gate: all index.md dependencies for IP-02 have merged to dev; phase work branch starts from latest origin/dev.
+
+3. `feat(domain): implement ip-02-t03`
+   - Task IDs: `IP-02-T03`.
+   - Owned target paths: `extension/domain/profile_id` (to-create), `extension/domain/tab_identity` (to-create), `extension/domain/tab_projection` (to-create), `extension/domain/activation` (to-create), `host/internal/domain/profile_id` (to-create), `host/internal/domain/tab_identity` (to-create), `host/internal/domain/tab_projection` (to-create), `host/internal/domain/activation` (to-create), `fixtures/domain/phase-02` (to-create), `tests/domain/phase-02` (to-create).
+   - Behavior: Implement the profile-control lifecycle: generate one opaque profile ID on first install, retain it in profile-scoped extension control state, carry it through hello/snapshot/delta/query/activation messages, fail closed on loss or mismatch, and allow identity replacement only as part of an explicit reset after session shutdown.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/domain/phase-02/run_fixtures.py --suite phase-02`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Implement the profile-control lifecycle: generate one opaque profile ID on first install, retain it in profile-scoped extension control state, carry it through hello/snapshot/delta/query/activation messages, fail closed on loss or mismatch, and allow identity replacement only as part of an explicit reset after session shutdown.
+   - Dependency gate: all index.md dependencies for IP-02 have merged to dev; phase work branch starts from latest origin/dev.
+
+4. `feat(domain): implement ip-02-t04`
+   - Task IDs: `IP-02-T04`.
+   - Owned target paths: `extension/domain/profile_id` (to-create), `extension/domain/tab_identity` (to-create), `extension/domain/tab_projection` (to-create), `extension/domain/activation` (to-create), `host/internal/domain/profile_id` (to-create), `host/internal/domain/tab_identity` (to-create), `host/internal/domain/tab_projection` (to-create), `host/internal/domain/activation` (to-create), `fixtures/domain/phase-02` (to-create), `tests/domain/phase-02` (to-create).
+   - Behavior: Implement the eligibility boundary consumed by IP-04: validate profile/context/tab/window identity, bound all text and URL-derived fields before allocation, keep optional group/label fields explicitly absent, and emit exclusion reasons only as redacted counts or bounded error classes.
+   - Fixture and command: IP-04; run `python3 tests/domain/phase-02/run_fixtures.py --suite phase-02`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Implement the eligibility boundary consumed by IP-04: validate profile/context/tab/window identity, bound all text and URL-derived fields before allocation, keep optional group/label fields explicitly absent, and emit exclusion reasons only as redacted counts or bounded error classes.
+   - Dependency gate: all index.md dependencies for IP-02 have merged to dev; phase work branch starts from latest origin/dev.
+
+5. `feat(domain): implement ip-02-t05`
+   - Task IDs: `IP-02-T05`.
+   - Owned target paths: `extension/domain/profile_id` (to-create), `extension/domain/tab_identity` (to-create), `extension/domain/tab_projection` (to-create), `extension/domain/activation` (to-create), `host/internal/domain/profile_id` (to-create), `host/internal/domain/tab_identity` (to-create), `host/internal/domain/tab_projection` (to-create), `host/internal/domain/activation` (to-create), `fixtures/domain/phase-02` (to-create), `tests/domain/phase-02` (to-create).
+   - Behavior: Implement projection transitions: initialize revision `0`, atomically accept an authoritative revision-`1` snapshot, apply only expected ordered events, suppress matching duplicates, preserve state on conflicts/gaps, and produce `SNAPSHOT_REQUIRED`/`REVISION_MISMATCH` outcomes without returning partial indexes.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/domain/phase-02/run_fixtures.py --suite phase-02`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Implement projection transitions: initialize revision `0`, atomically accept an authoritative revision-`1` snapshot, apply only expected ordered events, suppress matching duplicates, preserve state on conflicts/gaps, and produce `SNAPSHOT_REQUIRED`/`REVISION_MISMATCH` outcomes without returning partial indexes.
+   - Dependency gate: all index.md dependencies for IP-02 have merged to dev; phase work branch starts from latest origin/dev.
+
+6. `feat(domain): implement ip-02-t06`
+   - Task IDs: `IP-02-T06`.
+   - Owned target paths: `extension/domain/profile_id` (to-create), `extension/domain/tab_identity` (to-create), `extension/domain/tab_projection` (to-create), `extension/domain/activation` (to-create), `host/internal/domain/profile_id` (to-create), `host/internal/domain/tab_identity` (to-create), `host/internal/domain/tab_projection` (to-create), `host/internal/domain/activation` (to-create), `fixtures/domain/phase-02` (to-create), `tests/domain/phase-02` (to-create).
+   - Behavior: Add runtime epoch fencing and result references: create a new epoch for a fresh runtime/snapshot lineage, invalidate older references on reconnect or replacement, and ensure UI references contain identity plus epoch/revision rather than mutable title/URL data.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/domain/phase-02/run_fixtures.py --suite phase-02`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Add runtime epoch fencing and result references: create a new epoch for a fresh runtime/snapshot lineage, invalidate older references on reconnect or replacement, and ensure UI references contain identity plus epoch/revision rather than mutable title/URL data.
+   - Dependency gate: all index.md dependencies for IP-02 have merged to dev; phase work branch starts from latest origin/dev.
+
+7. `feat(domain): implement ip-02-t07`
+   - Task IDs: `IP-02-T07`.
+   - Owned target paths: `extension/domain/profile_id` (to-create), `extension/domain/tab_identity` (to-create), `extension/domain/tab_projection` (to-create), `extension/domain/activation` (to-create), `host/internal/domain/profile_id` (to-create), `host/internal/domain/tab_identity` (to-create), `host/internal/domain/tab_projection` (to-create), `host/internal/domain/activation` (to-create), `fixtures/domain/phase-02` (to-create), `tests/domain/phase-02` (to-create).
+   - Behavior: Define the ownership seams consumed by later phases: extension writes authoritative projection and invokes browser activation; host validates, mirrors, indexes, ranks, and emits status; SQLite repository stores only profile-scoped configuration and bounded successful activation metadata; UI renders bounded fields and submits references but cannot mutate projection or call browser APIs directly.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/domain/phase-02/run_fixtures.py --suite phase-02`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Define the ownership seams consumed by later phases: extension writes authoritative projection and invokes browser activation; host validates, mirrors, indexes, ranks, and emits status; SQLite repository stores only profile-scoped configuration and bounded successful activation metadata; UI renders bounded fields and submits references but cannot mutate projection or call browser APIs directly.
+   - Dependency gate: all index.md dependencies for IP-02 have merged to dev; phase work branch starts from latest origin/dev.
+
+8. `feat(domain): implement ip-02-t08`
+   - Task IDs: `IP-02-T08`.
+   - Owned target paths: `extension/domain/profile_id` (to-create), `extension/domain/tab_identity` (to-create), `extension/domain/tab_projection` (to-create), `extension/domain/activation` (to-create), `host/internal/domain/profile_id` (to-create), `host/internal/domain/tab_identity` (to-create), `host/internal/domain/tab_projection` (to-create), `host/internal/domain/activation` (to-create), `fixtures/domain/phase-02` (to-create), `tests/domain/phase-02` (to-create).
+   - Behavior: Add the activation-observed path and retention hooks: write only confirmed normal-context activations when the user setting permits, purge by age then count deterministically, keep private/failed activations session-only, and expose reset/uninstall deletion hooks without deleting browser state.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/domain/phase-02/run_fixtures.py --suite phase-02`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Add the activation-observed path and retention hooks: write only confirmed normal-context activations when the user setting permits, purge by age then count deterministically, keep private/failed activations session-only, and expose reset/uninstall deletion hooks without deleting browser state.
+   - Dependency gate: all index.md dependencies for IP-02 have merged to dev; phase work branch starts from latest origin/dev.
+
+9. `test(domain): implement ip-02-t09`
+   - Task IDs: `IP-02-T09`.
+   - Owned target paths: fixtures/domain/phase-02, tests/domain/phase-02.
+   - Behavior: Add the phase fixtures and test seam under `fixtures/domain/phase-02` and `tests/domain/phase-02`: assert exact map contents, identity keys, epoch/revision transitions, cross-profile rejection, stale activation outcomes, tie-break order, retention counts/ages, and ownership violations. Do not assert field-copy plumbing or internal function names.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/domain/phase-02/run_fixtures.py --suite phase-02`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Add the phase fixtures and test seam under `fixtures/domain/phase-02` and `tests/domain/phase-02`: assert exact map contents, identity keys, epoch/revision transitions, cross-profile rejection, stale activation outcomes, tie-break order, retention counts/ages, and ownership violations. Do not assert field-copy plumbing or internal function names.
+   - Dependency gate: all index.md dependencies for IP-02 have merged to dev; phase work branch starts from latest origin/dev.
+
+10. `feat(domain): implement ip-02-t10`
+   - Task IDs: `IP-02-T10`.
+   - Owned target paths: `extension/domain/profile_id` (to-create), `extension/domain/tab_identity` (to-create), `extension/domain/tab_projection` (to-create), `extension/domain/activation` (to-create), `host/internal/domain/profile_id` (to-create), `host/internal/domain/tab_identity` (to-create), `host/internal/domain/tab_projection` (to-create), `host/internal/domain/activation` (to-create), `fixtures/domain/phase-02` (to-create), `tests/domain/phase-02` (to-create).
+   - Behavior: Record all cross-phase handoffs in the implementation index: IP-04 owns browser event/eligibility wiring, IP-05 owns reconciliation, IP-07 owns wire validation/error literals, IP-08 owns schema/migrations, IP-11 owns score components, IP-14 owns browser activation execution, and IP-15/IP-18 own reset/uninstall execution. This phase remains the domain contract owner.
+   - Fixture and command: IP-04, IP-05, IP-07, IP-08, IP-11, IP-14, IP-15, IP-18; run `python3 tests/domain/phase-02/run_fixtures.py --suite phase-02`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Record all cross-phase handoffs in the implementation index: IP-04 owns browser event/eligibility wiring, IP-05 owns reconciliation, IP-07 owns wire validation/error literals, IP-08 owns schema/migrations, IP-11 owns score components, IP-14 owns browser activation execution, and IP-15/IP-18 own reset/uninstall execution. This phase remains the domain contract owner.
+   - Dependency gate: all index.md dependencies for IP-02 have merged to dev; phase work branch starts from latest origin/dev.
 
 ## 8. Kiểm chứng và nghiệm thu
 

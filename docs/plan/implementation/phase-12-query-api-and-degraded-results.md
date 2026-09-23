@@ -1,7 +1,7 @@
 # Phase 12 — Query API and degraded results
 
 > Plan ID: IP-12
-> Status: not_started
+> Status: See README.md execution tracker
 > Execution owner: Go query-orchestration and extension query-state owner
 > Dependencies: IP-07, IP-09, IP-10, IP-11
 > Parallel boundary: IP-13 consumes the query/result and status contract; IP-14 consumes revision-bound result references. No shared implementation paths with those phases.
@@ -93,29 +93,80 @@
 
 ## 6. Công việc triển khai
 
-- [ ] **Contract and limits:** write the versioned `query`/`query_result`/typed-error schemas, enumerate required/optional fields, enforce `profile_id` and `projection_revision` binding, define negotiated/configured result-limit precedence, and reject malformed/oversized input before index allocation.
-- [ ] **Host orchestration:** implement the readiness gate (`Ready` plus exact published revision only), call IP-10 preparation and IP-11 ranking, cap and serialize bounded rows, include model/revision/status/timing metadata, and preserve deterministic ordering and explanations.
-- [ ] **Validation and empty paths:** distinguish valid empty query, empty projection, no result, invalid query, overlong payload, cancellation, and deadline expiration. Every path must leave the index unchanged and return a bounded observable status.
-- [ ] **Revision safety:** prove unknown revision and rebuilding revision return no result rows, no older snapshot fallback, typed error code, current known revision/freshness metadata where safe, and a retry/resync action for the client.
-- [ ] **Degraded runtime:** map transport unavailable/shutdown/recovering to no-result unavailable state; map optional SQLite failure to successful lexical result with `persistence_state=degraded`, safe defaults/session-only recency, and a non-blocking diagnostic status.
-- [ ] **Extension query client:** increment the local input sequence on each accepted change, send the latest projection revision, discard out-of-order/superseded responses, and expose a render model whose status cannot imply confirmed results or activation when the host did not return them.
-- [ ] **Fixture and test seams:** implement `QUERY-001` through `QUERY-012` and focused tests against observable wire/client behavior, including profile mismatch, duplicate request identity, bounded error payloads, deterministic repeated runs, and redacted diagnostics.
-- [ ] **Performance proof:** implement the exact benchmark command and fixture, capture environment and warm-up/iteration settings, report p50/p95/p99 and allocation counts, and fail the command when the NFR-002 p95 budget or expected status/result shape is violated.
+- [ ] `IP-12-T01` **Contract and limits:** write the versioned `query`/`query_result`/typed-error schemas, enumerate required/optional fields, enforce `profile_id` and `projection_revision` binding, define negotiated/configured result-limit precedence, and reject malformed/oversized input before index allocation.
+- [ ] `IP-12-T02` **Host orchestration:** implement the readiness gate (`Ready` plus exact published revision only), call IP-10 preparation and IP-11 ranking, cap and serialize bounded rows, include model/revision/status/timing metadata, and preserve deterministic ordering and explanations.
+- [ ] `IP-12-T03` **Validation and empty paths:** distinguish valid empty query, empty projection, no result, invalid query, overlong payload, cancellation, and deadline expiration. Every path must leave the index unchanged and return a bounded observable status.
+- [ ] `IP-12-T04` **Revision safety:** prove unknown revision and rebuilding revision return no result rows, no older snapshot fallback, typed error code, current known revision/freshness metadata where safe, and a retry/resync action for the client.
+- [ ] `IP-12-T05` **Degraded runtime:** map transport unavailable/shutdown/recovering to no-result unavailable state; map optional SQLite failure to successful lexical result with `persistence_state=degraded`, safe defaults/session-only recency, and a non-blocking diagnostic status.
+- [ ] `IP-12-T06` **Extension query client:** increment the local input sequence on each accepted change, send the latest projection revision, discard out-of-order/superseded responses, and expose a render model whose status cannot imply confirmed results or activation when the host did not return them.
+- [ ] `IP-12-T07` **Fixture and test seams:** implement `QUERY-001` through `QUERY-012` and focused tests against observable wire/client behavior, including profile mismatch, duplicate request identity, bounded error payloads, deterministic repeated runs, and redacted diagnostics.
+- [ ] `IP-12-T08` **Performance proof:** implement the exact benchmark command and fixture, capture environment and warm-up/iteration settings, report p50/p95/p99 and allocation counts, and fail the command when the NFR-002 p95 budget or expected status/result shape is violated.
 
 ## 7. Kế hoạch commit
 
-1. `feat(query): add bounded query contract and revision gate`
-   - Thay đổi: Add the host request/response/error types, limit validation, profile/revision/index-state gates, cancellation/deadline handling, and safe status mapping under `host/query/` (to-create).
-   - Cách kiểm tra: From repository root, run `go test ./host/query/... -run 'Test(QueryContract|ResultLimit|RevisionGate|Validation)'` once the planned Go module and package exist; fixture expectations must show zero rows for unknown/rebuilding revisions.
-2. `feat(query): connect extension client and degraded status`
-   - Thay đổi: Add `extension/src/runtime/query-client.ts`, latest-input sequencing, stale-response suppression, host-down/recovery mapping, and persistence-degraded result model.
-   - Cách kiểm tra: Run `npm test -- --runInBand tests/query/phase-12/query-client.test.ts` from the extension root (or the repository's adopted equivalent) with `QUERY-002`, `QUERY-007`, `QUERY-008`, and `QUERY-009`.
-3. `test(query): add query failure and determinism fixtures`
-   - Thay đổi: Add `fixtures/query/phase-12/` and `tests/query/phase-12/` for field matching, empty/invalid/no-result, bounds, revision safety, degraded persistence, and deterministic handoff.
-   - Cách kiểm tra: From repository root, run `go test ./tests/query/phase-12/... -run 'TestQueryFixture' -count=1` and assert each fixture's expected status, rows, revision, and bounded response fields.
-4. `perf(query): add 1000-tab query-to-render benchmark`
-   - Thay đổi: Add the benchmark harness and `QUERY-012` measurement output with p50/p95/p99, environment, and allocation/result-count evidence.
-   - Cách kiểm tra: From repository root, run `GOMAXPROCS=1 go run ./tests/query/phase-12/cmd/query-to-render-benchmark --fixture fixtures/query/phase-12/QUERY-012-query-to-render-1000-tabs-64-chars.json --warmup 20 --iterations 200 --p95-budget-ms 50`; require `status=pass`, `fixture_tabs=1000`, `query_scalars=64`, and `p95_ms<=50`.
+1. `feat(query): implement ip-12-t01`
+   - Task IDs: `IP-12-T01`.
+   - Owned target paths: `host/query/` (to-create), `extension/src/runtime/query-client.ts` (to-create), `fixtures/query/phase-12/` (to-create), `tests/query/phase-12/` (to-create).
+   - Behavior: **Contract and limits:** write the versioned `query`/`query_result`/typed-error schemas, enumerate required/optional fields, enforce `profile_id` and `projection_revision` binding, define negotiated/configured result-limit precedence, and reject malformed/oversized input before index allocation.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/query/... ./tests/query/phase-12/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Contract and limits:** write the versioned `query`/`query_result`/typed-error schemas, enumerate required/optional fields, enforce `profile_id` and `projection_revision` binding, define negotiated/configured result-limit precedence, and reject malformed/oversized input before index allocation.
+   - Dependency gate: all index.md dependencies for IP-12 have merged to dev; phase work branch starts from latest origin/dev.
+
+2. `feat(query): implement ip-12-t02`
+   - Task IDs: `IP-12-T02`.
+   - Owned target paths: `host/query/` (to-create), `extension/src/runtime/query-client.ts` (to-create), `fixtures/query/phase-12/` (to-create), `tests/query/phase-12/` (to-create).
+   - Behavior: **Host orchestration:** implement the readiness gate (`Ready` plus exact published revision only), call IP-10 preparation and IP-11 ranking, cap and serialize bounded rows, include model/revision/status/timing metadata, and preserve deterministic ordering and explanations.
+   - Fixture and command: IP-10, IP-11; run `go test ./host/query/... ./tests/query/phase-12/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Host orchestration:** implement the readiness gate (`Ready` plus exact published revision only), call IP-10 preparation and IP-11 ranking, cap and serialize bounded rows, include model/revision/status/timing metadata, and preserve deterministic ordering and explanations.
+   - Dependency gate: all index.md dependencies for IP-12 have merged to dev; phase work branch starts from latest origin/dev.
+
+3. `feat(query): implement ip-12-t03`
+   - Task IDs: `IP-12-T03`.
+   - Owned target paths: `host/query/` (to-create), `extension/src/runtime/query-client.ts` (to-create), `fixtures/query/phase-12/` (to-create), `tests/query/phase-12/` (to-create).
+   - Behavior: **Validation and empty paths:** distinguish valid empty query, empty projection, no result, invalid query, overlong payload, cancellation, and deadline expiration. Every path must leave the index unchanged and return a bounded observable status.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/query/... ./tests/query/phase-12/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Validation and empty paths:** distinguish valid empty query, empty projection, no result, invalid query, overlong payload, cancellation, and deadline expiration. Every path must leave the index unchanged and return a bounded observable status.
+   - Dependency gate: all index.md dependencies for IP-12 have merged to dev; phase work branch starts from latest origin/dev.
+
+4. `feat(query): implement ip-12-t04`
+   - Task IDs: `IP-12-T04`.
+   - Owned target paths: `host/query/` (to-create), `extension/src/runtime/query-client.ts` (to-create), `fixtures/query/phase-12/` (to-create), `tests/query/phase-12/` (to-create).
+   - Behavior: **Revision safety:** prove unknown revision and rebuilding revision return no result rows, no older snapshot fallback, typed error code, current known revision/freshness metadata where safe, and a retry/resync action for the client.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/query/... ./tests/query/phase-12/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Revision safety:** prove unknown revision and rebuilding revision return no result rows, no older snapshot fallback, typed error code, current known revision/freshness metadata where safe, and a retry/resync action for the client.
+   - Dependency gate: all index.md dependencies for IP-12 have merged to dev; phase work branch starts from latest origin/dev.
+
+5. `feat(query): implement ip-12-t05`
+   - Task IDs: `IP-12-T05`.
+   - Owned target paths: `host/query/` (to-create), `extension/src/runtime/query-client.ts` (to-create), `fixtures/query/phase-12/` (to-create), `tests/query/phase-12/` (to-create).
+   - Behavior: **Degraded runtime:** map transport unavailable/shutdown/recovering to no-result unavailable state; map optional SQLite failure to successful lexical result with `persistence_state=degraded`, safe defaults/session-only recency, and a non-blocking diagnostic status.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/query/... ./tests/query/phase-12/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Degraded runtime:** map transport unavailable/shutdown/recovering to no-result unavailable state; map optional SQLite failure to successful lexical result with `persistence_state=degraded`, safe defaults/session-only recency, and a non-blocking diagnostic status.
+   - Dependency gate: all index.md dependencies for IP-12 have merged to dev; phase work branch starts from latest origin/dev.
+
+6. `test(query): implement ip-12-t06`
+   - Task IDs: `IP-12-T06`.
+   - Owned target paths: `host/query/` (to-create), `extension/src/runtime/query-client.ts` (to-create), `fixtures/query/phase-12/` (to-create), `tests/query/phase-12/` (to-create).
+   - Behavior: **Extension query client:** increment the local input sequence on each accepted change, send the latest projection revision, discard out-of-order/superseded responses, and expose a render model whose status cannot imply confirmed results or activation when the host did not return them.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/query/... ./tests/query/phase-12/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Extension query client:** increment the local input sequence on each accepted change, send the latest projection revision, discard out-of-order/superseded responses, and expose a render model whose status cannot imply confirmed results or activation when the host did not return them.
+   - Dependency gate: all index.md dependencies for IP-12 have merged to dev; phase work branch starts from latest origin/dev.
+
+7. `test(query): implement ip-12-t07`
+   - Task IDs: `IP-12-T07`.
+   - Owned target paths: `host/query/` (to-create), `extension/src/runtime/query-client.ts` (to-create), `fixtures/query/phase-12/` (to-create), `tests/query/phase-12/` (to-create).
+   - Behavior: **Fixture and test seams:** implement `QUERY-001` through `QUERY-012` and focused tests against observable wire/client behavior, including profile mismatch, duplicate request identity, bounded error payloads, deterministic repeated runs, and redacted diagnostics.
+   - Fixture and command: QUERY-001, QUERY-012; run `go test ./host/query/... ./tests/query/phase-12/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Fixture and test seams:** implement `QUERY-001` through `QUERY-012` and focused tests against observable wire/client behavior, including profile mismatch, duplicate request identity, bounded error payloads, deterministic repeated runs, and redacted diagnostics.
+   - Dependency gate: all index.md dependencies for IP-12 have merged to dev; phase work branch starts from latest origin/dev.
+
+8. `test(query): implement ip-12-t08`
+   - Task IDs: `IP-12-T08`.
+   - Owned target paths: `host/query/` (to-create), `extension/src/runtime/query-client.ts` (to-create), `fixtures/query/phase-12/` (to-create), `tests/query/phase-12/` (to-create).
+   - Behavior: **Performance proof:** implement the exact benchmark command and fixture, capture environment and warm-up/iteration settings, report p50/p95/p99 and allocation counts, and fail the command when the NFR-002 p95 budget or expected status/result shape is violated.
+   - Fixture and command: NFR-002; run `go test ./host/query/... ./tests/query/phase-12/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Performance proof:** implement the exact benchmark command and fixture, capture environment and warm-up/iteration settings, report p50/p95/p99 and allocation counts, and fail the command when the NFR-002 p95 budget or expected status/result shape is violated.
+   - Dependency gate: all index.md dependencies for IP-12 have merged to dev; phase work branch starts from latest origin/dev.
 
 ## 8. Kiểm chứng và nghiệm thu
 

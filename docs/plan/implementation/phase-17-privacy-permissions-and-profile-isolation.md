@@ -1,7 +1,7 @@
 # Phase 17 — Privacy, permissions, and profile isolation
 
 > Plan ID: IP-17
-> Status: not_started
+> Status: See README.md execution tracker
 > Execution owner: Privacy and security implementation owner
 > Dependencies: IP-03, IP-04, IP-05, IP-07, IP-08, IP-16
 > Parallel boundary: IP-18 may consume this policy after IP-17 is merged; IP-19 consumes the evidence; no shared owned paths
@@ -83,12 +83,12 @@
 
 ## 6. Công việc triển khai
 
-- [ ] **Việc 1 — Freeze the field-class and ownership matrix.** In `extension/src/privacy/` and `host/privacy/` (to-create), record for every field its source, owner, allowed boundary, storage class, retention, display policy, and redaction rule:
+- [ ] `IP-17-T01` **Việc 1 — Freeze the field-class and ownership matrix.** In `extension/src/privacy/` and `host/privacy/` (to-create), record for every field its source, owner, allowed boundary, storage class, retention, display policy, and redaction rule:
   - Transient search/projection values: title, full URL, derived domain, window/group labels, tab/window/group IDs, pinned/active state, private marker, query input, and projection revision. They may cross the extension-to-host local connection only after scope and limit checks; they remain memory-only and are never diagnostics or SQLite values.
   - Bounded durable values: validated profile-scoped settings, installation/schema state, and activation metadata containing only the permitted tab identity/domain/timestamp/source fields. Never write query text, URL path/query/fragment, page text, cookies, tokens, or raw browser payloads.
   - Diagnostic values: status/error enums, counts, durations, versions, sizes, revisions, retryability, retention counters, and opaque local correlation IDs. Raw title, URL, domain, labels, query input, browser IDs, private identifiers, and arbitrary error text are denied.
   - Forbidden values: credentials, cookies, session tokens, auth headers, extension/host private keys, environment secrets, page contents, network payloads, and data from excluded browser surfaces. A field that cannot be classified is rejected rather than forwarded.
-- [ ] **Việc 2 — Implement the permission matrix and static audit.** Keep the manifest allowlist narrow and map each capability as follows:
+- [ ] `IP-17-T02` **Việc 2 — Implement the permission matrix and static audit.** Keep the manifest allowlist narrow and map each capability as follows:
 
   | Capability/API | Product use and owner | Manifest/permission decision | Denial or absence behavior | Evidence |
   | --- | --- | --- | --- | --- |
@@ -102,36 +102,36 @@
   | History, saved-item, download, cookie, page, network, and broad-host capabilities | Outside the product boundary. | MUST NOT be requested, declared, or called; no wildcard host patterns, page scripting, interception, or data-source permission. | No data is collected and no permission prompt is shown. A future request requires a new decision record and updated privacy docs. | Manifest denylist, dependency/API scan, runtime spies, review sign-off. |
 
   - Build the static audit so it fails on an undeclared permission, wildcard/broad host pattern, page access, unapproved API import, or a permission-to-requirement mapping that is missing. Do not treat an API denial as permission to try a different excluded API.
-- [ ] **Việc 3 — Bind every message and browser action to one scope.**
+- [ ] `IP-17-T03` **Việc 3 — Bind every message and browser action to one scope.**
   - Obtain IP-02's opaque `profile_id` from the active extension profile; never derive it from a signed-in account, URL, title, or arbitrary message field. Pair it with `context_kind` and an ephemeral private session nonce where available.
   - During `hello`, bind the host session to `(browser_family, profile_id, context_kind)`; require the same binding on `snapshot`, `delta`, `query`, health, reset, activation acknowledgement, and diagnostics requests. Reject absent, malformed, changed, or foreign scope with `PROFILE_MISMATCH` before projection/index/SQLite access.
   - In the extension, verify scope and projection revision on every result before rendering or activation. A result from another profile/context, or a result whose context ended, is stale and cannot be used as a fallback target.
   - Key SQLite reads/writes by the same scope. Normal and private scopes have separate in-memory sessions; private writes are rejected at the repository boundary even if a caller supplies a normal-looking profile ID. Reset and uninstall operate only on the requested owned scope and never inspect or delete another profile's rows.
   - On profile switch, browser restart, service-worker restart, permission revocation, host reconnect, or private-context teardown, discard the old session and request a fresh authoritative snapshot. Do not reuse an old in-memory index or a stale host connection across scopes.
-- [ ] **Việc 4 — Enforce private-context lifetime and data flow.**
+- [ ] `IP-17-T04` **Việc 4 — Enforce private-context lifetime and data flow.**
   - Keep private tab projection/index/query/result data in an isolated memory arena keyed by its private scope; do not merge it with normal projection counts, ranking recency, settings, or diagnostic payloads.
   - Disable activation-recency writes for private records. If the shared IP-14 path reports an activation, record only a safe non-persistent outcome; never persist the private tab identity, domain, timestamp, or source.
   - Clear private memory and cancel pending private requests when the browser reports the context is gone. A late response is ignored by scope/nonce validation and cannot populate normal state.
   - Add a browser capability probe for Chrome and Edge. A denied probe has a deterministic unavailable state and no attempt to inspect private tabs through page APIs, host permissions, or a normal-context snapshot.
-- [ ] **Việc 5 — Apply redaction before every durable or observable output.**
+- [ ] `IP-17-T05` **Việc 5 — Apply redaction before every durable or observable output.**
   - Validate UTF-8, schema, and field types first; select the explicit diagnostic allowlist second; redact/drop URL path, query, fragment, title, labels, raw IDs, query text, private identifiers, and arbitrary error detail third; then serialize and enforce the record-size cap. Redaction MUST happen before SQLite insertion, export, crash/error formatting, and test snapshots.
   - Replace raw correlation material with a per-session opaque ID or one-way local digest only when the contract needs correlation. Never use a reversible encoding, account identifier, raw profile ID, tab ID, title, URL, or query as a diagnostic correlation value.
   - Keep UI search results local and bounded: the user may see the allowed title/domain/URL context for the current scope, but the query, raw metadata, or private fields must not enter diagnostics or persistence. Strip URL credentials, query strings, fragments, and other unneeded components from any displayed context according to the privacy/display contract.
   - Ensure typed errors contain only the safe error literal, retryability, scope-safe request identity, and recovery action. Panic/crash paths and command-line output use the same deny-by-default formatter; no raw browser field is interpolated.
   - Test sentinel values through every output sink and assert absence byte-for-byte, including nested/unknown objects and malformed error values. Redaction failure is a hard test failure, not a warning.
-- [ ] **Việc 6 — Define secrets and input limits at the boundary.**
+- [ ] `IP-17-T06` **Việc 6 — Define secrets and input limits at the boundary.**
   - Consume IP-07's exact constants for frame bytes, identifier bytes, field bytes, query characters, tab count, synchronization count, result limit, timeout, and diagnostic record bytes; do not duplicate or silently widen them. Enforce result limit 1–50 and the declared 1,000-tab operating envelope before allocation/indexing.
   - Reject invalid UTF-8, NUL/control injection where the API does not permit it, negative/overflowing numeric values, unknown scope/context enums, duplicate conflicting identities, malformed URLs, missing required scope, and fields exceeding their limit. Omit optional fields only when their absence is an allowed contract state.
   - Reject or drop secret-shaped fields and never read environment secrets, cookies, session tokens, auth headers, private keys, browser storage values, or network payloads. Do not place secrets in fixtures, source, test snapshots, logs, crash reports, command arguments, or artifacts.
   - Bound diagnostic serialization and total retention bytes before SQLite writes. SQL statements remain static/parameterized; no tab/query/profile field is interpolated into SQL, a path, a shell command, or a host invocation.
   - Exercise oversized and adversarial inputs in `FX-PRIVACY-INPUT-LIMITS` and `FX-PRIVACY-SECRET-REJECTION`; expected outcomes are typed rejection or safe omission with no partial scope mutation and no sensitive echo.
-- [ ] **Việc 7 — Audit logs, retention, reset, and uninstall.**
+- [ ] `IP-17-T07` **Việc 7 — Audit logs, retention, reset, and uninstall.**
   - Verify normal diagnostic rows are profile-scoped and private rows are absent. On insert/startup, apply IP-08's seven-day age eviction, then oldest-first eviction until serialized diagnostics are at most 10,000,000 bytes; cap one row before insertion and record only a safe eviction outcome.
   - Verify activation metadata is profile-scoped, at most 500 rows/30 days, and disabled for private context. Ensure a profile's retention pass cannot evict or inspect another profile's rows.
   - Run reset and uninstall fixtures to prove only InfoBoard-owned configuration, installation state, activation metadata, diagnostics, caches, manifests, and binaries are removed; browser tabs, browser history, unrelated profile data, and unrelated paths remain unchanged.
   - Inspect diagnostics and exports after permission denial, profile mismatch, private teardown, host crash, protocol mismatch, storage degradation, reset, and uninstall. Each transition must be explainable by safe status/error fields without raw metadata.
   - Add an audit result that reports permission set, API-call set, storage classes, retention limits, and fixture hashes. The audit itself contains no raw titles, URLs, queries, tokens, or private identifiers.
-- [ ] **Việc 8 — Exercise concrete abuse cases and hand off evidence.**
+- [ ] `IP-17-T08` **Việc 8 — Exercise concrete abuse cases and hand off evidence.**
   - Cross-profile confused deputy: inject profile B's request into profile A's session; expect `PROFILE_MISMATCH`, no result/settings/row access, and no activation.
   - Private-to-normal leakage: send a private delta followed by a normal query and inspect index, result, SQLite, and logs; expect zero private fields outside the private scope.
   - Stale private response: end the private context before a delayed result; expect cancellation/ignore and no normal fallback activation.
@@ -142,15 +142,69 @@
 
 ## 7. Kế hoạch commit
 
-1. `feat(privacy): enforce permission and profile-scope policy`
-   - Thay đổi: implement the manifest capability matrix, scope-bound session/extension guards, private-context lifetime, redaction/secret policy, and input-limit adapters under the phase-owned paths.
-   - Cách kiểm tra: run the static permission audit plus `FX-PRIVACY-PROFILE-CROSS-READ`, `FX-PRIVACY-PRIVATE-SEPARATION`, `FX-PRIVACY-PERMISSION-DENIED`, and `FX-PRIVACY-INPUT-LIMITS`.
-2. `test(privacy): verify isolation redaction and retention boundaries`
-   - Thay đổi: add deterministic permission, abuse, excluded-surface, redaction, secret, private-teardown, reset/uninstall, and age/byte retention fixtures and tests.
-   - Cách kiểm tra: run `FX-PRIVACY-REDACTION`, `FX-PRIVACY-RETENTION-AUDIT`, `FX-PRIVACY-EXCLUDED-SURFACE`, and the cross-profile/cross-context activation checks; record evidence for the security review.
-3. `docs(implementation): add phase 17 privacy permissions and profile isolation`
-   - Thay đổi: this standalone plan file only; the phase branch must not edit `index.md`, sibling phases, source code, or `main`.
-   - Cách kiểm tra: `git diff --check`; assert exact headings 1–10, canonical links, real skill links, owned to-create paths, no excluded old-scope terms, and a one-file diff.
+1. `feat(privacy): implement ip-17-t01`
+   - Task IDs: `IP-17-T01`.
+   - Owned target paths: extension/src/privacy/, host/privacy/.
+   - Behavior: **Việc 1 — Freeze the field-class and ownership matrix.** In `extension/src/privacy/` and `host/privacy/` (to-create), record for every field its source, owner, allowed boundary, storage class, retention, display policy, and redaction rule:
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/privacy/... -run 'Test(Profile|Private|Redaction|Secret|InputLimit|Retention)'`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Việc 1 — Freeze the field-class and ownership matrix.** In `extension/src/privacy/` and `host/privacy/` (to-create), record for every field its source, owner, allowed boundary, storage class, retention, display policy, and redaction rule:
+   - Dependency gate: all index.md dependencies for IP-17 have merged to dev; phase work branch starts from latest origin/dev.
+
+2. `test(privacy): implement ip-17-t02`
+   - Task IDs: `IP-17-T02`.
+   - Owned target paths: `extension/src/privacy/` (to-create), `host/privacy/` (to-create), `fixtures/privacy/phase-17/` (to-create), `tests/privacy/phase-17/` (to-create).
+   - Behavior: **Việc 2 — Implement the permission matrix and static audit.** Keep the manifest allowlist narrow and map each capability as follows:
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/privacy/... -run 'Test(Profile|Private|Redaction|Secret|InputLimit|Retention)'`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Việc 2 — Implement the permission matrix and static audit.** Keep the manifest allowlist narrow and map each capability as follows:
+   - Dependency gate: all index.md dependencies for IP-17 have merged to dev; phase work branch starts from latest origin/dev.
+
+3. `feat(privacy): implement ip-17-t03`
+   - Task IDs: `IP-17-T03`.
+   - Owned target paths: `extension/src/privacy/` (to-create), `host/privacy/` (to-create), `fixtures/privacy/phase-17/` (to-create), `tests/privacy/phase-17/` (to-create).
+   - Behavior: **Việc 3 — Bind every message and browser action to one scope.**
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/privacy/... -run 'Test(Profile|Private|Redaction|Secret|InputLimit|Retention)'`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Việc 3 — Bind every message and browser action to one scope.**
+   - Dependency gate: all index.md dependencies for IP-17 have merged to dev; phase work branch starts from latest origin/dev.
+
+4. `feat(privacy): implement ip-17-t04`
+   - Task IDs: `IP-17-T04`.
+   - Owned target paths: `extension/src/privacy/` (to-create), `host/privacy/` (to-create), `fixtures/privacy/phase-17/` (to-create), `tests/privacy/phase-17/` (to-create).
+   - Behavior: **Việc 4 — Enforce private-context lifetime and data flow.**
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/privacy/... -run 'Test(Profile|Private|Redaction|Secret|InputLimit|Retention)'`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Việc 4 — Enforce private-context lifetime and data flow.**
+   - Dependency gate: all index.md dependencies for IP-17 have merged to dev; phase work branch starts from latest origin/dev.
+
+5. `feat(privacy): implement ip-17-t05`
+   - Task IDs: `IP-17-T05`.
+   - Owned target paths: `extension/src/privacy/` (to-create), `host/privacy/` (to-create), `fixtures/privacy/phase-17/` (to-create), `tests/privacy/phase-17/` (to-create).
+   - Behavior: **Việc 5 — Apply redaction before every durable or observable output.**
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/privacy/... -run 'Test(Profile|Private|Redaction|Secret|InputLimit|Retention)'`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Việc 5 — Apply redaction before every durable or observable output.**
+   - Dependency gate: all index.md dependencies for IP-17 have merged to dev; phase work branch starts from latest origin/dev.
+
+6. `feat(privacy): implement ip-17-t06`
+   - Task IDs: `IP-17-T06`.
+   - Owned target paths: `extension/src/privacy/` (to-create), `host/privacy/` (to-create), `fixtures/privacy/phase-17/` (to-create), `tests/privacy/phase-17/` (to-create).
+   - Behavior: **Việc 6 — Define secrets and input limits at the boundary.**
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/privacy/... -run 'Test(Profile|Private|Redaction|Secret|InputLimit|Retention)'`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Việc 6 — Define secrets and input limits at the boundary.**
+   - Dependency gate: all index.md dependencies for IP-17 have merged to dev; phase work branch starts from latest origin/dev.
+
+7. `test(privacy): implement ip-17-t07`
+   - Task IDs: `IP-17-T07`.
+   - Owned target paths: `extension/src/privacy/` (to-create), `host/privacy/` (to-create), `fixtures/privacy/phase-17/` (to-create), `tests/privacy/phase-17/` (to-create).
+   - Behavior: **Việc 7 — Audit logs, retention, reset, and uninstall.**
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/privacy/... -run 'Test(Profile|Private|Redaction|Secret|InputLimit|Retention)'`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Việc 7 — Audit logs, retention, reset, and uninstall.**
+   - Dependency gate: all index.md dependencies for IP-17 have merged to dev; phase work branch starts from latest origin/dev.
+
+8. `feat(privacy): implement ip-17-t08`
+   - Task IDs: `IP-17-T08`.
+   - Owned target paths: `extension/src/privacy/` (to-create), `host/privacy/` (to-create), `fixtures/privacy/phase-17/` (to-create), `tests/privacy/phase-17/` (to-create).
+   - Behavior: **Việc 8 — Exercise concrete abuse cases and hand off evidence.**
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/privacy/... -run 'Test(Profile|Private|Redaction|Secret|InputLimit|Retention)'`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Việc 8 — Exercise concrete abuse cases and hand off evidence.**
+   - Dependency gate: all index.md dependencies for IP-17 have merged to dev; phase work branch starts from latest origin/dev.
 
 ## 8. Kiểm chứng và nghiệm thu
 

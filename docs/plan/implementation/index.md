@@ -100,9 +100,9 @@ Every phase file is standalone and must contain the metadata block plus exactly 
 
 Section 10 must link a real skill under `.agent/skills/`, `CONTEXT.md`, canonical documents under `docs/plan/refactor/`, and every relevant target outside `docs/`. Use `to-create` for paths not yet present. Each phase must state its sibling boundaries and exact future verification command or fixture contract; never replace verification with a generic test placeholder.
 
-## Branch, commit, and merge protocol
+## Phase-plan authoring branch protocol
 
-The control owner creates the structural cutover. For each phase:
+This protocol applies only to plan-file edits. Plan authors branch from current `dev`, edit only their assigned phase plan, validate it, and integrate the plan change into `dev`. The README execution tracker is coordinator-owned. These authoring branches do not authorize product implementation on `main`.
 
 ```bash
 git switch dev
@@ -115,13 +115,25 @@ git commit -m "docs(implementation): add phase XX <slug>"
 git push -u origin plan/implementation-ip-XX-<slug>
 ```
 
-After review, merge the single-file branch into `dev`, verify its path set, run the corpus validator, and push `dev`. Phase agents must not edit `README.md`, `index.md`, sibling phase files, implementation source, or `main`. The control owner updates root controls in separate commits.
+After review, integrate the single-file plan branch into `dev`, validate the corpus, and push `dev`. Stop on failed push, non-fast-forward, unexpected path, or unresolved contract conflict; never force-push.
 
-The required commit sequence is the structural cutover, one phase-file commit for IP-01 through IP-20, then the final root-control index commit. Stop on a failed push, non-fast-forward, unexpected path, or unresolved contract conflict; do not force-push.
+## Product implementation and release protocol
+
+This protocol applies to future implementation code, fixtures, packages, and tests—not authoring plan files.
+
+1. A phase work branch starts from latest `origin/dev`, never `main`. Follow the phase Section 7 task/commit map; change only owned paths and explicitly assigned fixtures/tests.
+2. Run phase acceptance checks on the work branch. Only a passing phase may become `Ready for dev integration`; report exact command/result/evidence, SHA, branch, PR, and blocker/next action to the coordinator. Agents do not edit the shared README dashboard.
+3. Integrate only after every DAG dependency is integrated into `dev`. Run integration checks on `dev`; record SHA and evidence in README. `Integrated in dev` precedes `Complete`; `Complete` requires acceptance criteria pass and integration.
+4. Never commit implementation directly to `main`, merge the release PR, or mark a phase complete before integration acceptance. After IP-20 release gates pass, coordinator opens a `dev` → `main` PR and leaves it open for user review and manual merge.
+5. README is the single execution-status source. Never duplicate live progress status in `index.md` or phase files.
+
+See [`README.md`](README.md) for the dashboard, allowed statuses, transition evidence, coordinator ownership, and agent report template.
 
 ## Final corpus checks
 
-The throwaway validator must prove from repository root that `dev` is clean and equals `origin/dev`; exactly 22 Markdown files exist directly here; no old stage or auxiliary package file remains; all phase metadata, headings, IDs, dependencies, owned paths, skill links, canonical links, commit plans, and section 10 references exist; local links resolve; primary requirement ownership matches this table; owned paths do not overlap without an explicit contract owner; current browser/runtime/privacy terms are present; excluded historical scope terms are absent; only `docs/plan/implementation/**` changed from baseline; and the remote `dev` SHA equals local `dev` after the final push.
+The validator runs from repository root and verifies that all twenty phases retain exactly sections 1–10; each Section 6 task has one stable phase-local ID and exactly one Section 7 commit owner; each commit has a conventional message, target paths, behavior, Section 8 command/fixture, observable result, and dependency gate; dependency metadata matches this DAG; status metadata points to README; and canonical, skill, and local links resolve. README must contain exactly twenty phase rows, valid status values, resolved phase links, all required progress fields, and a separate release-PR state. Negative probes reject duplicate IDs, unowned tasks, commits without commands or expected outcomes, missing phase rows, and invalid status values.
+
+Repository workflow checks additionally run `git diff --check`, inspect the documentation-only path set, verify the branch/clean state, and confirm local `dev` equals `origin/dev` after push. Implementation source remains absent until product implementation begins.
 
 ## Finalized corpus
 

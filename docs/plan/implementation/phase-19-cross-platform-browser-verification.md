@@ -1,7 +1,7 @@
 # Phase 19 — Cross-platform browser verification
 
 > Plan ID: IP-19
-> Status: not_started
+> Status: See README.md execution tracker
 > Execution owner: Cross-platform verification and release owner
 > Dependencies: IP-13, IP-14, IP-15, IP-16, IP-17, IP-18
 > Parallel boundary: IP-20 only, after this matrix and its evidence are complete or have accepted blocked reasons
@@ -75,8 +75,8 @@
 
 ### 6.1 Freeze the matrix and evidence schema
 
-- [ ] Create `fixtures/compatibility/phase-19/reference-hardware.json` with these required reference classes. The file must be populated with exact immutable device IDs before any cell is marked PASS: R-LINUX (physical x86-64, at least 4 physical cores, 16 GiB RAM, NVMe/SSD, Linux release declared), R-MACOS (physical Apple Silicon or declared supported Mac class, at least 16 GiB RAM, internal SSD, macOS release declared), and R-WINDOWS (physical x86-64, at least 4 physical cores, 16 GiB RAM, NVMe/SSD, Windows release declared). The class is a minimum; the report records the exact CPU, RAM, storage, OS build, browser build, power mode, and display scale.
-- [ ] Create a six-row matrix manifest. The required rows and command substitutions are:
+- [ ] `IP-19-T01` Create `fixtures/compatibility/phase-19/reference-hardware.json` with these required reference classes. The file must be populated with exact immutable device IDs before any cell is marked PASS: R-LINUX (physical x86-64, at least 4 physical cores, 16 GiB RAM, NVMe/SSD, Linux release declared), R-MACOS (physical Apple Silicon or declared supported Mac class, at least 16 GiB RAM, internal SSD, macOS release declared), and R-WINDOWS (physical x86-64, at least 4 physical cores, 16 GiB RAM, NVMe/SSD, Windows release declared). The class is a minimum; the report records the exact CPU, RAM, storage, OS build, browser build, power mode, and display scale.
+- [ ] `IP-19-T02` Create a six-row matrix manifest. The required rows and command substitutions are:
 
 | Cell ID | Browser | OS | Reference | Evidence directory | Required command arguments |
 | --- | --- | --- | --- | --- | --- |
@@ -87,34 +87,34 @@
 | C05 | Chrome Stable | Windows | R-WINDOWS | `artifacts/verification/phase-19/chrome-windows/` | `--browser chrome --os windows --reference R-WINDOWS` |
 | C06 | Edge Stable | Windows | R-WINDOWS | `artifacts/verification/phase-19/edge-windows/` | `--browser edge --os windows --reference R-WINDOWS` |
 
-- [ ] Require every cell report to contain cell ID, status, run timestamp, repository commit, extension package SHA-256, host binary SHA-256, Native Messaging manifest SHA-256, protocol/schema/ranking versions, fixture SHA-256, hardware ID, OS/browser build, locale, power mode, exact commands, raw artifact paths, gate statuses, and `blocked_reason` when status is BLOCKED. Empty status or an unqualified “not run” is invalid.
-- [ ] Adopt these stable fixture IDs from the canonical fixture inventory: `FX-SHORTCUT-FOCUS`, `FX-QUERY-1000-64`, `FX-ACTIVATION-RACE`, `FX-EVENT-RECONCILE`, `FX-MISSED-EVENT`, `FX-HOST-DOWN`, `FX-HOST-CRASH`, `FX-MALFORMED-FRAME`, `FX-OVERSIZED-FRAME`, `FX-STORAGE-DEGRADED`, `FX-PERMISSION-DENIED`, `FX-PROFILE-ISOLATION`, `FX-PRIVATE-CONTEXT`, `FX-RESET-OWNERSHIP`, `FX-UNINSTALL-OWNERSHIP`, and `FX-ACCESSIBILITY`. Each fixture includes setup, input, expected observable output, cleanup, and synthetic-data assertions.
+- [ ] `IP-19-T03` Require every cell report to contain cell ID, status, run timestamp, repository commit, extension package SHA-256, host binary SHA-256, Native Messaging manifest SHA-256, protocol/schema/ranking versions, fixture SHA-256, hardware ID, OS/browser build, locale, power mode, exact commands, raw artifact paths, gate statuses, and `blocked_reason` when status is BLOCKED. Empty status or an unqualified “not run” is invalid.
+- [ ] `IP-19-T04` Adopt these stable fixture IDs from the canonical fixture inventory: `FX-SHORTCUT-FOCUS`, `FX-QUERY-1000-64`, `FX-ACTIVATION-RACE`, `FX-EVENT-RECONCILE`, `FX-MISSED-EVENT`, `FX-HOST-DOWN`, `FX-HOST-CRASH`, `FX-MALFORMED-FRAME`, `FX-OVERSIZED-FRAME`, `FX-STORAGE-DEGRADED`, `FX-PERMISSION-DENIED`, `FX-PROFILE-ISOLATION`, `FX-PRIVATE-CONTEXT`, `FX-RESET-OWNERSHIP`, `FX-UNINSTALL-OWNERSHIP`, and `FX-ACCESSIBILITY`. Each fixture includes setup, input, expected observable output, cleanup, and synthetic-data assertions.
 
 ### 6.2 Execute the lifecycle and compatibility journeys
 
-- [ ] For each C01–C06, run from repository root with the exact future runner interface:
+- [ ] `IP-19-T05` For each C01–C06, run from repository root with the exact future runner interface:
 
       ./tests/compatibility/phase-19/run-cell --browser <chrome|edge> --os <linux|macos|windows> --reference <R-LINUX|R-MACOS|R-WINDOWS> --fixture-manifest fixtures/compatibility/phase-19/fixtures.json --journeys clean-install,startup,upgrade,reconnect,reset,uninstall --evidence-dir artifacts/verification/phase-19/<browser>-<os>
 
   Substitute the six explicit argument rows in the matrix; do not run a different browser, OS, reference, or fixture seed under the same cell ID.
-- [ ] Clean install: start from a disposable browser profile and clean host registration, install the exact package pair from IP-18, verify the configured browser command appears in Chrome/Edge command settings, launch the focused surface, and verify the query input owns focus before text input. Capture install output, command trace, focused-input trace, package hashes, and initial health state.
-- [ ] Startup and suspension: restart the browser, allow the extension service worker to suspend, invoke the command again, and verify hello/ready, profile identity, projection revision, and focused surface recovery. Record host availability, index freshness, and no duplicate projection IDs.
-- [ ] Upgrade: install the previous release artifacts, seed configuration and synthetic tabs, upgrade extension and host independently and together, restart the browser, and verify migration, protocol compatibility, retained allowed configuration, projection convergence, and no unrelated browser-state change. Run the upgrade twice to prove idempotence.
-- [ ] Reconnect and rebuild: stop or isolate the host, observe a visible unavailable/recovering state, restart the registered host, complete handshake and full snapshot, and verify healthy index readiness, one result per eligible tab, and no stale activation. Run once after a clean browser restart and once after a service-worker suspension.
-- [ ] Reset: set non-default profile-scoped configuration, seed diagnostics and activation metadata, invoke reset, and verify only InfoBoard-owned records are removed, safe defaults are restored, open tabs remain open, and unrelated browser data is unchanged. Repeat reset to prove idempotence.
-- [ ] Uninstall: remove the extension and native registration using the package's supported uninstaller, verify owned files and profile data are removed, verify open tabs and unrelated browser state remain unchanged, and repeat the uninstaller to prove idempotence. Capture the before/after ownership manifest and process list.
-- [ ] Run clean-install, startup, upgrade, reconnect, reset, and uninstall in each matrix cell even when the same host class is reused. A Linux result cannot stand in for macOS or Windows, and Chrome cannot stand in for Edge.
+- [ ] `IP-19-T06` Clean install: start from a disposable browser profile and clean host registration, install the exact package pair from IP-18, verify the configured browser command appears in Chrome/Edge command settings, launch the focused surface, and verify the query input owns focus before text input. Capture install output, command trace, focused-input trace, package hashes, and initial health state.
+- [ ] `IP-19-T07` Startup and suspension: restart the browser, allow the extension service worker to suspend, invoke the command again, and verify hello/ready, profile identity, projection revision, and focused surface recovery. Record host availability, index freshness, and no duplicate projection IDs.
+- [ ] `IP-19-T08` Upgrade: install the previous release artifacts, seed configuration and synthetic tabs, upgrade extension and host independently and together, restart the browser, and verify migration, protocol compatibility, retained allowed configuration, projection convergence, and no unrelated browser-state change. Run the upgrade twice to prove idempotence.
+- [ ] `IP-19-T09` Reconnect and rebuild: stop or isolate the host, observe a visible unavailable/recovering state, restart the registered host, complete handshake and full snapshot, and verify healthy index readiness, one result per eligible tab, and no stale activation. Run once after a clean browser restart and once after a service-worker suspension.
+- [ ] `IP-19-T10` Reset: set non-default profile-scoped configuration, seed diagnostics and activation metadata, invoke reset, and verify only InfoBoard-owned records are removed, safe defaults are restored, open tabs remain open, and unrelated browser data is unchanged. Repeat reset to prove idempotence.
+- [ ] `IP-19-T11` Uninstall: remove the extension and native registration using the package's supported uninstaller, verify owned files and profile data are removed, verify open tabs and unrelated browser state remain unchanged, and repeat the uninstaller to prove idempotence. Capture the before/after ownership manifest and process list.
+- [ ] `IP-19-T12` Run clean-install, startup, upgrade, reconnect, reset, and uninstall in each matrix cell even when the same host class is reused. A Linux result cannot stand in for macOS or Windows, and Chrome cannot stand in for Edge.
 
 ### 6.3 Measure NFR-001, NFR-002, and NFR-003
 
-- [ ] Implement `tests/performance/phase-19/measure-hot-path` with the following exact interface, from repository root:
+- [ ] `IP-19-T13` Implement `tests/performance/phase-19/measure-hot-path` with the following exact interface, from repository root:
 
       ./tests/performance/phase-19/measure-hot-path --browser <chrome|edge> --os <linux|macos|windows> --reference <R-LINUX|R-MACOS|R-WINDOWS> --fixture fixtures/compatibility/phase-19/fixtures.json --tab-count 1000 --query p19-cross-platform-tab-activation-latency-benchmark-query-000000 --samples 101 --warmup 10 --seed p19 --output artifacts/verification/phase-19/<browser>-<os>/performance.json
 
-- [ ] Use the same 101 measured repetitions after 10 discarded warmups per cell, a monotonic clock, no DevTools throttling, AC power, a quiet machine, and the exact deterministic seed. Sort each metric independently; define p95 as rank ceil(0.95 × 101) = 96, and retain p50, p95, p99, minimum, maximum, and all raw samples. Never average the six cells into one pass/fail value.
-- [ ] Measure the boundaries exactly: NFR-001 starts at the browser command dispatch and stops only when the focused search surface is visible and `document.activeElement` is the query input; NFR-002 starts when a query revision is accepted and stops when the matching result revision is rendered and observable; NFR-003 starts at highlighted-result Enter keydown and stops at the browser activation acknowledgement, while separately recording browser scheduling delay and excluding it from the NFR-003 duration.
-- [ ] Seed a real indexed projection of exactly 1,000 eligible synthetic tab records for `FX-QUERY-1000-64`. The query is exactly 64 characters: `p19-cross-platform-tab-activation-latency-benchmark-query-000000`. The report must include projection revision, query revision, result count, and checksum of the expected ordered IDs so a fast but incomplete result cannot pass.
-- [ ] Compare each cell to the gates below and record a machine-readable result. A cell passes only when all three measured p95 values meet their limits and no measurement setup exception is open.
+- [ ] `IP-19-T14` Use the same 101 measured repetitions after 10 discarded warmups per cell, a monotonic clock, no DevTools throttling, AC power, a quiet machine, and the exact deterministic seed. Sort each metric independently; define p95 as rank ceil(0.95 × 101) = 96, and retain p50, p95, p99, minimum, maximum, and all raw samples. Never average the six cells into one pass/fail value.
+- [ ] `IP-19-T15` Measure the boundaries exactly: NFR-001 starts at the browser command dispatch and stops only when the focused search surface is visible and `document.activeElement` is the query input; NFR-002 starts when a query revision is accepted and stops when the matching result revision is rendered and observable; NFR-003 starts at highlighted-result Enter keydown and stops at the browser activation acknowledgement, while separately recording browser scheduling delay and excluding it from the NFR-003 duration.
+- [ ] `IP-19-T16` Seed a real indexed projection of exactly 1,000 eligible synthetic tab records for `FX-QUERY-1000-64`. The query is exactly 64 characters: `p19-cross-platform-tab-activation-latency-benchmark-query-000000`. The report must include projection revision, query revision, result count, and checksum of the expected ordered IDs so a fast but incomplete result cannot pass.
+- [ ] `IP-19-T17` Compare each cell to the gates below and record a machine-readable result. A cell passes only when all three measured p95 values meet their limits and no measurement setup exception is open.
 
 | Requirement | Measurement | Gate per matrix cell | Evidence |
 | --- | --- | --- | --- |
@@ -122,38 +122,38 @@
 | NFR-002 | Query accepted → rendered result revision, 1,000 tabs and 64-character query | p95 <= 50 ms | Raw samples, result-revision trace, projection/query fixture hash |
 | NFR-003 | Enter keydown → activation acknowledgement, scheduling delay excluded | p95 <= 100 ms | Raw samples, activation acknowledgement trace, browser scheduling trace |
 
-- [ ] Also record p50/p99 and process/browser memory at setup, after warmup, after the measured run, and after 10 repeated runs. A memory increase without a bounded explanation is a release risk even when latency passes. Do not silently discard outliers; annotate GC, OS scheduling, browser restart, or fixture failures in the raw record.
+- [ ] `IP-19-T18` Also record p50/p99 and process/browser memory at setup, after warmup, after the measured run, and after 10 repeated runs. A memory increase without a bounded explanation is a release risk even when latency passes. Do not silently discard outliers; annotate GC, OS scheduling, browser restart, or fixture failures in the raw record.
 
 ### 6.4 Verify accessibility on each browser/OS cell
 
-- [ ] Run from repository root with the exact future interface:
+- [ ] `IP-19-T19` Run from repository root with the exact future interface:
 
       ./tests/accessibility/phase-19/run --browser <chrome|edge> --os <linux|macos|windows> --reference <R-LINUX|R-MACOS|R-WINDOWS> --fixture FX-ACCESSIBILITY --viewport 320x480 --text-scale 200 --reduced-motion --keyboard-only --output artifacts/verification/phase-19/<browser>-<os>/accessibility.json
 
-- [ ] Trace the pointer-free journey: invoke the configured command, confirm the query input is focused, type a synthetic query, move with ArrowDown and ArrowUp, activate with Enter, dismiss with Escape, reopen, and verify focus is restored. Capture key events, active element, selected result, activation acknowledgement, dismissal, and browser state.
-- [ ] Inspect semantic labels, roles, descriptions, live status announcements, result count changes, visible focus indicator, contrast, and error/degraded/recovering states. Use the supported browser accessibility tree and an automated accessibility audit; record rule IDs, versions, findings, and any accepted manual-review reason.
-- [ ] Repeat at 200% text scale and a 320 × 480 CSS-pixel window. Enable reduced motion and verify no required state depends on animation. For each OS, include the supported screen reader evidence (Orca on Linux, VoiceOver on macOS, and Narrator or the declared Windows screen reader) with synthetic content only.
-- [ ] Mark NFR-008 PASS only when keyboard operation, visible focus, semantics, contrast, reduced motion, text scaling, and narrow-window behavior all pass in the cell; otherwise retain the failing trace and route the defect to IP-13.
+- [ ] `IP-19-T20` Trace the pointer-free journey: invoke the configured command, confirm the query input is focused, type a synthetic query, move with ArrowDown and ArrowUp, activate with Enter, dismiss with Escape, reopen, and verify focus is restored. Capture key events, active element, selected result, activation acknowledgement, dismissal, and browser state.
+- [ ] `IP-19-T21` Inspect semantic labels, roles, descriptions, live status announcements, result count changes, visible focus indicator, contrast, and error/degraded/recovering states. Use the supported browser accessibility tree and an automated accessibility audit; record rule IDs, versions, findings, and any accepted manual-review reason.
+- [ ] `IP-19-T22` Repeat at 200% text scale and a 320 × 480 CSS-pixel window. Enable reduced motion and verify no required state depends on animation. For each OS, include the supported screen reader evidence (Orca on Linux, VoiceOver on macOS, and Narrator or the declared Windows screen reader) with synthetic content only.
+- [ ] `IP-19-T23` Mark NFR-008 PASS only when keyboard operation, visible focus, semantics, contrast, reduced motion, text scaling, and narrow-window behavior all pass in the cell; otherwise retain the failing trace and route the defect to IP-13.
 
 ### 6.5 Verify permissions, privacy, and profile boundaries
 
-- [ ] Run from repository root with the exact future interface:
+- [ ] `IP-19-T24` Run from repository root with the exact future interface:
 
       ./tests/privacy/phase-19/audit --browser <chrome|edge> --os <linux|macos|windows> --reference <R-LINUX|R-MACOS|R-WINDOWS> --extension-package <path-to-package> --host-manifest <path-to-native-manifest> --fixture fixtures/compatibility/phase-19/fixtures.json --output artifacts/verification/phase-19/<browser>-<os>/privacy.json
 
-- [ ] Compare manifest permissions, optional permissions, host origins, and host registration paths with the IP-17 matrix and IP-18 package manifest. Reject any unapproved permission for history, downloads, cookies, broad host access, page content, or unrelated storage. Record the complete inspected lists and hashes, not just a boolean.
-- [ ] Instrument the normal path from install through query and activation and assert zero network requests, zero loopback listeners, no page evaluation or content reads, no command execution outside the registered host boundary, and no data sent off-machine. Save request/listener/API summaries with URL, title, query, and token fields redacted or omitted.
-- [ ] Use two disposable browser profiles and one private-context run. Prove that profile A cannot query or activate profile B, private-context records are excluded or cleaned according to IP-17, configuration remains profile-scoped, and reset/uninstall do not alter unrelated profile data. Capture synthetic IDs and counts only.
-- [ ] Export diagnostics after host-down, reconnect, stale-result, and storage-degraded journeys. Assert that logs contain metadata such as counts, durations, versions, and error classes but no raw URLs, titles, query strings, tokens, or secrets. Record redaction findings and retention cleanup results.
-- [ ] Mark NFR-009 PASS only when static permissions, runtime data flow, profile/private isolation, diagnostics redaction, and ownership cleanup all pass. Any high-severity privacy finding blocks the cell and the release gate.
+- [ ] `IP-19-T25` Compare manifest permissions, optional permissions, host origins, and host registration paths with the IP-17 matrix and IP-18 package manifest. Reject any unapproved permission for history, downloads, cookies, broad host access, page content, or unrelated storage. Record the complete inspected lists and hashes, not just a boolean.
+- [ ] `IP-19-T26` Instrument the normal path from install through query and activation and assert zero network requests, zero loopback listeners, no page evaluation or content reads, no command execution outside the registered host boundary, and no data sent off-machine. Save request/listener/API summaries with URL, title, query, and token fields redacted or omitted.
+- [ ] `IP-19-T27` Use two disposable browser profiles and one private-context run. Prove that profile A cannot query or activate profile B, private-context records are excluded or cleaned according to IP-17, configuration remains profile-scoped, and reset/uninstall do not alter unrelated profile data. Capture synthetic IDs and counts only.
+- [ ] `IP-19-T28` Export diagnostics after host-down, reconnect, stale-result, and storage-degraded journeys. Assert that logs contain metadata such as counts, durations, versions, and error classes but no raw URLs, titles, query strings, tokens, or secrets. Record redaction findings and retention cleanup results.
+- [ ] `IP-19-T29` Mark NFR-009 PASS only when static permissions, runtime data flow, profile/private isolation, diagnostics redaction, and ownership cleanup all pass. Any high-severity privacy finding blocks the cell and the release gate.
 
 ### 6.6 Exercise failure and recovery journeys
 
-- [ ] Run from repository root with the exact future interface:
+- [ ] `IP-19-T30` Run from repository root with the exact future interface:
 
       ./tests/recovery/phase-19/run --browser <chrome|edge> --os <linux|macos|windows> --reference <R-LINUX|R-MACOS|R-WINDOWS> --fixture-manifest fixtures/compatibility/phase-19/fixtures.json --output artifacts/verification/phase-19/<browser>-<os>/recovery.json
 
-- [ ] Use the following fixture-to-observable contract in every cell:
+- [ ] `IP-19-T31` Use the following fixture-to-observable contract in every cell:
 
 | Fixture | Injected condition | Required observable result and evidence |
 | --- | --- | --- |
@@ -170,12 +170,12 @@
 | FX-RESET-OWNERSHIP | Reset during healthy and recovering states | Only owned records/configuration are removed, safe defaults restored, tabs and unrelated data unchanged |
 | FX-UNINSTALL-OWNERSHIP | Uninstall and repeated uninstall | Owned registration/files/data removed; tabs and unrelated browser data unchanged; operation is idempotent |
 
-- [ ] Include service-worker suspension and browser restart in both FX-HOST-CRASH and FX-MISSED-EVENT runs. Record state sequence, projection revision before/after, result revision, host health, index freshness, duplicate-ID count, and recovery duration.
-- [ ] Verify every error is diagnosable and user-safe: no unconfirmed activation, no hidden recoverable failure, no unbounded retry loop, and no raw sensitive data in the evidence. Route failures to IP-14, IP-16, or IP-17 according to the owning contract.
+- [ ] `IP-19-T32` Include service-worker suspension and browser restart in both FX-HOST-CRASH and FX-MISSED-EVENT runs. Record state sequence, projection revision before/after, result revision, host health, index freshness, duplicate-ID count, and recovery duration.
+- [ ] `IP-19-T33` Verify every error is diagnosable and user-safe: no unconfirmed activation, no hidden recoverable failure, no unbounded retry loop, and no raw sensitive data in the evidence. Route failures to IP-14, IP-16, or IP-17 according to the owning contract.
 
 ### 6.7 Map evidence to requirements and release gates
 
-- [ ] Generate a requirement traceability table in `matrix-report.json`. The primary owner remains the phase named by the implementation index; IP-19 contributes cross-platform evidence only.
+- [ ] `IP-19-T34` Generate a requirement traceability table in `matrix-report.json`. The primary owner remains the phase named by the implementation index; IP-19 contributes cross-platform evidence only.
 
 | Requirement | Evidence captured in this phase | Observable acceptance signal |
 | --- | --- | --- |
@@ -202,25 +202,298 @@
 | NFR-009 | Per-cell privacy.json | No excluded source is requested, collected, persisted, or transmitted |
 | NFR-010 | Six-row matrix-report.json | Chrome and Edge each pass or have an explicitly accepted exception on Linux, macOS, and Windows |
 
-- [ ] Include supporting evidence for projection convergence, ranking determinism, resource bounds, and operational timeout/error-class rules without claiming their primary ownership. Forward the same artifact hashes to IP-05, IP-11, IP-16, and IP-18 as applicable.
-- [ ] Require the final gate ledger to contain performance, accessibility, privacy, recovery, compatibility, install/upgrade/uninstall, and documentation/protocol consistency statuses. A gate is PASS, FAIL, or BLOCKED with an owner and evidence path; no blank or implicit status is accepted.
+- [ ] `IP-19-T35` Include supporting evidence for projection convergence, ranking determinism, resource bounds, and operational timeout/error-class rules without claiming their primary ownership. Forward the same artifact hashes to IP-05, IP-11, IP-16, and IP-18 as applicable.
+- [ ] `IP-19-T36` Require the final gate ledger to contain performance, accessibility, privacy, recovery, compatibility, install/upgrade/uninstall, and documentation/protocol consistency statuses. A gate is PASS, FAIL, or BLOCKED with an owner and evidence path; no blank or implicit status is accepted.
 
 ## 7. Kế hoạch commit
 
-1. `feat(verification): add cross-platform matrix fixtures and runner`
-   - Add the six-cell manifest, deterministic fixture set, reference-hardware schema, evidence schema, and one-cell lifecycle runner under the phase-19 fixture/test paths.
-   - Check with the exact C01 command first, then replay the same command with all six matrix substitutions and inspect the machine-readable cell report.
-2. `test(verification): exercise browser lifecycle and failure journeys`
-   - Add clean install, startup, upgrade, reconnect, reset, uninstall, service-worker, browser-restart, protocol, projection, stale-result, and storage-degraded journeys.
-   - Check that every journey produces its expected observable state and redacted evidence, including explicit BLOCKED output when an environment is unavailable.
-3. `perf(verification): record hot-path p95 evidence`
-   - Add the 101-sample/10-warmup runner and raw timing, percentile, memory, projection, and scheduling-delay records for NFR-001 through NFR-003.
-   - Check each cell independently against 100 ms, 50 ms, and 100 ms p95 limits using the exact 1,000-tab and 64-character fixture.
-4. `test(verification): add accessibility privacy and recovery gates`
-   - Add the accessibility, permission/privacy, profile/private-context, redaction, ownership, and recovery reports and connect them to matrix-report.json.
-   - Check keyboard-only and assistive-technology journeys, static/runtime privacy inspection, reset/uninstall ownership, and release-gate aggregation.
+1. `test(compatibility): implement ip-19-t01`
+   - Task IDs: `IP-19-T01`.
+   - Owned target paths: fixtures/compatibility/phase-19/reference-hardware.json.
+   - Behavior: Create `fixtures/compatibility/phase-19/reference-hardware.json` with these required reference classes. The file must be populated with exact immutable device IDs before any cell is marked PASS: R-LINUX (physical x86-64, at least 4 physical cores, 16 GiB RAM, NVMe/SSD, Linux release declared), R-MACOS (physical Apple Silicon or declared supported Mac class, at least 16 GiB RAM, internal SSD, macOS release declared), and R-WINDOWS (physical x86-64, at least 4 physical cores, 16 GiB RAM, NVMe/SSD, Windows release declared). The class is a minimum; the report records the exact CPU, RAM, storage, OS build, browser build, power mode, and display scale.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Create `fixtures/compatibility/phase-19/reference-hardware.json` with these required reference classes. The file must be populated with exact immutable device IDs before any cell is marked PASS: R-LINUX (physical x86-64, at least 4 physical cores, 16 GiB RAM, NVMe/SSD, Linux release declared), R-MACOS (physical Apple Silicon or declared supported Mac class, at least 16 GiB RAM, internal SSD, macOS release declared), and R-WINDOWS (physical x86-64, at least 4 physical cores, 16 GiB RAM, NVMe/SSD, Windows release declared). The class is a minimum; the report records the exact CPU, RAM, storage, OS build, browser build, power mode, and display scale.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
 
-The documentation change itself is committed separately as `docs(implementation): add phase 19 cross platform browser verification` and must contain only this phase file.
+2. `feat(compatibility): implement ip-19-t02`
+   - Task IDs: `IP-19-T02`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Create a six-row matrix manifest. The required rows and command substitutions are:
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Create a six-row matrix manifest. The required rows and command substitutions are:
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+3. `test(compatibility): implement ip-19-t03`
+   - Task IDs: `IP-19-T03`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Require every cell report to contain cell ID, status, run timestamp, repository commit, extension package SHA-256, host binary SHA-256, Native Messaging manifest SHA-256, protocol/schema/ranking versions, fixture SHA-256, hardware ID, OS/browser build, locale, power mode, exact commands, raw artifact paths, gate statuses, and `blocked_reason` when status is BLOCKED. Empty status or an unqualified “not run” is invalid.
+   - Fixture and command: SHA-256; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Require every cell report to contain cell ID, status, run timestamp, repository commit, extension package SHA-256, host binary SHA-256, Native Messaging manifest SHA-256, protocol/schema/ranking versions, fixture SHA-256, hardware ID, OS/browser build, locale, power mode, exact commands, raw artifact paths, gate statuses, and `blocked_reason` when status is BLOCKED. Empty status or an unqualified “not run” is invalid.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+4. `test(compatibility): implement ip-19-t04`
+   - Task IDs: `IP-19-T04`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Adopt these stable fixture IDs from the canonical fixture inventory: `FX-SHORTCUT-FOCUS`, `FX-QUERY-1000-64`, `FX-ACTIVATION-RACE`, `FX-EVENT-RECONCILE`, `FX-MISSED-EVENT`, `FX-HOST-DOWN`, `FX-HOST-CRASH`, `FX-MALFORMED-FRAME`, `FX-OVERSIZED-FRAME`, `FX-STORAGE-DEGRADED`, `FX-PERMISSION-DENIED`, `FX-PROFILE-ISOLATION`, `FX-PRIVATE-CONTEXT`, `FX-RESET-OWNERSHIP`, `FX-UNINSTALL-OWNERSHIP`, and `FX-ACCESSIBILITY`. Each fixture includes setup, input, expected observable output, cleanup, and synthetic-data assertions.
+   - Fixture and command: FX-SHORTCUT-FOCUS, FX-QUERY-1000-64, FX-ACTIVATION-RACE, FX-EVENT-RECONCILE, FX-MISSED-EVENT, FX-HOST-DOWN, FX-HOST-CRASH, FX-MALFORMED-FRAME, FX-OVERSIZED-FRAME, FX-STORAGE-DEGRADED, FX-PERMISSION-DENIED, FX-PROFILE-ISOLATION, FX-PRIVATE-CONTEXT, FX-RESET-OWNERSHIP, FX-UNINSTALL-OWNERSHIP, FX-ACCESSIBILITY; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Adopt these stable fixture IDs from the canonical fixture inventory: `FX-SHORTCUT-FOCUS`, `FX-QUERY-1000-64`, `FX-ACTIVATION-RACE`, `FX-EVENT-RECONCILE`, `FX-MISSED-EVENT`, `FX-HOST-DOWN`, `FX-HOST-CRASH`, `FX-MALFORMED-FRAME`, `FX-OVERSIZED-FRAME`, `FX-STORAGE-DEGRADED`, `FX-PERMISSION-DENIED`, `FX-PROFILE-ISOLATION`, `FX-PRIVATE-CONTEXT`, `FX-RESET-OWNERSHIP`, `FX-UNINSTALL-OWNERSHIP`, and `FX-ACCESSIBILITY`. Each fixture includes setup, input, expected observable output, cleanup, and synthetic-data assertions.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+5. `feat(compatibility): implement ip-19-t05`
+   - Task IDs: `IP-19-T05`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: For each C01–C06, run from repository root with the exact future runner interface:
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: For each C01–C06, run from repository root with the exact future runner interface:
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+6. `feat(compatibility): implement ip-19-t06`
+   - Task IDs: `IP-19-T06`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Clean install: start from a disposable browser profile and clean host registration, install the exact package pair from IP-18, verify the configured browser command appears in Chrome/Edge command settings, launch the focused surface, and verify the query input owns focus before text input. Capture install output, command trace, focused-input trace, package hashes, and initial health state.
+   - Fixture and command: IP-18; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Clean install: start from a disposable browser profile and clean host registration, install the exact package pair from IP-18, verify the configured browser command appears in Chrome/Edge command settings, launch the focused surface, and verify the query input owns focus before text input. Capture install output, command trace, focused-input trace, package hashes, and initial health state.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+7. `feat(compatibility): implement ip-19-t07`
+   - Task IDs: `IP-19-T07`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Startup and suspension: restart the browser, allow the extension service worker to suspend, invoke the command again, and verify hello/ready, profile identity, projection revision, and focused surface recovery. Record host availability, index freshness, and no duplicate projection IDs.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Startup and suspension: restart the browser, allow the extension service worker to suspend, invoke the command again, and verify hello/ready, profile identity, projection revision, and focused surface recovery. Record host availability, index freshness, and no duplicate projection IDs.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+8. `feat(compatibility): implement ip-19-t08`
+   - Task IDs: `IP-19-T08`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Upgrade: install the previous release artifacts, seed configuration and synthetic tabs, upgrade extension and host independently and together, restart the browser, and verify migration, protocol compatibility, retained allowed configuration, projection convergence, and no unrelated browser-state change. Run the upgrade twice to prove idempotence.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Upgrade: install the previous release artifacts, seed configuration and synthetic tabs, upgrade extension and host independently and together, restart the browser, and verify migration, protocol compatibility, retained allowed configuration, projection convergence, and no unrelated browser-state change. Run the upgrade twice to prove idempotence.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+9. `feat(compatibility): implement ip-19-t09`
+   - Task IDs: `IP-19-T09`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Reconnect and rebuild: stop or isolate the host, observe a visible unavailable/recovering state, restart the registered host, complete handshake and full snapshot, and verify healthy index readiness, one result per eligible tab, and no stale activation. Run once after a clean browser restart and once after a service-worker suspension.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Reconnect and rebuild: stop or isolate the host, observe a visible unavailable/recovering state, restart the registered host, complete handshake and full snapshot, and verify healthy index readiness, one result per eligible tab, and no stale activation. Run once after a clean browser restart and once after a service-worker suspension.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+10. `feat(compatibility): implement ip-19-t10`
+   - Task IDs: `IP-19-T10`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Reset: set non-default profile-scoped configuration, seed diagnostics and activation metadata, invoke reset, and verify only InfoBoard-owned records are removed, safe defaults are restored, open tabs remain open, and unrelated browser data is unchanged. Repeat reset to prove idempotence.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Reset: set non-default profile-scoped configuration, seed diagnostics and activation metadata, invoke reset, and verify only InfoBoard-owned records are removed, safe defaults are restored, open tabs remain open, and unrelated browser data is unchanged. Repeat reset to prove idempotence.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+11. `feat(compatibility): implement ip-19-t11`
+   - Task IDs: `IP-19-T11`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Uninstall: remove the extension and native registration using the package's supported uninstaller, verify owned files and profile data are removed, verify open tabs and unrelated browser state remain unchanged, and repeat the uninstaller to prove idempotence. Capture the before/after ownership manifest and process list.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Uninstall: remove the extension and native registration using the package's supported uninstaller, verify owned files and profile data are removed, verify open tabs and unrelated browser state remain unchanged, and repeat the uninstaller to prove idempotence. Capture the before/after ownership manifest and process list.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+12. `feat(compatibility): implement ip-19-t12`
+   - Task IDs: `IP-19-T12`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Run clean-install, startup, upgrade, reconnect, reset, and uninstall in each matrix cell even when the same host class is reused. A Linux result cannot stand in for macOS or Windows, and Chrome cannot stand in for Edge.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Run clean-install, startup, upgrade, reconnect, reset, and uninstall in each matrix cell even when the same host class is reused. A Linux result cannot stand in for macOS or Windows, and Chrome cannot stand in for Edge.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+13. `test(compatibility): implement ip-19-t13`
+   - Task IDs: `IP-19-T13`.
+   - Owned target paths: tests/performance/phase-19/measure-hot-path.
+   - Behavior: Implement `tests/performance/phase-19/measure-hot-path` with the following exact interface, from repository root:
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Implement `tests/performance/phase-19/measure-hot-path` with the following exact interface, from repository root:
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+14. `test(compatibility): implement ip-19-t14`
+   - Task IDs: `IP-19-T14`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Use the same 101 measured repetitions after 10 discarded warmups per cell, a monotonic clock, no DevTools throttling, AC power, a quiet machine, and the exact deterministic seed. Sort each metric independently; define p95 as rank ceil(0.95 × 101) = 96, and retain p50, p95, p99, minimum, maximum, and all raw samples. Never average the six cells into one pass/fail value.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Use the same 101 measured repetitions after 10 discarded warmups per cell, a monotonic clock, no DevTools throttling, AC power, a quiet machine, and the exact deterministic seed. Sort each metric independently; define p95 as rank ceil(0.95 × 101) = 96, and retain p50, p95, p99, minimum, maximum, and all raw samples. Never average the six cells into one pass/fail value.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+15. `test(compatibility): implement ip-19-t15`
+   - Task IDs: `IP-19-T15`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Measure the boundaries exactly: NFR-001 starts at the browser command dispatch and stops only when the focused search surface is visible and `document.activeElement` is the query input; NFR-002 starts when a query revision is accepted and stops when the matching result revision is rendered and observable; NFR-003 starts at highlighted-result Enter keydown and stops at the browser activation acknowledgement, while separately recording browser scheduling delay and excluding it from the NFR-003 duration.
+   - Fixture and command: NFR-001, NFR-002, NFR-003; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Measure the boundaries exactly: NFR-001 starts at the browser command dispatch and stops only when the focused search surface is visible and `document.activeElement` is the query input; NFR-002 starts when a query revision is accepted and stops when the matching result revision is rendered and observable; NFR-003 starts at highlighted-result Enter keydown and stops at the browser activation acknowledgement, while separately recording browser scheduling delay and excluding it from the NFR-003 duration.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+16. `test(compatibility): implement ip-19-t16`
+   - Task IDs: `IP-19-T16`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Seed a real indexed projection of exactly 1,000 eligible synthetic tab records for `FX-QUERY-1000-64`. The query is exactly 64 characters: `p19-cross-platform-tab-activation-latency-benchmark-query-000000`. The report must include projection revision, query revision, result count, and checksum of the expected ordered IDs so a fast but incomplete result cannot pass.
+   - Fixture and command: FX-QUERY-1000-64; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Seed a real indexed projection of exactly 1,000 eligible synthetic tab records for `FX-QUERY-1000-64`. The query is exactly 64 characters: `p19-cross-platform-tab-activation-latency-benchmark-query-000000`. The report must include projection revision, query revision, result count, and checksum of the expected ordered IDs so a fast but incomplete result cannot pass.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+17. `test(compatibility): implement ip-19-t17`
+   - Task IDs: `IP-19-T17`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Compare each cell to the gates below and record a machine-readable result. A cell passes only when all three measured p95 values meet their limits and no measurement setup exception is open.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Compare each cell to the gates below and record a machine-readable result. A cell passes only when all three measured p95 values meet their limits and no measurement setup exception is open.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+18. `test(compatibility): implement ip-19-t18`
+   - Task IDs: `IP-19-T18`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Also record p50/p99 and process/browser memory at setup, after warmup, after the measured run, and after 10 repeated runs. A memory increase without a bounded explanation is a release risk even when latency passes. Do not silently discard outliers; annotate GC, OS scheduling, browser restart, or fixture failures in the raw record.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Also record p50/p99 and process/browser memory at setup, after warmup, after the measured run, and after 10 repeated runs. A memory increase without a bounded explanation is a release risk even when latency passes. Do not silently discard outliers; annotate GC, OS scheduling, browser restart, or fixture failures in the raw record.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+19. `feat(compatibility): implement ip-19-t19`
+   - Task IDs: `IP-19-T19`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Run from repository root with the exact future interface:
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Run from repository root with the exact future interface:
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+20. `feat(compatibility): implement ip-19-t20`
+   - Task IDs: `IP-19-T20`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Trace the pointer-free journey: invoke the configured command, confirm the query input is focused, type a synthetic query, move with ArrowDown and ArrowUp, activate with Enter, dismiss with Escape, reopen, and verify focus is restored. Capture key events, active element, selected result, activation acknowledgement, dismissal, and browser state.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Trace the pointer-free journey: invoke the configured command, confirm the query input is focused, type a synthetic query, move with ArrowDown and ArrowUp, activate with Enter, dismiss with Escape, reopen, and verify focus is restored. Capture key events, active element, selected result, activation acknowledgement, dismissal, and browser state.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+21. `test(compatibility): implement ip-19-t21`
+   - Task IDs: `IP-19-T21`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Inspect semantic labels, roles, descriptions, live status announcements, result count changes, visible focus indicator, contrast, and error/degraded/recovering states. Use the supported browser accessibility tree and an automated accessibility audit; record rule IDs, versions, findings, and any accepted manual-review reason.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Inspect semantic labels, roles, descriptions, live status announcements, result count changes, visible focus indicator, contrast, and error/degraded/recovering states. Use the supported browser accessibility tree and an automated accessibility audit; record rule IDs, versions, findings, and any accepted manual-review reason.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+22. `feat(compatibility): implement ip-19-t22`
+   - Task IDs: `IP-19-T22`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Repeat at 200% text scale and a 320 × 480 CSS-pixel window. Enable reduced motion and verify no required state depends on animation. For each OS, include the supported screen reader evidence (Orca on Linux, VoiceOver on macOS, and Narrator or the declared Windows screen reader) with synthetic content only.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Repeat at 200% text scale and a 320 × 480 CSS-pixel window. Enable reduced motion and verify no required state depends on animation. For each OS, include the supported screen reader evidence (Orca on Linux, VoiceOver on macOS, and Narrator or the declared Windows screen reader) with synthetic content only.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+23. `feat(compatibility): implement ip-19-t23`
+   - Task IDs: `IP-19-T23`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Mark NFR-008 PASS only when keyboard operation, visible focus, semantics, contrast, reduced motion, text scaling, and narrow-window behavior all pass in the cell; otherwise retain the failing trace and route the defect to IP-13.
+   - Fixture and command: NFR-008, IP-13; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Mark NFR-008 PASS only when keyboard operation, visible focus, semantics, contrast, reduced motion, text scaling, and narrow-window behavior all pass in the cell; otherwise retain the failing trace and route the defect to IP-13.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+24. `feat(compatibility): implement ip-19-t24`
+   - Task IDs: `IP-19-T24`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Run from repository root with the exact future interface:
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Run from repository root with the exact future interface:
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+25. `feat(compatibility): implement ip-19-t25`
+   - Task IDs: `IP-19-T25`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Compare manifest permissions, optional permissions, host origins, and host registration paths with the IP-17 matrix and IP-18 package manifest. Reject any unapproved permission for history, downloads, cookies, broad host access, page content, or unrelated storage. Record the complete inspected lists and hashes, not just a boolean.
+   - Fixture and command: IP-17, IP-18; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Compare manifest permissions, optional permissions, host origins, and host registration paths with the IP-17 matrix and IP-18 package manifest. Reject any unapproved permission for history, downloads, cookies, broad host access, page content, or unrelated storage. Record the complete inspected lists and hashes, not just a boolean.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+26. `feat(compatibility): implement ip-19-t26`
+   - Task IDs: `IP-19-T26`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Instrument the normal path from install through query and activation and assert zero network requests, zero loopback listeners, no page evaluation or content reads, no command execution outside the registered host boundary, and no data sent off-machine. Save request/listener/API summaries with URL, title, query, and token fields redacted or omitted.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Instrument the normal path from install through query and activation and assert zero network requests, zero loopback listeners, no page evaluation or content reads, no command execution outside the registered host boundary, and no data sent off-machine. Save request/listener/API summaries with URL, title, query, and token fields redacted or omitted.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+27. `feat(compatibility): implement ip-19-t27`
+   - Task IDs: `IP-19-T27`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Use two disposable browser profiles and one private-context run. Prove that profile A cannot query or activate profile B, private-context records are excluded or cleaned according to IP-17, configuration remains profile-scoped, and reset/uninstall do not alter unrelated profile data. Capture synthetic IDs and counts only.
+   - Fixture and command: IP-17; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Use two disposable browser profiles and one private-context run. Prove that profile A cannot query or activate profile B, private-context records are excluded or cleaned according to IP-17, configuration remains profile-scoped, and reset/uninstall do not alter unrelated profile data. Capture synthetic IDs and counts only.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+28. `feat(compatibility): implement ip-19-t28`
+   - Task IDs: `IP-19-T28`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Export diagnostics after host-down, reconnect, stale-result, and storage-degraded journeys. Assert that logs contain metadata such as counts, durations, versions, and error classes but no raw URLs, titles, query strings, tokens, or secrets. Record redaction findings and retention cleanup results.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Export diagnostics after host-down, reconnect, stale-result, and storage-degraded journeys. Assert that logs contain metadata such as counts, durations, versions, and error classes but no raw URLs, titles, query strings, tokens, or secrets. Record redaction findings and retention cleanup results.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+29. `feat(compatibility): implement ip-19-t29`
+   - Task IDs: `IP-19-T29`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Mark NFR-009 PASS only when static permissions, runtime data flow, profile/private isolation, diagnostics redaction, and ownership cleanup all pass. Any high-severity privacy finding blocks the cell and the release gate.
+   - Fixture and command: NFR-009; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Mark NFR-009 PASS only when static permissions, runtime data flow, profile/private isolation, diagnostics redaction, and ownership cleanup all pass. Any high-severity privacy finding blocks the cell and the release gate.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+30. `feat(compatibility): implement ip-19-t30`
+   - Task IDs: `IP-19-T30`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Run from repository root with the exact future interface:
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Run from repository root with the exact future interface:
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+31. `test(compatibility): implement ip-19-t31`
+   - Task IDs: `IP-19-T31`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Use the following fixture-to-observable contract in every cell:
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Use the following fixture-to-observable contract in every cell:
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+32. `feat(compatibility): implement ip-19-t32`
+   - Task IDs: `IP-19-T32`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Include service-worker suspension and browser restart in both FX-HOST-CRASH and FX-MISSED-EVENT runs. Record state sequence, projection revision before/after, result revision, host health, index freshness, duplicate-ID count, and recovery duration.
+   - Fixture and command: FX-HOST-CRASH, FX-MISSED-EVENT; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Include service-worker suspension and browser restart in both FX-HOST-CRASH and FX-MISSED-EVENT runs. Record state sequence, projection revision before/after, result revision, host health, index freshness, duplicate-ID count, and recovery duration.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+33. `feat(compatibility): implement ip-19-t33`
+   - Task IDs: `IP-19-T33`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Verify every error is diagnosable and user-safe: no unconfirmed activation, no hidden recoverable failure, no unbounded retry loop, and no raw sensitive data in the evidence. Route failures to IP-14, IP-16, or IP-17 according to the owning contract.
+   - Fixture and command: IP-14, IP-16, IP-17; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Verify every error is diagnosable and user-safe: no unconfirmed activation, no hidden recoverable failure, no unbounded retry loop, and no raw sensitive data in the evidence. Route failures to IP-14, IP-16, or IP-17 according to the owning contract.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+34. `feat(compatibility): implement ip-19-t34`
+   - Task IDs: `IP-19-T34`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Generate a requirement traceability table in `matrix-report.json`. The primary owner remains the phase named by the implementation index; IP-19 contributes cross-platform evidence only.
+   - Fixture and command: IP-19; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Generate a requirement traceability table in `matrix-report.json`. The primary owner remains the phase named by the implementation index; IP-19 contributes cross-platform evidence only.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+35. `feat(compatibility): implement ip-19-t35`
+   - Task IDs: `IP-19-T35`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Include supporting evidence for projection convergence, ranking determinism, resource bounds, and operational timeout/error-class rules without claiming their primary ownership. Forward the same artifact hashes to IP-05, IP-11, IP-16, and IP-18 as applicable.
+   - Fixture and command: IP-05, IP-11, IP-16, IP-18; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Include supporting evidence for projection convergence, ranking determinism, resource bounds, and operational timeout/error-class rules without claiming their primary ownership. Forward the same artifact hashes to IP-05, IP-11, IP-16, and IP-18 as applicable.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
+
+36. `feat(compatibility): implement ip-19-t36`
+   - Task IDs: `IP-19-T36`.
+   - Owned target paths: `fixtures/compatibility/phase-19/` (to-create); `tests/compatibility/phase-19/` (to-create); `tests/performance/phase-19/` (to-create); `tests/accessibility/phase-19/` (to-create); `tests/privacy/phase-19/` (to-create); `tests/recovery/phase-19/` (to-create); `artifacts/verification/phase-19/` (to-create).
+   - Behavior: Require the final gate ledger to contain performance, accessibility, privacy, recovery, compatibility, install/upgrade/uninstall, and documentation/protocol consistency statuses. A gate is PASS, FAIL, or BLOCKED with an owner and evidence path; no blank or implicit status is accepted.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-19 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Require the final gate ledger to contain performance, accessibility, privacy, recovery, compatibility, install/upgrade/uninstall, and documentation/protocol consistency statuses. A gate is PASS, FAIL, or BLOCKED with an owner and evidence path; no blank or implicit status is accepted.
+   - Dependency gate: all index.md dependencies for IP-19 have merged to dev; phase work branch starts from latest origin/dev.
 
 ## 8. Kiểm chứng và nghiệm thu
 

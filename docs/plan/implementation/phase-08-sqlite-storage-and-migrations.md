@@ -1,7 +1,7 @@
 # Phase 08 — SQLite storage and migrations
 
 > Plan ID: IP-08
-> Status: not_started
+> Status: See README.md execution tracker
 > Execution owner: Go host persistence owner
 > Dependencies: IP-02, IP-06
 > Parallel boundary: IP-07
@@ -81,37 +81,104 @@
 
 ## 6. Công việc triển khai
 
-- [ ] Việc 1 — Chốt logical schema tại `host/storage/schema.go` (to-create):
+- [ ] `IP-08-T01` Việc 1 — Chốt logical schema tại `host/storage/schema.go` (to-create):
   - `schema_meta`/`schema_migrations`: supported schema version, migration ID/checksum và committed-at; `user_version` chỉ tăng sau commit.
   - `configuration(profile_id PRIMARY KEY, result_limit, density, theme, show_context_labels, persist_activation_recency, protocol_version, ranking_model_version, updated_at)` với CHECK bounds và default an toàn.
   - `installation_state(installation_key PRIMARY KEY, extension_version, host_version, browser_family, protocol_version, ranking_model_version, host_registration_state, last_successful_migration, repair_state, updated_at)`; không chứa tab rows.
   - `activation_metadata(activation_id PRIMARY KEY, profile_id, tab_identity, domain, activated_at, source)` với index `(profile_id, activated_at DESC)` và bounded field lengths.
   - `diagnostics(diagnostic_id PRIMARY KEY, occurred_at, profile_id NULLABLE, event_kind, error_class, retryable, duration_ms, projection_revision, protocol_version, ranking_model_version, schema_version, payload_bytes, redacted_payload)` với index `(occurred_at)`; `profile_id` chỉ là opaque scope, không phải raw browser account identifier.
   - Không tạo bảng live projection, query history hoặc raw URL storage. Kiểm tra `foreign_keys`, journaling/atomicity và file permission policy theo platform mà không giả định một driver cụ thể.
-- [ ] Việc 2 — Định nghĩa repository API và failure isolation tại `host/storage/repository.go` (to-create): mọi method nhận context/cancellation, profile scope và bounded input; trả typed result (`Ready`, `Degraded`, `UpgradeRequired`, `Quarantined/Rebuilt`) cùng retryability. Read config fallback defaults khi open/read fail; write failure không làm query/index hoặc browser activation fail.
-- [ ] Việc 3 — Implement migration runner tại `host/storage/migrations/` (to-create): acquire bounded lock, validate current version, execute ordered migrations inside one transaction, verify postconditions, insert migration record và commit; rollback giữ database version trước đó khi bất kỳ step/checksum/postcondition nào fail. Migration retry phải idempotent và không ghi `last_successful_migration` trước commit.
-- [ ] Việc 4 — Xử lý compatibility: nếu on-disk version lớn hơn supported version, không rewrite/drop/attempt downgrade; mở read-only hoặc đóng repository, trả upgrade-required và giữ file nguyên vẹn. Nếu protocol/ranking compatibility mismatch, giữ status riêng và không dùng dữ liệu version không hiểu cho ranking; lexical query vẫn dùng projection memory.
-- [ ] Việc 5 — Xử lý corruption tại `host/storage/recovery.go` (to-create): bounded open và `PRAGMA integrity_check`/schema validation; khi corrupt, flush/close handle, atomic rename sang owned quarantine name có timestamp/nonce, tạo database mới từ schema/defaults, ghi recovery marker nếu có thể và trả trạng thái degraded/recovered. Không xóa quarantine tự động; nếu rename/create thất bại, giữ browser activation và lexical path hoạt động với session-only memory state.
-- [ ] Việc 6 — Enforce retention bằng transaction nhỏ và deterministic order: activation prune theo `activated_at ASC, activation_id ASC` đến giới hạn 30 ngày và 500 row/profile; diagnostics prune theo thời gian rồi cumulative UTF-8 `payload_bytes` đến 7 ngày/10 MiB. Startup, append, graceful shutdown đều chạy bounded prune; prune error chỉ làm persistence degraded, không reject query/activation.
-- [ ] Việc 7 — Implement reset/uninstall ownership tại `host/storage/reset.go` (to-create): profile reset xóa configuration/activation của đúng `profile_id` và các diagnostic rows được phép gắn profile; full reset/uninstall transactionally xóa mọi InfoBoard-owned table/state rồi cleanup generated host files/registration theo ownership manifest. Lệnh lặp lại là no-op thành công; lỗi giữa chừng không xóa browser tabs/history/unrelated files và phải báo recovery state.
-- [ ] Việc 8 — Wire host lifecycle: open/migrate/load config trước `Ready`, close/flush bounded metadata khi shutdown, mark unavailable/recovering khi failure, và expose schema/migration/retention health qua IP-07/IP-16. Không block snapshot indexing, lexical query hoặc extension activation on durable write.
-- [ ] Việc 9 — Tạo fixtures/tests cho baseline, migration, unknown future version, failed commit, corrupt file, both retention limits, profile isolation, storage outage, reset và uninstall. Assert observable statuses, row contents/counts, preserved quarantined file, unchanged browser-state fake and lexical/activation success; không assert driver-specific implementation details ngoài contract.
-- [ ] Việc 10 — Ghi evidence/diagnostic redaction: verify title, full URL, query, cookie/token và SQL/path input không xuất hiện trong stored diagnostics/export; health chỉ nêu counts, durations, versions, revisions và error classes. Liên kết result với FR-013/014/015 và NFR-006/009 trong acceptance output.
+- [ ] `IP-08-T02` Việc 2 — Định nghĩa repository API và failure isolation tại `host/storage/repository.go` (to-create): mọi method nhận context/cancellation, profile scope và bounded input; trả typed result (`Ready`, `Degraded`, `UpgradeRequired`, `Quarantined/Rebuilt`) cùng retryability. Read config fallback defaults khi open/read fail; write failure không làm query/index hoặc browser activation fail.
+- [ ] `IP-08-T03` Việc 3 — Implement migration runner tại `host/storage/migrations/` (to-create): acquire bounded lock, validate current version, execute ordered migrations inside one transaction, verify postconditions, insert migration record và commit; rollback giữ database version trước đó khi bất kỳ step/checksum/postcondition nào fail. Migration retry phải idempotent và không ghi `last_successful_migration` trước commit.
+- [ ] `IP-08-T04` Việc 4 — Xử lý compatibility: nếu on-disk version lớn hơn supported version, không rewrite/drop/attempt downgrade; mở read-only hoặc đóng repository, trả upgrade-required và giữ file nguyên vẹn. Nếu protocol/ranking compatibility mismatch, giữ status riêng và không dùng dữ liệu version không hiểu cho ranking; lexical query vẫn dùng projection memory.
+- [ ] `IP-08-T05` Việc 5 — Xử lý corruption tại `host/storage/recovery.go` (to-create): bounded open và `PRAGMA integrity_check`/schema validation; khi corrupt, flush/close handle, atomic rename sang owned quarantine name có timestamp/nonce, tạo database mới từ schema/defaults, ghi recovery marker nếu có thể và trả trạng thái degraded/recovered. Không xóa quarantine tự động; nếu rename/create thất bại, giữ browser activation và lexical path hoạt động với session-only memory state.
+- [ ] `IP-08-T06` Việc 6 — Enforce retention bằng transaction nhỏ và deterministic order: activation prune theo `activated_at ASC, activation_id ASC` đến giới hạn 30 ngày và 500 row/profile; diagnostics prune theo thời gian rồi cumulative UTF-8 `payload_bytes` đến 7 ngày/10 MiB. Startup, append, graceful shutdown đều chạy bounded prune; prune error chỉ làm persistence degraded, không reject query/activation.
+- [ ] `IP-08-T07` Việc 7 — Implement reset/uninstall ownership tại `host/storage/reset.go` (to-create): profile reset xóa configuration/activation của đúng `profile_id` và các diagnostic rows được phép gắn profile; full reset/uninstall transactionally xóa mọi InfoBoard-owned table/state rồi cleanup generated host files/registration theo ownership manifest. Lệnh lặp lại là no-op thành công; lỗi giữa chừng không xóa browser tabs/history/unrelated files và phải báo recovery state.
+- [ ] `IP-08-T08` Việc 8 — Wire host lifecycle: open/migrate/load config trước `Ready`, close/flush bounded metadata khi shutdown, mark unavailable/recovering khi failure, và expose schema/migration/retention health qua IP-07/IP-16. Không block snapshot indexing, lexical query hoặc extension activation on durable write.
+- [ ] `IP-08-T09` Việc 9 — Tạo fixtures/tests cho baseline, migration, unknown future version, failed commit, corrupt file, both retention limits, profile isolation, storage outage, reset và uninstall. Assert observable statuses, row contents/counts, preserved quarantined file, unchanged browser-state fake and lexical/activation success; không assert driver-specific implementation details ngoài contract.
+- [ ] `IP-08-T10` Việc 10 — Ghi evidence/diagnostic redaction: verify title, full URL, query, cookie/token và SQL/path input không xuất hiện trong stored diagnostics/export; health chỉ nêu counts, durations, versions, revisions và error classes. Liên kết result với FR-013/014/015 và NFR-006/009 trong acceptance output.
 
 ## 7. Kế hoạch commit
 
-1. `feat(storage): add bounded SQLite schema and repository boundary`
-   - Thay đổi: tạo schema/version constants, ownership manifest, typed repository API, defaults, profile-scoped configuration/activation access và diagnostics byte accounting dưới `host/storage/`.
-   - Cách kiểm tra: `cd /workspace/InfoBoard && go test ./host/storage/... -run 'TestSchema|TestProfileIsolation|TestRetention' -count=1` với `INFOBOARD_FIXTURE_ROOT=fixtures/sqlite`.
-2. `feat(storage): add transactional migrations and recovery`
-   - Thay đổi: migration runner, unknown-future guard, failed-transaction rollback, integrity check, quarantine/rebuild và degraded status.
-   - Cách kiểm tra: `cd /workspace/InfoBoard && go test ./host/storage/... -run 'TestMigration|TestUnknownFuture|TestCorrupt|TestDegraded' -count=1` với temporary `INFOBOARD_DATA_DIR`.
-3. `feat(storage): add reset and retention lifecycle`
-   - Thay đổi: activation/diagnostics pruning, shutdown flush, profile/full reset và owned-artifact cleanup hooks.
-   - Cách kiểm tra: `cd /workspace/InfoBoard && go test ./host/storage/... -run 'TestReset|TestUninstall|TestActivationRetention|TestDiagnosticsRetention' -count=1` với `INFOBOARD_FIXTURE_ROOT=fixtures/sqlite`.
-4. `test(storage): cover persistence failure isolation`
-   - Thay đổi: failure-injection integration fixtures chứng minh SQLite outage/degraded state không chặn lexical query hoặc browser-owned activation và migration/quarantine có đường phục hồi.
-   - Cách kiểm tra: `cd /workspace/InfoBoard && go test ./tests/storage/... -run 'TestPersistenceFailureDoesNotBlockLexicalOrActivation' -count=1` với `INFOBOARD_FIXTURE_ROOT=fixtures/sqlite`.
+1. `feat(storage): implement ip-08-t01`
+   - Task IDs: `IP-08-T01`.
+   - Owned target paths: host/storage/schema.go.
+   - Behavior: Việc 1 — Chốt logical schema tại `host/storage/schema.go` (to-create):
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/storage/... ./tests/storage/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 1 — Chốt logical schema tại `host/storage/schema.go` (to-create):
+   - Dependency gate: all index.md dependencies for IP-08 have merged to dev; phase work branch starts from latest origin/dev.
+
+2. `feat(storage): implement ip-08-t02`
+   - Task IDs: `IP-08-T02`.
+   - Owned target paths: host/storage/repository.go.
+   - Behavior: Việc 2 — Định nghĩa repository API và failure isolation tại `host/storage/repository.go` (to-create): mọi method nhận context/cancellation, profile scope và bounded input; trả typed result (`Ready`, `Degraded`, `UpgradeRequired`, `Quarantined/Rebuilt`) cùng retryability. Read config fallback defaults khi open/read fail; write failure không làm query/index hoặc browser activation fail.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/storage/... ./tests/storage/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 2 — Định nghĩa repository API và failure isolation tại `host/storage/repository.go` (to-create): mọi method nhận context/cancellation, profile scope và bounded input; trả typed result (`Ready`, `Degraded`, `UpgradeRequired`, `Quarantined/Rebuilt`) cùng retryability. Read config fallback defaults khi open/read fail; write failure không làm query/index hoặc browser activation fail.
+   - Dependency gate: all index.md dependencies for IP-08 have merged to dev; phase work branch starts from latest origin/dev.
+
+3. `feat(storage): implement ip-08-t03`
+   - Task IDs: `IP-08-T03`.
+   - Owned target paths: host/storage/migrations/.
+   - Behavior: Việc 3 — Implement migration runner tại `host/storage/migrations/` (to-create): acquire bounded lock, validate current version, execute ordered migrations inside one transaction, verify postconditions, insert migration record và commit; rollback giữ database version trước đó khi bất kỳ step/checksum/postcondition nào fail. Migration retry phải idempotent và không ghi `last_successful_migration` trước commit.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/storage/... ./tests/storage/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 3 — Implement migration runner tại `host/storage/migrations/` (to-create): acquire bounded lock, validate current version, execute ordered migrations inside one transaction, verify postconditions, insert migration record và commit; rollback giữ database version trước đó khi bất kỳ step/checksum/postcondition nào fail. Migration retry phải idempotent và không ghi `last_successful_migration` trước commit.
+   - Dependency gate: all index.md dependencies for IP-08 have merged to dev; phase work branch starts from latest origin/dev.
+
+4. `feat(storage): implement ip-08-t04`
+   - Task IDs: `IP-08-T04`.
+   - Owned target paths: `host/storage/` (to-create), `host/storage/migrations/` (to-create), `fixtures/sqlite/` (to-create), `tests/storage/` (to-create).
+   - Behavior: Việc 4 — Xử lý compatibility: nếu on-disk version lớn hơn supported version, không rewrite/drop/attempt downgrade; mở read-only hoặc đóng repository, trả upgrade-required và giữ file nguyên vẹn. Nếu protocol/ranking compatibility mismatch, giữ status riêng và không dùng dữ liệu version không hiểu cho ranking; lexical query vẫn dùng projection memory.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/storage/... ./tests/storage/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 4 — Xử lý compatibility: nếu on-disk version lớn hơn supported version, không rewrite/drop/attempt downgrade; mở read-only hoặc đóng repository, trả upgrade-required và giữ file nguyên vẹn. Nếu protocol/ranking compatibility mismatch, giữ status riêng và không dùng dữ liệu version không hiểu cho ranking; lexical query vẫn dùng projection memory.
+   - Dependency gate: all index.md dependencies for IP-08 have merged to dev; phase work branch starts from latest origin/dev.
+
+5. `feat(storage): implement ip-08-t05`
+   - Task IDs: `IP-08-T05`.
+   - Owned target paths: host/storage/recovery.go.
+   - Behavior: Việc 5 — Xử lý corruption tại `host/storage/recovery.go` (to-create): bounded open và `PRAGMA integrity_check`/schema validation; khi corrupt, flush/close handle, atomic rename sang owned quarantine name có timestamp/nonce, tạo database mới từ schema/defaults, ghi recovery marker nếu có thể và trả trạng thái degraded/recovered. Không xóa quarantine tự động; nếu rename/create thất bại, giữ browser activation và lexical path hoạt động với session-only memory state.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/storage/... ./tests/storage/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 5 — Xử lý corruption tại `host/storage/recovery.go` (to-create): bounded open và `PRAGMA integrity_check`/schema validation; khi corrupt, flush/close handle, atomic rename sang owned quarantine name có timestamp/nonce, tạo database mới từ schema/defaults, ghi recovery marker nếu có thể và trả trạng thái degraded/recovered. Không xóa quarantine tự động; nếu rename/create thất bại, giữ browser activation và lexical path hoạt động với session-only memory state.
+   - Dependency gate: all index.md dependencies for IP-08 have merged to dev; phase work branch starts from latest origin/dev.
+
+6. `feat(storage): implement ip-08-t06`
+   - Task IDs: `IP-08-T06`.
+   - Owned target paths: `host/storage/` (to-create), `host/storage/migrations/` (to-create), `fixtures/sqlite/` (to-create), `tests/storage/` (to-create).
+   - Behavior: Việc 6 — Enforce retention bằng transaction nhỏ và deterministic order: activation prune theo `activated_at ASC, activation_id ASC` đến giới hạn 30 ngày và 500 row/profile; diagnostics prune theo thời gian rồi cumulative UTF-8 `payload_bytes` đến 7 ngày/10 MiB. Startup, append, graceful shutdown đều chạy bounded prune; prune error chỉ làm persistence degraded, không reject query/activation.
+   - Fixture and command: UTF-8; run `go test ./host/storage/... ./tests/storage/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 6 — Enforce retention bằng transaction nhỏ và deterministic order: activation prune theo `activated_at ASC, activation_id ASC` đến giới hạn 30 ngày và 500 row/profile; diagnostics prune theo thời gian rồi cumulative UTF-8 `payload_bytes` đến 7 ngày/10 MiB. Startup, append, graceful shutdown đều chạy bounded prune; prune error chỉ làm persistence degraded, không reject query/activation.
+   - Dependency gate: all index.md dependencies for IP-08 have merged to dev; phase work branch starts from latest origin/dev.
+
+7. `feat(storage): implement ip-08-t07`
+   - Task IDs: `IP-08-T07`.
+   - Owned target paths: host/storage/reset.go.
+   - Behavior: Việc 7 — Implement reset/uninstall ownership tại `host/storage/reset.go` (to-create): profile reset xóa configuration/activation của đúng `profile_id` và các diagnostic rows được phép gắn profile; full reset/uninstall transactionally xóa mọi InfoBoard-owned table/state rồi cleanup generated host files/registration theo ownership manifest. Lệnh lặp lại là no-op thành công; lỗi giữa chừng không xóa browser tabs/history/unrelated files và phải báo recovery state.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/storage/... ./tests/storage/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 7 — Implement reset/uninstall ownership tại `host/storage/reset.go` (to-create): profile reset xóa configuration/activation của đúng `profile_id` và các diagnostic rows được phép gắn profile; full reset/uninstall transactionally xóa mọi InfoBoard-owned table/state rồi cleanup generated host files/registration theo ownership manifest. Lệnh lặp lại là no-op thành công; lỗi giữa chừng không xóa browser tabs/history/unrelated files và phải báo recovery state.
+   - Dependency gate: all index.md dependencies for IP-08 have merged to dev; phase work branch starts from latest origin/dev.
+
+8. `feat(storage): implement ip-08-t08`
+   - Task IDs: `IP-08-T08`.
+   - Owned target paths: `host/storage/` (to-create), `host/storage/migrations/` (to-create), `fixtures/sqlite/` (to-create), `tests/storage/` (to-create).
+   - Behavior: Việc 8 — Wire host lifecycle: open/migrate/load config trước `Ready`, close/flush bounded metadata khi shutdown, mark unavailable/recovering khi failure, và expose schema/migration/retention health qua IP-07/IP-16. Không block snapshot indexing, lexical query hoặc extension activation on durable write.
+   - Fixture and command: IP-07, IP-16; run `go test ./host/storage/... ./tests/storage/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 8 — Wire host lifecycle: open/migrate/load config trước `Ready`, close/flush bounded metadata khi shutdown, mark unavailable/recovering khi failure, và expose schema/migration/retention health qua IP-07/IP-16. Không block snapshot indexing, lexical query hoặc extension activation on durable write.
+   - Dependency gate: all index.md dependencies for IP-08 have merged to dev; phase work branch starts from latest origin/dev.
+
+9. `test(storage): implement ip-08-t09`
+   - Task IDs: `IP-08-T09`.
+   - Owned target paths: `host/storage/` (to-create), `host/storage/migrations/` (to-create), `fixtures/sqlite/` (to-create), `tests/storage/` (to-create).
+   - Behavior: Việc 9 — Tạo fixtures/tests cho baseline, migration, unknown future version, failed commit, corrupt file, both retention limits, profile isolation, storage outage, reset và uninstall. Assert observable statuses, row contents/counts, preserved quarantined file, unchanged browser-state fake and lexical/activation success; không assert driver-specific implementation details ngoài contract.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `go test ./host/storage/... ./tests/storage/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 9 — Tạo fixtures/tests cho baseline, migration, unknown future version, failed commit, corrupt file, both retention limits, profile isolation, storage outage, reset và uninstall. Assert observable statuses, row contents/counts, preserved quarantined file, unchanged browser-state fake and lexical/activation success; không assert driver-specific implementation details ngoài contract.
+   - Dependency gate: all index.md dependencies for IP-08 have merged to dev; phase work branch starts from latest origin/dev.
+
+10. `feat(storage): implement ip-08-t10`
+   - Task IDs: `IP-08-T10`.
+   - Owned target paths: `host/storage/` (to-create), `host/storage/migrations/` (to-create), `fixtures/sqlite/` (to-create), `tests/storage/` (to-create).
+   - Behavior: Việc 10 — Ghi evidence/diagnostic redaction: verify title, full URL, query, cookie/token và SQL/path input không xuất hiện trong stored diagnostics/export; health chỉ nêu counts, durations, versions, revisions và error classes. Liên kết result với FR-013/014/015 và NFR-006/009 trong acceptance output.
+   - Fixture and command: FR-013, NFR-006; run `go test ./host/storage/... ./tests/storage/... -count=1`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Việc 10 — Ghi evidence/diagnostic redaction: verify title, full URL, query, cookie/token và SQL/path input không xuất hiện trong stored diagnostics/export; health chỉ nêu counts, durations, versions, revisions và error classes. Liên kết result với FR-013/014/015 và NFR-006/009 trong acceptance output.
+   - Dependency gate: all index.md dependencies for IP-08 have merged to dev; phase work branch starts from latest origin/dev.
 
 ## 8. Kiểm chứng và nghiệm thu
 

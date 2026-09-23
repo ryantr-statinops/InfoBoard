@@ -1,7 +1,7 @@
 # Phase 04 — Tab observation and eligibility
 
 > Plan ID: IP-04
-> Status: not_started
+> Status: See README.md execution tracker
 > Execution owner: extension browser-events implementer
 > Dependencies: IP-02, IP-03
 > Parallel boundary: IP-06, IP-07, IP-08 after the IP-02/IP-03 contracts are stable; no shared implementation files
@@ -94,29 +94,107 @@
 
 ## 6. Công việc triển khai
 
-- [ ] Map every supported Chrome/Edge event source to the common event vocabulary. Record which event fields are required, optional, browser-specific, or a resync trigger; keep registration idempotent across service-worker restarts.
-- [ ] Implement the pure eligibility decision. Validate profile/context and bounded IDs, keep only allowed open-tab metadata, assign stable reason codes, and distinguish `excluded` from `deferred` when a retry or full snapshot can recover state.
-- [ ] Implement full snapshot acquisition and an independent snapshot oracle in the fake browser adapter. Treat an empty snapshot as authoritative only when the browser call completed successfully and the profile/context is known.
-- [ ] Normalize partial `onUpdated` changes and tab/window/group notifications into field-level deltas. Merge equivalent updates by `TabIdentity`; preserve meaningful title/URL/window/group/pin/active/eligibility changes.
-- [ ] Define duplicate suppression: repeated identical effective state is a no-op; conflicting or out-of-order revisions mark uncertainty; remove is idempotent; browser-ID reuse requires a new epoch/identity; no notification may produce two records for one identity.
-- [ ] Define window and group cascades. A removed or inaccessible window must not leave eligible orphan tabs; a group label update must affect only tabs in that group; missing optional group/window labels must preserve the tab with an explicit absent value.
-- [ ] Define private-context behavior and teardown. Keep private records in the current in-memory projection only, partition them from normal records, and remove them on private-context end, browser shutdown, reset, or disconnect according to IP-02 lifecycle rules.
-- [ ] Define permission/API-denial behavior. Required capability denial produces a bounded unavailable/deferred state, retry/resnapshot signal, and structured diagnostic counter; optional capability denial preserves safe fields and marks only the missing field.
-- [ ] Emit the IP-05 handoff with event sequence metadata, effective-change marker, resync reason, and safe counters. Never log or transmit raw titles, full URLs, query strings, fragments, or page data as diagnostics.
-- [ ] Add fixtures and tests for `FX-TAB-EVENTS`, `FX-TAB-EVENT-COALESCE`, `FX-TAB-WINDOW-LIFECYCLE`, `FX-TAB-ELIGIBILITY`, `FX-PRIVATE-CONTEXT`, `FX-PERMISSION-DENIED`, `FX-TAB-ID-REUSE`, and `FX-TAB-SNAPSHOT-CONVERGENCE`.
-- [ ] Run a Chrome fake-adapter and Edge fake-adapter through the same fixture corpus. Differences in API namespace/signature must not alter normalized decisions or final projection output.
+- [ ] `IP-04-T01` Map every supported Chrome/Edge event source to the common event vocabulary. Record which event fields are required, optional, browser-specific, or a resync trigger; keep registration idempotent across service-worker restarts.
+- [ ] `IP-04-T02` Implement the pure eligibility decision. Validate profile/context and bounded IDs, keep only allowed open-tab metadata, assign stable reason codes, and distinguish `excluded` from `deferred` when a retry or full snapshot can recover state.
+- [ ] `IP-04-T03` Implement full snapshot acquisition and an independent snapshot oracle in the fake browser adapter. Treat an empty snapshot as authoritative only when the browser call completed successfully and the profile/context is known.
+- [ ] `IP-04-T04` Normalize partial `onUpdated` changes and tab/window/group notifications into field-level deltas. Merge equivalent updates by `TabIdentity`; preserve meaningful title/URL/window/group/pin/active/eligibility changes.
+- [ ] `IP-04-T05` Define duplicate suppression: repeated identical effective state is a no-op; conflicting or out-of-order revisions mark uncertainty; remove is idempotent; browser-ID reuse requires a new epoch/identity; no notification may produce two records for one identity.
+- [ ] `IP-04-T06` Define window and group cascades. A removed or inaccessible window must not leave eligible orphan tabs; a group label update must affect only tabs in that group; missing optional group/window labels must preserve the tab with an explicit absent value.
+- [ ] `IP-04-T07` Define private-context behavior and teardown. Keep private records in the current in-memory projection only, partition them from normal records, and remove them on private-context end, browser shutdown, reset, or disconnect according to IP-02 lifecycle rules.
+- [ ] `IP-04-T08` Define permission/API-denial behavior. Required capability denial produces a bounded unavailable/deferred state, retry/resnapshot signal, and structured diagnostic counter; optional capability denial preserves safe fields and marks only the missing field.
+- [ ] `IP-04-T09` Emit the IP-05 handoff with event sequence metadata, effective-change marker, resync reason, and safe counters. Never log or transmit raw titles, full URLs, query strings, fragments, or page data as diagnostics.
+- [ ] `IP-04-T10` Add fixtures and tests for `FX-TAB-EVENTS`, `FX-TAB-EVENT-COALESCE`, `FX-TAB-WINDOW-LIFECYCLE`, `FX-TAB-ELIGIBILITY`, `FX-PRIVATE-CONTEXT`, `FX-PERMISSION-DENIED`, `FX-TAB-ID-REUSE`, and `FX-TAB-SNAPSHOT-CONVERGENCE`.
+- [ ] `IP-04-T11` Run a Chrome fake-adapter and Edge fake-adapter through the same fixture corpus. Differences in API namespace/signature must not alter normalized decisions or final projection output.
 
 ## 7. Kế hoạch commit
 
-1. `feat(browser): normalize tab and window observation events`
-   - Thay đổi: add the adapter listener lifecycle, event-normalizer vocabulary, bounded field validation, and browser/API failure states under the owned `extension/src/browser/` paths.
-   - Cách kiểm tra: run the phase browser adapter fixture runner from repository root with `FX-TAB-EVENTS`, `FX-TAB-WINDOW-LIFECYCLE`, and `FX-TAB-ID-REUSE`; compare normalized event traces and reason codes for Chrome and Edge fakes.
-2. `feat(browser): enforce tab eligibility and private isolation`
-   - Thay đổi: add pure eligibility decisions, normal/private context partitioning, disposal, optional-field handling, and required/optional permission-denial behavior.
-   - Cách kiểm tra: run `FX-TAB-ELIGIBILITY`, `FX-PRIVATE-CONTEXT`, and `FX-PERMISSION-DENIED`; assert excluded/private records never enter the normal or durable handoff and denial produces a retryable diagnostic state.
-3. `test(browser): prove event projection convergence`
-   - Thay đổi: add phase-04 fixture files and tests for duplicate suppression, coalescing, missing events, resync markers, and full-snapshot convergence.
-   - Cách kiểm tra: from the repository root, run the implementation-specific browser test command against `fixtures/browser/phase-04/` and `tests/browser/phase-04/`; the runner must report zero duplicate identities and equality between event-reduced output and the full-snapshot oracle.
+1. `feat(browser): implement ip-04-t01`
+   - Task IDs: `IP-04-T01`.
+   - Owned target paths: `extension/src/browser/tab-observer.ts` (to-create), `extension/src/browser/eligibility.ts` (to-create), `extension/src/browser/event-normalizer.ts` (to-create), `fixtures/browser/phase-04/` (to-create), `tests/browser/phase-04/` (to-create).
+   - Behavior: Map every supported Chrome/Edge event source to the common event vocabulary. Record which event fields are required, optional, browser-specific, or a resync trigger; keep registration idempotent across service-worker restarts.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `npm test -- --runInBand tests/browser/phase-04`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Map every supported Chrome/Edge event source to the common event vocabulary. Record which event fields are required, optional, browser-specific, or a resync trigger; keep registration idempotent across service-worker restarts.
+   - Dependency gate: all index.md dependencies for IP-04 have merged to dev; phase work branch starts from latest origin/dev.
+
+2. `feat(browser): implement ip-04-t02`
+   - Task IDs: `IP-04-T02`.
+   - Owned target paths: `extension/src/browser/tab-observer.ts` (to-create), `extension/src/browser/eligibility.ts` (to-create), `extension/src/browser/event-normalizer.ts` (to-create), `fixtures/browser/phase-04/` (to-create), `tests/browser/phase-04/` (to-create).
+   - Behavior: Implement the pure eligibility decision. Validate profile/context and bounded IDs, keep only allowed open-tab metadata, assign stable reason codes, and distinguish `excluded` from `deferred` when a retry or full snapshot can recover state.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `npm test -- --runInBand tests/browser/phase-04`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Implement the pure eligibility decision. Validate profile/context and bounded IDs, keep only allowed open-tab metadata, assign stable reason codes, and distinguish `excluded` from `deferred` when a retry or full snapshot can recover state.
+   - Dependency gate: all index.md dependencies for IP-04 have merged to dev; phase work branch starts from latest origin/dev.
+
+3. `feat(browser): implement ip-04-t03`
+   - Task IDs: `IP-04-T03`.
+   - Owned target paths: `extension/src/browser/tab-observer.ts` (to-create), `extension/src/browser/eligibility.ts` (to-create), `extension/src/browser/event-normalizer.ts` (to-create), `fixtures/browser/phase-04/` (to-create), `tests/browser/phase-04/` (to-create).
+   - Behavior: Implement full snapshot acquisition and an independent snapshot oracle in the fake browser adapter. Treat an empty snapshot as authoritative only when the browser call completed successfully and the profile/context is known.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `npm test -- --runInBand tests/browser/phase-04`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Implement full snapshot acquisition and an independent snapshot oracle in the fake browser adapter. Treat an empty snapshot as authoritative only when the browser call completed successfully and the profile/context is known.
+   - Dependency gate: all index.md dependencies for IP-04 have merged to dev; phase work branch starts from latest origin/dev.
+
+4. `feat(browser): implement ip-04-t04`
+   - Task IDs: `IP-04-T04`.
+   - Owned target paths: `extension/src/browser/tab-observer.ts` (to-create), `extension/src/browser/eligibility.ts` (to-create), `extension/src/browser/event-normalizer.ts` (to-create), `fixtures/browser/phase-04/` (to-create), `tests/browser/phase-04/` (to-create).
+   - Behavior: Normalize partial `onUpdated` changes and tab/window/group notifications into field-level deltas. Merge equivalent updates by `TabIdentity`; preserve meaningful title/URL/window/group/pin/active/eligibility changes.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `npm test -- --runInBand tests/browser/phase-04`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Normalize partial `onUpdated` changes and tab/window/group notifications into field-level deltas. Merge equivalent updates by `TabIdentity`; preserve meaningful title/URL/window/group/pin/active/eligibility changes.
+   - Dependency gate: all index.md dependencies for IP-04 have merged to dev; phase work branch starts from latest origin/dev.
+
+5. `feat(browser): implement ip-04-t05`
+   - Task IDs: `IP-04-T05`.
+   - Owned target paths: `extension/src/browser/tab-observer.ts` (to-create), `extension/src/browser/eligibility.ts` (to-create), `extension/src/browser/event-normalizer.ts` (to-create), `fixtures/browser/phase-04/` (to-create), `tests/browser/phase-04/` (to-create).
+   - Behavior: Define duplicate suppression: repeated identical effective state is a no-op; conflicting or out-of-order revisions mark uncertainty; remove is idempotent; browser-ID reuse requires a new epoch/identity; no notification may produce two records for one identity.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `npm test -- --runInBand tests/browser/phase-04`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Define duplicate suppression: repeated identical effective state is a no-op; conflicting or out-of-order revisions mark uncertainty; remove is idempotent; browser-ID reuse requires a new epoch/identity; no notification may produce two records for one identity.
+   - Dependency gate: all index.md dependencies for IP-04 have merged to dev; phase work branch starts from latest origin/dev.
+
+6. `feat(browser): implement ip-04-t06`
+   - Task IDs: `IP-04-T06`.
+   - Owned target paths: `extension/src/browser/tab-observer.ts` (to-create), `extension/src/browser/eligibility.ts` (to-create), `extension/src/browser/event-normalizer.ts` (to-create), `fixtures/browser/phase-04/` (to-create), `tests/browser/phase-04/` (to-create).
+   - Behavior: Define window and group cascades. A removed or inaccessible window must not leave eligible orphan tabs; a group label update must affect only tabs in that group; missing optional group/window labels must preserve the tab with an explicit absent value.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `npm test -- --runInBand tests/browser/phase-04`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Define window and group cascades. A removed or inaccessible window must not leave eligible orphan tabs; a group label update must affect only tabs in that group; missing optional group/window labels must preserve the tab with an explicit absent value.
+   - Dependency gate: all index.md dependencies for IP-04 have merged to dev; phase work branch starts from latest origin/dev.
+
+7. `feat(browser): implement ip-04-t07`
+   - Task IDs: `IP-04-T07`.
+   - Owned target paths: `extension/src/browser/tab-observer.ts` (to-create), `extension/src/browser/eligibility.ts` (to-create), `extension/src/browser/event-normalizer.ts` (to-create), `fixtures/browser/phase-04/` (to-create), `tests/browser/phase-04/` (to-create).
+   - Behavior: Define private-context behavior and teardown. Keep private records in the current in-memory projection only, partition them from normal records, and remove them on private-context end, browser shutdown, reset, or disconnect according to IP-02 lifecycle rules.
+   - Fixture and command: IP-02; run `npm test -- --runInBand tests/browser/phase-04`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Define private-context behavior and teardown. Keep private records in the current in-memory projection only, partition them from normal records, and remove them on private-context end, browser shutdown, reset, or disconnect according to IP-02 lifecycle rules.
+   - Dependency gate: all index.md dependencies for IP-04 have merged to dev; phase work branch starts from latest origin/dev.
+
+8. `feat(browser): implement ip-04-t08`
+   - Task IDs: `IP-04-T08`.
+   - Owned target paths: `extension/src/browser/tab-observer.ts` (to-create), `extension/src/browser/eligibility.ts` (to-create), `extension/src/browser/event-normalizer.ts` (to-create), `fixtures/browser/phase-04/` (to-create), `tests/browser/phase-04/` (to-create).
+   - Behavior: Define permission/API-denial behavior. Required capability denial produces a bounded unavailable/deferred state, retry/resnapshot signal, and structured diagnostic counter; optional capability denial preserves safe fields and marks only the missing field.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `npm test -- --runInBand tests/browser/phase-04`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Define permission/API-denial behavior. Required capability denial produces a bounded unavailable/deferred state, retry/resnapshot signal, and structured diagnostic counter; optional capability denial preserves safe fields and marks only the missing field.
+   - Dependency gate: all index.md dependencies for IP-04 have merged to dev; phase work branch starts from latest origin/dev.
+
+9. `feat(browser): implement ip-04-t09`
+   - Task IDs: `IP-04-T09`.
+   - Owned target paths: `extension/src/browser/tab-observer.ts` (to-create), `extension/src/browser/eligibility.ts` (to-create), `extension/src/browser/event-normalizer.ts` (to-create), `fixtures/browser/phase-04/` (to-create), `tests/browser/phase-04/` (to-create).
+   - Behavior: Emit the IP-05 handoff with event sequence metadata, effective-change marker, resync reason, and safe counters. Never log or transmit raw titles, full URLs, query strings, fragments, or page data as diagnostics.
+   - Fixture and command: IP-05; run `npm test -- --runInBand tests/browser/phase-04`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Emit the IP-05 handoff with event sequence metadata, effective-change marker, resync reason, and safe counters. Never log or transmit raw titles, full URLs, query strings, fragments, or page data as diagnostics.
+   - Dependency gate: all index.md dependencies for IP-04 have merged to dev; phase work branch starts from latest origin/dev.
+
+10. `test(browser): implement ip-04-t10`
+   - Task IDs: `IP-04-T10`.
+   - Owned target paths: `extension/src/browser/tab-observer.ts` (to-create), `extension/src/browser/eligibility.ts` (to-create), `extension/src/browser/event-normalizer.ts` (to-create), `fixtures/browser/phase-04/` (to-create), `tests/browser/phase-04/` (to-create).
+   - Behavior: Add fixtures and tests for `FX-TAB-EVENTS`, `FX-TAB-EVENT-COALESCE`, `FX-TAB-WINDOW-LIFECYCLE`, `FX-TAB-ELIGIBILITY`, `FX-PRIVATE-CONTEXT`, `FX-PERMISSION-DENIED`, `FX-TAB-ID-REUSE`, and `FX-TAB-SNAPSHOT-CONVERGENCE`.
+   - Fixture and command: FX-TAB-EVENTS, FX-TAB-EVENT-COALESCE, FX-TAB-WINDOW-LIFECYCLE, FX-TAB-ELIGIBILITY, FX-PRIVATE-CONTEXT, FX-PERMISSION-DENIED, FX-TAB-ID-REUSE, FX-TAB-SNAPSHOT-CONVERGENCE; run `npm test -- --runInBand tests/browser/phase-04`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Add fixtures and tests for `FX-TAB-EVENTS`, `FX-TAB-EVENT-COALESCE`, `FX-TAB-WINDOW-LIFECYCLE`, `FX-TAB-ELIGIBILITY`, `FX-PRIVATE-CONTEXT`, `FX-PERMISSION-DENIED`, `FX-TAB-ID-REUSE`, and `FX-TAB-SNAPSHOT-CONVERGENCE`.
+   - Dependency gate: all index.md dependencies for IP-04 have merged to dev; phase work branch starts from latest origin/dev.
+
+11. `test(browser): implement ip-04-t11`
+   - Task IDs: `IP-04-T11`.
+   - Owned target paths: `extension/src/browser/tab-observer.ts` (to-create), `extension/src/browser/eligibility.ts` (to-create), `extension/src/browser/event-normalizer.ts` (to-create), `fixtures/browser/phase-04/` (to-create), `tests/browser/phase-04/` (to-create).
+   - Behavior: Run a Chrome fake-adapter and Edge fake-adapter through the same fixture corpus. Differences in API namespace/signature must not alter normalized decisions or final projection output.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `npm test -- --runInBand tests/browser/phase-04`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: Run a Chrome fake-adapter and Edge fake-adapter through the same fixture corpus. Differences in API namespace/signature must not alter normalized decisions or final projection output.
+   - Dependency gate: all index.md dependencies for IP-04 have merged to dev; phase work branch starts from latest origin/dev.
 
 ## 8. Kiểm chứng và nghiệm thu
 

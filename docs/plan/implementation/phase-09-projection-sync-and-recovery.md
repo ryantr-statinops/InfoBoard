@@ -1,7 +1,7 @@
 # Phase 09 — Projection sync and recovery
 
 > Plan ID: IP-09
-> Status: not_started
+> Status: See README.md execution tracker
 > Execution owner: extension-host synchronization and recovery owner
 > Dependencies: IP-04, IP-05, IP-07, IP-08
 > Parallel boundary: IP-10 consumes the published projection/index handoff and rebuild status; IP-12 consumes revision availability and degraded-status outputs. No shared implementation paths with IP-04, IP-05, IP-07, or IP-08.
@@ -77,24 +77,89 @@
 
 ## 6. Công việc triển khai
 
-- [ ] **Implement the sync state machine:** in `extension/src/runtime/projection-sync.ts`, represent `Disconnected -> Connecting -> Handshaking -> Synchronizing -> Rebuilding -> Ready` and `Recovering` transitions. Reject tab data before a successful `hello_ack`; preserve profile/context/epoch/revision/sequence as mandatory fences; expose bounded status without leaking title, URL or query data.
-- [ ] **Implement hello-to-ready gating:** send one `hello` with the current profile and supported capabilities, validate `hello_ack` protocol/limits/profile and persistence health, request a completed IP-04 snapshot, send `snapshot`, and wait for the host to validate and stage the matching index. Emit `sync_ack` and enter `Ready` only when projection and index publish the same revision/generation.
-- [ ] **Implement atomic snapshot publication:** in `host/internal/sync/orchestrator.go`, validate all records and counts before allocation, hand a detached snapshot to IP-05/IP-10, and publish one complete generation. On invalid, partial, canceled or failed build input, discard staging state, keep no new queryable revision, and return `SNAPSHOT_REQUIRED`, `REVISION_MISMATCH` or a bounded internal/recovery status as appropriate.
-- [ ] **Implement ordered delta processing:** require the expected predecessor and matching profile/context/epoch; stage a whole bounded batch; call the index publication seam; then acknowledge accepted revision/sequence. Treat exact duplicates as idempotent acknowledgement, and treat gaps, conflicting duplicates, stale events or out-of-order events as no-op plus `resync_required` with current revision and reason.
-- [ ] **Implement dropped-event resync:** on `resync_required`, stop sending further deltas, discard obsolete queued deltas, acquire a new full snapshot from the browser projection seam and repeat snapshot -> rebuild -> ready. Record fixture-visible counts/revisions and prove that final indexed IDs equal the browser-authoritative eligible IDs, with no duplicate records.
-- [ ] **Implement reconnect and full rebuild:** in `host/internal/recovery/rebuild.go`, invalidate session-scoped work on disconnect, prevent old callbacks/results from publishing, use IP-06 bounded reconnect/cancellation, and force a new hello plus authoritative snapshot. Host crash, service-worker suspension, interrupted snapshot and index-build failure must end in `Recovering`/`Rebuilding` or `Disconnected`, never silently reuse stale state.
-- [ ] **Implement persistence-degraded continuation:** consume IP-08 health at handshake and during runtime. If SQLite open/migration/write fails, keep defaults and session-only metadata in memory, keep a successfully published lexical index queryable and let extension activation proceed; surface `PERSISTENCE_DEGRADED` and retryable health/diagnostic data without blocking synchronization.
-- [ ] **Implement revision-safe query handoff:** before forwarding or answering a query, compare requested profile/context/generation/revision with the published ready state. Return `REVISION_MISMATCH` for unknown/old revisions and `INDEX_REBUILDING` for a revision still staging; return no result payload in either case, and never serve the last ready revision as an implicit fallback.
-- [ ] **Add fixtures and observability:** create the `SYNC-001`–`SYNC-008` fixtures and tests under the owned roots. Assert lifecycle transitions, exact typed statuses, `sync_ack`/`resync_required`, final identity sets, revision equality, persistence-degraded lexical result/activation, bounded retries and redacted diagnostic fields. Include a no-network/no-page-read test seam.
+- [ ] `IP-09-T01` **Implement the sync state machine:** in `extension/src/runtime/projection-sync.ts`, represent `Disconnected -> Connecting -> Handshaking -> Synchronizing -> Rebuilding -> Ready` and `Recovering` transitions. Reject tab data before a successful `hello_ack`; preserve profile/context/epoch/revision/sequence as mandatory fences; expose bounded status without leaking title, URL or query data.
+- [ ] `IP-09-T02` **Implement hello-to-ready gating:** send one `hello` with the current profile and supported capabilities, validate `hello_ack` protocol/limits/profile and persistence health, request a completed IP-04 snapshot, send `snapshot`, and wait for the host to validate and stage the matching index. Emit `sync_ack` and enter `Ready` only when projection and index publish the same revision/generation.
+- [ ] `IP-09-T03` **Implement atomic snapshot publication:** in `host/internal/sync/orchestrator.go`, validate all records and counts before allocation, hand a detached snapshot to IP-05/IP-10, and publish one complete generation. On invalid, partial, canceled or failed build input, discard staging state, keep no new queryable revision, and return `SNAPSHOT_REQUIRED`, `REVISION_MISMATCH` or a bounded internal/recovery status as appropriate.
+- [ ] `IP-09-T04` **Implement ordered delta processing:** require the expected predecessor and matching profile/context/epoch; stage a whole bounded batch; call the index publication seam; then acknowledge accepted revision/sequence. Treat exact duplicates as idempotent acknowledgement, and treat gaps, conflicting duplicates, stale events or out-of-order events as no-op plus `resync_required` with current revision and reason.
+- [ ] `IP-09-T05` **Implement dropped-event resync:** on `resync_required`, stop sending further deltas, discard obsolete queued deltas, acquire a new full snapshot from the browser projection seam and repeat snapshot -> rebuild -> ready. Record fixture-visible counts/revisions and prove that final indexed IDs equal the browser-authoritative eligible IDs, with no duplicate records.
+- [ ] `IP-09-T06` **Implement reconnect and full rebuild:** in `host/internal/recovery/rebuild.go`, invalidate session-scoped work on disconnect, prevent old callbacks/results from publishing, use IP-06 bounded reconnect/cancellation, and force a new hello plus authoritative snapshot. Host crash, service-worker suspension, interrupted snapshot and index-build failure must end in `Recovering`/`Rebuilding` or `Disconnected`, never silently reuse stale state.
+- [ ] `IP-09-T07` **Implement persistence-degraded continuation:** consume IP-08 health at handshake and during runtime. If SQLite open/migration/write fails, keep defaults and session-only metadata in memory, keep a successfully published lexical index queryable and let extension activation proceed; surface `PERSISTENCE_DEGRADED` and retryable health/diagnostic data without blocking synchronization.
+- [ ] `IP-09-T08` **Implement revision-safe query handoff:** before forwarding or answering a query, compare requested profile/context/generation/revision with the published ready state. Return `REVISION_MISMATCH` for unknown/old revisions and `INDEX_REBUILDING` for a revision still staging; return no result payload in either case, and never serve the last ready revision as an implicit fallback.
+- [ ] `IP-09-T09` **Add fixtures and observability:** create the `SYNC-001`–`SYNC-008` fixtures and tests under the owned roots. Assert lifecycle transitions, exact typed statuses, `sync_ack`/`resync_required`, final identity sets, revision equality, persistence-degraded lexical result/activation, bounded retries and redacted diagnostic fields. Include a no-network/no-page-read test seam.
 
 ## 7. Kế hoạch commit
 
-1. `feat(sync): orchestrate snapshot and delta convergence`
-   - Thay đổi: add the extension synchronization state machine, host snapshot/delta commit barrier, revision guard and the reconnect/resync/full-rebuild seams under the owned `extension/` and `host/` paths.
-   - Cách kiểm tra: run `go test ./host/... -run 'TestSync_(Hello|Snapshot|Delta|Resync|Revision)' -count=1` and the extension sync unit tests against `SYNC-001`–`SYNC-006`.
-2. `test(sync): cover recovery and degraded persistence boundaries`
-   - Thay đổi: add `SYNC-007`/`SYNC-008`, dropped-event convergence, persistence-degraded continuation, profile mismatch, redacted diagnostics and explicit no-result assertions for unknown/rebuilding revisions.
-   - Cách kiểm tra: run the phase-09 fixture runner plus Go and Node integration commands from section 8; inspect final indexed IDs and lifecycle/status evidence.
+1. `feat(sync): implement ip-09-t01`
+   - Task IDs: `IP-09-T01`.
+   - Owned target paths: extension/src/runtime/projection-sync.ts.
+   - Behavior: **Implement the sync state machine:** in `extension/src/runtime/projection-sync.ts`, represent `Disconnected -> Connecting -> Handshaking -> Synchronizing -> Rebuilding -> Ready` and `Recovering` transitions. Reject tab data before a successful `hello_ack`; preserve profile/context/epoch/revision/sequence as mandatory fences; expose bounded status without leaking title, URL or query data.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/recovery/phase-09/run_fixtures.py --suite phase-09 --fixtures fixtures/recovery/phase-09 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Implement the sync state machine:** in `extension/src/runtime/projection-sync.ts`, represent `Disconnected -> Connecting -> Handshaking -> Synchronizing -> Rebuilding -> Ready` and `Recovering` transitions. Reject tab data before a successful `hello_ack`; preserve profile/context/epoch/revision/sequence as mandatory fences; expose bounded status without leaking title, URL or query data.
+   - Dependency gate: all index.md dependencies for IP-09 have merged to dev; phase work branch starts from latest origin/dev.
+
+2. `feat(sync): implement ip-09-t02`
+   - Task IDs: `IP-09-T02`.
+   - Owned target paths: `extension/src/runtime/projection-sync.ts` (to-create), `host/internal/sync/orchestrator.go` (to-create), `host/internal/recovery/rebuild.go` (to-create), `fixtures/recovery/phase-09/` (to-create), `tests/recovery/phase-09/` (to-create).
+   - Behavior: **Implement hello-to-ready gating:** send one `hello` with the current profile and supported capabilities, validate `hello_ack` protocol/limits/profile and persistence health, request a completed IP-04 snapshot, send `snapshot`, and wait for the host to validate and stage the matching index. Emit `sync_ack` and enter `Ready` only when projection and index publish the same revision/generation.
+   - Fixture and command: IP-04; run `python3 tests/recovery/phase-09/run_fixtures.py --suite phase-09 --fixtures fixtures/recovery/phase-09 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Implement hello-to-ready gating:** send one `hello` with the current profile and supported capabilities, validate `hello_ack` protocol/limits/profile and persistence health, request a completed IP-04 snapshot, send `snapshot`, and wait for the host to validate and stage the matching index. Emit `sync_ack` and enter `Ready` only when projection and index publish the same revision/generation.
+   - Dependency gate: all index.md dependencies for IP-09 have merged to dev; phase work branch starts from latest origin/dev.
+
+3. `feat(sync): implement ip-09-t03`
+   - Task IDs: `IP-09-T03`.
+   - Owned target paths: host/internal/sync/orchestrator.go.
+   - Behavior: **Implement atomic snapshot publication:** in `host/internal/sync/orchestrator.go`, validate all records and counts before allocation, hand a detached snapshot to IP-05/IP-10, and publish one complete generation. On invalid, partial, canceled or failed build input, discard staging state, keep no new queryable revision, and return `SNAPSHOT_REQUIRED`, `REVISION_MISMATCH` or a bounded internal/recovery status as appropriate.
+   - Fixture and command: IP-05, IP-10; run `python3 tests/recovery/phase-09/run_fixtures.py --suite phase-09 --fixtures fixtures/recovery/phase-09 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Implement atomic snapshot publication:** in `host/internal/sync/orchestrator.go`, validate all records and counts before allocation, hand a detached snapshot to IP-05/IP-10, and publish one complete generation. On invalid, partial, canceled or failed build input, discard staging state, keep no new queryable revision, and return `SNAPSHOT_REQUIRED`, `REVISION_MISMATCH` or a bounded internal/recovery status as appropriate.
+   - Dependency gate: all index.md dependencies for IP-09 have merged to dev; phase work branch starts from latest origin/dev.
+
+4. `feat(sync): implement ip-09-t04`
+   - Task IDs: `IP-09-T04`.
+   - Owned target paths: `extension/src/runtime/projection-sync.ts` (to-create), `host/internal/sync/orchestrator.go` (to-create), `host/internal/recovery/rebuild.go` (to-create), `fixtures/recovery/phase-09/` (to-create), `tests/recovery/phase-09/` (to-create).
+   - Behavior: **Implement ordered delta processing:** require the expected predecessor and matching profile/context/epoch; stage a whole bounded batch; call the index publication seam; then acknowledge accepted revision/sequence. Treat exact duplicates as idempotent acknowledgement, and treat gaps, conflicting duplicates, stale events or out-of-order events as no-op plus `resync_required` with current revision and reason.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/recovery/phase-09/run_fixtures.py --suite phase-09 --fixtures fixtures/recovery/phase-09 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Implement ordered delta processing:** require the expected predecessor and matching profile/context/epoch; stage a whole bounded batch; call the index publication seam; then acknowledge accepted revision/sequence. Treat exact duplicates as idempotent acknowledgement, and treat gaps, conflicting duplicates, stale events or out-of-order events as no-op plus `resync_required` with current revision and reason.
+   - Dependency gate: all index.md dependencies for IP-09 have merged to dev; phase work branch starts from latest origin/dev.
+
+5. `test(sync): implement ip-09-t05`
+   - Task IDs: `IP-09-T05`.
+   - Owned target paths: `extension/src/runtime/projection-sync.ts` (to-create), `host/internal/sync/orchestrator.go` (to-create), `host/internal/recovery/rebuild.go` (to-create), `fixtures/recovery/phase-09/` (to-create), `tests/recovery/phase-09/` (to-create).
+   - Behavior: **Implement dropped-event resync:** on `resync_required`, stop sending further deltas, discard obsolete queued deltas, acquire a new full snapshot from the browser projection seam and repeat snapshot -> rebuild -> ready. Record fixture-visible counts/revisions and prove that final indexed IDs equal the browser-authoritative eligible IDs, with no duplicate records.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/recovery/phase-09/run_fixtures.py --suite phase-09 --fixtures fixtures/recovery/phase-09 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Implement dropped-event resync:** on `resync_required`, stop sending further deltas, discard obsolete queued deltas, acquire a new full snapshot from the browser projection seam and repeat snapshot -> rebuild -> ready. Record fixture-visible counts/revisions and prove that final indexed IDs equal the browser-authoritative eligible IDs, with no duplicate records.
+   - Dependency gate: all index.md dependencies for IP-09 have merged to dev; phase work branch starts from latest origin/dev.
+
+6. `feat(sync): implement ip-09-t06`
+   - Task IDs: `IP-09-T06`.
+   - Owned target paths: host/internal/recovery/rebuild.go.
+   - Behavior: **Implement reconnect and full rebuild:** in `host/internal/recovery/rebuild.go`, invalidate session-scoped work on disconnect, prevent old callbacks/results from publishing, use IP-06 bounded reconnect/cancellation, and force a new hello plus authoritative snapshot. Host crash, service-worker suspension, interrupted snapshot and index-build failure must end in `Recovering`/`Rebuilding` or `Disconnected`, never silently reuse stale state.
+   - Fixture and command: IP-06; run `python3 tests/recovery/phase-09/run_fixtures.py --suite phase-09 --fixtures fixtures/recovery/phase-09 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Implement reconnect and full rebuild:** in `host/internal/recovery/rebuild.go`, invalidate session-scoped work on disconnect, prevent old callbacks/results from publishing, use IP-06 bounded reconnect/cancellation, and force a new hello plus authoritative snapshot. Host crash, service-worker suspension, interrupted snapshot and index-build failure must end in `Recovering`/`Rebuilding` or `Disconnected`, never silently reuse stale state.
+   - Dependency gate: all index.md dependencies for IP-09 have merged to dev; phase work branch starts from latest origin/dev.
+
+7. `feat(sync): implement ip-09-t07`
+   - Task IDs: `IP-09-T07`.
+   - Owned target paths: `extension/src/runtime/projection-sync.ts` (to-create), `host/internal/sync/orchestrator.go` (to-create), `host/internal/recovery/rebuild.go` (to-create), `fixtures/recovery/phase-09/` (to-create), `tests/recovery/phase-09/` (to-create).
+   - Behavior: **Implement persistence-degraded continuation:** consume IP-08 health at handshake and during runtime. If SQLite open/migration/write fails, keep defaults and session-only metadata in memory, keep a successfully published lexical index queryable and let extension activation proceed; surface `PERSISTENCE_DEGRADED` and retryable health/diagnostic data without blocking synchronization.
+   - Fixture and command: IP-08; run `python3 tests/recovery/phase-09/run_fixtures.py --suite phase-09 --fixtures fixtures/recovery/phase-09 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Implement persistence-degraded continuation:** consume IP-08 health at handshake and during runtime. If SQLite open/migration/write fails, keep defaults and session-only metadata in memory, keep a successfully published lexical index queryable and let extension activation proceed; surface `PERSISTENCE_DEGRADED` and retryable health/diagnostic data without blocking synchronization.
+   - Dependency gate: all index.md dependencies for IP-09 have merged to dev; phase work branch starts from latest origin/dev.
+
+8. `feat(sync): implement ip-09-t08`
+   - Task IDs: `IP-09-T08`.
+   - Owned target paths: `extension/src/runtime/projection-sync.ts` (to-create), `host/internal/sync/orchestrator.go` (to-create), `host/internal/recovery/rebuild.go` (to-create), `fixtures/recovery/phase-09/` (to-create), `tests/recovery/phase-09/` (to-create).
+   - Behavior: **Implement revision-safe query handoff:** before forwarding or answering a query, compare requested profile/context/generation/revision with the published ready state. Return `REVISION_MISMATCH` for unknown/old revisions and `INDEX_REBUILDING` for a revision still staging; return no result payload in either case, and never serve the last ready revision as an implicit fallback.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/recovery/phase-09/run_fixtures.py --suite phase-09 --fixtures fixtures/recovery/phase-09 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Implement revision-safe query handoff:** before forwarding or answering a query, compare requested profile/context/generation/revision with the published ready state. Return `REVISION_MISMATCH` for unknown/old revisions and `INDEX_REBUILDING` for a revision still staging; return no result payload in either case, and never serve the last ready revision as an implicit fallback.
+   - Dependency gate: all index.md dependencies for IP-09 have merged to dev; phase work branch starts from latest origin/dev.
+
+9. `test(sync): implement ip-09-t09`
+   - Task IDs: `IP-09-T09`.
+   - Owned target paths: `extension/src/runtime/projection-sync.ts` (to-create), `host/internal/sync/orchestrator.go` (to-create), `host/internal/recovery/rebuild.go` (to-create), `fixtures/recovery/phase-09/` (to-create), `tests/recovery/phase-09/` (to-create).
+   - Behavior: **Add fixtures and observability:** create the `SYNC-001`–`SYNC-008` fixtures and tests under the owned roots. Assert lifecycle transitions, exact typed statuses, `sync_ack`/`resync_required`, final identity sets, revision equality, persistence-degraded lexical result/activation, bounded retries and redacted diagnostic fields. Include a no-network/no-page-read test seam.
+   - Fixture and command: SYNC-001, SYNC-008; run `python3 tests/recovery/phase-09/run_fixtures.py --suite phase-09 --fixtures fixtures/recovery/phase-09 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Add fixtures and observability:** create the `SYNC-001`–`SYNC-008` fixtures and tests under the owned roots. Assert lifecycle transitions, exact typed statuses, `sync_ack`/`resync_required`, final identity sets, revision equality, persistence-degraded lexical result/activation, bounded retries and redacted diagnostic fields. Include a no-network/no-page-read test seam.
+   - Dependency gate: all index.md dependencies for IP-09 have merged to dev; phase work branch starts from latest origin/dev.
 
 ## 8. Kiểm chứng và nghiệm thu
 

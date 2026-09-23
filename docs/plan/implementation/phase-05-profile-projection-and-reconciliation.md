@@ -1,7 +1,7 @@
 # Phase 05 — Profile projection and reconciliation
 
 > Plan ID: IP-05
-> Status: not_started
+> Status: See README.md execution tracker
 > Execution owner: profile-projection and reconciliation owner
 > Dependencies: IP-02, IP-04, IP-06, IP-07
 > Parallel boundary: IP-09 consumes this phase's reconciliation contract; IP-10 consumes its committed projection handoff. No shared implementation files with IP-04, IP-06, IP-07, or IP-08.
@@ -96,36 +96,116 @@
 
 ## 6. Công việc triển khai
 
-- [ ] **Define the projection boundary:** map IP-02 `ProjectionState`/`EligibleTabRecord` and IP-04 normalized event fields into the extension producer and host reconciler packages. Make `profile_id`, `context_kind`, `projection_epoch`, and `projection_revision` mandatory partition/fence fields; reject synthetic identity fallbacks.
-- [ ] **Acquire and validate authoritative snapshots:** accept a snapshot as authority only when the browser call completed for the known current profile/context and every record passes IP-02 bounds/identity checks. Distinguish an intentional successful empty snapshot from permission failure, partial read, or unavailable profile state.
-- [ ] **Canonicalize snapshot input:** sort by immutable `TabIdentity`, compute a bounded digest for duplicate/conflict comparison, reject duplicate identities and cross-profile records, preserve explicit absent optional fields, and ensure equivalent input order produces one canonical output.
-- [ ] **Allocate epochs and revisions:** initialize at revision `0`; assign revision `1` to the first authoritative snapshot in a new epoch; increment one time per accepted effective event; never compare or reuse revisions across a new epoch. Start a fresh epoch for worker restart, host reconnect, or a full-resync lineage so stale in-flight work is fenced.
-- [ ] **Implement ordered delta reduction:** require current profile/context/epoch and the expected predecessor revision/sequence; stage field updates by `TabIdentity`; retain effective title, URL, window, group, pinned, active, eligibility, and remove transitions; commit each valid effective event exactly once. An all-or-nothing batch must not expose earlier operations if a later operation is invalid.
-- [ ] **Handle duplicates, stale events, and gaps:** acknowledge an exact already-consumed event without advancing revision; classify lower/old epoch, wrong predecessor, missing sequence, changed duplicate, unknown tab update, and invalid remove as stale/conflict/gap; preserve the last committed map and emit `resync_required` where continuity is uncertain.
-- [ ] **Replace atomically:** build and validate a candidate map off to the side, publish one immutable committed state only after every record passes, and notify the index handoff once. During staging failure or cancellation, readers keep the previous complete state; no partial map, duplicate identity, or transient empty map is observable.
-- [ ] **Recover after restart and reconnect:** clear or quarantine old-session state, bind the new session to the expected profile, require the new-epoch full snapshot before `Ready`, discard old private records and pending deltas, and expose `SnapshotRequired`/`Recovering` rather than serving silently stale state.
-- [ ] **Enforce profile/context isolation:** keep separate state partitions and counters for profiles and normal/private contexts, reject mismatched envelope/record/event profile IDs before mutation, and prove equal browser IDs in different profiles cannot collide in the host map or handoff.
-- [ ] **Publish safe handoff metadata:** send only committed epoch/revision/count/identity references, status, digest/version, durations, and bounded error classes to IP-07/IP-09/IP-10/IP-16. Never put raw title, URL, query, token, or page values in divergence diagnostics.
-- [ ] **Add fixture-driven tests:** implement all phase-05 fixtures and assert exact identity sets, record fields, lifecycle/status, revision/epoch transitions, profile boundaries, duplicate behavior, atomic visibility, and canonical output. Run both extension-side and host-side consumers against the same fixture schemas.
-- [ ] **Exercise the recovery sequence:** from the repository root, drive snapshot → ordered delta → dropped event → `resync_required` → new authoritative snapshot → index handoff, then repeat through a fresh session/epoch. The final committed IDs must equal the eligible browser oracle and contain no duplicate record.
+- [ ] `IP-05-T01` **Define the projection boundary:** map IP-02 `ProjectionState`/`EligibleTabRecord` and IP-04 normalized event fields into the extension producer and host reconciler packages. Make `profile_id`, `context_kind`, `projection_epoch`, and `projection_revision` mandatory partition/fence fields; reject synthetic identity fallbacks.
+- [ ] `IP-05-T02` **Acquire and validate authoritative snapshots:** accept a snapshot as authority only when the browser call completed for the known current profile/context and every record passes IP-02 bounds/identity checks. Distinguish an intentional successful empty snapshot from permission failure, partial read, or unavailable profile state.
+- [ ] `IP-05-T03` **Canonicalize snapshot input:** sort by immutable `TabIdentity`, compute a bounded digest for duplicate/conflict comparison, reject duplicate identities and cross-profile records, preserve explicit absent optional fields, and ensure equivalent input order produces one canonical output.
+- [ ] `IP-05-T04` **Allocate epochs and revisions:** initialize at revision `0`; assign revision `1` to the first authoritative snapshot in a new epoch; increment one time per accepted effective event; never compare or reuse revisions across a new epoch. Start a fresh epoch for worker restart, host reconnect, or a full-resync lineage so stale in-flight work is fenced.
+- [ ] `IP-05-T05` **Implement ordered delta reduction:** require current profile/context/epoch and the expected predecessor revision/sequence; stage field updates by `TabIdentity`; retain effective title, URL, window, group, pinned, active, eligibility, and remove transitions; commit each valid effective event exactly once. An all-or-nothing batch must not expose earlier operations if a later operation is invalid.
+- [ ] `IP-05-T06` **Handle duplicates, stale events, and gaps:** acknowledge an exact already-consumed event without advancing revision; classify lower/old epoch, wrong predecessor, missing sequence, changed duplicate, unknown tab update, and invalid remove as stale/conflict/gap; preserve the last committed map and emit `resync_required` where continuity is uncertain.
+- [ ] `IP-05-T07` **Replace atomically:** build and validate a candidate map off to the side, publish one immutable committed state only after every record passes, and notify the index handoff once. During staging failure or cancellation, readers keep the previous complete state; no partial map, duplicate identity, or transient empty map is observable.
+- [ ] `IP-05-T08` **Recover after restart and reconnect:** clear or quarantine old-session state, bind the new session to the expected profile, require the new-epoch full snapshot before `Ready`, discard old private records and pending deltas, and expose `SnapshotRequired`/`Recovering` rather than serving silently stale state.
+- [ ] `IP-05-T09` **Enforce profile/context isolation:** keep separate state partitions and counters for profiles and normal/private contexts, reject mismatched envelope/record/event profile IDs before mutation, and prove equal browser IDs in different profiles cannot collide in the host map or handoff.
+- [ ] `IP-05-T10` **Publish safe handoff metadata:** send only committed epoch/revision/count/identity references, status, digest/version, durations, and bounded error classes to IP-07/IP-09/IP-10/IP-16. Never put raw title, URL, query, token, or page values in divergence diagnostics.
+- [ ] `IP-05-T11` **Add fixture-driven tests:** implement all phase-05 fixtures and assert exact identity sets, record fields, lifecycle/status, revision/epoch transitions, profile boundaries, duplicate behavior, atomic visibility, and canonical output. Run both extension-side and host-side consumers against the same fixture schemas.
+- [ ] `IP-05-T12` **Exercise the recovery sequence:** from the repository root, drive snapshot → ordered delta → dropped event → `resync_required` → new authoritative snapshot → index handoff, then repeat through a fresh session/epoch. The final committed IDs must equal the eligible browser oracle and contain no duplicate record.
 
 ## 7. Kế hoạch commit
 
-1. `feat(projection): reconcile authoritative profile snapshots`
-   - Thay đổi: add the extension snapshot producer and host projection state/reconciler seams, profile/context validation, canonical snapshot digest, and atomic full-snapshot replacement under the owned paths.
-   - Cách kiểm tra: run `python3 tests/projection/phase-05/run_fixtures.py --suite phase-05 --fixtures fixtures/projection/phase-05 --only FX-PROJECTION-SNAPSHOT-AUTHORITY,FX-PROJECTION-ATOMIC-REPLACE,FX-PROJECTION-PROFILE-BOUNDARY --strict`; assert one complete committed state and no cross-profile mutation.
-2. `feat(projection): apply ordered deltas and revision fences`
-   - Thay đổi: add effective-event revision allocation, sequence/predecessor checks, exact duplicate acknowledgement, stale/conflict/gap handling, remove semantics, and resync outcomes.
-   - Cách kiểm tra: run `go test ./host/... ./tests/projection/phase-05 -run 'TestProjection_(Delta|Revision|Duplicate|Stale|Gap)' -count=1` with `FX-PROJECTION-ORDERED-DELTAS`, `FX-PROJECTION-DUPLICATE-DELTA`, and `FX-PROJECTION-STALE-REVISION`.
-3. `feat(projection): recover profile state across restart`
-   - Thay đổi: add fresh-epoch/session fencing, missed-event snapshot recovery, private/context partition handoff, and committed-state/index readiness callbacks for IP-09/IP-10.
-   - Cách kiểm tra: run `FX-PROJECTION-MISSED-EVENT` and `FX-PROJECTION-RESTART`; verify old epoch work is rejected, new snapshot is required before ready, and final IDs equal the browser oracle.
-4. `test(projection): prove deterministic convergence and isolation`
-   - Thay đổi: add the full phase fixture corpus, deterministic permutation/replay tests, atomic-read observer, and extension/host parity checks.
-   - Cách kiểm tra: run `node --test tests/projection/phase-05/*.test.mjs`, `go test ./host/... ./tests/projection/phase-05 -count=1`, and the strict Python fixture runner; require zero duplicate identities and byte-equivalent canonical outputs for repeated inputs.
-5. `docs(implementation): add phase 05 profile projection and reconciliation`
-   - Thay đổi: publish this standalone phase plan only; implementation commits above are future work and must not be mixed into the documentation branch.
-   - Cách kiểm tra: run `git diff --check`; validate exactly one metadata block, exactly ten numbered headings, resolving canonical/skill/context links, and a path-only diff containing this phase file.
+1. `feat(projection): implement ip-05-t01`
+   - Task IDs: `IP-05-T01`.
+   - Owned target paths: `extension/src/projection/reconciler.ts` (to-create), `host/internal/projection/state.go` (to-create), `host/internal/projection/reconciler.go` (to-create), `fixtures/projection/phase-05/` (to-create), `tests/projection/phase-05/` (to-create).
+   - Behavior: **Define the projection boundary:** map IP-02 `ProjectionState`/`EligibleTabRecord` and IP-04 normalized event fields into the extension producer and host reconciler packages. Make `profile_id`, `context_kind`, `projection_epoch`, and `projection_revision` mandatory partition/fence fields; reject synthetic identity fallbacks.
+   - Fixture and command: IP-02, IP-04; run `python3 tests/projection/phase-05/run_fixtures.py --suite phase-05 --fixtures fixtures/projection/phase-05 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Define the projection boundary:** map IP-02 `ProjectionState`/`EligibleTabRecord` and IP-04 normalized event fields into the extension producer and host reconciler packages. Make `profile_id`, `context_kind`, `projection_epoch`, and `projection_revision` mandatory partition/fence fields; reject synthetic identity fallbacks.
+   - Dependency gate: all index.md dependencies for IP-05 have merged to dev; phase work branch starts from latest origin/dev.
+
+2. `feat(projection): implement ip-05-t02`
+   - Task IDs: `IP-05-T02`.
+   - Owned target paths: `extension/src/projection/reconciler.ts` (to-create), `host/internal/projection/state.go` (to-create), `host/internal/projection/reconciler.go` (to-create), `fixtures/projection/phase-05/` (to-create), `tests/projection/phase-05/` (to-create).
+   - Behavior: **Acquire and validate authoritative snapshots:** accept a snapshot as authority only when the browser call completed for the known current profile/context and every record passes IP-02 bounds/identity checks. Distinguish an intentional successful empty snapshot from permission failure, partial read, or unavailable profile state.
+   - Fixture and command: IP-02; run `python3 tests/projection/phase-05/run_fixtures.py --suite phase-05 --fixtures fixtures/projection/phase-05 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Acquire and validate authoritative snapshots:** accept a snapshot as authority only when the browser call completed for the known current profile/context and every record passes IP-02 bounds/identity checks. Distinguish an intentional successful empty snapshot from permission failure, partial read, or unavailable profile state.
+   - Dependency gate: all index.md dependencies for IP-05 have merged to dev; phase work branch starts from latest origin/dev.
+
+3. `feat(projection): implement ip-05-t03`
+   - Task IDs: `IP-05-T03`.
+   - Owned target paths: `extension/src/projection/reconciler.ts` (to-create), `host/internal/projection/state.go` (to-create), `host/internal/projection/reconciler.go` (to-create), `fixtures/projection/phase-05/` (to-create), `tests/projection/phase-05/` (to-create).
+   - Behavior: **Canonicalize snapshot input:** sort by immutable `TabIdentity`, compute a bounded digest for duplicate/conflict comparison, reject duplicate identities and cross-profile records, preserve explicit absent optional fields, and ensure equivalent input order produces one canonical output.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/projection/phase-05/run_fixtures.py --suite phase-05 --fixtures fixtures/projection/phase-05 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Canonicalize snapshot input:** sort by immutable `TabIdentity`, compute a bounded digest for duplicate/conflict comparison, reject duplicate identities and cross-profile records, preserve explicit absent optional fields, and ensure equivalent input order produces one canonical output.
+   - Dependency gate: all index.md dependencies for IP-05 have merged to dev; phase work branch starts from latest origin/dev.
+
+4. `feat(projection): implement ip-05-t04`
+   - Task IDs: `IP-05-T04`.
+   - Owned target paths: `extension/src/projection/reconciler.ts` (to-create), `host/internal/projection/state.go` (to-create), `host/internal/projection/reconciler.go` (to-create), `fixtures/projection/phase-05/` (to-create), `tests/projection/phase-05/` (to-create).
+   - Behavior: **Allocate epochs and revisions:** initialize at revision `0`; assign revision `1` to the first authoritative snapshot in a new epoch; increment one time per accepted effective event; never compare or reuse revisions across a new epoch. Start a fresh epoch for worker restart, host reconnect, or a full-resync lineage so stale in-flight work is fenced.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/projection/phase-05/run_fixtures.py --suite phase-05 --fixtures fixtures/projection/phase-05 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Allocate epochs and revisions:** initialize at revision `0`; assign revision `1` to the first authoritative snapshot in a new epoch; increment one time per accepted effective event; never compare or reuse revisions across a new epoch. Start a fresh epoch for worker restart, host reconnect, or a full-resync lineage so stale in-flight work is fenced.
+   - Dependency gate: all index.md dependencies for IP-05 have merged to dev; phase work branch starts from latest origin/dev.
+
+5. `feat(projection): implement ip-05-t05`
+   - Task IDs: `IP-05-T05`.
+   - Owned target paths: `extension/src/projection/reconciler.ts` (to-create), `host/internal/projection/state.go` (to-create), `host/internal/projection/reconciler.go` (to-create), `fixtures/projection/phase-05/` (to-create), `tests/projection/phase-05/` (to-create).
+   - Behavior: **Implement ordered delta reduction:** require current profile/context/epoch and the expected predecessor revision/sequence; stage field updates by `TabIdentity`; retain effective title, URL, window, group, pinned, active, eligibility, and remove transitions; commit each valid effective event exactly once. An all-or-nothing batch must not expose earlier operations if a later operation is invalid.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/projection/phase-05/run_fixtures.py --suite phase-05 --fixtures fixtures/projection/phase-05 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Implement ordered delta reduction:** require current profile/context/epoch and the expected predecessor revision/sequence; stage field updates by `TabIdentity`; retain effective title, URL, window, group, pinned, active, eligibility, and remove transitions; commit each valid effective event exactly once. An all-or-nothing batch must not expose earlier operations if a later operation is invalid.
+   - Dependency gate: all index.md dependencies for IP-05 have merged to dev; phase work branch starts from latest origin/dev.
+
+6. `feat(projection): implement ip-05-t06`
+   - Task IDs: `IP-05-T06`.
+   - Owned target paths: `extension/src/projection/reconciler.ts` (to-create), `host/internal/projection/state.go` (to-create), `host/internal/projection/reconciler.go` (to-create), `fixtures/projection/phase-05/` (to-create), `tests/projection/phase-05/` (to-create).
+   - Behavior: **Handle duplicates, stale events, and gaps:** acknowledge an exact already-consumed event without advancing revision; classify lower/old epoch, wrong predecessor, missing sequence, changed duplicate, unknown tab update, and invalid remove as stale/conflict/gap; preserve the last committed map and emit `resync_required` where continuity is uncertain.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/projection/phase-05/run_fixtures.py --suite phase-05 --fixtures fixtures/projection/phase-05 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Handle duplicates, stale events, and gaps:** acknowledge an exact already-consumed event without advancing revision; classify lower/old epoch, wrong predecessor, missing sequence, changed duplicate, unknown tab update, and invalid remove as stale/conflict/gap; preserve the last committed map and emit `resync_required` where continuity is uncertain.
+   - Dependency gate: all index.md dependencies for IP-05 have merged to dev; phase work branch starts from latest origin/dev.
+
+7. `feat(projection): implement ip-05-t07`
+   - Task IDs: `IP-05-T07`.
+   - Owned target paths: `extension/src/projection/reconciler.ts` (to-create), `host/internal/projection/state.go` (to-create), `host/internal/projection/reconciler.go` (to-create), `fixtures/projection/phase-05/` (to-create), `tests/projection/phase-05/` (to-create).
+   - Behavior: **Replace atomically:** build and validate a candidate map off to the side, publish one immutable committed state only after every record passes, and notify the index handoff once. During staging failure or cancellation, readers keep the previous complete state; no partial map, duplicate identity, or transient empty map is observable.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/projection/phase-05/run_fixtures.py --suite phase-05 --fixtures fixtures/projection/phase-05 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Replace atomically:** build and validate a candidate map off to the side, publish one immutable committed state only after every record passes, and notify the index handoff once. During staging failure or cancellation, readers keep the previous complete state; no partial map, duplicate identity, or transient empty map is observable.
+   - Dependency gate: all index.md dependencies for IP-05 have merged to dev; phase work branch starts from latest origin/dev.
+
+8. `feat(projection): implement ip-05-t08`
+   - Task IDs: `IP-05-T08`.
+   - Owned target paths: `extension/src/projection/reconciler.ts` (to-create), `host/internal/projection/state.go` (to-create), `host/internal/projection/reconciler.go` (to-create), `fixtures/projection/phase-05/` (to-create), `tests/projection/phase-05/` (to-create).
+   - Behavior: **Recover after restart and reconnect:** clear or quarantine old-session state, bind the new session to the expected profile, require the new-epoch full snapshot before `Ready`, discard old private records and pending deltas, and expose `SnapshotRequired`/`Recovering` rather than serving silently stale state.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/projection/phase-05/run_fixtures.py --suite phase-05 --fixtures fixtures/projection/phase-05 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Recover after restart and reconnect:** clear or quarantine old-session state, bind the new session to the expected profile, require the new-epoch full snapshot before `Ready`, discard old private records and pending deltas, and expose `SnapshotRequired`/`Recovering` rather than serving silently stale state.
+   - Dependency gate: all index.md dependencies for IP-05 have merged to dev; phase work branch starts from latest origin/dev.
+
+9. `feat(projection): implement ip-05-t09`
+   - Task IDs: `IP-05-T09`.
+   - Owned target paths: `extension/src/projection/reconciler.ts` (to-create), `host/internal/projection/state.go` (to-create), `host/internal/projection/reconciler.go` (to-create), `fixtures/projection/phase-05/` (to-create), `tests/projection/phase-05/` (to-create).
+   - Behavior: **Enforce profile/context isolation:** keep separate state partitions and counters for profiles and normal/private contexts, reject mismatched envelope/record/event profile IDs before mutation, and prove equal browser IDs in different profiles cannot collide in the host map or handoff.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/projection/phase-05/run_fixtures.py --suite phase-05 --fixtures fixtures/projection/phase-05 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Enforce profile/context isolation:** keep separate state partitions and counters for profiles and normal/private contexts, reject mismatched envelope/record/event profile IDs before mutation, and prove equal browser IDs in different profiles cannot collide in the host map or handoff.
+   - Dependency gate: all index.md dependencies for IP-05 have merged to dev; phase work branch starts from latest origin/dev.
+
+10. `feat(projection): implement ip-05-t10`
+   - Task IDs: `IP-05-T10`.
+   - Owned target paths: `extension/src/projection/reconciler.ts` (to-create), `host/internal/projection/state.go` (to-create), `host/internal/projection/reconciler.go` (to-create), `fixtures/projection/phase-05/` (to-create), `tests/projection/phase-05/` (to-create).
+   - Behavior: **Publish safe handoff metadata:** send only committed epoch/revision/count/identity references, status, digest/version, durations, and bounded error classes to IP-07/IP-09/IP-10/IP-16. Never put raw title, URL, query, token, or page values in divergence diagnostics.
+   - Fixture and command: IP-07, IP-09, IP-10, IP-16; run `python3 tests/projection/phase-05/run_fixtures.py --suite phase-05 --fixtures fixtures/projection/phase-05 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Publish safe handoff metadata:** send only committed epoch/revision/count/identity references, status, digest/version, durations, and bounded error classes to IP-07/IP-09/IP-10/IP-16. Never put raw title, URL, query, token, or page values in divergence diagnostics.
+   - Dependency gate: all index.md dependencies for IP-05 have merged to dev; phase work branch starts from latest origin/dev.
+
+11. `test(projection): implement ip-05-t11`
+   - Task IDs: `IP-05-T11`.
+   - Owned target paths: `extension/src/projection/reconciler.ts` (to-create), `host/internal/projection/state.go` (to-create), `host/internal/projection/reconciler.go` (to-create), `fixtures/projection/phase-05/` (to-create), `tests/projection/phase-05/` (to-create).
+   - Behavior: **Add fixture-driven tests:** implement all phase-05 fixtures and assert exact identity sets, record fields, lifecycle/status, revision/epoch transitions, profile boundaries, duplicate behavior, atomic visibility, and canonical output. Run both extension-side and host-side consumers against the same fixture schemas.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/projection/phase-05/run_fixtures.py --suite phase-05 --fixtures fixtures/projection/phase-05 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Add fixture-driven tests:** implement all phase-05 fixtures and assert exact identity sets, record fields, lifecycle/status, revision/epoch transitions, profile boundaries, duplicate behavior, atomic visibility, and canonical output. Run both extension-side and host-side consumers against the same fixture schemas.
+   - Dependency gate: all index.md dependencies for IP-05 have merged to dev; phase work branch starts from latest origin/dev.
+
+12. `feat(projection): implement ip-05-t12`
+   - Task IDs: `IP-05-T12`.
+   - Owned target paths: `extension/src/projection/reconciler.ts` (to-create), `host/internal/projection/state.go` (to-create), `host/internal/projection/reconciler.go` (to-create), `fixtures/projection/phase-05/` (to-create), `tests/projection/phase-05/` (to-create).
+   - Behavior: **Exercise the recovery sequence:** from the repository root, drive snapshot → ordered delta → dropped event → `resync_required` → new authoritative snapshot → index handoff, then repeat through a fresh session/epoch. The final committed IDs must equal the eligible browser oracle and contain no duplicate record.
+   - Fixture and command: the observable fixture/outcome stated by this task; run `python3 tests/projection/phase-05/run_fixtures.py --suite phase-05 --fixtures fixtures/projection/phase-05 --strict`. This is a future check until its declared source and fixture prerequisites exist.
+   - Observable result before commit: **Exercise the recovery sequence:** from the repository root, drive snapshot → ordered delta → dropped event → `resync_required` → new authoritative snapshot → index handoff, then repeat through a fresh session/epoch. The final committed IDs must equal the eligible browser oracle and contain no duplicate record.
+   - Dependency gate: all index.md dependencies for IP-05 have merged to dev; phase work branch starts from latest origin/dev.
 
 ## 8. Kiểm chứng và nghiệm thu
 
