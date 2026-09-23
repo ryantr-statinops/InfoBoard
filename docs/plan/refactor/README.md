@@ -1,35 +1,58 @@
-# Refactor workspace
+# InfoBoard product refactor
 
 ## Status
 
-`discovery`
+`product-specification`
 
-This workspace records the restart of the product direction. The previous InfoBoard idea is retired for this refactor. Its documentation remains in the repository as historical material only.
+This directory is the source of truth for the rebuilt InfoBoard product. The old InfoBoard documentation remains historical and does not define this product. Implementation work starts only after the documents in this directory are internally consistent and the acceptance criteria are testable.
 
-## Current direction
+## Product definition
 
-The first product direction under evaluation is a Chromium-first tab search extension:
+InfoBoard is a Chromium desktop extension with a local companion runtime for fast, keyboard-first search and switching across the user's open browser tabs.
 
 ```text
-Keyboard shortcut -> instant search UI -> fuzzy/ranked tab results -> switch to tab
+configurable shortcut
+-> focused search surface
+-> exact/fuzzy query over current open tabs
+-> deterministic contextual ranking
+-> selected-tab activation
 ```
 
-The target runtime is a warm Go process or a stable Native Messaging host. Fast lexical search is the hot path. ChromaDB is optional and must not block normal tab switching.
+The product target is a complete, installable, recoverable desktop product. It is not framed as an MVP-first sequence. Delivery order may reduce implementation risk, but no temporary behavior is promoted to the product contract without an explicit decision.
 
-## Rules
+## Binding product boundaries
 
-1. Start from a user problem, not from a database.
-2. Chromium desktop is the first support boundary.
-3. Keep the hot path local, bounded, and measurable.
-4. Treat SQLite as persistence only if the product needs persistence.
-5. Add ChromaDB, RocksDB, or DuckDB only when a concrete behavior requires them.
-6. Record provisional decisions here before implementation work begins.
-7. Do not copy old InfoBoard requirements, APIs, schemas, or migration plans into the new product.
+- Browsers: Chrome and Edge desktop.
+- Operating systems: Linux, macOS, and Windows.
+- Browser data: open tabs, title, URL, domain, window, tab group, pinned state, and recent activation.
+- Search: local lexical search over normalized tab metadata with deterministic context and recency ranking.
+- Runtime: Manifest V3 extension plus a Go Native Messaging host that owns the in-memory index and remains resident while the connection is useful.
+- Persistence: local SQLite for configuration, installation state, and bounded activation metadata; current tab state is rebuildable from the browser.
+- Privacy: no cookies, local storage, network interception, whole browsing history, cloud indexing, or page-content indexing in the product contract.
 
-## Documents
+## Document map
 
-1. [Browser landscape](browser-landscape.md)
-2. [Tab search idea brief](idea-brief.md)
-3. [Runtime architecture](runtime-architecture.md)
-4. [Decision log](decisions.md)
-5. [Refactor roadmap](roadmap.md)
+| Document | Contract |
+| --- | --- |
+| [Product contract](idea-brief.md) | User, problem, outcomes, capabilities, boundaries, and complete product behavior |
+| [Requirements](requirements.md) | Functional, quality, privacy, compatibility, and operational requirements |
+| [Browser landscape](browser-landscape.md) | Browser APIs, permissions, profiles, platform constraints, and support boundary |
+| [User experience](user-experience.md) | Journeys, states, interaction rules, accessibility, and failure presentation |
+| [Domain and privacy](domain-and-privacy.md) | Entities, data lifecycle, trust boundaries, privacy rules, and security invariants |
+| [Search and ranking](search-and-ranking.md) | Query parsing, normalization, scoring, deterministic ordering, and explainability |
+| [Architecture](architecture.md) | Components, ownership, data flow, process lifecycle, and failure isolation |
+| [Runtime protocol](runtime-protocol.md) | Native Messaging frames, synchronization, requests, responses, and compatibility |
+| [Persistence and lifecycle](persistence-and-lifecycle.md) | SQLite responsibilities, migrations, startup, shutdown, recovery, and uninstall |
+| [Packaging and operations](packaging-and-operations.md) | Install, update, permissions, OS packaging, diagnostics, and recovery |
+| [Verification and acceptance](verification-and-acceptance.md) | Test seams, measurable acceptance criteria, compatibility matrix, and release gates |
+| [Roadmap](roadmap.md) | Dependency-ordered delivery slices for the complete product target |
+| [Decision log](decisions.md) | Binding decisions, rejected alternatives, and revisit triggers |
+
+## Rules for future changes
+
+1. Update the product contract before adding a capability.
+2. Every new data source must document user value, privacy impact, retention, and removal behavior.
+3. Every runtime or storage choice must name its owner, failure behavior, and measurable acceptance signal.
+4. Search results must remain deterministic for the same tab projection, query, and timestamp inputs.
+5. Semantic retrieval, page content, history, and cloud services are separate proposals; they are not implicit dependencies.
+6. Changes that weaken browser or privacy boundaries require a decision-log entry before implementation.
