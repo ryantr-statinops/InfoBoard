@@ -354,5 +354,42 @@
       "selection_rule": "Implement the planned Python corpus validator only after its source path and invocation are selected; before then use throwaway validation without claiming a repository command exists.",
       "pass_signal": "Requirement ownership, task/commit mappings, fixture schema, IDs, local links, and phase acceptance seams validate without duplicate owners or unowned requirements."
     }
+  ],
+  "global_invariants": [
+    {
+      "id": "INV-001",
+      "statement": "Only the current browser profile and its authorized context may contribute to a projection, query, result reference, or durable record.",
+      "observable_guard": "A cross-profile input is rejected before mutation and produces no cross-profile result or activation reference."
+    },
+    {
+      "id": "INV-002",
+      "statement": "Projection revisions advance only for accepted effective changes within their current epoch; stale or conflicting work cannot publish partial state.",
+      "observable_guard": "Accepted revisions are monotonic, rejected events leave the last committed projection unchanged, and stale epochs require an authoritative snapshot."
+    },
+    {
+      "id": "INV-003",
+      "statement": "Identical projection, query, timestamp, context, and ranking-model inputs produce identical ordered results and explanations.",
+      "observable_guard": "Repeated fixture runs produce byte-equivalent ordered opaque IDs, scores, and bounded explanation data despite candidate insertion-order changes."
+    },
+    {
+      "id": "INV-004",
+      "statement": "Diagnostics and status output exclude raw titles, full URLs, query strings, page contents, credentials, and private record values.",
+      "observable_guard": "Synthetic sensitive sentinels are absent from every emitted diagnostic/status record; only bounded counts, versions, states, and error classes remain."
+    },
+    {
+      "id": "INV-005",
+      "statement": "Payloads, record counts, request durations, and concurrency are bounded before allocation or partial application.",
+      "observable_guard": "At-bound inputs pass; over-bound inputs return a typed bounded failure with no partial state mutation or unbounded queued work."
+    },
+    {
+      "id": "INV-006",
+      "statement": "Browser activation fails closed unless the selected result's profile, identity, epoch, revision, and current browser state are explicitly valid.",
+      "observable_guard": "Stale, removed, reused, or mismatched references produce zero activation calls and never silently select another tab."
+    },
+    {
+      "id": "INV-007",
+      "statement": "Reset and uninstall remove only InfoBoard-owned local state and never mutate browser tabs, history, or unrelated user data.",
+      "observable_guard": "Owned records are absent after cleanup while unrelated sentinels and browser state remain unchanged; repeating cleanup is idempotent."
+    }
   ]
 }
