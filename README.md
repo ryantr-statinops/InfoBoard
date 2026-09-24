@@ -6,7 +6,7 @@ The extension owns browser permissions, tab observation, the focused search surf
 
 ## Project status
 
-IP-01 and IP-02 are complete in dev. IP-03's extension scaffold is implemented on a local branch as a browser-toolbar popup with open (Ctrl+Shift+Y / Command+Shift+Y) and close (Ctrl+Shift+X / Command+Shift+X) shortcuts. Build, unit/domain checks, corpus, fixtures, and targeted Go checks pass; Chrome/Edge browser acceptance and integration remain blocked by the browser environment.
+IP-01 and IP-02 are complete in dev. IP-03 is merged into dev as a browser-toolbar popup with open (Ctrl+Shift+Y / Command+Shift+Y) and close (Ctrl+Shift+X / Command+Shift+X) shortcuts. Build, unit/domain checks, corpus, fixtures, and targeted Go checks pass. Chrome/Edge popup acceptance remains unverified; it was skipped at the user's direction.
 
 - [Canonical product specification](docs/plan/refactor/README.md)
 - [Implementation execution dashboard](docs/plan/implementation/README.md)
