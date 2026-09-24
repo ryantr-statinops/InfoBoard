@@ -17,12 +17,12 @@ function reportError(doc: Document, code: 'profile-unavailable' | 'query-input-m
 }
 
 export async function initializeSearchSurface(doc: Document = document): Promise<void> {
+  registerSurfaceDismissal(doc);
   const context = await adapter.currentProfileContext();
   if (!context.ok) { reportError(doc, 'profile-unavailable'); return; }
   const input = doc.querySelector<HTMLInputElement>('[data-search-input]');
   if (!input) { reportError(doc, 'query-input-missing'); return; }
   input.value = '';
-  registerSurfaceDismissal(doc);
   doc.documentElement.dataset.searchSession = crypto.randomUUID();
   const announceReady = () => {
     if (doc.activeElement !== input) { reportError(doc, 'focus-unavailable'); return; }

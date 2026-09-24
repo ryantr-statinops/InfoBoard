@@ -3,9 +3,22 @@ import { readFile } from 'node:fs/promises';
 import { parseProfileID } from '../../extension/domain/index.js';
 import { ChromeBrowserAdapter, resetProfileAfterDisconnect, type BrowserApi } from '../../extension/src/browser/browser-adapter.js';
 
+type PopupMessageListener = (message: unknown, sender: unknown, sendResponse: (response: unknown) => void) => boolean | void;
+
 function browserApi(readValue: unknown | null, recordWindowRead: () => void, calls: string[]): BrowserApi {
+  let popupMessageListener: PopupMessageListener | undefined;
   return {
-    runtime: { onInstalled: { addListener: () => undefined }, onStartup: { addListener: () => undefined } },
+    runtime: {
+      onInstalled: { addListener: () => undefined },
+      onStartup: { addListener: () => undefined },
+      onMessage: { addListener: listener => { popupMessageListener = listener; } },
+      sendMessage: async message => {
+        if (!popupMessageListener) throw new Error('No popup message listener');
+        let response: unknown;
+        popupMessageListener(message, {}, value => { response = value; });
+        return response;
+      },
+    },
     commands: { onCommand: { addListener: () => undefined } },
     action: { openPopup: async options => { calls.push(`open-popup:${options?.windowId ?? 'current'}`); } },
     windows: { getLastFocused: async () => { recordWindowRead(); return { id: 1, incognito: false }; } },
@@ -40,6 +53,16 @@ test('the action popup opens in the focused browser window without querying page
   expect(opened).toEqual({ ok: true, value: undefined });
   expect(windowReads).toBe(1);
   expect(calls).toEqual(['read:profile_id', 'open-popup:current']);
+});
+
+test('close-search is forwarded only to the popup close listener', async () => {
+  const calls: string[] = [];
+  const adapter = new ChromeBrowserAdapter(browserApi(null, () => undefined, calls));
+  let closed = false;
+  adapter.registerPopupCloseListener(() => { closed = true; });
+  const result = await adapter.closeSearchSurface();
+  expect(result).toEqual({ ok: true, value: undefined });
+  expect(closed).toBe(true);
 });
 
 test('explicit identity reset disconnects before removing the sole approved key', async () => {

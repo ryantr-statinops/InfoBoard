@@ -10,8 +10,8 @@
 
 ## 1. Mục tiêu
 
-- Tạo nền tảng Manifest V3 tối thiểu cho Chrome và Edge desktop với đúng một command cấu hình được và browser action popup của InfoBoard bên trong thanh công cụ trình duyệt.
-- Command gọi `chrome.action.openPopup()` cho cửa sổ hiện hành; popup 480×600 mở ngay trong browser chrome, focus ô query trước khi nhận phím, không tạo OS window/tab mới và không điều hướng hay đổi tab đang chọn.
+- Tạo nền tảng Manifest V3 tối thiểu cho Chrome và Edge desktop với hai shortcut cấu hình được: `open-search` để mở browser action popup và `close-search` để đóng popup.
+- `open-search` gọi action popup 480×600 bên trong browser chrome; `close-search` đóng popup đang mở. Ô query được focus trước khi nhận phím; cả hai shortcut giữ nguyên tab đang chọn và không tạo OS window/tab mới.
 - Tách quyền browser khỏi logic popup bằng browser-adapter seam dùng chung Chrome/Edge. Worker phải hoạt động sau startup/suspension/restart mà không dựa vào global state sống lâu.
 - Chốt contract cho các phase sau: IP-04 sở hữu tab observation/reconcile, IP-12/IP-13 sở hữu query và UI states đầy đủ; phase này sở hữu bootstrap, action-popup focus handoff và lifecycle boundary.
 - Đáp ứng FR-001 làm requirement owner; cung cấp các seam cần thiết cho FR-002, FR-006, FR-008 và các baseline NFR-007, NFR-008, NFR-010.
@@ -19,14 +19,14 @@
 ## 2. Phạm vi
 
 - Bao gồm:
-  - Manifest V3 với extension identity, version, `action.default_popup` trỏ tới search shell, service-worker entrypoint và một command định danh `open-search`; cả toolbar action và configured command mở cùng extension-owned popup.
-  - Command handler idempotent/single-flight: synchronously invoke the browser action popup from the user command gesture; the popup validates the stored profile ID before becoming ready or accepting input. No OS window/tab creation or current-tab navigation.
+  - Manifest V3 với `action.default_popup`, module service worker và hai command định danh `open-search`/`close-search`; toolbar action và `open-search` cùng mở một extension-owned popup.
+  - Command handler single-flight: mở bằng action popup API trực tiếp trong user gesture hoặc gửi close signal tới popup; không tạo OS window/tab và không điều hướng tab đang chọn.
   - `surface-entrypoint` tạo session mới, reset query, focus input với `preventScroll` sau DOM ready và phát ready/error signal mà không tái sử dụng query cũ.
   - Browser adapter chỉ expose profile-context/storage contract, action-popup opening, command registration và lifecycle signals; không expose raw browser objects hoặc gọi tabs/page APIs ngoài boundary.
   - Service-worker lifecycle: listeners top-level, profile ID khởi tạo chỉ trong install event, command hoạt động sau restart, không có timer/network daemon.
   - Phase-local permissions are exactly `storage` and `windows`; `storage.local` may use only key `profile_id`. `action` and `commands` are manifest keys, not permissions. No `tabs`, host permissions, `sidePanel`, `scripting`, or page access in IP-03; defer `tabs`/`tabGroups` to IP-04 and `nativeMessaging` to IP-07.
   - Accessibility handoff tối thiểu: query input có accessible name/label, là control đầu tiên nhận focus khi surface sẵn sàng, có visible focus style do shell cung cấp và không phụ thuộc animation; detailed result labels, live regions, reduced-motion styling và keyboard result navigation bàn giao cho IP-13.
-  - Fixture và test seams cho command invocation, existing-surface focus, focus-before-typing, Esc dismissal, manifest permissions, worker suspension/resume và Chrome/Edge adapter parity.
+  - Fixture/test seams cover both shortcuts, toolbar popup invocation, focus-before-typing, single-flight open/close, Escape, explicit close, manifest permissions, worker suspension/restart and Chrome/Edge parity.
 - Ngoài phạm vi:
   - Không implement tab create/update/move/group/pin/activate/remove observation, eligibility filtering, private-context policy hoặc projection reconciliation; các boundary đó thuộc IP-04/IP-05.
   - Không implement Native Messaging frame/envelope/handshake, Go host lifecycle, SQLite, lexical index, ranking, query orchestration, health hoặc diagnostics; các boundary đó thuộc IP-06 đến IP-12.
@@ -43,7 +43,7 @@
 
 ## 4. Đầu ra cần bàn giao
 
-- `extension/manifest.json`: Manifest V3 with the `open-search` command, `action.default_popup` set to `dist/search/surface-shell.html`, service-worker module, and only the phase-local `storage` and `windows` permissions; no host permissions.
+- `extension/manifest.json`: Manifest V3 with `open-search`/`close-search` keyboard commands, `action.default_popup` pointing to the packaged search shell, service worker, only phase-local `storage`/`windows` permissions, and no host permissions.
 - `extension/src/background/service-worker.ts` (to-create): top-level listener registration, command dispatch, startup/install hooks, operation cancellation/recovery boundary và adapter construction. Không giữ projection/index state trong worker globals.
 - `extension/src/browser/browser-adapter.ts`: typed profile-context, identity-store, action-popup-open, command-listener, and lifecycle contracts; no tab creation/focus or page APIs.
 - `extension/src/search/surface-entrypoint.ts` (to-create): extension-page bootstrap, fresh search-session token, semantic query input lookup, focus handoff, close/dismiss event boundary và ready signal.
@@ -77,35 +77,35 @@
 
 ## 6. Công việc triển khai
 
-- [ ] `IP-03-T01` **Manifest và browser-popup boundary:** khai báo Manifest V3 với `action.default_popup: dist/search/surface-shell.html`, module service worker và command `open-search`. Phase-local permissions đúng là `storage` và `windows`; storage chỉ dùng key REF-013 `profile_id`. `action` và `commands` là manifest keys, không phải permissions. Không khai báo `tabs`, host permissions, `sidePanel` hay scripting trong IP-03.
+- [ ] `IP-03-T01` **Manifest và browser-popup boundary:** khai báo Manifest V3 với `action.default_popup: dist/search/surface-shell.html`, module service worker và `open-search`/`close-search` commands. Phase-local permissions đúng là `storage` và `windows`; storage chỉ dùng REF-013 key `profile_id`. `action` và `commands` là manifest keys, không phải permissions. Không khai báo `tabs`, host permissions, `sidePanel` hay scripting.
 
-- [ ] `IP-03-T02` **Permission fail-closed:** test built manifest có đúng `storage`, `windows`, một command, một action popup, không có `host_permissions`, và loại history/downloads/cookies/scripting/page access/permissions ngoài allowlist.
+- [ ] `IP-03-T02` **Permission fail-closed:** test built manifest có đúng `storage`, `windows`, hai command open/close, một action popup, không `host_permissions`, và không history/download/cookie/scripting/page access.
 - [ ] `IP-03-T03` **Browser adapter contract:** expose `currentProfileContext()`, `openSearchSurface()` using `chrome.action.openPopup()`, the identity-only profile store, and top-level command/lifecycle registration. Return bounded results; never expose raw Chrome/Edge objects.
-- [ ] `IP-03-T04` **Command dispatch:** a top-level `commands.onCommand` listener for `open-search` directly opens the action popup within the user gesture and single-flights duplicate calls. The popup validates profile identity before focus/ready; do not create, activate, or navigate tabs/windows.
+- [ ] `IP-03-T04` **Command dispatch:** `open-search` calls `chrome.action.openPopup()` synchronously from the keyboard user gesture and single-flights repeated opens; `close-search` sends a bounded close message to the open popup. The popup validates profile identity before focus/ready. Neither command creates, activates, or navigates tabs.
 - [ ] `IP-03-T05` **Popup bounds:** action popup là extension-owned resource `dist/search/surface-shell.html`, kích thước CSS 480×600; không tạo detached OS window hoặc load URL/asset ngoài extension package.
 - [ ] `IP-03-T06` **Keyboard focus handoff:** tạo session mới, reset query, chờ DOM ready rồi focus input với `preventScroll`; ready chỉ khi `document.activeElement` đúng input. Missing input/focus failure hiển thị status recoverable.
-- [ ] `IP-03-T07` **Dismissal boundary:** `Esc` và close button đóng action popup bằng popup lifecycle; không activate/navigate tab, ghi query, title, URL hoặc gọi page API.
+- [ ] `IP-03-T07` **Dismissal boundary:** `Esc`, the close button, and the configured `close-search` shortcut close the action popup. Dismissal never activates/navigates the selected tab or persists/logs query, title, or URL.
 - [ ] `IP-03-T08` **Service-worker lifecycle:** đăng ký listeners ở module evaluation, giữ chỉ bounded single-flight state, khởi tạo profile ID chỉ trong first-install, phục hồi từ extension storage sau restart; không polling/network/long-lived timer.
 - [ ] `IP-03-T09` **Browser parity:** Chrome và Edge dùng cùng action-popup contract và fixture, chỉ khác browser channel; API errors được normalize trong adapter.
 - [ ] `IP-03-T10` **Handoff:** expose profile/context/session-ready seams; browser authority remains in extension; no host, projection or page-content responsibility enters this phase.
-- [ ] `IP-03-T11` **Targeted tests:** cover command popup, focus-before-type, bounds, dismissal, duplicate command, invalid profile, storage failure, restart persistence and zero network/page reads; browser assertions must run in Chrome and Edge.
+- [ ] `IP-03-T11` **Targeted tests:** cover `open-search` and `close-search` shortcuts, popup focus, single-flight opening, missing/corrupt profile ID, storage failures, worker restart, Escape, explicit close, and no network/page read.
 
 ## 7. Kế hoạch commit
 
 1. `feat(extension): implement ip-03-t01`
    - Task IDs: `IP-03-T01`.
    - Owned target paths: extension/manifest.json.
-   - Behavior: build `manifest_version: 3` with `action.default_popup` for the focused search shell, one configurable `open-search` command, and exactly `storage`/`windows` permissions. The action toolbar key is not a permission.
+   - Behavior: configure the browser action popup resource, one `open-search` command and one `close-search` command; only `storage` and `windows` are requested, with storage restricted to REF-013 key `profile_id`.
    - Fixture and command: read `fixtures/extension/command-open-surface.json` directly, then run `npm run build:extension`, `BROWSER=chrome npm run test:extension -- tests/extension/manifest-permissions.test.ts tests/extension/command-open-surface.test.ts tests/extension/service-worker-lifecycle.test.ts`, and the identical command with `BROWSER=edge`.
-   - Observable result before commit: the built manifest declares the toolbar action popup, one configurable command, exactly the phase-local `storage` and `windows` permissions, and no host permissions.
+   - Observable result before commit: the built manifest includes the toolbar popup, both keyboard commands, exactly the phase-local `storage` and `windows` permissions, and no host permissions.
    - Dependency gate: all index.md dependencies for IP-03 have merged to dev; phase work branch starts from latest origin/dev.
 
 2. `test(extension): implement ip-03-t02`
    - Task IDs: `IP-03-T02`.
    - Owned target paths: `extension/manifest.json` (to-create); `extension/src/background/service-worker.ts` (to-create); `extension/src/browser/browser-adapter.ts` (to-create); `extension/src/search/surface-entrypoint.ts` (to-create); `extension/src/search/surface-shell.html` (to-create); `fixtures/extension/command-open-surface.json` (to-create); `tests/extension/manifest-permissions.test.ts` (to-create); `tests/extension/command-open-surface.test.ts` (to-create); `tests/extension/service-worker-lifecycle.test.ts` (to-create).
-   - Behavior: parse the built manifest and require exactly `storage` and `windows`, one `open-search` command, an extension-owned `action.default_popup`, absent `host_permissions`, and no history/download/cookie/page/scripting permissions.
+   - Behavior: manifest parser test requires exactly the `storage`/`windows` permissions, one action popup, `open-search` and `close-search` command declarations, and no host permissions or excluded browser-data permissions.
    - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-03 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
-   - Observable result before commit: any undeclared permission, host pattern, missing popup, duplicate command, or page-access capability fails the manifest audit.
+   - Observable result before commit: undeclared permissions, host patterns, an absent popup, or missing open/close command declarations fail the manifest audit.
    - Dependency gate: all index.md dependencies for IP-03 have merged to dev; phase work branch starts from latest origin/dev.
 
 3. `test(extension): implement ip-03-t03`
@@ -119,9 +119,9 @@
 4. `feat(extension): implement ip-03-t04`
    - Task IDs: `IP-03-T04`.
    - Owned target paths: `extension/manifest.json` (to-create); `extension/src/background/service-worker.ts` (to-create); `extension/src/browser/browser-adapter.ts` (to-create); `extension/src/search/surface-entrypoint.ts` (to-create); `extension/src/search/surface-shell.html` (to-create); `fixtures/extension/command-open-surface.json` (to-create); `tests/extension/manifest-permissions.test.ts` (to-create); `tests/extension/command-open-surface.test.ts` (to-create); `tests/extension/service-worker-lifecycle.test.ts` (to-create).
-   - Behavior: register a top-level `commands.onCommand` listener for `open-search`; call `chrome.action.openPopup()` synchronously from the user gesture, with bounded single-flight behavior. The popup validates stored profile identity before becoming ready; no tab/window mutation.
+   - Behavior: `open-search` calls `chrome.action.openPopup()` synchronously from the user gesture; `close-search` sends a close message to the popup. Single-flight repeated opens. Profile-ID validation happens in the popup before it becomes ready.
    - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-03 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
-   - Observable result before commit: the browser toolbar popup opens in the current window; missing/corrupt identity leaves the popup in a bounded recoverable error state and does not focus/accept a query.
+   - Observable result before commit: opening stays inside browser chrome; the close shortcut dismisses only the popup; missing/corrupt identity leaves the popup unready with a bounded status.
    - Dependency gate: all index.md dependencies for IP-03 have merged to dev; phase work branch starts from latest origin/dev.
 
 5. `feat(extension): implement ip-03-t05`
@@ -143,9 +143,9 @@
 7. `feat(extension): implement ip-03-t07`
    - Task IDs: `IP-03-T07`.
    - Owned target paths: `extension/manifest.json` (to-create); `extension/src/background/service-worker.ts` (to-create); `extension/src/browser/browser-adapter.ts` (to-create); `extension/src/search/surface-entrypoint.ts` (to-create); `extension/src/search/surface-shell.html` (to-create); `fixtures/extension/command-open-surface.json` (to-create); `tests/extension/manifest-permissions.test.ts` (to-create); `tests/extension/command-open-surface.test.ts` (to-create); `tests/extension/service-worker-lifecycle.test.ts` (to-create).
-   - Behavior: Escape and the explicit close control close the action popup itself. They never activate/navigate the current tab or persist/log query, title, or URL values.
+   - Behavior: Escape, explicit close, and `close-search` use the action-popup lifecycle; no tab activation/navigation or sensitive-value logging.
    - Fixture and command: IP-13; run `the exact phase-03 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
-   - Observable result before commit: dismissal removes the browser action popup and leaves the previously selected tab and window unchanged.
+   - Observable result before commit: all three dismissal paths close the popup and preserve the previously selected tab/window.
    - Dependency gate: all index.md dependencies for IP-03 have merged to dev; phase work branch starts from latest origin/dev.
 
 8. `feat(extension): implement ip-03-t08`
@@ -175,9 +175,9 @@
 11. `test(extension): implement ip-03-t11`
    - Task IDs: `IP-03-T11`.
    - Owned target paths: `extension/manifest.json` (to-create); `extension/src/background/service-worker.ts` (to-create); `extension/src/browser/browser-adapter.ts` (to-create); `extension/src/search/surface-entrypoint.ts` (to-create); `extension/src/search/surface-shell.html` (to-create); `fixtures/extension/command-open-surface.json` (to-create); `tests/extension/manifest-permissions.test.ts` (to-create); `tests/extension/command-open-surface.test.ts` (to-create); `tests/extension/service-worker-lifecycle.test.ts` (to-create).
-   - Behavior: test the configured command, action popup in the active browser window, single-flight behavior, storage fail-closed cases, first-input focus, Escape/close, browser-tab preservation, worker restart, and zero network/page reads.
+   - Behavior: test both configurable shortcuts, action popup focus and bounds, single-flight opening, close hotkey, Escape, explicit close, storage/profile fail-closed paths, restart, and zero page/network access.
    - Fixture and command: the observable fixture/outcome stated by this task; run `the exact phase-03 fixture/check command in Section 8 after its source prerequisite exists`. This is a future check until its declared source and fixture prerequisites exist.
-   - Observable result before commit: Chrome and Edge tests assert visible popup state and focus/dismiss behavior; fakes cover deterministic permission and API-error outcomes, never browser parity.
+   - Observable result before commit: browser tests assert the popup and active-tab state; fakes cover deterministic API failures but never stand in for Chrome/Edge parity.
    - Dependency gate: all index.md dependencies for IP-03 have merged to dev; phase work branch starts from latest origin/dev.
 
 ## 8. Kiểm chứng và nghiệm thu
@@ -185,12 +185,12 @@
 - [ ] From repository root, run `npm ci`, `npm run build:extension`, then `BROWSER=chrome npm run test:extension -- tests/extension/manifest-permissions.test.ts tests/extension/command-open-surface.test.ts tests/extension/service-worker-lifecycle.test.ts`. The fixture is read directly from `fixtures/extension/command-open-surface.json`.
 - [ ] Repeat with `BROWSER=edge npm run test:extension -- tests/extension/manifest-permissions.test.ts tests/extension/command-open-surface.test.ts tests/extension/service-worker-lifecycle.test.ts` using the Edge browser binary.
 - [ ] In each browser, invoke configured `open-search` without pointer input. Observe a browser-toolbar action popup (not a detached OS window), 480×600 CSS viewport, focused `#query`, and an unchanged active product tab/window.
-- [ ] Repeat after service-worker suspension/restart. The command must still open the action popup, single-flight duplicate invocations, and fail closed if profile identity is unavailable or the browser action API rejects the request.
-- [ ] Trigger `Esc` and the explicit close control. Observe that the action popup closes while the selected tab/window remains unchanged; no activation call or sensitive-field log occurs.
-- [ ] Parse the built MV3 manifest. Acceptance requires exactly the `storage` and `windows` permissions, action popup path `dist/search/surface-shell.html`, one `open-search` command, no `host_permissions`, and no history/download/cookie/page/scripting access.
+- [ ] Repeat after service-worker suspension/restart. `open-search` must still open the popup and single-flight duplicate opens; unavailable profile identity must leave the popup unready with a bounded recovery status.
+- [ ] Trigger the configured `close-search` shortcut (default Ctrl+Shift+X; Command+Shift+X on macOS), Escape, and the close control. Each closes only the popup and preserves the previously selected tab/window without activation or sensitive-value logging.
+- [ ] Parse the built MV3 manifest. Acceptance requires exactly the `storage` and `windows` permissions, action popup path `dist/search/surface-shell.html`, exactly `open-search` and `close-search` commands, no `host_permissions`, and no history/download/cookie/page/scripting access.
 - [ ] Run the accessibility smoke: accessible query label, visible focus, no animation-dependent focus, and usability at the declared popup viewport. Full result-list accessibility and reduced-motion evidence remain IP-13.
 - [ ] Intercept extension requests: zero network requests, page navigation/injection, page-content reads, or remote service calls.
-- [ ] Acceptance mapping: FR-001 by Chrome/Edge command settings plus action-popup command journey; FR-002 by focus-before-text; FR-006 by stable result/status mount points; FR-008 by dismissal preserving the active tab; NFR-007 by permission/request audit; NFR-008 by keyboard focus/accessibility; NFR-010 by Chrome/Edge release matrix.
+- [ ] Acceptance mapping: FR-001 by Chrome/Edge command settings plus open/close shortcut journeys; FR-002 by focus-before-text; FR-006 by stable result/status mount points; FR-008 by close/Escape preserving the active tab; NFR-007 by permission/request audit; NFR-008 by keyboard focus/accessibility; NFR-010 by Chrome/Edge release matrix.
 
 ## 9. Rủi ro và quyết định còn mở
 

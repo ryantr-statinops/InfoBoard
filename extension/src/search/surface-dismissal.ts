@@ -1,3 +1,7 @@
+import { ChromeBrowserAdapter } from '../browser/browser-adapter.js';
+
+const adapter = new ChromeBrowserAdapter();
+
 export function registerSurfaceDismissal(doc: Document): void {
   const close = () => { doc.defaultView?.close(); };
   doc.querySelector<HTMLInputElement>('[data-search-input]')?.addEventListener('keydown', event => {
@@ -7,4 +11,5 @@ export function registerSurfaceDismissal(doc: Document): void {
     }
   });
   doc.querySelector('[data-close-search]')?.addEventListener('click', close);
+  adapter.registerPopupCloseListener(close);
 }

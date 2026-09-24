@@ -6,12 +6,19 @@ export type BrowserResult<T> =
 export interface BrowserProfileContext { browserFamily: 'chrome' | 'edge'; profileId: ProfileID; contextKind: ContextKind }
 export interface BrowserAdapter {
   openSearchSurface(): Promise<BrowserResult<void>>;
+  closeSearchSurface(): Promise<BrowserResult<void>>;
   currentProfileContext(): Promise<BrowserResult<BrowserProfileContext>>;
   registerCommandListener(listener: (command: string) => void): void;
   registerLifecycleListeners(onInstall: (reason: string) => void, onStartup: () => void): void;
+  registerPopupCloseListener(listener: () => void): void;
 }
 export interface BrowserApi {
-  runtime: { onInstalled: { addListener(fn: (details: { reason: string }) => void): void }; onStartup: { addListener(fn: () => void): void } };
+  runtime: {
+    onInstalled: { addListener(fn: (details: { reason: string }) => void): void };
+    onStartup: { addListener(fn: () => void): void };
+    onMessage: { addListener(fn: (message: unknown, sender: unknown, sendResponse: (response: unknown) => void) => boolean | void): void };
+    sendMessage(message: unknown): Promise<unknown>;
+  };
   commands: { onCommand: { addListener(fn: (command: string) => void): void } };
   action: { openPopup(options?: { windowId?: number }): Promise<void> };
   windows: { getLastFocused(): Promise<{ id?: number; incognito?: boolean }> };
@@ -46,6 +53,14 @@ export class ChromeBrowserAdapter implements BrowserAdapter, ProfileIDStore {
     });
     this.api.runtime.onStartup.addListener(onStartup);
   }
+  registerPopupCloseListener(listener: () => void): void {
+    this.api.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      if (typeof message !== 'object' || message === null || !('type' in message) || message.type !== 'dismiss-search') return false;
+      listener();
+      sendResponse({ ok: true });
+      return false;
+    });
+  }
   async currentProfileContext(): Promise<BrowserResult<BrowserProfileContext>> {
     try {
       const profileId = parseProfileID(await this.read());
@@ -58,6 +73,12 @@ export class ChromeBrowserAdapter implements BrowserAdapter, ProfileIDStore {
   async openSearchSurface(): Promise<BrowserResult<void>> {
     try {
       await this.api.action.openPopup();
+      return { ok: true, value: undefined };
+    } catch (error) { return failure(error); }
+  }
+  async closeSearchSurface(): Promise<BrowserResult<void>> {
+    try {
+      await this.api.runtime.sendMessage({ type: 'dismiss-search' });
       return { ok: true, value: undefined };
     } catch (error) { return failure(error); }
   }
