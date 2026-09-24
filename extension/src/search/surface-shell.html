@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>InfoBoard Search</title>
+  <style>
+    html, body { box-sizing: border-box; width: 480px; height: 600px; margin: 0; overflow: auto; font: 16px system-ui, sans-serif; background: #fff; color: #151515; }
+    main { padding: 16px; }
+    input { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 2px solid #555; border-radius: 6px; font: inherit; }
+    input:focus-visible, button:focus-visible { outline: 3px solid #1463d5; outline-offset: 2px; }
+    button { margin-top: 12px; padding: 8px 12px; }
+    [data-search-ready="true"] input { border-color: #1463d5; }
+    [data-surface-status]:empty { display: none; }
+  </style>
+</head>
+<body>
+  <main>
+    <label for="query">Search open tabs</label>
+    <input id="query" data-search-input type="search" autocomplete="off" spellcheck="false">
+    <p data-surface-status role="status" aria-live="polite"></p>
+    <button type="button" data-close-search>Close search</button>
+  </main>
+  <script type="module" src="../src/search/surface-entrypoint.js"></script>
+</body>
+</html>

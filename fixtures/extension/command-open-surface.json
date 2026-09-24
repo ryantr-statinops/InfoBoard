@@ -1,0 +1,1 @@
+{"fixture_id":"FX-SHORTCUT-FOCUS","owner_phase":"IP-03","command":"open-search","close_command":"close-search","shortcuts":{"open_search":"Ctrl+Shift+Y","close_search":"Ctrl+Shift+X"},"surface":{"width":480,"height":600,"container":"browser-action-popup"},"expected":{"query_focused":true,"selected_tab_unchanged":true,"action_popup":true,"host_permissions":false}}

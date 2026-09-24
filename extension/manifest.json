@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "InfoBoard",
+  "version": "0.1.0",
+  "description": "Search eligible open browser tabs.",
+  "permissions": ["storage", "windows"],
+  "background": {
+    "service_worker": "dist/src/background/service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Open InfoBoard search",
+    "default_popup": "dist/search/surface-shell.html"
+  },
+  "commands": {
+    "open-search": {
+      "suggested_key": { "default": "Ctrl+Shift+Y", "mac": "Command+Shift+Y" },
+      "description": "Open InfoBoard search"
+    },
+    "close-search": {
+      "suggested_key": { "default": "Ctrl+Shift+X", "mac": "Command+Shift+X" },
+      "description": "Close InfoBoard search"
+    }
+  }
+}

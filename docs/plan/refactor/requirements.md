@@ -10,7 +10,7 @@
 
 | ID | Requirement | Acceptance signal |
 | --- | --- | --- |
-| FR-001 | The extension MUST expose one user-configurable browser command for opening search. | Chrome and Edge command settings show the command and invoke the search surface. |
+| FR-001 | The extension MUST expose configurable `open-search` and `close-search` browser commands. | Chrome and Edge command settings show both shortcuts; open-search shows the browser action popup and close-search dismisses it without changing the selected tab. |
 | FR-002 | The search surface MUST focus its query input before accepting text. | Keyboard trace reaches a focused input without pointer interaction. |
 | FR-003 | The system MUST search the current profile's open-tab projection by title, URL, domain, window, group, and state labels. | Fixture queries return expected field matches and exclude unavailable data. |
 | FR-004 | The system MUST update results as the query changes without requiring submit. | Each accepted query revision renders a corresponding result revision. |
