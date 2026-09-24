@@ -29,7 +29,7 @@
 
 The extension owns the command, search surface, browser event listeners, profile boundary, tab activation, and user-visible state. The service worker may be suspended or restarted, so it MUST persist only what is necessary and MUST reconcile from browser APIs after reconnect.
 
-The search surface is an extension-owned focused window or page rather than a transient content-script overlay. It does not require access to every page. Page scripting is not part of the product contract.
+The search surface is the extension-owned action popup anchored in the browser toolbar. It stays inside the browser UI, does not navigate or activate the current page, and does not require page DOM access, scripts, or host permissions. The browser action icon is the native container for the configured command's popup.
 
 ## Profile and private-window rules
 

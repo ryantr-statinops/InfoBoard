@@ -1,38 +1,56 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { ChromeBrowserAdapter, resetProfileAfterDisconnect } from '../../extension/src/browser/browser-adapter.js';
+import { parseProfileID } from '../../extension/domain/index.js';
+import { ChromeBrowserAdapter, resetProfileAfterDisconnect, type BrowserApi } from '../../extension/src/browser/browser-adapter.js';
 
-test('worker inputs fail closed on malformed or unavailable profile identity', async () => {
+function browserApi(readValue: unknown | null, recordWindowRead: () => void, calls: string[]): BrowserApi {
+  return {
+    runtime: { onInstalled: { addListener: () => undefined }, onStartup: { addListener: () => undefined } },
+    commands: { onCommand: { addListener: () => undefined } },
+    action: { openPopup: async options => { calls.push(`open-popup:${options?.windowId ?? 'current'}`); } },
+    windows: { getLastFocused: async () => { recordWindowRead(); return { id: 1, incognito: false }; } },
+    storage: { local: {
+      get: async key => { calls.push(`read:${key}`); return readValue === null ? {} : { [key]: readValue }; },
+      set: async values => { calls.push(`write:${Object.keys(values).join(',')}`); },
+      remove: async key => { calls.push(`remove:${key}`); },
+    } },
+  };
+}
+
+test('missing and malformed profile identities fail closed before browser-window work', async () => {
   for (const value of ['not-an-id', null]) {
     let windowReads = 0;
-    const api = {
-      runtime: { getURL: (path: string) => `chrome-extension://test/${path}`, onInstalled: { addListener() {} }, onStartup: { addListener() {} }, onMessage: { addListener() {} } },
-      commands: { onCommand: { addListener() {} } },
-      tabs: { query: async () => { throw new Error('must not inspect tabs'); }, update: async () => undefined },
-      windows: { getLastFocused: async () => { windowReads++; return { id: 1, incognito: false }; }, create: async () => ({ id: 1 }), update: async () => undefined, remove: async () => undefined },
-      storage: { local: { get: async (key: string) => { expect(key).toBe('profile_id'); return value === null ? {} : { profile_id: value }; }, set: async () => undefined, remove: async () => undefined } },
-    };
-    const result = await new ChromeBrowserAdapter(api as any).currentProfileContext();
+    const calls: string[] = [];
+    const adapter = new ChromeBrowserAdapter(browserApi(value, () => { windowReads += 1; }, calls));
+    const result = await adapter.currentProfileContext();
     expect(result.ok).toBe(false);
     expect(windowReads).toBe(0);
+    expect(calls).toEqual(['read:profile_id']);
   }
+});
+
+test('the action popup opens in the focused browser window without querying page tabs', async () => {
+  let windowReads = 0;
+  const calls: string[] = [];
+  const profile = parseProfileID('123e4567-e89b-42d3-a456-426614174000');
+  const adapter = new ChromeBrowserAdapter(browserApi(profile, () => { windowReads += 1; }, calls));
+  const context = await adapter.currentProfileContext();
+  expect(context.ok).toBe(true);
+  const opened = await adapter.openSearchSurface();
+  expect(opened).toEqual({ ok: true, value: undefined });
+  expect(windowReads).toBe(1);
+  expect(calls).toEqual(['read:profile_id', 'open-popup:current']);
 });
 
 test('explicit identity reset disconnects before removing the sole approved key', async () => {
   const calls: string[] = [];
-  const api = {
-    runtime: { getURL: (path: string) => path, onInstalled: { addListener() {} }, onStartup: { addListener() {} }, onMessage: { addListener() {} } },
-    commands: { onCommand: { addListener() {} } }, tabs: { query: async () => [], update: async () => undefined },
-    windows: { getLastFocused: async () => ({ id: 1 }), create: async () => ({ id: 1 }), update: async () => undefined, remove: async () => undefined },
-    storage: { local: { get: async (key: string) => { calls.push(`read:${key}`); return {}; }, set: async (values: Record<string, unknown>) => { calls.push(`write:${Object.keys(values).join(',')}`); }, remove: async (key: string) => { calls.push(`remove:${key}`); } } },
-  };
-  const adapter = new ChromeBrowserAdapter(api as any);
-  await adapter.write('123e4567-e89b-42d3-a456-426614174000' as any);
+  const adapter = new ChromeBrowserAdapter(browserApi(null, () => undefined, calls));
+  await adapter.write(parseProfileID('123e4567-e89b-42d3-a456-426614174000'));
   await resetProfileAfterDisconnect(adapter, async () => { calls.push('disconnect'); });
   expect(calls).toEqual(['write:profile_id', 'disconnect', 'remove:profile_id']);
 });
 
-test('surface sources and generated manifest exclude network and page storage', async () => {
+test('surface and manifest exclude page storage, network permissions, and injected scripts', async () => {
   const html = await readFile('extension/src/search/surface-shell.html', 'utf8');
   const adapter = await readFile('extension/src/browser/browser-adapter.ts', 'utf8');
   const manifest = JSON.parse(await readFile('extension/manifest.json', 'utf8'));
@@ -40,5 +58,7 @@ test('surface sources and generated manifest exclude network and page storage', 
   expect(html).not.toContain('localStorage');
   expect(html).not.toContain('sessionStorage');
   expect(adapter).not.toContain('storage.sync');
-  expect(manifest.permissions).toEqual(['storage', 'tabs', 'windows']);
+  expect(manifest.permissions).toEqual(['storage', 'windows']);
+  expect(manifest.host_permissions).toBeUndefined();
+  expect(manifest.action.default_popup).toBe('dist/search/surface-shell.html');
 });
