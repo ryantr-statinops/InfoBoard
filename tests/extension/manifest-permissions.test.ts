@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 
-test('built manifest has only storage/window permissions and open/close action-popup shortcuts', async () => {
+test('built manifest has only tab, group, and identity permissions plus open/close shortcuts', async () => {
   const manifest = JSON.parse(await readFile('extension/manifest.json', 'utf8'));
   expect(manifest.manifest_version).toBe(3);
-  expect([...manifest.permissions].sort()).toEqual(['storage', 'windows']);
+  expect([...manifest.permissions].sort()).toEqual(['storage', 'tabGroups', 'tabs']);
   expect(manifest.host_permissions).toBeUndefined();
   expect(Object.keys(manifest.commands).sort()).toEqual(['close-search', 'open-search']);
   expect(manifest.commands['open-search'].suggested_key).toEqual({ default: 'Ctrl+Shift+Y', mac: 'Command+Shift+Y' });
