@@ -27,6 +27,8 @@ test('extension search surface initializes and handles close signals in a 480x60
   const ctx = await launch(dir, fixture.surface);
   try {
     const source = ctx.pages()[0] ?? await ctx.newPage();
+    const externalRequests: string[] = [];
+    ctx.on('request', request => { if (/^https?:/.test(request.url())) externalRequests.push(request.url()); });
     const worker = ctx.serviceWorkers()[0] ?? await ctx.waitForEvent('serviceworker', { timeout: 10000 });
     expect(worker.url()).toMatch(/^chrome-extension:\/\/[a-p]{32}\/dist\/src\/background\/service-worker\.js$/);
     await expect.poll(() => worker.evaluate(async () => chrome.storage.local.get('profile_id'))).toHaveProperty('profile_id');
@@ -44,8 +46,6 @@ test('extension search surface initializes and handles close signals in a 480x60
     expect(source.url()).toBe(selectedTabUrl);
     await source.goto(surfaceUrl);
     const originalUrl = source.url();
-    const externalRequests: string[] = [];
-    ctx.on('request', request => { if (/^https?:/.test(request.url())) externalRequests.push(request.url()); });
     await expect.poll(() => source.evaluate(() => ({ focused: document.activeElement === document.querySelector('[data-search-input]'), ready: document.documentElement.dataset.searchReady }))).toEqual({ focused: true, ready: 'true' });
     expect(await source.locator('[data-search-input]').inputValue()).toBe('');
     await expect(source.getByLabel('Search open tabs')).toBeVisible();
