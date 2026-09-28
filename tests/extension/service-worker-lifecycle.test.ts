@@ -73,6 +73,34 @@ test('explicit identity reset disconnects before removing the sole approved key'
   expect(calls).toEqual(['write:profile_id', 'disconnect', 'remove:profile_id']);
 });
 
+test('a fresh service-worker adapter restores the installed profile identity from extension storage', async () => {
+  const calls: string[] = [];
+  let storedProfile: unknown | null = null;
+  const createAdapter = () => {
+    const api = browserApi(null, () => undefined, calls);
+    api.storage.local.get = async key => {
+      calls.push(`read:${key}`);
+      return key === 'profile_id' && storedProfile !== null ? { profile_id: storedProfile } : {};
+    };
+    api.storage.local.set = async values => {
+      calls.push(`write:${Object.keys(values).join(',')}`);
+      storedProfile = values.profile_id ?? null;
+    };
+    return new ChromeBrowserAdapter(api);
+  };
+
+  const firstWorker = createAdapter();
+  await firstWorker.initializeFirstInstall();
+  const profileFromFirstWorker = storedProfile;
+  expect(profileFromFirstWorker).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+
+  const restartedWorker = createAdapter();
+  const context = await restartedWorker.currentProfileContext();
+  expect(context.ok).toBe(true);
+  if (context.ok) expect(context.value.profileId).toBe(profileFromFirstWorker);
+  expect(calls).toEqual(['read:profile_id', 'write:profile_id', 'read:profile_id']);
+});
+
 test('surface and manifest exclude page storage, network permissions, and injected scripts', async () => {
   const html = await readFile('extension/src/search/surface-shell.html', 'utf8');
   const adapter = await readFile('extension/src/browser/browser-adapter.ts', 'utf8');
