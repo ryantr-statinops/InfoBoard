@@ -6,7 +6,7 @@
 > Dependencies: IP-02, IP-03
 > Parallel boundary: IP-06, IP-07, IP-08 after the IP-02/IP-03 contracts are stable; no shared implementation files
 > Requirement IDs: FR-009 (primary); FR-003, NFR-005, NFR-007, NFR-009 (supporting)
-> Owned paths: `extension/src/browser/tab-observer.ts` (to-create), `extension/src/browser/eligibility.ts` (to-create), `extension/src/browser/event-normalizer.ts` (to-create), `fixtures/browser/phase-04/` (to-create), `tests/browser/phase-04/` (to-create)
+> Owned paths: `extension/src/browser/tab-observer.ts`, `extension/src/browser/eligibility.ts`, `extension/src/browser/event-normalizer.ts`, `extension/src/browser/browser-adapter.ts`, `extension/src/background/service-worker.ts`, `tests/extension/tab-observer.test.ts`, `fixtures/browser/phase-04/` (pending), and `tests/browser/phase-04/` (pending)
 
 ## 1. Mục tiêu
 
@@ -40,21 +40,21 @@
 - IP-02 is merged and defines `profile_id`, `ContextKind`, `TabIdentity`, `ProjectionEpoch`, `ProjectionRevision`, `EligibleTabRecord`, missing-field behavior, lifecycle states, and extension ownership of browser authority. The observer must use these types and must not invent title/URL-based identity.
 - IP-03 is merged and provides the Manifest V3 service-worker and browser-adapter seam, exact minimal permissions, Chrome/Edge namespace selection, and lifecycle hooks. Listener registration must be top-level and safe after worker suspension/resume; it must not add permissions or call browser globals outside the adapter.
 - Read the binding [`target architecture`](../refactor/architecture.md), [`domain and privacy contract`](../refactor/domain-and-privacy.md), [`browser landscape`](../refactor/browser-landscape.md), [`requirements`](../refactor/requirements.md), [`runtime protocol`](../refactor/runtime-protocol.md), and [`verification and acceptance`](../refactor/verification-and-acceptance.md).
-- Source roots are currently absent. Every path named in this phase is a logical `to-create` target and must be replaced with the exact implementation path only if the source tree exists when implementation begins.
+- Core IP-04 observer, eligibility, event-normalization, adapter, service-worker, and initial adapter tests now exist in the implementation tree. The fixture corpus and full phase-specific convergence/parity tests remain pending; acceptance in Section 8 is not yet satisfied.
 - The fixture harness must be able to emit events with controlled ordering, repeat an event, omit optional fields, deny an API call, close a private window, reuse a browser tab ID in a new epoch, and return an independent full snapshot for oracle comparison.
 
 ## 4. Đầu ra cần bàn giao
 
-- `extension/src/browser/tab-observer.ts` (to-create):
+- `extension/src/browser/tab-observer.ts`:
   - Listener registration and teardown for all supported tab/window/group event sources.
   - A startup/full-snapshot method that reads only the current profile's open tabs and returns a bounded set of raw adapter records for eligibility evaluation.
   - Event callbacks that capture the smallest safe event payload and enqueue normalized events without performing host calls or browser activation.
   - Lifecycle behavior for worker restart, browser shutdown, listener registration failure, and event queue overflow: mark the stream uncertain and request a full snapshot.
-- `extension/src/browser/event-normalizer.ts` (to-create):
+- `extension/src/browser/event-normalizer.ts`:
   - Conversion of Chrome and Edge event signatures into the common event vocabulary, including change masks for title, URL, status, window, group, pinned, active, and other eligible fields.
   - Validation of profile/context, tab/window/group IDs, event epoch, and bounded strings before a reducer sees the event.
   - Explicit handling for `onUpdated` events that arrive in several partial notifications and for equivalent browser notifications emitted by both tab and window APIs.
-- `extension/src/browser/eligibility.ts` (to-create):
+- `extension/src/browser/eligibility.ts`:
   - A pure eligibility function with a decision (`eligible`, `excluded`, or `deferred`), reason code, normalized allowed fields, and context disposal action when relevant.
   - Rules for normal/private contexts, closed or missing windows, unsupported URL schemes, inaccessible or missing metadata, and denied/unsupported browser capabilities. Reasons must be safe for diagnostics and must not contain raw title or URL values.
   - A per-profile/context identity key based on IP-02 identity fields; never use title, URL, domain, array position, or event sequence as identity.
@@ -67,7 +67,7 @@
   - `FX-PERMISSION-DENIED` — deny one required browser capability and separately deny an optional metadata capability. The first case yields a diagnosable unavailable/deferred state and resync/retry action; the second retains safe fields while reporting the missing optional field.
   - `FX-TAB-ID-REUSE` — remove a tab and reuse its numeric browser ID in a new projection epoch. The new tab has a distinct `TabIdentity`; no stale record or old event mutates it.
   - `FX-TAB-SNAPSHOT-CONVERGENCE` — apply a long event stream with dropped/repeated notifications, then compare to the independently obtained full eligible snapshot. The result is exactly the snapshot ID set and field state, with no duplicate IDs.
-- `tests/browser/phase-04/` (to-create): adapter parity tests, pure eligibility/reason-code tests, reducer/event-normalizer tests, private-context disposal tests, denial diagnostics tests, and the convergence/property fixture runner. Tests must assert observable projection and status outcomes rather than listener implementation details.
+- `tests/extension/tab-observer.test.ts`: initial adapter-backed checks for private-access policy, install initialization, normal/private projection separation, and private-context teardown. The planned `tests/browser/phase-04/` parity and fixture-convergence suite remains pending.
 - A handoff contract for IP-05 stating which normalized event fields are authoritative, when to advance an effective projection revision, when to set `resync_required`, and which diagnostic counters/error classes are emitted. The handoff must state that the browser full snapshot is the authority after uncertainty.
 
 ## 5. Skill và tài liệu áp dụng
@@ -198,7 +198,9 @@
 
 ## 8. Kiểm chứng và nghiệm thu
 
-- [ ] Once implementation exists, from repository root run the exact phase command `npm test -- --runInBand tests/browser/phase-04` (or the repository's equivalent command recorded by IP-01) with fixture root `fixtures/browser/phase-04/`; do not substitute a test that omits the fixtures.
+Progress checkpoint (2026-09-28): `npm run build:extension` and `BROWSER=chromium npm run test:extension` pass (13/13 tests), and the implementation-corpus validator passes. This is implementation progress only; the acceptance checks below remain open until the eight planned fixtures, independent snapshot oracle, event-coalescing/ID-reuse coverage, and Chrome/Edge fake-adapter parity are implemented and pass.
+
+- [ ] For full acceptance, add the planned fixture corpus and runner, then run the repository-supported Phase-04 fixture suite against `fixtures/browser/phase-04/`; do not substitute a test that omits the fixtures. The current partial observer check is `BROWSER=chromium npm run test:extension -- tests/extension/tab-observer.test.ts`.
 - [ ] Run the Chrome and Edge fake-adapter matrix over `FX-TAB-EVENTS` and `FX-TAB-SNAPSHOT-CONVERGENCE`. The final projection contains one record per expected eligible `TabIdentity`, no duplicate IDs, and the same field values as the independent full snapshot.
 - [ ] Run `FX-TAB-EVENT-COALESCE`, `FX-TAB-WINDOW-LIFECYCLE`, and `FX-TAB-ID-REUSE`. Repeated notifications are idempotent, effective changes survive coalescing, orphan records are removed, and an old numeric tab ID cannot mutate or activate a new identity.
 - [ ] Run `FX-TAB-ELIGIBILITY` and `FX-PRIVATE-CONTEXT`. The result includes only eligible current-profile records; excluded records have stable safe reason codes; private records are isolated, in-memory only, and removed when private context ends.
@@ -226,5 +228,5 @@
 - Skill: [`task-planning`](../../../.agent/skills/common/foundation/task-planning/SKILL.md)
 - Skill: [`git-workflow`](../../../.agent/skills/common/engineering/git-workflow/SKILL.md)
 - Project context: [`CONTEXT.md`](../../../CONTEXT.md)
-- Source/config/test path ngoài `docs/`: `extension/src/browser/tab-observer.ts`, `extension/src/browser/eligibility.ts`, `extension/src/browser/event-normalizer.ts`, `fixtures/browser/phase-04/`, `tests/browser/phase-04/` (all `to-create`)
-- Fixture/tool/artifact ngoài `docs/`: `FX-TAB-EVENTS`, `FX-TAB-EVENT-COALESCE`, `FX-TAB-WINDOW-LIFECYCLE`, `FX-TAB-ELIGIBILITY`, `FX-PRIVATE-CONTEXT`, `FX-PERMISSION-DENIED`, `FX-TAB-ID-REUSE`, and `FX-TAB-SNAPSHOT-CONVERGENCE` under `fixtures/browser/phase-04/` (to-create); repository-root browser fixture runner (to-create)
+- Source/config/test path ngoài `docs/`: `extension/src/browser/tab-observer.ts`, `extension/src/browser/eligibility.ts`, `extension/src/browser/event-normalizer.ts`, `extension/src/browser/browser-adapter.ts`, `extension/src/background/service-worker.ts`, and `tests/extension/tab-observer.test.ts` exist; `fixtures/browser/phase-04/` and `tests/browser/phase-04/` remain pending.
+- Fixture/tool/artifact ngoài `docs/`: `FX-TAB-EVENTS`, `FX-TAB-EVENT-COALESCE`, `FX-TAB-WINDOW-LIFECYCLE`, `FX-TAB-ELIGIBILITY`, `FX-PRIVATE-CONTEXT`, `FX-PERMISSION-DENIED`, `FX-TAB-ID-REUSE`, and `FX-TAB-SNAPSHOT-CONVERGENCE` under `fixtures/browser/phase-04/` (pending); repository-root browser fixture runner (pending)
