@@ -170,7 +170,8 @@ export function normalizeBrowserEvent(input: BrowserApiEvent): NormalizeBrowserE
     case 'tabs.onAttached': {
       const tabId = nonNegativeInteger(args[0]);
       if (tabId === undefined || !isRecord(args[1])) return { ok: false, reason: 'identity_unavailable' };
-      const windowId = nonNegativeInteger(args[1].windowId);
+      const rawWindowId = input.source === 'tabs.onAttached' ? args[1].newWindowId : args[1].windowId;
+      const windowId = nonNegativeInteger(rawWindowId);
       if (windowId === undefined) return { ok: false, reason: 'identity_unavailable' };
       return { ok: true, event: { source: input.source, kind: 'move', tabId, windowId, changedFields: ['windowId'], requiresSnapshot: true } };
     }
