@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "phase": "IP-04",
+  "fixtures": [
+    {
+      "fixture_id": "FX-TAB-EVENTS",
+      "private_access": true,
+      "initial": {
+        "windows": [{ "id": 1, "incognito": false }],
+        "groups": [{ "id": 7, "windowId": 1, "title": "Old group" }],
+        "tabs": [
+          { "id": 10, "windowId": 1, "groupId": 7, "title": "Alpha", "url": "https://alpha.example/a", "pinned": false, "active": false, "incognito": false },
+          { "id": 11, "windowId": 1, "groupId": -1, "title": "Temporary", "url": "https://temporary.example/a", "pinned": false, "active": true, "incognito": false }
+        ]
+      },
+      "events": [
+        { "source": "tabs.onMoved", "args": [10, { "windowId": 1, "fromIndex": 0, "toIndex": 1 }] },
+        { "source": "tabs.onCreated", "args": [{ "id": 12, "windowId": 1, "groupId": -1, "title": "Transient", "url": "https://transient.example/", "pinned": false, "active": false, "incognito": false }] },
+        { "source": "tabs.onUpdated", "args": [10, { "title": "Beta" }, { "id": 10, "windowId": 1, "groupId": 7, "title": "Beta", "url": "https://alpha.example/a", "pinned": false, "active": false, "incognito": false }] },
+        { "source": "tabGroups.onUpdated", "args": [{ "id": 7, "windowId": 1, "title": "New group" }] },
+        { "source": "tabs.onUpdated", "args": [10, { "pinned": true }, { "id": 10, "windowId": 1, "groupId": 7, "title": "Beta", "url": "https://alpha.example/a", "pinned": true, "active": false, "incognito": false }] },
+        { "source": "tabs.onActivated", "args": [{ "tabId": 10, "windowId": 1 }] },
+        { "source": "tabs.onRemoved", "args": [11, { "windowId": 1, "isWindowClosing": false }] },
+        { "source": "tabs.onRemoved", "args": [12, { "windowId": 1, "isWindowClosing": false }] }
+      ],
+      "expected": { "tab_ids": [10], "records": [{ "tab_id": 10, "title": "Beta", "group_label": "New group", "pinned": true, "active": true }], "status": "ready" }
+    },
+    {
+      "fixture_id": "FX-TAB-EVENT-COALESCE",
+      "private_access": true,
+      "initial": {
+        "windows": [{ "id": 1, "incognito": false }],
+        "groups": [],
+        "tabs": [{ "id": 10, "windowId": 1, "groupId": -1, "title": "Before", "url": "https://coalesce.example/a", "pinned": false, "active": true, "incognito": false }]
+      },
+      "events": [
+        { "source": "tabs.onUpdated", "args": [10, { "title": "After" }, { "id": 10, "windowId": 1, "groupId": -1, "title": "After", "url": "https://coalesce.example/a", "pinned": false, "active": true, "incognito": false }] },
+        { "source": "tabs.onUpdated", "args": [10, { "title": "After" }, { "id": 10, "windowId": 1, "groupId": -1, "title": "After", "url": "https://coalesce.example/a", "pinned": false, "active": true, "incognito": false }] }
+      ],
+      "expected": { "tab_ids": [10], "records": [{ "tab_id": 10, "title": "After" }], "minimum_duplicate_events": 1, "status": "ready" }
+    },
+    {
+      "fixture_id": "FX-TAB-WINDOW-LIFECYCLE",
+      "private_access": true,
+      "initial": {
+        "windows": [{ "id": 1, "incognito": false }, { "id": 3, "incognito": false }],
+        "groups": [],
+        "tabs": [
+          { "id": 10, "windowId": 1, "groupId": -1, "title": "Keep", "url": "https://keep.example/", "pinned": false, "active": true, "incognito": false },
+          { "id": 30, "windowId": 3, "groupId": -1, "title": "Orphan", "url": "https://orphan.example/", "pinned": false, "active": false, "incognito": false }
+        ]
+      },
+      "events": [{ "source": "windows.onRemoved", "args": [3] }],
+      "expected": { "tab_ids": [10], "status": "ready" }
+    },
+    {
+      "fixture_id": "FX-TAB-ELIGIBILITY",
+      "private_access": true,
+      "initial": {
+        "windows": [{ "id": 1, "incognito": false }],
+        "groups": [],
+        "tabs": [
+          { "id": 10, "windowId": 1, "groupId": -1, "title": "Eligible", "url": "https://eligible.example/", "pinned": false, "active": true, "incognito": false },
+          { "id": 20, "windowId": 1, "groupId": -1, "title": "Unsupported", "url": "file:///tmp/no.html", "pinned": false, "active": false, "incognito": false },
+          { "id": 30, "windowId": 1, "groupId": -1, "url": "https://deferred.example/", "pinned": false, "active": false, "incognito": false }
+        ]
+      },
+      "events": [],
+      "expected": { "tab_ids": [10], "minimum_excluded": 1, "minimum_deferred": 1, "status": "degraded" }
+    },
+    {
+      "fixture_id": "FX-PRIVATE-CONTEXT",
+      "private_access": true,
+      "initial": {
+        "windows": [{ "id": 1, "incognito": false }, { "id": 2, "incognito": true }],
+        "groups": [],
+        "tabs": [
+          { "id": 10, "windowId": 1, "groupId": -1, "title": "Normal", "url": "https://normal.example/", "pinned": false, "active": true, "incognito": false },
+          { "id": 20, "windowId": 2, "groupId": -1, "title": "Private", "url": "https://private.example/", "pinned": false, "active": false, "incognito": true }
+        ]
+      },
+      "events": [{ "source": "windows.onRemoved", "args": [2] }],
+      "expected": { "tab_ids": [10], "private_context_ended": true, "status": "ready" }
+    },
+    {
+      "fixture_id": "FX-PERMISSION-DENIED",
+      "private_access": false,
+      "initial": {
+        "windows": [{ "id": 1, "incognito": false }, { "id": 2, "incognito": true }],
+        "groups": [],
+        "tabs": [
+          { "id": 10, "windowId": 1, "groupId": -1, "title": "Normal", "url": "https://normal.example/", "pinned": false, "active": true, "incognito": false },
+          { "id": 20, "windowId": 2, "groupId": -1, "title": "Private", "url": "https://private.example/", "pinned": false, "active": false, "incognito": true }
+        ]
+      },
+      "events": [],
+      "expected": { "tab_ids": [10], "private_unavailable_reason": "permission_denied", "status": "ready" }
+    },
+    {
+      "fixture_id": "FX-TAB-ID-REUSE",
+      "private_access": true,
+      "initial": {
+        "windows": [{ "id": 1, "incognito": false }],
+        "groups": [],
+        "tabs": [{ "id": 10, "windowId": 1, "groupId": -1, "title": "Old identity", "url": "https://old.example/", "pinned": false, "active": true, "incognito": false }]
+      },
+      "events": [
+        { "source": "tabs.onRemoved", "args": [10, { "windowId": 1, "isWindowClosing": false }] },
+        { "snapshot_after": [{ "id": 10, "windowId": 1, "groupId": -1, "title": "Reused ID", "url": "https://new.example/", "pinned": false, "active": true, "incognito": false }] },
+        { "source": "tabs.onCreated", "args": [{ "id": 10, "windowId": 1, "groupId": -1, "title": "Reused ID", "url": "https://new.example/", "pinned": false, "active": true, "incognito": false }] },
+        { "source": "tabs.onUpdated", "args": [10, { "title": "Reused then updated" }, { "id": 10, "windowId": 1, "groupId": -1, "title": "Reused then updated", "url": "https://new.example/", "pinned": false, "active": true, "incognito": false }] }
+      ],
+      "expected": { "tab_ids": [10], "records": [{ "tab_id": 10, "title": "Reused then updated" }], "status": "ready" }
+    },
+    {
+      "fixture_id": "FX-TAB-SNAPSHOT-CONVERGENCE",
+      "private_access": true,
+      "initial": {
+        "windows": [{ "id": 1, "incognito": false }, { "id": 2, "incognito": false }],
+        "groups": [],
+        "tabs": [{ "id": 10, "windowId": 1, "groupId": -1, "title": "Before resync", "url": "https://snapshot.example/old", "pinned": false, "active": true, "incognito": false }]
+      },
+      "events": [
+        { "snapshot_after": [{ "id": 10, "windowId": 2, "groupId": -1, "title": "Oracle record", "url": "https://snapshot.example/current", "pinned": true, "active": true, "incognito": false }] },
+        { "source": "tabs.onMoved", "args": [10, { "windowId": 2, "fromIndex": 0, "toIndex": 0 }] }
+      ],
+      "expected": { "tab_ids": [10], "records": [{ "tab_id": 10, "window_id": 2, "title": "Oracle record", "url_display": "https://snapshot.example/current", "pinned": true }], "status": "ready" }
+    }
+  ]
+}
