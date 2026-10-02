@@ -236,6 +236,8 @@ export class TabObserver {
     this.unsubscribe?.();
     this.unsubscribe = undefined;
     this.pendingEvents = [];
+    this.removedTabIds.clear();
+    this.reusedTabIds.clear();
     for (const contextKind of ['normal', 'private'] as const) {
       const state = this.contexts[contextKind];
       state.records.clear();
@@ -452,14 +454,19 @@ export class TabObserver {
     for (const contextKind of ['normal', 'private'] as const) {
       const state = this.contexts[contextKind];
       const group = state.groups.find(candidate => safeId(candidate.id) === event.groupId);
+      const groupWindowId = event.windowId ?? safeId(group?.windowId);
       if (event.removedGroup) {
         state.groups = state.groups.filter(candidate => safeId(candidate.id) !== event.groupId);
-      } else if (group && event.patch && Object.hasOwn(event.patch, 'groupLabel')) {
+      } else if (event.patch && Object.hasOwn(event.patch, 'groupLabel')) {
         const title = event.patch.groupLabel;
-        state.groups = state.groups.map(candidate => safeId(candidate.id) === event.groupId ? { ...candidate, title } : candidate);
+        if (group) {
+          state.groups = state.groups.map(candidate => safeId(candidate.id) === event.groupId && (groupWindowId === undefined || safeId(candidate.windowId) === groupWindowId) ? { ...candidate, title } : candidate);
+        } else if (groupWindowId !== undefined && state.windows.some(window => safeId(window.id) === groupWindowId)) {
+          state.groups.push({ id: event.groupId, windowId: groupWindowId, title });
+        }
       }
       for (const [key, raw] of state.rawTabs) {
-        if (safeId(raw.groupId) !== event.groupId || event.windowId !== undefined && safeId(raw.windowId) !== event.windowId) continue;
+        if (safeId(raw.groupId) !== event.groupId || groupWindowId !== undefined && safeId(raw.windowId) !== groupWindowId) continue;
         const patch: BrowserTabSnapshot = event.removedGroup ? { groupId: -1, groupLabel: undefined } : { ...(event.patch ?? {}) };
         await this.applyTabPatch({
           source: event.source,
@@ -612,6 +619,7 @@ export class TabObserver {
     }
     this.contexts = next;
     this.removedTabIds.clear();
+    this.reusedTabIds.clear();
     const incomplete = next.normal.resyncRequired || this.privateAccess && next.private.resyncRequired;
     if (!this.privateAccess) next.private.status = 'unavailable';
     this.resyncRequired = incomplete;
