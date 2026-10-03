@@ -109,7 +109,7 @@ test('surface and manifest exclude page storage, network permissions, and inject
   expect(html).not.toContain('localStorage');
   expect(html).not.toContain('sessionStorage');
   expect(adapter).not.toContain('storage.sync');
-  expect(manifest.permissions).toEqual(['storage', 'tabs', 'tabGroups']);
+  expect([...manifest.permissions].sort()).toEqual(['nativeMessaging', 'storage', 'tabGroups', 'tabs']);
   expect(manifest.host_permissions).toBeUndefined();
   expect(manifest.action.default_popup).toBe('dist/search/surface-shell.html');
 });

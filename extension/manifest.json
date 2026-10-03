@@ -3,7 +3,7 @@
   "name": "InfoBoard",
   "version": "0.1.0",
   "description": "Search eligible open browser tabs.",
-  "permissions": ["storage", "tabs", "tabGroups"],
+  "permissions": ["storage", "tabs", "tabGroups", "nativeMessaging"],
   "background": {
     "service_worker": "dist/src/background/service-worker.js",
     "type": "module"
