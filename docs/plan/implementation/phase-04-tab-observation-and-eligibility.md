@@ -200,7 +200,7 @@ Actual branch history: `8def9d2` (T01–T04), `ad43457` (eligibility), `cbd8187`
 
 ## 8. Kiểm chứng và nghiệm thu
 
-Progress checkpoint (2026-09-28): `npm run build:extension` passes; `BROWSER=chromium npm run test:extension` passes (38/38); `npm run test:domain` passes (9/9). The implementation-corpus validator is run after these checklist corrections. Chrome/Edge comparison is fake-adapter parity; no branded Chrome/Edge browser matrix was run.
+Progress checkpoint (2026-10-03): `npm run build:extension` passes; `BROWSER=chromium npm run test:extension` passes (38/38); `npm run test:domain` passes (9/9); implementation-corpus validation passes (20 phases, 232 tasks, 25 requirements, 9 fixtures, 7 invariants, 19 seams); `git diff --check` passes. Chrome/Edge comparison is fake-adapter parity; no branded Chrome/Edge browser matrix was run.
 
 - [x] Run all eight IP-04 fixture scenarios through `tests/extension/tab-observer-fixtures.test.ts`.
 - [x] Run Chrome-complete and Edge-optional fake adapters over the same fixture corpus and compare normalized projections.
