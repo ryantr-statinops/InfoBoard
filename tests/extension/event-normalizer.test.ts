@@ -73,3 +73,16 @@ test('window creation and focus notifications remain scoped typed events', () =>
   expect(focused.ok && focused.event.kind).toBe('window_changed');
   expect(focused.ok && focused.event.windowId).toBe(3);
 });
+
+test('tab group reassignment remains a tab-level delta including removal from a group', () => {
+  const result = normalizeBrowserEvent({
+    source: 'tabs.onUpdated',
+    args: [10, { groupId: -1 }, { id: 10, windowId: 1, groupId: -1, title: 'Ungrouped', url: 'https://example.test/', pinned: false, active: true, incognito: false }],
+  });
+  expect(result.ok).toBe(true);
+  if (!result.ok) return;
+  expect(result.event.kind).toBe('group');
+  expect(result.event.tabId).toBe(10);
+  expect(result.event.patch?.groupId).toBe(-1);
+  expect(result.event.groupId).toBeUndefined();
+});

@@ -323,7 +323,7 @@ export class TabObserver {
       this.removeWindow(event.windowId, sequence);
       return;
     }
-    if (event.kind === 'group') {
+    if (event.kind === 'group' && event.source.startsWith('tabGroups.')) {
       await this.applyGroupEvent(event, sequence);
       return;
     }
@@ -335,7 +335,7 @@ export class TabObserver {
       await this.applyActivation(event.tabId, event.windowId, sequence);
       return;
     }
-    if ((event.kind === 'create' || event.kind === 'update' || event.kind === 'move' || event.kind === 'pin') && event.tabId !== undefined) {
+    if ((event.kind === 'create' || event.kind === 'update' || event.kind === 'move' || event.kind === 'pin' || event.kind === 'group') && event.tabId !== undefined) {
       if (this.reusedTabIds.has(event.tabId) || this.removedTabIds.has(event.tabId) && event.kind !== 'create') {
         this.reusedTabIds.add(event.tabId);
         await this.refreshSnapshot('tab_id_reuse');

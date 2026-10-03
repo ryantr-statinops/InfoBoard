@@ -12,11 +12,11 @@ interface Phase04Scenario {
   fixture_id: string;
   private_access: boolean;
   initial: { windows: unknown[]; groups: unknown[]; tabs: unknown[] };
-  events: Array<{ source?: string; args?: unknown[]; snapshot_after?: unknown[] }>;
+  events: Array<{ source?: string; args?: unknown[]; snapshot_after?: unknown[]; edge_equivalent?: Array<{ source: string; args: unknown[] }> }>;
   expected: {
     tab_ids: number[];
     status: string;
-    records?: Array<{ tab_id: number; title?: string; group_label?: string; window_id?: number; url_display?: string; pinned?: boolean; active?: boolean }>;
+    records?: Array<{ tab_id: number; title?: string; group_id?: number | null; group_label?: string; group_label_absent?: boolean; window_id?: number; url_display?: string; pinned?: boolean; active?: boolean }>;
     minimum_duplicate_events?: number;
     minimum_excluded?: number;
     minimum_deferred?: number;
@@ -99,6 +99,8 @@ test('the eight IP-04 fixture scenarios produce their declared observable projec
       expect(record, `${scenario.fixture_id}: record ${expected.tab_id}`).toBeDefined();
       if (!record) continue;
       if (expected.title !== undefined) expect(record.title_display, scenario.fixture_id).toBe(expected.title);
+      if (expected.group_id !== undefined) expect(record.group_id, scenario.fixture_id).toBe(expected.group_id);
+      if (expected.group_label_absent) expect(record.group_label_display, scenario.fixture_id).toBeUndefined();
       if (expected.group_label !== undefined) expect(record.group_label_display, scenario.fixture_id).toBe(expected.group_label);
       if (expected.window_id !== undefined) expect(record.window_id, scenario.fixture_id).toBe(expected.window_id);
       if (expected.url_display !== undefined) expect(record.url_display, scenario.fixture_id).toBe(expected.url_display);
@@ -120,7 +122,8 @@ async function projectionFor(scenario: Phase04Scenario, edgeCompatible: boolean)
   await flushQueuedEvents();
   for (const event of scenario.events) {
     if (event.snapshot_after) fake.replaceSnapshot(event.snapshot_after);
-    if (event.source) fake.fire(event.source, ...(event.args ?? []));
+    const steps = edgeCompatible && event.edge_equivalent ? event.edge_equivalent : event.source ? [{ source: event.source, args: event.args ?? [] }] : [];
+    for (const step of steps) fake.fire(step.source, ...step.args);
     await flushQueuedEvents();
   }
   const view = observer.view();

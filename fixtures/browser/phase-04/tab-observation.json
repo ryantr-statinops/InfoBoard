@@ -44,14 +44,22 @@
       "private_access": true,
       "initial": {
         "windows": [{ "id": 1, "incognito": false }, { "id": 3, "incognito": false }],
-        "groups": [],
+        "groups": [{ "id": 7, "windowId": 1, "title": "Moving group" }],
         "tabs": [
-          { "id": 10, "windowId": 1, "groupId": -1, "title": "Keep", "url": "https://keep.example/", "pinned": false, "active": true, "incognito": false },
+          { "id": 10, "windowId": 1, "groupId": 7, "title": "Keep", "url": "https://keep.example/", "pinned": false, "active": true, "incognito": false },
           { "id": 30, "windowId": 3, "groupId": -1, "title": "Orphan", "url": "https://orphan.example/", "pinned": false, "active": false, "incognito": false }
         ]
       },
-      "events": [{ "source": "windows.onRemoved", "args": [3] }],
-      "expected": { "tab_ids": [10], "status": "ready" }
+      "events": [
+        { "source": "windows.onCreated", "args": [{ "id": 4, "incognito": false, "focused": false }] },
+        { "source": "windows.onFocusChanged", "args": [1] },
+        { "source": "tabs.onAttached", "args": [10, { "newWindowId": 1, "newPosition": 0 }] },
+        { "source": "tabs.onDetached", "args": [10, { "oldWindowId": 1, "oldPosition": 0 }] },
+        { "source": "tabGroups.onMoved", "args": [7, { "windowId": 1, "oldWindowId": 1 }] },
+        { "source": "tabGroups.onRemoved", "args": [7], "edge_equivalent": [{ "source": "tabs.onUpdated", "args": [10, { "groupId": -1 }, { "id": 10, "windowId": 1, "groupId": -1, "title": "Keep", "url": "https://keep.example/", "pinned": false, "active": true, "incognito": false }] }] },
+        { "source": "windows.onRemoved", "args": [3] }
+      ],
+      "expected": { "tab_ids": [10], "records": [{ "tab_id": 10, "group_id": null, "group_label_absent": true, "window_id": 1, "title": "Keep" }], "status": "ready" }
     },
     {
       "fixture_id": "FX-TAB-ELIGIBILITY",

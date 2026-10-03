@@ -10,20 +10,20 @@ Canonical contract: [`README.md`](../refactor/README.md), [`architecture.md`](..
 
 ## Logical target layout
 
-The repository currently has no implementation source tree. Until implementation creates it, the following paths are logical `to-create` targets:
+Implementation has begun. The layout records original target classifications; completed paths and active phase status are tracked below and in README.md.
 
 ```text
-extension/   # to-create: Manifest V3 boundary, browser adapter, focused search surface
+extension/   # to-create: Manifest V3 boundary, browser adapter, focused search surface (implemented in IP-03/IP-04)
 host/        # to-create: Go Native Messaging host, projection, index, persistence, diagnostics
 packaging/   # to-create: browser package, native manifest, installer and lifecycle artifacts
 fixtures/catalog.schema.json # shared fixture envelope schema (IP-01)
 fixtures/catalog.json        # shared fixture catalog (IP-01)
-fixtures/<phase>/            # to-create: phase-owned fixtures
+fixtures/<phase>/            # phase-owned fixtures; IP-04 fixture corpus exists
 tests/implementation/validate_corpus.py # present: standard-library corpus/fixture validator
-tests/<phase>/                 # to-create: unit, integration, browser, accessibility and performance tests
+tests/<phase>/                 # phase-owned tests; IP-02 and extension test suites exist
 ```
 
-IP-01 owns the exact package/module naming map. The shared [`fixture catalog`](../../../fixtures/catalog.json) and [`catalog schema`](../../../fixtures/catalog.schema.json) define nine reusable observable cases plus future checks, invariants, and one traceable acceptance seam for every later phase. The runtime roots and phase-owned test/fixture roots remain `to-create`; the shared validator is present and phase-specific acceptance suites still extend, rather than inherit as complete, the shared baseline. A phase author must reread the implementation scaffold if it appears and replace a logical path with the exact observed path before committing.
+IP-01 owns the exact package/module naming map. The shared fixture catalog and catalog schema define nine reusable observable cases plus future checks, invariants, and one traceable acceptance seam for every later phase. The extension runtime and IP-04 fixture/test roots exist; host, packaging, and later phase-owned roots remain to-create. The shared validator is present, and phase-specific acceptance suites extend rather than inherit the shared baseline. A phase author must reread the implementation scaffold and use observed paths before committing.
 
 ## Phase inventory and dependency DAG
 
