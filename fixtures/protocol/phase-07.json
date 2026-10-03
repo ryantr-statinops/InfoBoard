@@ -1,0 +1,1938 @@
+{
+  "schema_version": 1,
+  "phase": "IP-07",
+  "artifact": "native-messaging-protocol",
+  "requirement_ids": [
+    "FR-010",
+    "FR-012",
+    "FR-013",
+    "NFR-005",
+    "NFR-006"
+  ],
+  "shared_consumers": [
+    "go",
+    "node"
+  ],
+  "contract_source": "host/internal/protocol",
+  "frame_encoding": {
+    "owner": "IP-06",
+    "length_prefix_bytes": 4,
+    "byte_order": "little_endian",
+    "payload": "utf8_json",
+    "note": "The IP-06 runtime owns the single stdin reader, the single serialized stdout writer, and the length prefix. IP-07 materializes fixture bytes but must not read a stream or implement a second length-prefix reader."
+  },
+  "transport_boundary": {
+    "max_frame_bytes": 1048576,
+    "max_json_payload_bytes": 262144,
+    "frame_zero_length_rejected": true,
+    "payload_limit_enforced_before_decode": true,
+    "over_frame_boundary_owner": "IP-06"
+  },
+  "envelope": {
+    "required_fields": [
+      "protocol",
+      "type",
+      "request_id",
+      "profile_id",
+      "projection_revision",
+      "payload"
+    ],
+    "unknown_fields_rejected": true,
+    "duplicate_keys_rejected": true,
+    "trailing_bytes_rejected": true,
+    "protocol_major": 1,
+    "request_id_max_bytes": 128,
+    "profile_id_max_bytes": 128,
+    "projection_revision_min": 0,
+    "profile_identity_source": "envelope_profile_id"
+  },
+  "limits": {
+    "query_max_scalars": 512,
+    "snapshot_max_records": 10000,
+    "delta_max_operations": 1000,
+    "query_max_results": 50,
+    "title_max_scalars": 512,
+    "domain_max_bytes": 255,
+    "url_max_bytes": 2048,
+    "capabilities_max_count": 32,
+    "message_type_max_bytes": 64,
+    "snapshot_tab_id_max": 9007199254740991
+  },
+  "deadlines_ms": {
+    "frame_read": 2000,
+    "hello": 2000,
+    "snapshot_apply": 1000,
+    "delta_apply": 1000,
+    "query_host_budget": 40,
+    "query_request_budget": 100,
+    "health": 100,
+    "activation_status": 500,
+    "shutdown_drain": 1000
+  },
+  "error_codes": [
+    "INVALID_FRAME",
+    "PROTOCOL_MISMATCH",
+    "PROFILE_MISMATCH",
+    "PAYLOAD_LIMIT",
+    "SNAPSHOT_REQUIRED",
+    "REVISION_MISMATCH",
+    "INDEX_REBUILDING",
+    "QUERY_TIMEOUT",
+    "PERSISTENCE_DEGRADED",
+    "HOST_SHUTDOWN",
+    "INTERNAL_FAILURE"
+  ],
+  "resync_reasons": [
+    "revision_mismatch",
+    "sequence_gap",
+    "snapshot_stale",
+    "index_rebuilding",
+    "profile_changed"
+  ],
+  "message_types": [
+    {
+      "type": "hello",
+      "direction": "extension_to_host",
+      "payload_fields": [
+        "extension_version",
+        "browser_family",
+        "browser_version",
+        "context_kind",
+        "capabilities",
+        "supported_protocol_versions"
+      ]
+    },
+    {
+      "type": "hello_ack",
+      "direction": "host_to_extension",
+      "payload_fields": [
+        "protocol",
+        "host_version",
+        "limits",
+        "ranking_model_version",
+        "persistence"
+      ]
+    },
+    {
+      "type": "snapshot",
+      "direction": "extension_to_host",
+      "payload_fields": [
+        "tabs",
+        "sequence"
+      ]
+    },
+    {
+      "type": "delta",
+      "direction": "extension_to_host",
+      "payload_fields": [
+        "base_revision",
+        "sequence_start",
+        "sequence_end",
+        "operations"
+      ]
+    },
+    {
+      "type": "sync_ack",
+      "direction": "host_to_extension",
+      "payload_fields": [
+        "accepted_revision",
+        "accepted_sequence"
+      ]
+    },
+    {
+      "type": "resync_required",
+      "direction": "host_to_extension",
+      "payload_fields": [
+        "reason",
+        "expected_revision",
+        "expected_sequence"
+      ]
+    },
+    {
+      "type": "query",
+      "direction": "extension_to_host",
+      "payload_fields": [
+        "query",
+        "result_limit",
+        "current_window_id"
+      ]
+    },
+    {
+      "type": "query_result",
+      "direction": "host_to_extension",
+      "payload_fields": [
+        "results",
+        "ranking_model_version",
+        "projection_revision",
+        "counters"
+      ]
+    },
+    {
+      "type": "activation_observed",
+      "direction": "extension_to_host",
+      "payload_fields": [
+        "result_reference",
+        "tab_id",
+        "projection_revision",
+        "outcome"
+      ]
+    },
+    {
+      "type": "activation_failed",
+      "direction": "extension_to_host",
+      "payload_fields": [
+        "result_reference",
+        "tab_id",
+        "projection_revision",
+        "error_code"
+      ]
+    },
+    {
+      "type": "activation_ack",
+      "direction": "host_to_extension",
+      "payload_fields": [
+        "accepted",
+        "projection_revision"
+      ]
+    },
+    {
+      "type": "health",
+      "direction": "extension_to_host",
+      "payload_fields": []
+    },
+    {
+      "type": "health_result",
+      "direction": "host_to_extension",
+      "payload_fields": [
+        "availability",
+        "host_state",
+        "protocol_version",
+        "session_id",
+        "storage_state",
+        "index_state",
+        "projection_revision",
+        "projection_sequence",
+        "freshness_age_ms",
+        "retryable",
+        "counters"
+      ]
+    },
+    {
+      "type": "error",
+      "direction": "host_to_extension",
+      "payload_fields": [
+        "code",
+        "retryable",
+        "message_key"
+      ]
+    }
+  ],
+  "error_optional_fields": [
+    "retry_after_ms",
+    "expected_revision",
+    "expected_sequence"
+  ],
+  "session_states": [
+    "unbound",
+    "bound",
+    "ready",
+    "degraded",
+    "incompatible",
+    "disconnected",
+    "shutdown"
+  ],
+  "client_states": [
+    "Ready",
+    "Degraded",
+    "Reconnecting",
+    "Incompatible",
+    "Shutdown"
+  ],
+  "delta_operations": [
+    "create",
+    "update",
+    "move",
+    "group",
+    "pin",
+    "activate",
+    "remove"
+  ],
+  "identity": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "other_profile_id": "123e4567-e89b-42d3-a456-426614174009",
+    "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+    "second_projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+    "host_version": "0.1.0",
+    "extension_version": "0.1.0",
+    "browser_family": "chrome",
+    "browser_version": "126.0.0.0",
+    "ranking_model_version": "rank-v1",
+    "context_kind": "normal",
+    "capabilities": [
+      "query",
+      "snapshot",
+      "delta",
+      "health",
+      "activation_status"
+    ],
+    "supported_protocol_versions": [
+      1
+    ],
+    "tab_ids": [
+      10,
+      11
+    ],
+    "replacement_tab_ids": [
+      10,
+      11,
+      12,
+      13
+    ]
+  },
+  "privacy_sentinels": {
+    "title": "SENTINEL-TITLE-EEEE",
+    "url": "https://sentinel.example/path?q=SENTINEL-QUERY-FFFF",
+    "query": "SENTINEL-QUERY-FFFF",
+    "token": "SENTINEL-TOKEN-GGGG",
+    "page_marker": "SENTINEL-PAGE-HHHH"
+  },
+  "fixtures": [
+    {
+      "fixture_id": "NM-PROTO-001",
+      "title": "malformed envelope fails closed",
+      "requirement_ids": [
+        "FR-010",
+        "NFR-005"
+      ],
+      "pre_state": {
+        "state": "unbound",
+        "bound_profile_id": null,
+        "projection_revision": 0,
+        "projection_sequence": 0,
+        "indexed_tab_ids": []
+      },
+      "input_frames": [
+        {
+          "case": "missing_required_fields",
+          "raw_payload_text": "{\"protocol\":1,\"type\":\"hello\"}",
+          "expected_error_code": "INVALID_FRAME"
+        },
+        {
+          "case": "null_payload",
+          "raw_payload_text": "{\"protocol\":1,\"type\":\"hello\",\"request_id\":\"r-001\",\"profile_id\":\"123e4567-e89b-42d3-a456-426614174000\",\"projection_revision\":0,\"payload\":null}",
+          "expected_error_code": "INVALID_FRAME"
+        },
+        {
+          "case": "wrong_field_type",
+          "raw_payload_text": "{\"protocol\":\"1\",\"type\":\"hello\",\"request_id\":\"r-001\",\"profile_id\":\"123e4567-e89b-42d3-a456-426614174000\",\"projection_revision\":0,\"payload\":{}}",
+          "expected_error_code": "INVALID_FRAME"
+        },
+        {
+          "case": "duplicate_key",
+          "raw_payload_text": "{\"protocol\":1,\"protocol\":1,\"type\":\"hello\",\"request_id\":\"r-001\",\"profile_id\":\"123e4567-e89b-42d3-a456-426614174000\",\"projection_revision\":0,\"payload\":{}}",
+          "expected_error_code": "INVALID_FRAME"
+        },
+        {
+          "case": "unknown_field",
+          "raw_payload_text": "{\"protocol\":1,\"type\":\"hello\",\"request_id\":\"r-001\",\"profile_id\":\"123e4567-e89b-42d3-a456-426614174000\",\"projection_revision\":0,\"payload\":{},\"extra\":true}",
+          "expected_error_code": "INVALID_FRAME"
+        },
+        {
+          "case": "trailing_bytes",
+          "raw_payload_text": "{\"protocol\":1,\"type\":\"hello\",\"request_id\":\"r-001\",\"profile_id\":\"123e4567-e89b-42d3-a456-426614174000\",\"projection_revision\":0,\"payload\":{}} {}",
+          "expected_error_code": "INVALID_FRAME"
+        },
+        {
+          "case": "not_an_object",
+          "raw_payload_text": "[1,2,3]",
+          "expected_error_code": "INVALID_FRAME"
+        },
+        {
+          "case": "empty_request_id",
+          "request_id": "",
+          "type": "hello",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 0,
+          "payload": {},
+          "expected_error_code": "INVALID_FRAME"
+        }
+      ],
+      "expected": {
+        "emitted_frames": [
+          {
+            "type": "error",
+            "payload_fields": [
+              "code",
+              "retryable",
+              "message_key"
+            ],
+            "code": "INVALID_FRAME"
+          }
+        ],
+        "state": "unbound",
+        "error_code": "INVALID_FRAME",
+        "retryable": false,
+        "projection_revision": 0,
+        "indexed_tab_ids": [],
+        "request_ledger_size": 0,
+        "no_side_effect": true,
+        "redaction": {
+          "carries_raw_tab_fields": false,
+          "echoes_request_id_when_parseable": true,
+          "message_key_is_closed_vocabulary": true
+        },
+        "bounded_completion": true
+      }
+    },
+    {
+      "fixture_id": "NM-PROTO-002",
+      "title": "unsupported protocol version fails closed",
+      "requirement_ids": [
+        "FR-010",
+        "FR-012"
+      ],
+      "pre_state": {
+        "state": "unbound",
+        "bound_profile_id": null,
+        "projection_revision": 0,
+        "projection_sequence": 0,
+        "indexed_tab_ids": []
+      },
+      "input_frames": [
+        {
+          "request_id": "r-002",
+          "type": "hello",
+          "protocol": 2,
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 0,
+          "payload": {
+            "extension_version": "0.1.0",
+            "browser_family": "chrome",
+            "browser_version": "126.0.0.0",
+            "context_kind": "normal",
+            "capabilities": [
+              "query"
+            ],
+            "supported_protocol_versions": [
+              2
+            ]
+          },
+          "expected_error_code": "PROTOCOL_MISMATCH"
+        },
+        {
+          "request_id": "r-002b",
+          "type": "hello",
+          "protocol": 0,
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 0,
+          "payload": {
+            "extension_version": "0.1.0",
+            "browser_family": "chrome",
+            "browser_version": "126.0.0.0",
+            "context_kind": "normal",
+            "capabilities": [
+              "query"
+            ],
+            "supported_protocol_versions": [
+              1
+            ]
+          },
+          "expected_error_code": "PROTOCOL_MISMATCH"
+        }
+      ],
+      "expected": {
+        "emitted_frames": [
+          {
+            "type": "error",
+            "payload_fields": [
+              "code",
+              "retryable",
+              "message_key"
+            ],
+            "code": "PROTOCOL_MISMATCH"
+          }
+        ],
+        "state": "incompatible",
+        "error_code": "PROTOCOL_MISMATCH",
+        "retryable": false,
+        "tab_data_accepted": false,
+        "projection_revision": 0,
+        "indexed_tab_ids": [],
+        "request_ledger_size": 0,
+        "no_side_effect": true,
+        "recovery_action": "repair_protocol",
+        "redaction": {
+          "carries_raw_tab_fields": false,
+          "echoes_request_id_when_parseable": true,
+          "message_key_is_closed_vocabulary": true
+        },
+        "bounded_completion": true
+      }
+    },
+    {
+      "fixture_id": "NM-PROTO-003",
+      "title": "profile mismatch after binding does not mutate state",
+      "requirement_ids": [
+        "FR-010",
+        "NFR-009"
+      ],
+      "pre_state": {
+        "state": "bound",
+        "bound_profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_revision": 0,
+        "projection_sequence": 0,
+        "indexed_tab_ids": []
+      },
+      "input_frames": [
+        {
+          "request_id": "r-003",
+          "type": "snapshot",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174009",
+          "projection_revision": 1,
+          "payload": {
+            "sequence": 1,
+            "tabs": [
+              {
+                "tab_id": 10,
+                "window_id": 1,
+                "title_display": "Alpha",
+                "url_display": "alpha.example",
+                "domain_display": "alpha.example",
+                "pinned": false,
+                "active": true,
+                "group_id": null,
+                "context_kind": "normal"
+              }
+            ]
+          },
+          "expected_error_code": "PROFILE_MISMATCH"
+        },
+        {
+          "request_id": "r-003b",
+          "type": "query",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174009",
+          "projection_revision": 0,
+          "payload": {
+            "query": "alpha",
+            "result_limit": 10,
+            "current_window_id": 1
+          },
+          "expected_error_code": "PROFILE_MISMATCH"
+        }
+      ],
+      "expected": {
+        "emitted_frames": [
+          {
+            "type": "error",
+            "payload_fields": [
+              "code",
+              "retryable",
+              "message_key"
+            ],
+            "code": "PROFILE_MISMATCH"
+          }
+        ],
+        "state": "bound",
+        "error_code": "PROFILE_MISMATCH",
+        "retryable": false,
+        "bound_profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_revision": 0,
+        "indexed_tab_ids": [],
+        "request_ledger_size": 0,
+        "cross_profile_records_rejected": 2,
+        "no_side_effect": true,
+        "redaction": {
+          "carries_raw_tab_fields": false,
+          "echoes_request_id_when_parseable": true,
+          "message_key_is_closed_vocabulary": true
+        },
+        "bounded_completion": true
+      }
+    },
+    {
+      "fixture_id": "NM-PROTO-004",
+      "title": "payload and transport boundaries are enforced before allocation",
+      "requirement_ids": [
+        "NFR-005",
+        "FR-010"
+      ],
+      "pre_state": {
+        "state": "ready",
+        "bound_profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_revision": 1,
+        "projection_sequence": 1,
+        "indexed_tab_ids": [
+          10,
+          11
+        ]
+      },
+      "input_frames": [
+        {
+          "case": "at_json_payload_limit",
+          "request_id": "r-004a",
+          "type": "query",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 1,
+          "payload": {
+            "query": "alpha",
+            "result_limit": 10,
+            "current_window_id": 1
+          },
+          "payload_padding": {
+            "field": "note",
+            "total_json_payload_bytes": 262144,
+            "filler": "x"
+          },
+          "expected_error_code": null
+        },
+        {
+          "case": "one_byte_over_json_payload_limit",
+          "request_id": "r-004b",
+          "type": "query",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 1,
+          "payload": {
+            "query": "alpha",
+            "result_limit": 10,
+            "current_window_id": 1
+          },
+          "payload_padding": {
+            "field": "note",
+            "total_json_payload_bytes": 262145,
+            "filler": "x"
+          },
+          "expected_error_code": "PAYLOAD_LIMIT"
+        },
+        {
+          "case": "one_scalar_over_query_limit",
+          "request_id": "r-004c",
+          "type": "query",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 1,
+          "payload": {
+            "query": "alpha",
+            "result_limit": 10,
+            "current_window_id": 1
+          },
+          "query_scalars": 513,
+          "expected_error_code": "PAYLOAD_LIMIT"
+        },
+        {
+          "case": "one_operation_over_delta_limit",
+          "request_id": "r-004d",
+          "type": "delta",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 2,
+          "payload": {
+            "base_revision": 1,
+            "sequence_start": 2,
+            "sequence_end": 2,
+            "operations": []
+          },
+          "repeat_operation_count": 1001,
+          "expected_error_code": "PAYLOAD_LIMIT"
+        },
+        {
+          "case": "one_capability_over_limit",
+          "request_id": "r-004e",
+          "type": "hello",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 0,
+          "payload": {
+            "extension_version": "0.1.0",
+            "browser_family": "chrome",
+            "browser_version": "126.0.0.0",
+            "context_kind": "normal",
+            "capabilities": [
+              "c00",
+              "c01",
+              "c02",
+              "c03",
+              "c04",
+              "c05",
+              "c06",
+              "c07",
+              "c08",
+              "c09",
+              "c10",
+              "c11",
+              "c12",
+              "c13",
+              "c14",
+              "c15",
+              "c16",
+              "c17",
+              "c18",
+              "c19",
+              "c20",
+              "c21",
+              "c22",
+              "c23",
+              "c24",
+              "c25",
+              "c26",
+              "c27",
+              "c28",
+              "c29",
+              "c30",
+              "c31",
+              "c32"
+            ],
+            "supported_protocol_versions": [
+              1
+            ]
+          },
+          "expected_error_code": "PAYLOAD_LIMIT"
+        },
+        {
+          "case": "one_result_over_limit",
+          "request_id": "r-004f",
+          "type": "query",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 1,
+          "payload": {
+            "query": "alpha",
+            "result_limit": 51,
+            "current_window_id": 1
+          },
+          "expected_error_code": "PAYLOAD_LIMIT"
+        }
+      ],
+      "expected": {
+        "bounded_completion": true,
+        "emitted_frames": [
+          {
+            "type": "query_result",
+            "payload_fields": [
+              "results",
+              "ranking_model_version",
+              "projection_revision",
+              "counters"
+            ],
+            "code": null
+          },
+          {
+            "type": "error",
+            "payload_fields": [
+              "code",
+              "retryable",
+              "message_key"
+            ],
+            "code": "PAYLOAD_LIMIT"
+          },
+          {
+            "type": "error",
+            "payload_fields": [
+              "code",
+              "retryable",
+              "message_key"
+            ],
+            "code": "PAYLOAD_LIMIT"
+          },
+          {
+            "type": "error",
+            "payload_fields": [
+              "code",
+              "retryable",
+              "message_key"
+            ],
+            "code": "PAYLOAD_LIMIT"
+          },
+          {
+            "type": "error",
+            "payload_fields": [
+              "code",
+              "retryable",
+              "message_key"
+            ],
+            "code": "PAYLOAD_LIMIT"
+          },
+          {
+            "type": "error",
+            "payload_fields": [
+              "code",
+              "retryable",
+              "message_key"
+            ],
+            "code": "PAYLOAD_LIMIT"
+          }
+        ],
+        "error_code": "PAYLOAD_LIMIT",
+        "no_side_effect": true,
+        "over_limit_records_indexed": 0,
+        "partial_application": false,
+        "projection_revision": 1,
+        "redaction": {
+          "carries_raw_tab_fields": false,
+          "echoes_request_id_when_parseable": true,
+          "message_key_is_closed_vocabulary": true
+        },
+        "rejected_before_allocation": true,
+        "rejected_inputs": 5,
+        "retryable": false,
+        "state": "ready"
+      }
+    },
+    {
+      "fixture_id": "NM-PROTO-005",
+      "title": "tab data before hello_ack is refused",
+      "requirement_ids": [
+        "FR-010",
+        "NFR-005"
+      ],
+      "pre_state": {
+        "state": "unbound",
+        "bound_profile_id": null,
+        "projection_revision": 0,
+        "projection_sequence": 0,
+        "indexed_tab_ids": []
+      },
+      "input_frames": [
+        {
+          "request_id": "r-005a",
+          "type": "snapshot",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 1,
+          "payload": {
+            "sequence": 1,
+            "tabs": [
+              {
+                "tab_id": 10,
+                "window_id": 1,
+                "title_display": "Alpha",
+                "url_display": "alpha.example",
+                "domain_display": "alpha.example",
+                "pinned": false,
+                "active": true,
+                "group_id": null,
+                "context_kind": "normal"
+              }
+            ]
+          },
+          "expected_error_code": "SNAPSHOT_REQUIRED"
+        },
+        {
+          "request_id": "r-005b",
+          "type": "delta",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 1,
+          "payload": {
+            "base_revision": 0,
+            "sequence_start": 1,
+            "sequence_end": 1,
+            "operations": [
+              {
+                "operation": "remove",
+                "tab_id": 10
+              }
+            ]
+          },
+          "expected_error_code": "SNAPSHOT_REQUIRED"
+        },
+        {
+          "request_id": "r-005c",
+          "type": "query",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 0,
+          "payload": {
+            "query": "alpha",
+            "result_limit": 10,
+            "current_window_id": 1
+          },
+          "expected_error_code": "SNAPSHOT_REQUIRED"
+        },
+        {
+          "request_id": "r-005d",
+          "type": "activation_observed",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 0,
+          "payload": {
+            "result_reference": {
+              "tab_id": 10,
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 1,
+              "result_id": "res-1"
+            },
+            "tab_id": 10,
+            "projection_revision": 1,
+            "outcome": "activated"
+          },
+          "expected_error_code": "SNAPSHOT_REQUIRED"
+        }
+      ],
+      "expected": {
+        "emitted_frames": [
+          {
+            "type": "error",
+            "code": "SNAPSHOT_REQUIRED"
+          },
+          {
+            "type": "error",
+            "code": "SNAPSHOT_REQUIRED"
+          },
+          {
+            "type": "error",
+            "code": "SNAPSHOT_REQUIRED"
+          },
+          {
+            "type": "error",
+            "code": "SNAPSHOT_REQUIRED"
+          }
+        ],
+        "state": "unbound",
+        "error_code": "SNAPSHOT_REQUIRED",
+        "retryable": true,
+        "tab_data_accepted": false,
+        "projection_revision": 0,
+        "indexed_tab_ids": [],
+        "request_ledger_size": 0,
+        "no_side_effect": true,
+        "redaction": {
+          "carries_raw_tab_fields": false,
+          "echoes_request_id_when_parseable": true,
+          "message_key_is_closed_vocabulary": true
+        },
+        "bounded_completion": true
+      }
+    },
+    {
+      "fixture_id": "NM-PROTO-006",
+      "title": "newer snapshot atomically replaces the projection",
+      "requirement_ids": [
+        "FR-010",
+        "NFR-005"
+      ],
+      "pre_state": {
+        "state": "ready",
+        "bound_profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_revision": 1,
+        "projection_sequence": 1,
+        "indexed_tab_ids": [
+          10,
+          11
+        ]
+      },
+      "input_frames": [
+        {
+          "request_id": "r-006a",
+          "type": "snapshot",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 2,
+          "payload": {
+            "sequence": 2,
+            "tabs": [
+              {
+                "tab_id": 10,
+                "window_id": 1,
+                "title_display": "Alpha",
+                "url_display": "alpha.example",
+                "domain_display": "alpha.example",
+                "pinned": false,
+                "active": true,
+                "group_id": null,
+                "context_kind": "normal"
+              },
+              {
+                "tab_id": 11,
+                "window_id": 1,
+                "title_display": "Beta",
+                "url_display": "beta.example",
+                "domain_display": "beta.example",
+                "pinned": false,
+                "active": false,
+                "group_id": null,
+                "context_kind": "normal"
+              },
+              {
+                "tab_id": 12,
+                "window_id": 1,
+                "title_display": "Gamma",
+                "url_display": "gamma.example",
+                "domain_display": "gamma.example",
+                "pinned": false,
+                "active": false,
+                "group_id": null,
+                "context_kind": "normal"
+              },
+              {
+                "tab_id": 13,
+                "window_id": 1,
+                "title_display": "Delta",
+                "url_display": "delta.example",
+                "domain_display": "delta.example",
+                "pinned": false,
+                "active": false,
+                "group_id": null,
+                "context_kind": "normal"
+              }
+            ]
+          },
+          "expected_error_code": null
+        },
+        {
+          "request_id": "r-006b",
+          "type": "delta",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 2,
+          "payload": {
+            "base_revision": 1,
+            "sequence_start": 2,
+            "sequence_end": 2,
+            "operations": [
+              {
+                "operation": "remove",
+                "tab_id": 11
+              }
+            ]
+          },
+          "expected_error_code": "REVISION_MISMATCH"
+        }
+      ],
+      "expected": {
+        "emitted_frames": [
+          {
+            "type": "sync_ack",
+            "payload_fields": [
+              "accepted_revision",
+              "accepted_sequence"
+            ]
+          },
+          {
+            "type": "resync_required",
+            "payload_fields": [
+              "reason",
+              "expected_revision",
+              "expected_sequence"
+            ]
+          },
+          {
+            "type": "error",
+            "code": "REVISION_MISMATCH"
+          }
+        ],
+        "state": "ready",
+        "error_code": "REVISION_MISMATCH",
+        "retryable": true,
+        "projection_revision": 2,
+        "projection_sequence": 2,
+        "indexed_tab_ids": [
+          10,
+          11,
+          12,
+          13
+        ],
+        "indexed_ids_equal_snapshot_ids": true,
+        "stale_delta_rejected": 1,
+        "partial_application": false,
+        "request_ledger_size": 2,
+        "no_side_effect": true,
+        "redaction": {
+          "carries_raw_tab_fields": false,
+          "echoes_request_id_when_parseable": true,
+          "message_key_is_closed_vocabulary": true
+        },
+        "bounded_completion": true
+      }
+    },
+    {
+      "fixture_id": "NM-PROTO-007",
+      "title": "delta gap, wrong base, and out-of-order ranges fail closed",
+      "requirement_ids": [
+        "FR-010",
+        "NFR-005"
+      ],
+      "pre_state": {
+        "state": "ready",
+        "bound_profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_revision": 2,
+        "projection_sequence": 2,
+        "indexed_tab_ids": [
+          10,
+          11,
+          12,
+          13
+        ]
+      },
+      "input_frames": [
+        {
+          "case": "sequence_gap",
+          "request_id": "r-007a",
+          "type": "delta",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 4,
+          "payload": {
+            "base_revision": 2,
+            "sequence_start": 5,
+            "sequence_end": 6,
+            "operations": [
+              {
+                "operation": "remove",
+                "tab_id": 11
+              }
+            ]
+          },
+          "expected_error_code": "REVISION_MISMATCH"
+        },
+        {
+          "case": "wrong_base_revision",
+          "request_id": "r-007b",
+          "type": "delta",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 3,
+          "payload": {
+            "base_revision": 1,
+            "sequence_start": 3,
+            "sequence_end": 3,
+            "operations": [
+              {
+                "operation": "remove",
+                "tab_id": 11
+              }
+            ]
+          },
+          "expected_error_code": "REVISION_MISMATCH"
+        },
+        {
+          "case": "non_contiguous_range",
+          "request_id": "r-007c",
+          "type": "delta",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 3,
+          "payload": {
+            "base_revision": 2,
+            "sequence_start": 3,
+            "sequence_end": 5,
+            "operations": [
+              {
+                "operation": "remove",
+                "tab_id": 11
+              },
+              {
+                "operation": "remove",
+                "tab_id": 12
+              },
+              {
+                "operation": "remove",
+                "tab_id": 13
+              }
+            ]
+          },
+          "expected_error_code": "REVISION_MISMATCH"
+        },
+        {
+          "case": "unknown_operation",
+          "request_id": "r-007d",
+          "type": "delta",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 3,
+          "payload": {
+            "base_revision": 2,
+            "sequence_start": 3,
+            "sequence_end": 3,
+            "operations": [
+              {
+                "operation": "archive",
+                "tab_id": 11
+              }
+            ]
+          },
+          "expected_error_code": "INVALID_FRAME"
+        },
+        {
+          "case": "accepted_delta",
+          "request_id": "r-007e",
+          "type": "delta",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 3,
+          "payload": {
+            "base_revision": 2,
+            "sequence_start": 3,
+            "sequence_end": 3,
+            "operations": [
+              {
+                "operation": "remove",
+                "tab_id": 11
+              }
+            ]
+          },
+          "expected_error_code": null
+        }
+      ],
+      "expected": {
+        "emitted_frames": [
+          {
+            "type": "resync_required",
+            "payload_fields": [
+              "reason",
+              "expected_revision",
+              "expected_sequence"
+            ]
+          },
+          {
+            "type": "error",
+            "code": "REVISION_MISMATCH"
+          },
+          {
+            "type": "resync_required",
+            "payload_fields": [
+              "reason",
+              "expected_revision",
+              "expected_sequence"
+            ]
+          },
+          {
+            "type": "error",
+            "code": "REVISION_MISMATCH"
+          },
+          {
+            "type": "resync_required",
+            "payload_fields": [
+              "reason",
+              "expected_revision",
+              "expected_sequence"
+            ]
+          },
+          {
+            "type": "error",
+            "code": "REVISION_MISMATCH"
+          },
+          {
+            "type": "error",
+            "code": "INVALID_FRAME"
+          },
+          {
+            "type": "sync_ack",
+            "payload_fields": [
+              "accepted_revision",
+              "accepted_sequence"
+            ]
+          }
+        ],
+        "state": "ready",
+        "error_code": "REVISION_MISMATCH",
+        "retryable": true,
+        "resync_reasons": [
+          "sequence_gap",
+          "revision_mismatch",
+          "sequence_gap"
+        ],
+        "projection_revision": 3,
+        "projection_sequence": 3,
+        "indexed_tab_ids": [
+          10,
+          12,
+          13
+        ],
+        "out_of_order_operations_visible": 0,
+        "partial_application": false,
+        "request_ledger_size": 5,
+        "no_side_effect": true,
+        "redaction": {
+          "carries_raw_tab_fields": false,
+          "echoes_request_id_when_parseable": true,
+          "message_key_is_closed_vocabulary": true
+        },
+        "bounded_completion": true
+      }
+    },
+    {
+      "fixture_id": "NM-PROTO-008",
+      "title": "exact duplicate request replays one response",
+      "requirement_ids": [
+        "FR-010",
+        "NFR-004"
+      ],
+      "pre_state": {
+        "state": "ready",
+        "bound_profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_revision": 2,
+        "projection_sequence": 2,
+        "indexed_tab_ids": [
+          10,
+          11,
+          12,
+          13
+        ]
+      },
+      "input_frames": [
+        {
+          "repeat_count": 3,
+          "request_id": "r-008",
+          "type": "delta",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 3,
+          "payload": {
+            "base_revision": 2,
+            "sequence_start": 3,
+            "sequence_end": 3,
+            "operations": [
+              {
+                "operation": "remove",
+                "tab_id": 11
+              }
+            ]
+          },
+          "expected_error_code": null
+        },
+        {
+          "repeat_count": 2,
+          "request_id": "r-008q",
+          "type": "query",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 3,
+          "payload": {
+            "query": "alpha",
+            "result_limit": 10,
+            "current_window_id": 1
+          },
+          "expected_error_code": null
+        }
+      ],
+      "expected": {
+        "emitted_frames": [
+          {
+            "type": "sync_ack",
+            "payload_fields": [
+              "accepted_revision",
+              "accepted_sequence"
+            ],
+            "emit_count": 3,
+            "identical_bytes": true
+          },
+          {
+            "type": "query_result",
+            "payload_fields": [
+              "results",
+              "ranking_model_version",
+              "projection_revision",
+              "counters"
+            ],
+            "emit_count": 2,
+            "identical_bytes": true
+          }
+        ],
+        "state": "ready",
+        "error_code": null,
+        "retryable": false,
+        "projection_revision": 3,
+        "projection_sequence": 3,
+        "indexed_tab_ids": [
+          10,
+          12,
+          13
+        ],
+        "side_effects_executed": 2,
+        "duplicate_ledger_hits": 3,
+        "request_ledger_size": 2,
+        "partial_application": false,
+        "no_side_effect": true,
+        "redaction": {
+          "carries_raw_tab_fields": false,
+          "echoes_request_id_when_parseable": true,
+          "message_key_is_closed_vocabulary": true
+        },
+        "bounded_completion": true
+      }
+    },
+    {
+      "fixture_id": "NM-PROTO-009",
+      "title": "duplicate request id with changed bytes fails closed",
+      "requirement_ids": [
+        "FR-010",
+        "NFR-005"
+      ],
+      "pre_state": {
+        "state": "ready",
+        "bound_profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_revision": 2,
+        "projection_sequence": 2,
+        "indexed_tab_ids": [
+          10,
+          11,
+          12,
+          13
+        ]
+      },
+      "input_frames": [
+        {
+          "request_id": "r-009",
+          "type": "delta",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 3,
+          "payload": {
+            "base_revision": 2,
+            "sequence_start": 3,
+            "sequence_end": 3,
+            "operations": [
+              {
+                "operation": "remove",
+                "tab_id": 11
+              }
+            ]
+          },
+          "expected_error_code": null
+        },
+        {
+          "request_id": "r-009",
+          "type": "delta",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 3,
+          "payload": {
+            "base_revision": 2,
+            "sequence_start": 3,
+            "sequence_end": 3,
+            "operations": [
+              {
+                "operation": "remove",
+                "tab_id": 12
+              }
+            ]
+          },
+          "expected_error_code": "INVALID_FRAME"
+        }
+      ],
+      "expected": {
+        "emitted_frames": [
+          {
+            "type": "sync_ack",
+            "payload_fields": [
+              "accepted_revision",
+              "accepted_sequence"
+            ]
+          },
+          {
+            "type": "error",
+            "payload_fields": [
+              "code",
+              "retryable",
+              "message_key"
+            ],
+            "code": "INVALID_FRAME"
+          }
+        ],
+        "state": "disconnected",
+        "error_code": "INVALID_FRAME",
+        "retryable": false,
+        "session_closed_after_error": true,
+        "projection_revision": 3,
+        "projection_sequence": 3,
+        "indexed_tab_ids": [
+          10,
+          12,
+          13
+        ],
+        "second_payload_applied": false,
+        "frames_after_close_accepted": 0,
+        "partial_application": false,
+        "no_side_effect": true,
+        "redaction": {
+          "carries_raw_tab_fields": false,
+          "echoes_request_id_when_parseable": true,
+          "message_key_is_closed_vocabulary": true
+        },
+        "bounded_completion": true
+      }
+    },
+    {
+      "fixture_id": "NM-PROTO-010",
+      "title": "query during rebuild and past the host budget",
+      "requirement_ids": [
+        "FR-010",
+        "NFR-005"
+      ],
+      "pre_state": {
+        "state": "ready",
+        "bound_profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_revision": 2,
+        "projection_sequence": 2,
+        "indexed_tab_ids": [
+          10,
+          11,
+          12,
+          13
+        ],
+        "index_state": "rebuilding"
+      },
+      "input_frames": [
+        {
+          "case": "index_rebuilding",
+          "request_id": "r-010a",
+          "type": "query",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 2,
+          "payload": {
+            "query": "alpha",
+            "result_limit": 10,
+            "current_window_id": 1
+          },
+          "expected_error_code": "INDEX_REBUILDING"
+        },
+        {
+          "case": "unknown_revision",
+          "request_id": "r-010b",
+          "type": "query",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 99,
+          "payload": {
+            "query": "alpha",
+            "result_limit": 10,
+            "current_window_id": 1
+          },
+          "expected_error_code": "REVISION_MISMATCH"
+        },
+        {
+          "case": "host_budget_exceeded",
+          "request_id": "r-010c",
+          "type": "query",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 2,
+          "payload": {
+            "query": "alpha",
+            "result_limit": 10,
+            "current_window_id": 1
+          },
+          "block_beyond_deadline": "query_host_budget",
+          "expected_error_code": "QUERY_TIMEOUT"
+        }
+      ],
+      "expected": {
+        "emitted_frames": [
+          {
+            "type": "error",
+            "payload_fields": [
+              "code",
+              "retryable",
+              "message_key"
+            ],
+            "code": "INDEX_REBUILDING"
+          },
+          {
+            "type": "error",
+            "payload_fields": [
+              "code",
+              "retryable",
+              "message_key",
+              "expected_revision"
+            ],
+            "code": "REVISION_MISMATCH"
+          },
+          {
+            "type": "error",
+            "payload_fields": [
+              "code",
+              "retryable",
+              "message_key",
+              "retry_after_ms"
+            ],
+            "code": "QUERY_TIMEOUT"
+          }
+        ],
+        "state": "ready",
+        "error_code": "QUERY_TIMEOUT",
+        "retryable": true,
+        "stale_results_served": 0,
+        "partial_results_returned": 0,
+        "projection_revision": 2,
+        "indexed_tab_ids": [
+          10,
+          11,
+          12,
+          13
+        ],
+        "request_ledger_size": 3,
+        "no_side_effect": true,
+        "redaction": {
+          "carries_raw_tab_fields": false,
+          "echoes_request_id_when_parseable": true,
+          "message_key_is_closed_vocabulary": true
+        },
+        "bounded_completion": true
+      }
+    },
+    {
+      "fixture_id": "NM-PROTO-011",
+      "title": "degraded persistence stays visible while lexical results remain",
+      "requirement_ids": [
+        "FR-013",
+        "FR-012"
+      ],
+      "pre_state": {
+        "state": "ready",
+        "bound_profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_revision": 2,
+        "projection_sequence": 2,
+        "indexed_tab_ids": [
+          10,
+          11,
+          12,
+          13
+        ],
+        "storage_state": "degraded"
+      },
+      "input_frames": [
+        {
+          "request_id": "r-011a",
+          "type": "health",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 2,
+          "payload": {},
+          "expected_error_code": null
+        },
+        {
+          "request_id": "r-011b",
+          "type": "query",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 2,
+          "payload": {
+            "query": "alpha",
+            "result_limit": 10,
+            "current_window_id": 1
+          },
+          "expected_error_code": null
+        }
+      ],
+      "expected": {
+        "emitted_frames": [
+          {
+            "type": "health_result",
+            "payload_fields": [
+              "availability",
+              "host_state",
+              "protocol_version",
+              "session_id",
+              "storage_state",
+              "index_state",
+              "projection_revision",
+              "projection_sequence",
+              "freshness_age_ms",
+              "retryable",
+              "counters"
+            ],
+            "storage_state": "degraded"
+          },
+          {
+            "type": "query_result",
+            "payload_fields": [
+              "results",
+              "ranking_model_version",
+              "projection_revision",
+              "counters"
+            ],
+            "degraded_annotation": "PERSISTENCE_DEGRADED"
+          }
+        ],
+        "state": "degraded",
+        "client_state": "Degraded",
+        "error_code": null,
+        "retryable": true,
+        "degraded_code": "PERSISTENCE_DEGRADED",
+        "lexical_results_available": true,
+        "availability": "healthy",
+        "projection_revision": 2,
+        "indexed_tab_ids": [
+          10,
+          11,
+          12,
+          13
+        ],
+        "request_ledger_size": 2,
+        "no_side_effect": true,
+        "redaction": {
+          "carries_raw_tab_fields": false,
+          "echoes_request_id_when_parseable": true,
+          "message_key_is_closed_vocabulary": true
+        },
+        "bounded_completion": true
+      }
+    },
+    {
+      "fixture_id": "NM-PROTO-012",
+      "title": "disconnect during a frame fails in-flight work and clears the ledger",
+      "requirement_ids": [
+        "FR-010",
+        "FR-012",
+        "NFR-006"
+      ],
+      "pre_state": {
+        "state": "ready",
+        "bound_profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_revision": 2,
+        "projection_sequence": 2,
+        "indexed_tab_ids": [
+          10,
+          11,
+          12,
+          13
+        ]
+      },
+      "input_frames": [
+        {
+          "request_id": "r-012a",
+          "type": "query",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 2,
+          "payload": {
+            "query": "alpha",
+            "result_limit": 10,
+            "current_window_id": 1
+          },
+          "hold_response": true,
+          "expected_error_code": "HOST_SHUTDOWN"
+        },
+        {
+          "case": "short_frame_then_eof",
+          "request_id": "r-012b",
+          "type": "query",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 2,
+          "payload": {
+            "query": "alpha",
+            "result_limit": 10,
+            "current_window_id": 1
+          },
+          "truncate_bytes": 12,
+          "then_eof": true,
+          "expected_error_code": "HOST_SHUTDOWN"
+        },
+        {
+          "case": "post_disconnect_frame",
+          "request_id": "r-012c",
+          "type": "health",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 2,
+          "payload": {},
+          "expected_error_code": "HOST_SHUTDOWN"
+        }
+      ],
+      "expected": {
+        "emitted_frames": [
+          {
+            "type": "error",
+            "payload_fields": [
+              "code",
+              "retryable",
+              "message_key"
+            ],
+            "code": "HOST_SHUTDOWN"
+          }
+        ],
+        "state": "disconnected",
+        "client_state": "Reconnecting",
+        "error_code": "HOST_SHUTDOWN",
+        "retryable": true,
+        "in_flight_failed": 2,
+        "session_identity_cleared": true,
+        "request_ledger_size": 0,
+        "frames_after_disconnect_accepted": 0,
+        "projection_revision": 2,
+        "indexed_tab_ids": [
+          10,
+          11,
+          12,
+          13
+        ],
+        "no_side_effect": true,
+        "redaction": {
+          "carries_raw_tab_fields": false,
+          "echoes_request_id_when_parseable": true,
+          "message_key_is_closed_vocabulary": true
+        },
+        "bounded_completion": true
+      }
+    },
+    {
+      "fixture_id": "NM-PROTO-013",
+      "title": "reconnect requires a new hello then snapshot",
+      "requirement_ids": [
+        "NFR-006",
+        "FR-010"
+      ],
+      "pre_state": {
+        "state": "disconnected",
+        "bound_profile_id": null,
+        "projection_revision": 0,
+        "projection_sequence": 0,
+        "indexed_tab_ids": [],
+        "previous_session_id": "0123456789abcdef0123456789abcdef",
+        "previous_projection_epoch": "123e4567-e89b-42d3-a456-426614174001"
+      },
+      "input_frames": [
+        {
+          "case": "query_before_new_hello",
+          "request_id": "r-013a",
+          "type": "query",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 0,
+          "payload": {
+            "query": "alpha",
+            "result_limit": 10,
+            "current_window_id": 1
+          },
+          "expected_error_code": "SNAPSHOT_REQUIRED"
+        },
+        {
+          "case": "delta_before_new_hello",
+          "request_id": "r-013b",
+          "type": "delta",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 1,
+          "payload": {
+            "base_revision": 0,
+            "sequence_start": 1,
+            "sequence_end": 1,
+            "operations": [
+              {
+                "operation": "remove",
+                "tab_id": 10
+              }
+            ]
+          },
+          "expected_error_code": "SNAPSHOT_REQUIRED"
+        },
+        {
+          "case": "new_hello",
+          "request_id": "r-013c",
+          "type": "hello",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 0,
+          "payload": {
+            "extension_version": "0.1.0",
+            "browser_family": "chrome",
+            "browser_version": "126.0.0.0",
+            "context_kind": "normal",
+            "capabilities": [
+              "query",
+              "snapshot",
+              "delta",
+              "health",
+              "activation_status"
+            ],
+            "supported_protocol_versions": [
+              1
+            ]
+          },
+          "expected_error_code": null
+        },
+        {
+          "case": "authoritative_snapshot",
+          "request_id": "r-013d",
+          "type": "snapshot",
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "projection_revision": 1,
+          "payload": {
+            "sequence": 1,
+            "tabs": [
+              {
+                "tab_id": 10,
+                "window_id": 1,
+                "title_display": "Alpha",
+                "url_display": "alpha.example",
+                "domain_display": "alpha.example",
+                "pinned": false,
+                "active": true,
+                "group_id": null,
+                "context_kind": "normal"
+              },
+              {
+                "tab_id": 11,
+                "window_id": 1,
+                "title_display": "Beta",
+                "url_display": "beta.example",
+                "domain_display": "beta.example",
+                "pinned": false,
+                "active": false,
+                "group_id": null,
+                "context_kind": "normal"
+              }
+            ]
+          },
+          "expected_error_code": null
+        }
+      ],
+      "expected": {
+        "emitted_frames": [
+          {
+            "type": "error",
+            "payload_fields": [
+              "code",
+              "retryable",
+              "message_key"
+            ],
+            "code": "SNAPSHOT_REQUIRED"
+          },
+          {
+            "type": "error",
+            "payload_fields": [
+              "code",
+              "retryable",
+              "message_key"
+            ],
+            "code": "SNAPSHOT_REQUIRED"
+          },
+          {
+            "type": "hello_ack",
+            "payload_fields": [
+              "protocol",
+              "host_version",
+              "limits",
+              "ranking_model_version",
+              "persistence"
+            ]
+          },
+          {
+            "type": "sync_ack",
+            "payload_fields": [
+              "accepted_revision",
+              "accepted_sequence"
+            ]
+          }
+        ],
+        "state": "ready",
+        "client_state": "Ready",
+        "error_code": null,
+        "retryable": false,
+        "requires_new_hello": true,
+        "requires_new_snapshot": true,
+        "reached_ready_without_reinstall": true,
+        "session_id_differs_from_previous": true,
+        "projection_epoch_differs_from_previous": true,
+        "projection_revision": 1,
+        "projection_sequence": 1,
+        "indexed_tab_ids": [
+          10,
+          11
+        ],
+        "stale_results_served": 0,
+        "request_ledger_size": 4,
+        "no_side_effect": true,
+        "redaction": {
+          "carries_raw_tab_fields": false,
+          "echoes_request_id_when_parseable": true,
+          "message_key_is_closed_vocabulary": true
+        },
+        "bounded_completion": true
+      }
+    }
+  ],
+  "limit_precedence": [
+    {
+      "case": "frame_bytes_over_1048576",
+      "owner": "IP-06",
+      "code": null,
+      "reachable_on_the_wire": true
+    },
+    {
+      "case": "json_payload_over_262144",
+      "owner": "IP-07",
+      "code": "PAYLOAD_LIMIT",
+      "reachable_on_the_wire": true
+    },
+    {
+      "case": "snapshot_records_over_10000",
+      "owner": "IP-07",
+      "code": "PAYLOAD_LIMIT",
+      "reachable_on_the_wire": false,
+      "note": "A full eligible-tab record is bounded well below 26 bytes, so 10,001 records cannot fit inside the 256 KiB JSON payload cap and the payload cap binds first. The record cap stays a defence-in-depth bound asserted at its own boundary, not a wire-observable rejection."
+    }
+  ]
+}
