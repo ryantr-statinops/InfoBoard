@@ -200,7 +200,7 @@ Actual branch history: `8def9d2` (T01–T04), `ad43457` (eligibility), `cbd8187`
 
 ## 8. Kiểm chứng và nghiệm thu
 
-Progress checkpoint (2026-10-03): `npm run build:extension` passes; `BROWSER=chromium npm run test:extension` passes (38/38); `npm run test:domain` passes (9/9); implementation-corpus validation passes (20 phases, 232 tasks, 25 requirements, 9 fixtures, 7 invariants, 19 seams); `git diff --check` passes. Chrome/Edge comparison is fake-adapter parity; no branded Chrome/Edge browser matrix was run.
+After merge commit `2d3aad9` into local `dev`, `npm run build:extension` passed; `BROWSER=chromium npm run test:extension` passed (38/38); `npm run test:domain` passed (9/9); implementation-corpus validation passed (20 phases, 232 tasks, 25 requirements, 9 fixtures, 7 invariants, 19 seams); `git diff --check` passed. Chrome/Edge comparison is fake-adapter parity; no branded Chrome/Edge browser matrix was run.
 
 - [x] Run all eight IP-04 fixture scenarios through `tests/extension/tab-observer-fixtures.test.ts`.
 - [x] Run Chrome-complete and Edge-optional fake adapters over the same fixture corpus and compare normalized projections.
@@ -209,7 +209,7 @@ Progress checkpoint (2026-10-03): `npm run build:extension` passes; `BROWSER=chr
 - [x] Cover required tab-query denial and optional group-query failure with fail-closed/partial-state semantics.
 - [x] Verify handoff event sequence/effective-change metadata and safe diagnostics without raw title/URL values.
 - [x] Verify successful empty snapshots differ from failures and authoritative snapshots clear reused-ID quarantine.
-- [x] Run build, extension tests, domain tests, corpus validation, and `git diff --check` before dev integration.
+- [x] Run build, extension tests, domain tests, corpus validation, and `git diff --check` on local `dev` after integration.
 
 ## 9. Rủi ro và quyết định còn mở
 
