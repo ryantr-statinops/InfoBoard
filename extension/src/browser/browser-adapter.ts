@@ -1,16 +1,47 @@
+import { isUnknownRecord } from './type-guards.js';
+import type { BrowserApiEvent, BrowserGroupSnapshot, BrowserTabSnapshot, BrowserTabSnapshotBatch, BrowserWindowSnapshot } from './event-normalizer.js';
 import { createProfileID, parseProfileID, type ContextKind, type ProfileID, type ProfileIDStore } from '../../domain/index.js';
 
 export type BrowserResult<T> =
   | { ok: true; value: T }
   | { ok: false; error: { kind: 'permission_denied' | 'unsupported' | 'not_found' | 'operation_failed' | 'cancelled'; retryable: boolean } };
 export interface BrowserProfileContext { browserFamily: 'chrome' | 'edge'; profileId: ProfileID; contextKind: ContextKind }
+export interface BrowserObserverRegistration { unsubscribe(): void; missingOptionalCapabilities: number }
 export interface BrowserAdapter {
   openSearchSurface(): Promise<BrowserResult<void>>;
   closeSearchSurface(): Promise<BrowserResult<void>>;
   currentProfileContext(): Promise<BrowserResult<BrowserProfileContext>>;
+  privateContextAccess(): Promise<BrowserResult<boolean>>;
+  getOpenTabSnapshot(): Promise<BrowserResult<BrowserTabSnapshotBatch>>;
+  registerTabObservationListeners(listener: (event: BrowserApiEvent) => void): BrowserResult<BrowserObserverRegistration>;
   registerCommandListener(listener: (command: string) => void): void;
   registerLifecycleListeners(onInstall: (reason: string) => void, onStartup: () => void): void;
   registerPopupCloseListener(listener: () => void): void;
+}
+type BrowserApiListener = (...args: readonly unknown[]) => void;
+interface BrowserApiListenerEvent { addListener(listener: BrowserApiListener): void; removeListener?(listener: BrowserApiListener): void }
+interface BrowserApiTabs {
+  query(queryInfo: Record<string, never>): Promise<unknown[]>;
+  onCreated?: BrowserApiListenerEvent;
+  onUpdated?: BrowserApiListenerEvent;
+  onMoved?: BrowserApiListenerEvent;
+  onAttached?: BrowserApiListenerEvent;
+  onDetached?: BrowserApiListenerEvent;
+  onActivated?: BrowserApiListenerEvent;
+  onRemoved?: BrowserApiListenerEvent;
+}
+interface BrowserApiTabGroups {
+  query(queryInfo: Record<string, never>): Promise<unknown[]>;
+  onUpdated?: BrowserApiListenerEvent;
+  onMoved?: BrowserApiListenerEvent;
+  onRemoved?: BrowserApiListenerEvent;
+}
+interface BrowserApiWindows {
+  getLastFocused(): Promise<{ id?: number; incognito?: boolean }>;
+  getAll?(options?: { populate?: boolean }): Promise<unknown[]>;
+  onCreated?: BrowserApiListenerEvent;
+  onRemoved?: BrowserApiListenerEvent;
+  onFocusChanged?: BrowserApiListenerEvent;
 }
 export interface BrowserApi {
   runtime: {
@@ -21,7 +52,10 @@ export interface BrowserApi {
   };
   commands: { onCommand: { addListener(fn: (command: string) => void): void } };
   action: { openPopup(options?: { windowId?: number }): Promise<void> };
-  windows: { getLastFocused(): Promise<{ id?: number; incognito?: boolean }> };
+  windows: BrowserApiWindows;
+  tabs?: BrowserApiTabs;
+  tabGroups?: BrowserApiTabGroups;
+  extension?: { isAllowedIncognitoAccess(): Promise<boolean> };
   storage: { local: { get(key: string): Promise<Record<string, unknown>>; set(items: Record<string, unknown>): Promise<void>; remove(key: string): Promise<void> } };
 }
 const PROFILE_KEY = 'profile_id';
@@ -31,7 +65,45 @@ function failure(error: unknown): BrowserResult<never> {
   const kind: ErrorKind = message.includes('permission') ? 'permission_denied' : message.includes('not found') ? 'not_found' : 'operation_failed';
   return { ok: false, error: { kind, retryable: kind === 'operation_failed' } };
 }
+function tabSnapshotFromApi(value: unknown): BrowserTabSnapshot {
+  const result: BrowserTabSnapshot = {};
+  if (!isUnknownRecord(value)) return result;
+  for (const field of ['id', 'windowId', 'groupId', 'title', 'url', 'pinned', 'active', 'incognito'] as const) {
+    if (Object.hasOwn(value, field)) result[field] = value[field];
+  }
+  return result;
+}
 
+function windowSnapshotFromApi(value: unknown): BrowserWindowSnapshot {
+  const result: BrowserWindowSnapshot = {};
+  if (!isUnknownRecord(value)) return result;
+  for (const field of ['id', 'incognito', 'focused', 'title'] as const) {
+    if (Object.hasOwn(value, field)) result[field] = value[field];
+  }
+  return result;
+}
+
+function groupSnapshotFromApi(value: unknown): BrowserGroupSnapshot {
+  const result: BrowserGroupSnapshot = {};
+  if (!isUnknownRecord(value)) return result;
+  for (const field of ['id', 'windowId', 'title'] as const) {
+    if (Object.hasOwn(value, field)) result[field] = value[field];
+  }
+  return result;
+}
+
+function attachObserverListener(
+  source: BrowserApiEvent['source'],
+  event: BrowserApiListenerEvent | undefined,
+  listener: (event: BrowserApiEvent) => void,
+  removers: Array<() => void>,
+): boolean {
+  if (!event) return false;
+  const callback: BrowserApiListener = (...args) => listener({ source, args });
+  event.addListener(callback);
+  removers.push(() => event.removeListener?.(callback));
+  return true;
+}
 export class ChromeBrowserAdapter implements BrowserAdapter, ProfileIDStore {
   private readonly api: BrowserApi;
   constructor(api?: BrowserApi) { this.api = api ?? (globalThis as typeof globalThis & { chrome: BrowserApi }).chrome; }
@@ -48,8 +120,11 @@ export class ChromeBrowserAdapter implements BrowserAdapter, ProfileIDStore {
   registerCommandListener(listener: (command: string) => void): void { this.api.commands.onCommand.addListener(listener); }
   registerLifecycleListeners(onInstall: (reason: string) => void, onStartup: () => void): void {
     this.api.runtime.onInstalled.addListener(({ reason }) => {
-      onInstall(reason);
-      if (reason === 'install') void this.initializeFirstInstall().catch(() => undefined);
+      if (reason === 'install') {
+        void this.initializeFirstInstall().then(() => onInstall(reason)).catch(() => undefined);
+      } else {
+        onInstall(reason);
+      }
     });
     this.api.runtime.onStartup.addListener(onStartup);
   }
@@ -61,7 +136,70 @@ export class ChromeBrowserAdapter implements BrowserAdapter, ProfileIDStore {
       return false;
     });
   }
-  async currentProfileContext(): Promise<BrowserResult<BrowserProfileContext>> {
+  async getOpenTabSnapshot(): Promise<BrowserResult<BrowserTabSnapshotBatch>> {
+    const tabs = this.api.tabs;
+    const getAllWindows = this.api.windows.getAll;
+    if (!tabs || !getAllWindows) return { ok: false, error: { kind: 'unsupported', retryable: false } };
+    try {
+      const [rawTabs, rawWindows] = await Promise.all([tabs.query({}), getAllWindows({ populate: false })]);
+      let rawGroups: unknown[] = [];
+      let optionalCapabilityErrors = 0;
+      const groupApi = this.api.tabGroups;
+      if (groupApi) {
+        try { rawGroups = await groupApi.query({}); }
+        catch { optionalCapabilityErrors += 1; }
+      } else {
+        optionalCapabilityErrors += 1;
+      }
+      return { ok: true, value: {
+        tabs: rawTabs.map(tabSnapshotFromApi),
+        windows: rawWindows.map(windowSnapshotFromApi),
+        groups: rawGroups.map(groupSnapshotFromApi),
+        optionalCapabilityErrors,
+      } };
+    } catch (error) { return failure(error); }
+  }
+  registerTabObservationListeners(listener: (event: BrowserApiEvent) => void): BrowserResult<BrowserObserverRegistration> {
+    const tabs = this.api.tabs;
+    const windows = this.api.windows;
+    if (!tabs || !windows) return { ok: false, error: { kind: 'unsupported', retryable: false } };
+    const removers: Array<() => void> = [];
+    const requiredSources: Array<[BrowserApiEvent['source'], BrowserApiListenerEvent | undefined]> = [
+      ['tabs.onCreated', tabs.onCreated], ['tabs.onUpdated', tabs.onUpdated], ['tabs.onMoved', tabs.onMoved],
+      ['tabs.onAttached', tabs.onAttached], ['tabs.onDetached', tabs.onDetached], ['tabs.onActivated', tabs.onActivated],
+      ['tabs.onRemoved', tabs.onRemoved], ['windows.onCreated', windows.onCreated], ['windows.onRemoved', windows.onRemoved],
+      ['windows.onFocusChanged', windows.onFocusChanged],
+    ];
+    for (const [source, event] of requiredSources) {
+      if (!attachObserverListener(source, event, listener, removers)) {
+        for (const remove of removers) { try { remove(); } catch { /* best-effort listener cleanup */ } }
+        return { ok: false, error: { kind: 'unsupported', retryable: false } };
+      }
+    }
+    let missingOptionalCapabilities = 0;
+    const groups = this.api.tabGroups;
+    if (!groups) {
+      missingOptionalCapabilities = 1;
+    } else {
+      const optionalSources: Array<[BrowserApiEvent['source'], BrowserApiListenerEvent | undefined]> = [
+        ['tabGroups.onUpdated', groups.onUpdated], ['tabGroups.onMoved', groups.onMoved], ['tabGroups.onRemoved', groups.onRemoved],
+      ];
+      for (const [source, event] of optionalSources) {
+        if (!attachObserverListener(source, event, listener, removers)) missingOptionalCapabilities += 1;
+      }
+    }
+    return { ok: true, value: {
+      missingOptionalCapabilities,
+      unsubscribe: () => { for (const remove of removers) { try { remove(); } catch { /* best-effort listener cleanup */ } } },
+    } };
+  }
+  async privateContextAccess(): Promise<BrowserResult<boolean>> {
+    const isAllowedIncognitoAccess = this.api.extension?.isAllowedIncognitoAccess;
+    if (!isAllowedIncognitoAccess) return { ok: false, error: { kind: 'unsupported', retryable: false } };
+    try { return { ok: true, value: await isAllowedIncognitoAccess.call(this.api.extension) }; }
+    catch (error) { return failure(error); }
+  }
+   async currentProfileContext(): Promise<BrowserResult<BrowserProfileContext>> {
     try {
       const profileId = parseProfileID(await this.read());
       const focused = await this.api.windows.getLastFocused();
