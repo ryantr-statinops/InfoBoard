@@ -13,17 +13,19 @@ Canonical contract: [`README.md`](../refactor/README.md), [`architecture.md`](..
 Implementation has begun. The layout records original target classifications; completed paths and active phase status are tracked below and in README.md.
 
 ```text
+go.work      # present: workspace joining the host and test modules
 extension/   # to-create: Manifest V3 boundary, browser adapter, focused search surface (implemented in IP-03/IP-04)
-host/        # to-create: Go Native Messaging host, projection, index, persistence, diagnostics
+host/        # to-create: runtime/protocol/projection roots; existing IP-02 domain module at host/go.mod
 packaging/   # to-create: browser package, native manifest, installer and lifecycle artifacts
 fixtures/catalog.schema.json # shared fixture envelope schema (IP-01)
 fixtures/catalog.json        # shared fixture catalog (IP-01)
 fixtures/<phase>/            # phase-owned fixtures; IP-04 fixture corpus exists
 tests/implementation/validate_corpus.py # present: standard-library corpus/fixture validator
-tests/<phase>/                 # phase-owned tests; IP-02 and extension test suites exist
+tests/go.mod # present: Go test module in the root workspace
+tests/<phase>/                 # to-create: phase-owned tests; IP-02 and extension test suites exist
 ```
 
-IP-01 owns the exact package/module naming map. The shared fixture catalog and catalog schema define nine reusable observable cases plus future checks, invariants, and one traceable acceptance seam for every later phase. The extension runtime and IP-04 fixture/test roots exist; host, packaging, and later phase-owned roots remain to-create. The shared validator is present, and phase-specific acceptance suites extend rather than inherit the shared baseline. A phase author must reread the implementation scaffold and use observed paths before committing.
+IP-01 owns the exact package/module naming map. The shared fixture catalog and catalog schema define nine reusable observable cases plus future checks, invariants, and one traceable acceptance seam for every later phase. The Go workspace at `go.work` joins the existing `host/` module and the test module at `tests/go.mod`. The extension runtime and IP-04 fixture/test roots exist; host runtime, packaging, and later phase-owned roots remain to-create. The shared validator is present, and phase-specific acceptance suites extend rather than inherit the shared baseline. A phase author must reread the implementation scaffold and use observed paths before committing.
 
 ## Phase inventory and dependency DAG
 
