@@ -10,7 +10,7 @@
 
 | ID | Requirement | Acceptance signal |
 | --- | --- | --- |
-| FR-001 | The extension MUST expose one user-configurable browser command for opening search. | Chrome and Edge command settings show the command and invoke the search surface. |
+| FR-001 | The extension MUST expose configurable `open-search` and `close-search` browser commands. | Chrome and Edge command settings show both shortcuts; open-search shows the browser action popup and close-search dismisses it without changing the selected tab. |
 | FR-002 | The search surface MUST focus its query input before accepting text. | Keyboard trace reaches a focused input without pointer interaction. |
 | FR-003 | The system MUST search the current profile's open-tab projection by title, URL, domain, window, group, and state labels. | Fixture queries return expected field matches and exclude unavailable data. |
 | FR-004 | The system MUST update results as the query changes without requiring submit. | Each accepted query revision renders a corresponding result revision. |
@@ -43,7 +43,7 @@
 
 ## Permission requirements
 
-The extension MUST request only permissions required by the product contract. Any permission for history, bookmarks, downloads, page content, cookies, storage beyond the declared local store, or broad host access requires a new decision record and updated privacy documentation.
+The extension MUST request only permissions required by the product contract. The sole approved extension-owned storage use is `chrome.storage.local` with the single key `profile_id` as specified by REF-013; this does not permit page `window.localStorage`, page/session storage, `storage.sync`, cookies, history, bookmarks, downloads, page content, or broad host access. Any other storage/data permission requires a new decision record and updated privacy documentation.
 
 ## Operational requirements
 

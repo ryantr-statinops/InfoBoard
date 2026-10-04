@@ -22,14 +22,14 @@
 | Browser history | Broader recall | Excluded. |
 | Bookmarks and downloads | Different search product | Excluded. |
 | Page DOM, rendered text, selected text | Richer semantic search | Excluded from the product contract. |
-| Cookies, local storage, session data | Credentials and private state | Excluded. |
-| Network interception | Broad sensitive access | Excluded. |
+| Cookies, page local/session storage | Credentials and private state | Excluded; the extension never reads page storage. |
+| Extension-owned `chrome.storage.local` | Stable opaque profile identity only | Allowed only for one locally generated `profile_id` at key `profile_id`, per REF-013. No other values, sync, page storage, or content. |
 
 ## Extension model
 
 The extension owns the command, search surface, browser event listeners, profile boundary, tab activation, and user-visible state. The service worker may be suspended or restarted, so it MUST persist only what is necessary and MUST reconcile from browser APIs after reconnect.
 
-The search surface is an extension-owned focused window or page rather than a transient content-script overlay. It does not require access to every page. Page scripting is not part of the product contract.
+The search surface is the extension-owned action popup anchored in the browser toolbar. It stays inside the browser UI, does not navigate or activate the current page, and does not require page DOM access, scripts, or host permissions. The browser action icon is the native container for the configured command's popup.
 
 ## Profile and private-window rules
 

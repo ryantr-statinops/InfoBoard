@@ -30,7 +30,7 @@ Required rules:
 
 ## Handshake
 
-The client sends `hello` with extension version, browser family/version, profile identity, supported capabilities, and protocol version. The host returns `hello_ack` with the accepted protocol, host version, limits, ranking model version, and persistence health.
+The client sends hello with extension version, browser family/version, context_kind, supported capabilities, and protocol version; profile identity is the required profile_id in the message envelope and is not duplicated in the payload. The host returns hello_ack with the accepted protocol, host version, limits, ranking model version, and persistence health.
 
 The extension does not enter `Ready` until the handshake succeeds. A mismatch yields a repairable incompatibility state and does not send tab data.
 

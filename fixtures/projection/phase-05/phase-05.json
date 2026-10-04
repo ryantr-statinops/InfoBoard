@@ -1,0 +1,1011 @@
+{
+  "schema_version": 1,
+  "phase": "IP-05",
+  "artifact": "projection-boundary",
+  "owner_task": "IP-05-T01",
+  "requirement_ids": [
+    "FR-009",
+    "FR-010",
+    "FR-014"
+  ],
+  "shared_consumers": [
+    "go",
+    "node"
+  ],
+  "contract_source": [
+    "extension/domain/index.ts",
+    "host/internal/domain/domain.go"
+  ],
+  "note": "IP-05-T01 publishes the projection boundary contract only: profile_id, context_kind, projection_epoch, and projection_revision are mandatory partition and fence fields on every projection record and IP-04 handoff, and no producer or host may substitute a synthetic or default identity. Snapshot acquisition, canonicalization, revision ordering, duplicate and gap handling, profile isolation, atomic replacement, and recovery are later IP-05 tasks, so this artifact states no ordering or recovery outcome.",
+  "outcome_note": "IP-02 projection outcomes are the authoritative boundary result for a record input. IP-07 owns the wire mapping for any boundary failure.",
+  "boundary": {
+    "mandatory_partition_fields": [
+      "profile_id",
+      "context_kind"
+    ],
+    "mandatory_fence_fields": [
+      "projection_epoch",
+      "projection_revision"
+    ],
+    "tab_identity_required_fields": [
+      "profile_id",
+      "context_kind",
+      "tab_id"
+    ],
+    "snapshot_record_required_fields": [
+      "profile_id",
+      "context_kind",
+      "tab_identity",
+      "window_id",
+      "group_id",
+      "title_display",
+      "title_search",
+      "url_search",
+      "url_display",
+      "domain_display",
+      "domain_search",
+      "pinned",
+      "active",
+      "eligible",
+      "observed_at",
+      "projection_epoch",
+      "projection_revision"
+    ],
+    "optional_record_fields": [
+      "window_label_display",
+      "window_label_search",
+      "group_label_display",
+      "group_label_search"
+    ],
+    "identity_sources": {
+      "profile_id": "extension_profile_id_storage",
+      "context_kind": "browser_window_incognito",
+      "projection_epoch": "ip04_observer_handoff",
+      "projection_revision": "ip04_observer_handoff"
+    },
+    "accepted_outcomes": [
+      "APPLIED"
+    ],
+    "fail_closed_outcome": "SNAPSHOT_REQUIRED",
+    "synthetic_identity_fallback_allowed": false,
+    "ip04_handoff_boundary": {
+      "owner": "IP-04",
+      "consumer": "IP-05",
+      "handoff_kinds": [
+        "snapshot",
+        "upsert",
+        "remove",
+        "window",
+        "status",
+        "private_context_ended",
+        "disposed"
+      ],
+      "message_kinds": [
+        "snapshot",
+        "delta",
+        "status"
+      ],
+      "handoff_kind_map": {
+        "snapshot": "snapshot",
+        "upsert": "delta",
+        "remove": "delta",
+        "window": "status",
+        "status": "status",
+        "private_context_ended": "status",
+        "disposed": "status"
+      },
+      "required_handoff_fields": {
+        "snapshot": [
+          "kind",
+          "profile_id",
+          "context_kind",
+          "projection_epoch",
+          "projection_revision"
+        ],
+        "delta": [
+          "kind",
+          "profile_id",
+          "context_kind",
+          "projection_epoch",
+          "projection_revision"
+        ],
+        "status": [
+          "kind"
+        ]
+      },
+      "optional_handoff_fields": [
+        "event_sequence",
+        "previous_revision",
+        "effective_change",
+        "resync_required",
+        "resync_reason",
+        "tab_identity",
+        "record",
+        "records"
+      ]
+    }
+  },
+  "reserved_fixture_ids": [
+    "FX-PROJECTION-SNAPSHOT-AUTHORITY",
+    "FX-PROJECTION-ORDERED-DELTAS",
+    "FX-PROJECTION-DUPLICATE-DELTA",
+    "FX-PROJECTION-STALE-REVISION",
+    "FX-PROJECTION-MISSED-EVENT",
+    "FX-PROJECTION-RESTART",
+    "FX-PROJECTION-PROFILE-BOUNDARY",
+    "FX-PROJECTION-ATOMIC-REPLACE",
+    "FX-PROJECTION-CANONICAL-OUTPUT"
+  ],
+  "fixtures": [
+    {
+      "fixture_id": "FX-PROJECTION-BOUNDARY-REQUIRED-FIELDS",
+      "owner_task": "IP-05-T01",
+      "category": "projection",
+      "requirement_ids": [
+        "FR-009",
+        "FR-010"
+      ],
+      "title": "A projection record is usable only when profile_id, context_kind, projection_epoch, and projection_revision are all present on the record and on its tab identity.",
+      "input": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+        "cases": [
+          {
+            "case_id": "accepted_complete_record",
+            "stage": "projection",
+            "cause": null,
+            "apply": "record",
+            "payload": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_identity": {
+                "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+                "context_kind": "normal",
+                "tab_id": 10
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "group_label_display": "Work",
+              "group_label_search": "work",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 1
+            },
+            "synthetic_fallback_probe": false,
+            "expected_outcome": "APPLIED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "missing_profile_id",
+            "stage": "boundary",
+            "cause": "missing_profile_id",
+            "apply": "none",
+            "payload": {
+              "context_kind": "normal",
+              "tab_identity": {
+                "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+                "context_kind": "normal",
+                "tab_id": 10
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 1
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "missing_context_kind",
+            "stage": "boundary",
+            "cause": "missing_context_kind",
+            "apply": "none",
+            "payload": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "tab_identity": {
+                "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+                "context_kind": "normal",
+                "tab_id": 10
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 1
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "missing_projection_epoch",
+            "stage": "boundary",
+            "cause": "missing_projection_epoch",
+            "apply": "none",
+            "payload": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_identity": {
+                "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+                "context_kind": "normal",
+                "tab_id": 10
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_revision": 1
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "missing_projection_revision",
+            "stage": "boundary",
+            "cause": "missing_projection_revision",
+            "apply": "none",
+            "payload": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_identity": {
+                "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+                "context_kind": "normal",
+                "tab_id": 10
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001"
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "missing_tab_identity_profile_id",
+            "stage": "boundary",
+            "cause": "missing_tab_identity_profile_id",
+            "apply": "none",
+            "payload": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_identity": {
+                "context_kind": "normal",
+                "tab_id": 10
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 1
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "missing_tab_identity_context_kind",
+            "stage": "boundary",
+            "cause": "missing_tab_identity_context_kind",
+            "apply": "none",
+            "payload": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_identity": {
+                "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+                "tab_id": 10
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 1
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "missing_tab_identity_tab_id",
+            "stage": "boundary",
+            "cause": "missing_tab_identity_tab_id",
+            "apply": "none",
+            "payload": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_identity": {
+                "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+                "context_kind": "normal"
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 1
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "final_outcome",
+            "value": "SNAPSHOT_REQUIRED"
+          },
+          {
+            "signal": "final_epoch",
+            "value": "123e4567-e89b-42d3-a456-426614174001"
+          },
+          {
+            "signal": "final_revision",
+            "value": 1
+          },
+          {
+            "signal": "final_identity_count",
+            "value": 1
+          },
+          {
+            "signal": "accepted_cases",
+            "value": 1
+          },
+          {
+            "signal": "rejected_cases",
+            "value": 7
+          }
+        ],
+        "privacy_assertions": [
+          "Every boundary rejection is reported as a bounded cause and a bounded outcome code; no title, URL, query, token, or private value appears in either.",
+          "A rejected record never reaches the projection state, so no identity set is published from incomplete input."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PROJECTION-BOUNDARY-SYNTHETIC-IDENTITY",
+      "owner_task": "IP-05-T01",
+      "category": "projection",
+      "requirement_ids": [
+        "FR-014",
+        "FR-010"
+      ],
+      "title": "Placeholder, default, and zero identity values are rejected at the boundary instead of being substituted for a missing profile_id, context_kind, projection_epoch, or projection_revision.",
+      "input": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+        "cases": [
+          {
+            "case_id": "accepted_complete_record",
+            "stage": "projection",
+            "cause": null,
+            "apply": "record",
+            "payload": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_identity": {
+                "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+                "context_kind": "normal",
+                "tab_id": 10
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 1
+            },
+            "synthetic_fallback_probe": false,
+            "expected_outcome": "APPLIED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "placeholder_profile_id",
+            "stage": "projection",
+            "cause": null,
+            "apply": "record",
+            "payload": {
+              "profile_id": "unknown-profile",
+              "context_kind": "normal",
+              "tab_identity": {
+                "profile_id": "unknown-profile",
+                "context_kind": "normal",
+                "tab_id": 10
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 1
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "placeholder_context_kind",
+            "stage": "projection",
+            "cause": null,
+            "apply": "record",
+            "payload": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "default",
+              "tab_identity": {
+                "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+                "context_kind": "default",
+                "tab_id": 10
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 1
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "empty_projection_epoch",
+            "stage": "projection",
+            "cause": null,
+            "apply": "record",
+            "payload": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_identity": {
+                "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+                "context_kind": "normal",
+                "tab_id": 10
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_epoch": "",
+              "projection_revision": 1
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "zero_projection_revision",
+            "stage": "projection",
+            "cause": null,
+            "apply": "record",
+            "payload": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_identity": {
+                "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+                "context_kind": "normal",
+                "tab_id": 10
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 0
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "blank_tab_identity_profile_id",
+            "stage": "projection",
+            "cause": null,
+            "apply": "record",
+            "payload": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_identity": {
+                "profile_id": "",
+                "context_kind": "normal",
+                "tab_id": 10
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 1
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "blank_tab_identity_context_kind",
+            "stage": "projection",
+            "cause": null,
+            "apply": "record",
+            "payload": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_identity": {
+                "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+                "context_kind": "",
+                "tab_id": 10
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 1
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "missing_profile_id_no_fallback",
+            "stage": "boundary",
+            "cause": "missing_profile_id",
+            "apply": "none",
+            "payload": {
+              "context_kind": "normal",
+              "tab_identity": {
+                "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+                "context_kind": "normal",
+                "tab_id": 10
+              },
+              "window_id": 1,
+              "group_id": 7,
+              "title_display": "Alpha",
+              "title_search": "alpha",
+              "url_search": "https://alpha.example/a",
+              "url_display": "https://alpha.example/a",
+              "domain_display": "alpha.example",
+              "domain_search": "alpha.example",
+              "pinned": false,
+              "active": true,
+              "eligible": true,
+              "observed_at": 1000,
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 1
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "final_outcome",
+            "value": "SNAPSHOT_REQUIRED"
+          },
+          {
+            "signal": "final_epoch",
+            "value": "123e4567-e89b-42d3-a456-426614174001"
+          },
+          {
+            "signal": "final_revision",
+            "value": 1
+          },
+          {
+            "signal": "final_identity_count",
+            "value": 1
+          },
+          {
+            "signal": "accepted_cases",
+            "value": 1
+          },
+          {
+            "signal": "rejected_cases",
+            "value": 7
+          }
+        ],
+        "privacy_assertions": [
+          "A rejected identity is reported only as a bounded outcome code; the rejected record values are never published, forwarded to the host, or written to diagnostics.",
+          "No synthetic profile, context, or epoch value is accepted or persisted, so substitution cannot create a key for a profile the browser never reported."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PROJECTION-BOUNDARY-HANDOFF-IDENTITY",
+      "owner_task": "IP-05-T01",
+      "category": "projection",
+      "requirement_ids": [
+        "FR-009",
+        "FR-014"
+      ],
+      "title": "An IP-04 observer handoff reaches the projection boundary only when it states profile_id, context_kind, projection_epoch, and projection_revision; a handoff without them is a status signal, never a projection record.",
+      "input": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+        "cases": [
+          {
+            "case_id": "accepted_complete_handoff",
+            "stage": "projection",
+            "cause": null,
+            "apply": "record",
+            "message_kind": "snapshot",
+            "boundary_check": "snapshot",
+            "handoff": {
+              "kind": "snapshot",
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 1,
+              "records": [
+                {
+                  "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+                  "context_kind": "normal",
+                  "tab_identity": {
+                    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+                    "context_kind": "normal",
+                    "tab_id": 10
+                  },
+                  "window_id": 1,
+                  "group_id": 7,
+                  "title_display": "Alpha",
+                  "title_search": "alpha",
+                  "url_search": "https://alpha.example/a",
+                  "url_display": "https://alpha.example/a",
+                  "domain_display": "alpha.example",
+                  "domain_search": "alpha.example",
+                  "pinned": false,
+                  "active": true,
+                  "eligible": true,
+                  "observed_at": 1000,
+                  "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+                  "projection_revision": 1
+                }
+              ]
+            },
+            "synthetic_fallback_probe": false,
+            "expected_outcome": "APPLIED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "handoff_missing_profile_id",
+            "stage": "boundary",
+            "cause": "missing_profile_id",
+            "apply": "none",
+            "message_kind": "snapshot",
+            "boundary_check": "snapshot",
+            "handoff": {
+              "kind": "snapshot",
+              "context_kind": "normal",
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 1,
+              "records": []
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "handoff_missing_context_kind",
+            "stage": "boundary",
+            "cause": "missing_context_kind",
+            "apply": "none",
+            "message_kind": "delta",
+            "boundary_check": "delta",
+            "handoff": {
+              "kind": "upsert",
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "projection_revision": 2
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "handoff_missing_projection_epoch",
+            "stage": "boundary",
+            "cause": "missing_projection_epoch",
+            "apply": "none",
+            "message_kind": "delta",
+            "boundary_check": "delta",
+            "handoff": {
+              "kind": "upsert",
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "projection_revision": 0
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "handoff_missing_projection_revision",
+            "stage": "boundary",
+            "cause": "missing_projection_revision",
+            "apply": "none",
+            "message_kind": "delta",
+            "boundary_check": "delta",
+            "handoff": {
+              "kind": "upsert",
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "projection_epoch": "123e4567-e89b-42d3-a456-426614174001"
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          },
+          {
+            "case_id": "handoff_status_without_identity",
+            "stage": "boundary",
+            "cause": "missing_profile_id",
+            "apply": "none",
+            "message_kind": "status",
+            "boundary_check": "snapshot",
+            "handoff": {
+              "kind": "status",
+              "projection_revision": 0,
+              "resync_required": true,
+              "resync_reason": "worker_restart"
+            },
+            "synthetic_fallback_probe": true,
+            "expected_outcome": "SNAPSHOT_REQUIRED",
+            "expected_state": {
+              "epoch": "123e4567-e89b-42d3-a456-426614174001",
+              "revision": 1,
+              "identity_count": 1
+            }
+          }
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "final_outcome",
+            "value": "SNAPSHOT_REQUIRED"
+          },
+          {
+            "signal": "final_epoch",
+            "value": "123e4567-e89b-42d3-a456-426614174001"
+          },
+          {
+            "signal": "final_revision",
+            "value": 1
+          },
+          {
+            "signal": "final_identity_count",
+            "value": 1
+          },
+          {
+            "signal": "accepted_cases",
+            "value": 1
+          },
+          {
+            "signal": "rejected_cases",
+            "value": 5
+          }
+        ],
+        "privacy_assertions": [
+          "A handoff that cannot state its profile, context, epoch, and revision is reported as a bounded status signal; no identity is inferred from the record values it carries.",
+          "The handoff carries tab metadata only as identity-bound record values; the boundary reports no title, URL, query, token, or page value when it refuses."
+        ]
+      }
+    }
+  ]
+}

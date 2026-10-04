@@ -48,7 +48,7 @@ A connection between one profile's extension and its Go Native Messaging host, w
 4. A query returns bounded result references and score reasons.
 5. Activation is confirmed through the extension's browser API.
 6. Recent activation metadata is optionally persisted in bounded SQLite storage.
-7. Reset/uninstall deletes InfoBoard-owned local data and disconnects the host.
+7. Reset/uninstall disconnects sessions before deleting InfoBoard-owned local data, including the identity-only extension key after the profile session is closed.
 
 ## Trust boundaries
 

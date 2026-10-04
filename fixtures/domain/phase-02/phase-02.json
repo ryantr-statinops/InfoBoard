@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "fixtures": [
+    {
+      "fixture_id": "FX-PROFILE-ISOLATION",
+      "owner_phase": "IP-02",
+      "requirement_ids": [
+        "FR-003",
+        "FR-014",
+        "NFR-004",
+        "NFR-005",
+        "NFR-009"
+      ],
+      "category": "domain",
+      "input": {
+        "same_tab_id": 7,
+        "profile_ids": [
+          "123e4567-e89b-42d3-a456-426614174000",
+          "123e4567-e89b-42d3-a456-426614174001"
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "contract",
+            "value": "pass"
+          }
+        ],
+        "privacy_assertions": [
+          "No title, URL, query, token, or private data is emitted by fixture diagnostics."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-IDENTITY-TIEBREAK",
+      "owner_phase": "IP-02",
+      "requirement_ids": [
+        "FR-003",
+        "FR-014",
+        "NFR-004",
+        "NFR-005",
+        "NFR-009"
+      ],
+      "category": "domain",
+      "input": {
+        "same_display": true,
+        "tab_ids": [
+          2,
+          1
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "contract",
+            "value": "pass"
+          }
+        ],
+        "privacy_assertions": [
+          "No title, URL, query, token, or private data is emitted by fixture diagnostics."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PROJECTION-LIFECYCLE",
+      "owner_phase": "IP-02",
+      "requirement_ids": [
+        "FR-003",
+        "FR-014",
+        "NFR-004",
+        "NFR-005",
+        "NFR-009"
+      ],
+      "category": "domain",
+      "input": {
+        "initial_tab_ids": [
+          7
+        ],
+        "add_tab_id": 8,
+        "remove_tab_id": 7
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "contract",
+            "value": "pass"
+          }
+        ],
+        "privacy_assertions": [
+          "No title, URL, query, token, or private data is emitted by fixture diagnostics."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-REVISION-FENCE",
+      "owner_phase": "IP-02",
+      "requirement_ids": [
+        "FR-003",
+        "FR-014",
+        "NFR-004",
+        "NFR-005",
+        "NFR-009"
+      ],
+      "category": "domain",
+      "input": {
+        "initial_revision": 1,
+        "gap_sequence": 3,
+        "stale_epoch": true,
+        "conflicting_duplicate": true
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "contract",
+            "value": "pass"
+          }
+        ],
+        "privacy_assertions": [
+          "No title, URL, query, token, or private data is emitted by fixture diagnostics."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-ACTIVATION-RETENTION",
+      "owner_phase": "IP-02",
+      "requirement_ids": [
+        "FR-003",
+        "FR-014",
+        "NFR-004",
+        "NFR-005",
+        "NFR-009"
+      ],
+      "category": "domain",
+      "input": {
+        "normal_records": 502,
+        "private_records": 1,
+        "age_days": 30,
+        "max_records": 500
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "contract",
+            "value": "pass"
+          }
+        ],
+        "privacy_assertions": [
+          "No title, URL, query, token, or private data is emitted by fixture diagnostics."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-OWNERSHIP-BOUNDARY",
+      "owner_phase": "IP-02",
+      "requirement_ids": [
+        "FR-003",
+        "FR-014",
+        "NFR-004",
+        "NFR-005",
+        "NFR-009"
+      ],
+      "category": "domain",
+      "input": {
+        "host_may_activate": false,
+        "ui_may_mutate_projection": false,
+        "sqlite_is_live_truth": false
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "contract",
+            "value": "pass"
+          }
+        ],
+        "privacy_assertions": [
+          "No title, URL, query, token, or private data is emitted by fixture diagnostics."
+        ]
+      }
+    }
+  ]
+}

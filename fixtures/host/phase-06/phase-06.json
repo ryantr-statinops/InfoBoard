@@ -1,0 +1,607 @@
+{
+  "schema_version": 1,
+  "phase": "IP-06",
+  "artifact": "host-lifecycle",
+  "requirement_ids": [
+    "NFR-006",
+    "FR-012"
+  ],
+  "shared_consumers": [
+    "go",
+    "node"
+  ],
+  "contract_source": "host/internal/runtime",
+  "frame_encoding": {
+    "length_prefix_bytes": 4,
+    "byte_order": "little_endian",
+    "payload": "utf8_json",
+    "note": "Browser-provided Native Messaging framing. The codec is transport scaffolding shared by consumers; IP-07 owns the envelope fields inside a payload."
+  },
+  "limits": {
+    "max_frame_bytes": 1048576,
+    "max_queued_frames": 64,
+    "max_concurrent_requests": 8,
+    "max_diagnostic_records": 256,
+    "max_diagnostic_bytes": 65536,
+    "startup_budget_ms": 5000,
+    "handshake_budget_ms": 2000,
+    "synchronization_budget_ms": 2000,
+    "request_budget_ms": 100,
+    "shutdown_budget_ms": 1000
+  },
+  "lifecycle_states": [
+    "starting",
+    "handshaking",
+    "synchronizing",
+    "ready",
+    "closing",
+    "unavailable",
+    "recovering"
+  ],
+  "availability_states": [
+    "healthy",
+    "unavailable",
+    "recovering"
+  ],
+  "failure_classes": [
+    "configuration_invalid",
+    "registration_invalid",
+    "startup_timeout",
+    "handshake_timeout",
+    "handshake_rejected",
+    "protocol_incompatible",
+    "profile_mismatch",
+    "snapshot_rejected",
+    "synchronization_timeout",
+    "request_timeout",
+    "transport_eof",
+    "transport_truncated",
+    "transport_malformed",
+    "transport_broken_pipe",
+    "transport_unavailable",
+    "frame_too_large",
+    "queue_overflow",
+    "concurrency_limit",
+    "dependency_unavailable",
+    "shutdown",
+    "cancelled",
+    "internal_failure"
+  ],
+  "wire_error_ownership": "IP-07 maps these internal classes onto the Native Messaging wire literals; phase-06 asserts the internal class only.",
+  "identity": {
+    "origin": "chrome-extension://abcdefghijklmnopabcdefghijklmnop",
+    "allowed_origins": [
+      "chrome-extension://abcdefghijklmnopabcdefghijklmnop"
+    ],
+    "unregistered_origin": "chrome-extension://ponmlkjihgfedcbaponmlkjihgfedcba",
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "other_profile_id": "123e4567-e89b-42d3-a456-426614174009",
+    "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+    "session_2_projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+    "host_version": "0.1.0",
+    "protocol_version": 1
+  },
+  "privacy_sentinels": {
+    "title": "SENTINEL-TITLE-AAAA",
+    "url": "https://sentinel.example/path?q=SENTINEL-QUERY-BBBB",
+    "query": "SENTINEL-QUERY-BBBB",
+    "token": "SENTINEL-TOKEN-CCCC",
+    "page_marker": "SENTINEL-PAGE-DDDD"
+  },
+  "fixtures": [
+    {
+      "fixture_id": "FX-HOST-START-HEALTHY",
+      "requirement_ids": [
+        "NFR-006",
+        "FR-012"
+      ],
+      "scenario": {
+        "registered_host": true,
+        "allowed_origins": [
+          "chrome-extension://abcdefghijklmnopabcdefghijklmnop"
+        ],
+        "invocation_origin": "chrome-extension://abcdefghijklmnopabcdefghijklmnop",
+        "protocol_version": 1,
+        "host_version": "0.1.0",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+        "tab_ids": [
+          10,
+          11,
+          12
+        ],
+        "stdin_sequence": [
+          "hello"
+        ],
+        "handoff_order": [
+          "limits_validated",
+          "invocation_validated",
+          "persistence_prepared",
+          "hello_ack",
+          "profile_validated",
+          "snapshot_indexed"
+        ],
+        "persistence_status": "ready",
+        "projection_status": {
+          "known": true,
+          "ready": true,
+          "revision": 1,
+          "count": 3
+        },
+        "tab_mutations": 0
+      },
+      "expected": {
+        "lifecycle_path": [
+          "starting",
+          "handshaking",
+          "synchronizing",
+          "ready",
+          "closing"
+        ],
+        "availability_at_ready": "healthy",
+        "availability_before_ready": [
+          "recovering"
+        ],
+        "failure_class": null,
+        "retryable": false,
+        "ready_only_after_snapshot_indexed": true,
+        "projection_known": true,
+        "projection_revision": 1,
+        "projection_count": 3,
+        "persistence": "ready",
+        "accepts_work_only_when_ready": true,
+        "stdout_frames": 0,
+        "non_frame_bytes_on_stdout": 0,
+        "diagnostics_on_stdout": 0,
+        "diagnostic_records_at_least": 6,
+        "health_snapshot_has_no_raw_tab_fields": true,
+        "bounded_completion": true,
+        "stdout_contains_only_frames": true,
+        "diagnostics_absent_from_stdout": true,
+        "sentinels_absent_from_diagnostics": true,
+        "tab_mutations": 0
+      }
+    },
+    {
+      "fixture_id": "FX-HOST-ABSENT",
+      "requirement_ids": [
+        "FR-012",
+        "NFR-006"
+      ],
+      "scenario": {
+        "registered_host": false,
+        "host_process_present": false,
+        "allowed_origins": [],
+        "invocation_origin": "chrome-extension://ponmlkjihgfedcbaponmlkjihgfedcba",
+        "protocol_version": 1,
+        "host_version": "0.1.0",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "tab_ids": [],
+        "stdin_sequence": [],
+        "handoff_order": [],
+        "persistence_status": "unknown",
+        "tab_mutations": 0
+      },
+      "expected": {
+        "session_created": false,
+        "lifecycle_path": [],
+        "availability": "unavailable",
+        "retryable": false,
+        "failure_class": "registration_invalid",
+        "recovery_action": "repair_registration",
+        "claims_results": false,
+        "stdout_frames": 0,
+        "stdout_bytes": 0,
+        "non_frame_bytes_on_stdout": 0,
+        "diagnostics_on_stdout": 0,
+        "diagnostic_records_at_least": 1,
+        "install_repair_attempted": false,
+        "stdin_consumed_bytes": 0,
+        "bounded_completion": true,
+        "stdout_contains_only_frames": true,
+        "diagnostics_absent_from_stdout": true,
+        "sentinels_absent_from_diagnostics": true,
+        "tab_mutations": 0
+      }
+    },
+    {
+      "fixture_id": "FX-HOST-RECOVERING",
+      "requirement_ids": [
+        "NFR-006",
+        "FR-012"
+      ],
+      "scenario": {
+        "registered_host": true,
+        "allowed_origins": [
+          "chrome-extension://abcdefghijklmnopabcdefghijklmnop"
+        ],
+        "invocation_origin": "chrome-extension://abcdefghijklmnopabcdefghijklmnop",
+        "protocol_version": 1,
+        "host_version": "0.1.0",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+        "tab_ids": [
+          10,
+          11,
+          12
+        ],
+        "session_2_stdin": [
+          "hello"
+        ],
+        "session_2_projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+        "reinstall_performed": false,
+        "tab_mutations": 0,
+        "session_1_disruptions": [
+          {
+            "name": "broken_pipe_on_stdin",
+            "observed_failure_class": "transport_broken_pipe",
+            "retryable": true,
+            "availability": "recovering",
+            "terminal_without_close": false
+          },
+          {
+            "name": "closed_browser_handle",
+            "observed_failure_class": "transport_unavailable",
+            "retryable": true,
+            "availability": "recovering",
+            "terminal_without_close": false
+          },
+          {
+            "name": "truncated_frame",
+            "observed_failure_class": "transport_truncated",
+            "retryable": false,
+            "availability": "unavailable",
+            "terminal_without_close": true
+          }
+        ]
+      },
+      "expected": {
+        "bounded_completion": true,
+        "diagnostics_absent_from_stdout": true,
+        "diagnostics_on_stdout": 0,
+        "non_frame_bytes_on_stdout": 0,
+        "reached_healthy_without_reinstall": true,
+        "sentinels_absent_from_diagnostics": true,
+        "session_1_disruptions": 3,
+        "session_1_failure_is_reported_to_protocol_owner": true,
+        "session_1_never_healthy_after_disruption": true,
+        "session_1_reconnect_requires_authoritative_snapshot": true,
+        "session_1_recoverable_transport_stays_recovering": true,
+        "session_1_recovering_disruptions": 2,
+        "session_1_stale_projection_served": false,
+        "session_1_terminal_failure_ends_the_session": true,
+        "session_1_unavailable_disruptions": 1,
+        "session_2_availability": "healthy",
+        "session_2_failure_class": null,
+        "session_2_lifecycle_path": [
+          "starting",
+          "handshaking",
+          "synchronizing",
+          "ready",
+          "closing"
+        ],
+        "session_2_projection_count": 3,
+        "session_2_projection_revision": 1,
+        "session_ids_distinct": true,
+        "stdout_contains_only_frames": true,
+        "stdout_frames": 0,
+        "tab_mutations": 0
+      }
+    },
+    {
+      "fixture_id": "FX-HOST-STDIO-OWNERSHIP",
+      "requirement_ids": [
+        "FR-012",
+        "NFR-006"
+      ],
+      "scenario": {
+        "registered_host": true,
+        "allowed_origins": [
+          "chrome-extension://abcdefghijklmnopabcdefghijklmnop"
+        ],
+        "invocation_origin": "chrome-extension://abcdefghijklmnopabcdefghijklmnop",
+        "protocol_version": 1,
+        "host_version": "0.1.0",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+        "tab_ids": [
+          10,
+          11,
+          12
+        ],
+        "stdin_sequence": [
+          "hello"
+        ],
+        "concurrent_requests": 8,
+        "diagnostic_lines_during_session": 3
+      },
+      "expected": {
+        "availability_at_ready": "healthy",
+        "bounded_completion": true,
+        "concurrent_requests": 8,
+        "diagnostic_records_bounded_by_max_diagnostic_records": true,
+        "diagnostics_absent_from_stdout": true,
+        "diagnostics_on_stdout": 0,
+        "failure_class": null,
+        "frames_written": 8,
+        "frames_written_matches_health_snapshot": true,
+        "health_snapshot_has_no_raw_tab_fields": true,
+        "non_frame_bytes_on_stdout": 0,
+        "overlapping_stdout_writes": 0,
+        "sentinels_absent_from_diagnostics": true,
+        "stdout_contains_only_frames": true,
+        "stdout_frames": 8,
+        "stdout_frames_interleaved": false,
+        "tab_mutations": 0
+      }
+    },
+    {
+      "fixture_id": "FX-HOST-TIMEOUT",
+      "requirement_ids": [
+        "NFR-006",
+        "FR-012"
+      ],
+      "scenario": {
+        "registered_host": true,
+        "allowed_origins": [
+          "chrome-extension://abcdefghijklmnopabcdefghijklmnop"
+        ],
+        "invocation_origin": "chrome-extension://abcdefghijklmnopabcdefghijklmnop",
+        "protocol_version": 1,
+        "host_version": "0.1.0",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+        "tab_ids": [
+          10
+        ],
+        "unbounded_waits": 0,
+        "cases": [
+          {
+            "name": "handshake_read",
+            "blocked": "protocol_negotiate",
+            "budget": "handshake_budget_ms",
+            "observed_via": "outcome",
+            "observed_failure_class": "handshake_timeout",
+            "retryable": true
+          },
+          {
+            "name": "synchronize",
+            "blocked": "projection_synchronize",
+            "budget": "synchronization_budget_ms",
+            "observed_via": "outcome",
+            "observed_failure_class": "synchronization_timeout",
+            "retryable": true
+          },
+          {
+            "name": "request_read",
+            "blocked": "protocol_accept",
+            "budget": "request_budget_ms",
+            "observed_via": "notification",
+            "observed_failure_class": "request_timeout",
+            "retryable": true
+          },
+          {
+            "name": "shutdown_flush",
+            "blocked": "persistence_flush",
+            "budget": "shutdown_budget_ms",
+            "observed_via": "outcome",
+            "observed_failure_class": "shutdown",
+            "retryable": true
+          }
+        ],
+        "stdin_sequence": [
+          "hello"
+        ],
+        "budget_scaling_divisor": 40
+      },
+      "expected": {
+        "bounded_completion": true,
+        "diagnostics_absent_from_stdout": true,
+        "each_timeout_within_its_own_budget": true,
+        "failure_class": null,
+        "leaked_workers": 0,
+        "persistence_degrades_without_breaking_lexical_runtime": true,
+        "retryable": true,
+        "sentinels_absent_from_diagnostics": true,
+        "session_finished_after_each_timeout": true,
+        "stdout_contains_only_frames": true,
+        "stdout_frames": 0,
+        "tab_mutations": 0,
+        "timed_out_operations": 4,
+        "unbounded_waits": 0
+      }
+    },
+    {
+      "fixture_id": "FX-HOST-CANCEL-DISCONNECT",
+      "requirement_ids": [
+        "NFR-006",
+        "FR-012"
+      ],
+      "scenario": {
+        "registered_host": true,
+        "allowed_origins": [
+          "chrome-extension://abcdefghijklmnopabcdefghijklmnop"
+        ],
+        "invocation_origin": "chrome-extension://abcdefghijklmnopabcdefghijklmnop",
+        "protocol_version": 1,
+        "host_version": "0.1.0",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+        "tab_ids": [
+          10,
+          11
+        ],
+        "stdin_sequence": [
+          "hello"
+        ],
+        "in_flight_requests": 3,
+        "client_cancellation": true,
+        "stdin_eof": true,
+        "close_calls": 3
+      },
+      "expected": {
+        "in_flight_stopped": 3,
+        "lifecycle_path": [
+          "starting",
+          "handshaking",
+          "synchronizing",
+          "ready",
+          "closing"
+        ],
+        "availability": "unavailable",
+        "failure_class": null,
+        "close_calls_observed": 3,
+        "dependency_close_calls": 1,
+        "close_idempotent": true,
+        "leaked_workers": 0,
+        "unrelated_session_cancelled": false,
+        "stdout_frames": 0,
+        "non_frame_bytes_on_stdout": 0,
+        "diagnostics_on_stdout": 0,
+        "bounded_completion": true,
+        "stdout_contains_only_frames": true,
+        "diagnostics_absent_from_stdout": true,
+        "sentinels_absent_from_diagnostics": true,
+        "tab_mutations": 0
+      }
+    },
+    {
+      "fixture_id": "FX-HOST-RESOURCE-LIMIT",
+      "requirement_ids": [
+        "NFR-006",
+        "FR-012"
+      ],
+      "scenario": {
+        "registered_host": true,
+        "allowed_origins": [
+          "chrome-extension://abcdefghijklmnopabcdefghijklmnop"
+        ],
+        "invocation_origin": "chrome-extension://abcdefghijklmnopabcdefghijklmnop",
+        "protocol_version": 1,
+        "host_version": "0.1.0",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+        "tab_ids": [
+          10
+        ],
+        "stdin_sequence": [
+          "hello"
+        ],
+        "rejected_inputs": [
+          {
+            "case": "oversized_frame",
+            "observed_via": "outcome",
+            "observed_failure_class": "frame_too_large",
+            "retryable": false
+          },
+          {
+            "case": "empty_frame",
+            "observed_via": "outcome",
+            "observed_failure_class": "transport_malformed",
+            "retryable": false
+          },
+          {
+            "case": "truncated_frame",
+            "observed_via": "outcome",
+            "observed_failure_class": "transport_truncated",
+            "retryable": false
+          },
+          {
+            "case": "concurrency_overflow",
+            "observed_via": "notification",
+            "observed_failure_class": "concurrency_limit",
+            "retryable": true
+          },
+          {
+            "case": "invalid_limits",
+            "observed_via": "outcome",
+            "observed_failure_class": "configuration_invalid",
+            "retryable": false
+          }
+        ]
+      },
+      "expected": {
+        "availability_path_contains": [
+          "unavailable",
+          "closing"
+        ],
+        "bounded_completion": true,
+        "concurrency_rejection_retryable": true,
+        "diagnostics_absent_from_stdout": true,
+        "diagnostics_on_stdout": 0,
+        "failure_class": null,
+        "max_read_requested_bytes_for_oversized_frame": 4,
+        "mutations_after_rejection": 0,
+        "non_frame_bytes_on_stdout": 0,
+        "rejected_before_allocation": true,
+        "rejected_inputs": 5,
+        "sentinels_absent_from_diagnostics": true,
+        "stdout_contains_only_frames": true,
+        "stdout_frames": 0,
+        "tab_mutations": 0,
+        "transport_rejections_retryable": false,
+        "unbounded_allocations": 0
+      }
+    },
+    {
+      "fixture_id": "FX-HOST-NO-LOOPBACK",
+      "requirement_ids": [
+        "NFR-006",
+        "FR-012"
+      ],
+      "scenario": {
+        "registered_host": true,
+        "allowed_origins": [
+          "chrome-extension://abcdefghijklmnopabcdefghijklmnop"
+        ],
+        "invocation_origin": "chrome-extension://abcdefghijklmnopabcdefghijklmnop",
+        "protocol_version": 1,
+        "host_version": "0.1.0",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174001",
+        "tab_ids": [
+          10
+        ],
+        "session_lifecycle": [
+          "startup",
+          "ready",
+          "disconnect",
+          "reconnect"
+        ],
+        "guarded_network_packages": [
+          "net",
+          "net/http",
+          "net/rpc"
+        ],
+        "guarded_process_packages": [
+          "os/exec",
+          "net"
+        ]
+      },
+      "expected": {
+        "alternate_transports": 0,
+        "availability_at_ready": "healthy",
+        "bounded_completion": true,
+        "child_process_spawn_attempts": 0,
+        "diagnostics_absent_from_stdout": true,
+        "failure_class": null,
+        "guarded_source_packages": [
+          "net",
+          "net/http",
+          "net/rpc",
+          "os/exec",
+          "net/url"
+        ],
+        "network_packages_imported_by_host_runtime": 0,
+        "sentinels_absent_from_diagnostics": true,
+        "stdout_contains_only_frames": true,
+        "stdout_frames": 0,
+        "tab_mutations": 0,
+        "transports": [
+          "stdin",
+          "stdout"
+        ]
+      }
+    }
+  ]
+}

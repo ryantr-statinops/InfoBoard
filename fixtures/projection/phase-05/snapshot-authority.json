@@ -1,0 +1,1289 @@
+{
+  "schema_version": 1,
+  "phase": "IP-05",
+  "artifact": "projection-snapshot-authority",
+  "owner_task": "IP-05-T02",
+  "fixture_id": "FX-PROJECTION-SNAPSHOT-AUTHORITY",
+  "requirement_ids": [
+    "FR-009",
+    "FR-010",
+    "FR-014"
+  ],
+  "shared_consumers": [
+    "go",
+    "node"
+  ],
+  "contract_source": [
+    "extension/domain/index.ts",
+    "extension/src/projection/reconciler.ts",
+    "host/internal/domain/domain.go",
+    "host/internal/projection/reconciler.go"
+  ],
+  "note": "IP-05-T02 owns snapshot acquisition and validation only. A snapshot is authority exactly when the browser read completed for the known current profile/context, the handoff states the IP-04 allocated fence, every record passes the IP-02 record contract against that fence, and IP-04 declared a present boolean resync_required of false. An intentional successful empty snapshot is authority and reports itself explicitly empty; a permission failure, a partial or failed read, an unavailable profile or private context, a resync-required handoff, a handoff whose resync marker is absent or non-boolean, and any invalid record are not authority, carry no records at all, and always require a fresh authoritative read. The producer acquisition in extension/src/projection/reconciler.ts and the host snapshot binding in host/internal/projection/reconciler.go are the only authorities for these outcomes: the Go consumer drives the host boundary and the Node consumer drives the producer boundary, and neither restates the rules.",
+  "outcome_note": "Authority is not commit. IP-05-T07 owns publishing an immutable committed map, so no case here may leave a committed lineage, publish an index handoff, or make a partition queryable; canonical ordering and digest (IP-05-T03), revision sequencing (IP-05-T04), delta reduction (IP-05-T05/T06), atomic replacement (IP-05-T07), and restart recovery (IP-05-T08/T12) stay outside this artifact.",
+  "claims": {
+    "boundary_artifact": "fixtures/projection/phase-05/phase-05.json",
+    "reserved_fixture_ids": [
+      "FX-PROJECTION-SNAPSHOT-AUTHORITY"
+    ],
+    "claim_note": "IP-05-T01 reserved this stable ID and implemented no clause of it. IP-05-T02 claims the acquisition and validation clauses below and states no revision-ordering, delta, canonical, atomic, or recovery outcome, so the later IP-05 tasks extend this same scenario instead of re-deciding it here."
+  },
+  "authority": {
+    "outcome_vocabulary": [
+      "AUTHORITATIVE",
+      "SNAPSHOT_REQUIRED",
+      "PROFILE_MISMATCH"
+    ],
+    "authoritative_outcome": "AUTHORITATIVE",
+    "required_conditions": [
+      {
+        "id": "complete_fence",
+        "rule": "The handoff states profile_id, context_kind, projection_epoch, previous_revision, projection_revision, and event_sequence, and its profile is the one the reconciler is bound to. A zero record list cannot substitute for a missing fence field."
+      },
+      {
+        "id": "snapshot_kind",
+        "rule": "Only a snapshot handoff reports a complete browser read. A status, window, private_context_ended, upsert, or remove handoff reports an observation or an event and is never completed into a snapshot, whatever record list it carries."
+      },
+      {
+        "id": "completed_browser_call",
+        "rule": "IP-04 declares resync_required as a mandatory boolean and sets it for a denied read, a failed or partial read, and an unreadable context. A snapshot that declares a resync requirement is an uncertain read even when its record list is empty, and a snapshot that leaves the marker absent or non-boolean never completed its read: the marker must be present and boolean, and false, before any record list can be authority."
+      },
+      {
+        "id": "explicit_record_list",
+        "rule": "The snapshot states its record list explicitly. An explicit empty list from a completed read is the one empty projection that is authority, because the browser reported no eligible tab."
+      },
+      {
+        "id": "bounded_record_count",
+        "rule": "The declared record count stays within the IP-02 acceptSnapshot and IP-07 snapshot_records bound of 10000. A larger read is refused before any record is staged, so an over-limit payload can neither replace nor clear the snapshot a completed read already acquired."
+      },
+      {
+        "id": "valid_records",
+        "rule": "Every record states the partition and fence identity of the snapshot and passes the IP-02 record contract. One unusable record refuses the whole snapshot."
+      }
+    ],
+    "record_preconditions": [
+      {
+        "field": "eligible",
+        "value": true,
+        "owner": "ip-04_eligibility",
+        "rule": "IP-04 filters tabs before publishing, so an ineligible record never belongs in a snapshot payload and is refused by both boundaries rather than mapped."
+      },
+      {
+        "field": "tab_identity",
+        "value": "complete",
+        "owner": "ip-02_tab_identity",
+        "rule": "A record states profile_id, context_kind, and a bounded tab_id on itself and on its tab identity."
+      },
+      {
+        "field": "projection_epoch",
+        "value": "declared_fence",
+        "owner": "ip-04_handoff",
+        "rule": "A record repeats the epoch of the handoff that carries it, so a snapshot is never assembled from mixed lineages."
+      },
+      {
+        "field": "projection_revision",
+        "value": "declared_fence",
+        "owner": "ip-04_handoff",
+        "rule": "A record repeats the revision of the handoff that carries it; which revisions may follow which is IP-05-T04's decision, not this fixture's."
+      }
+    ],
+    "resync_signals": {
+      "permission_denied": "The browser denied the read, so the partition has no authoritative snapshot.",
+      "snapshot_failed": "The read failed or returned unusable state, so the partition has no authoritative snapshot.",
+      "unsupported": "The context cannot be read at all, so the partition has no authoritative snapshot.",
+      "missing_required_state": "The read completed but a required browser state was missing, so the record list is incomplete and never authoritative.",
+      "disconnect": "The session is gone, so nothing it reported may be read as an empty authority."
+    },
+    "producer_signal_note": "The IP-04 resync_required and resync_reason pair is the producer-side acquisition signal. resync_required carries how the browser read finished, so the producer acquisition reads it raw: an absent or non-boolean marker is refused rather than read as a completed read. The IP-07 snapshot payload carries no field for that signal, so the host binds a complete fence plus IP-02-valid records and cannot see it itself; a non-authoritative outcome is therefore always reported by the producer acquisition, and the host boundary must never be read as the acquisition authority.",
+    "host_field_note": "An absent records field and an explicit empty record list are both a zero-length list at the host boundary, because the wire contract carries the list as an explicit array. The producer acquisition is the seam that refuses a snapshot with no declared record list at all.",
+    "reject_reason_vocabulary": [
+      "invalid_record",
+      "invalid_resync_marker",
+      "missing_context_kind",
+      "missing_profile_id",
+      "missing_projection_epoch",
+      "missing_records",
+      "missing_resync_marker",
+      "non_snapshot_handoff",
+      "partition_profile_mismatch",
+      "snapshot_bounds_exceeded",
+      "snapshot_resync_required",
+      "unpartitioned_handoff"
+    ],
+    "deferred_clauses": [
+      {
+        "clause": "A newer complete snapshot replaces the retained one, removing every absent record and adding every eligible record as one unit.",
+        "owner_task": "IP-05-T07",
+        "reason": "Atomic replacement and the single committed map are IP-05-T07; this artifact only proves which read is authority."
+      },
+      {
+        "clause": "The committed identity set equals the snapshot identity set and its canonical order and digest are stable.",
+        "owner_task": "IP-05-T03",
+        "reason": "Canonicalization and the bounded digest are IP-05-T03."
+      },
+      {
+        "clause": "The first authoritative snapshot of a new epoch is revision 1 and revision advances once per accepted effective event.",
+        "owner_task": "IP-05-T04",
+        "reason": "Revision ordering and epoch fencing are IP-05-T04; every case here states the revision IP-04 allocated without judging it."
+      },
+      {
+        "clause": "Ordered deltas, duplicates, stale events, and gaps reduce onto the retained snapshot.",
+        "owner_task": "IP-05-T05",
+        "reason": "Delta reduction and fencing are IP-05-T05 and IP-05-T06."
+      },
+      {
+        "clause": "A restart or resync converges onto the browser oracle with no duplicate or orphan record.",
+        "owner_task": "IP-05-T12",
+        "reason": "Recovery sequencing is IP-05-T08 and IP-05-T12; the resync cases here only prove that a resync signal is never empty authority."
+      },
+      {
+        "clause": "Two profiles keep separate partitions, counters, digests, and handoffs.",
+        "owner_task": "IP-05-T09",
+        "reason": "Profile and context isolation is IP-05-T09; the unbound-profile case proves only that a snapshot for another profile is not authority here."
+      }
+    ],
+    "max_snapshot_records": 10000,
+    "host_limit_note": "The IP-07 decoder refuses an over-limit snapshot payload at its own snapshot_records bound before the projection boundary is reached, and the boundary refuses the same record list at its own pre-staging gate, so an oversized read is stopped twice and never staged. The host consumer proves both real gates and hands the boundary the decoded records, because the wire gate is IP-07's evidence rather than this task's."
+  },
+  "input": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "context_kind": "normal",
+    "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+    "unbound_profile_id": "123e4567-e89b-42d3-a456-4266141740ff",
+    "foreign_epoch": "123e4567-e89b-42d3-a456-426614174003"
+  },
+  "cases": [
+    {
+      "case_id": "complete_populated_snapshot",
+      "acquisition_signal": "completed",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "snapshot",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+        "previous_revision": 0,
+        "projection_revision": 1,
+        "event_sequence": 1,
+        "effective_change": true,
+        "resync_required": false,
+        "records": [
+          {
+            "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+            "context_kind": "normal",
+            "tab_identity": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_id": 10
+            },
+            "window_id": 1,
+            "group_id": 7,
+            "title_display": "Alpha",
+            "title_search": "alpha",
+            "url_display": "https://alpha.example/a",
+            "url_search": "https://alpha.example/a",
+            "domain_display": "alpha.example",
+            "domain_search": "alpha.example",
+            "window_label_display": "Main",
+            "window_label_search": "main",
+            "group_label_display": "Work",
+            "group_label_search": "work",
+            "pinned": false,
+            "active": true,
+            "eligible": true,
+            "observed_at": 1000,
+            "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+            "projection_revision": 1
+          },
+          {
+            "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+            "context_kind": "normal",
+            "tab_identity": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_id": 11
+            },
+            "window_id": 1,
+            "group_id": null,
+            "title_display": "Beta",
+            "title_search": "beta",
+            "url_display": "https://beta.example/b",
+            "url_search": "https://beta.example/b",
+            "domain_display": "beta.example",
+            "domain_search": "beta.example",
+            "pinned": true,
+            "active": false,
+            "eligible": true,
+            "observed_at": 1001,
+            "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+            "projection_revision": 1
+          },
+          {
+            "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+            "context_kind": "normal",
+            "tab_identity": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_id": 12
+            },
+            "window_id": 2,
+            "group_id": 9,
+            "title_display": "Gamma",
+            "title_search": "gamma",
+            "url_display": "https://gamma.example/c",
+            "url_search": "https://gamma.example/c",
+            "domain_display": "gamma.example",
+            "domain_search": "gamma.example",
+            "window_label_display": "Second",
+            "window_label_search": "second",
+            "group_label_display": "Ops",
+            "group_label_search": "ops",
+            "pinned": false,
+            "active": false,
+            "eligible": true,
+            "observed_at": 1002,
+            "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+            "projection_revision": 1
+          }
+        ]
+      },
+      "acquisition": "AUTHORITATIVE",
+      "expected": {
+        "producer": {
+          "outcome": "AUTHORITATIVE",
+          "reason": null,
+          "authoritative": true,
+          "resync_required": false,
+          "record_count": 3,
+          "explicitly_empty": false,
+          "retained": true
+        },
+        "host": {
+          "call": "snapshot",
+          "validation": "ADMITTED",
+          "cause": null,
+          "code": null,
+          "resync": null,
+          "index": null,
+          "records": 3
+        }
+      },
+      "note": "A completed read of the known current profile and context with three IP-02-valid records is authority, and both boundaries hand the records back exactly as IP-04 declared them."
+    },
+    {
+      "case_id": "snapshot_without_record_list",
+      "acquisition_signal": "completed",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "snapshot",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+        "previous_revision": 0,
+        "projection_revision": 1,
+        "event_sequence": 1,
+        "effective_change": true,
+        "resync_required": false
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "missing_records",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "snapshot",
+          "validation": "ADMITTED",
+          "cause": null,
+          "code": null,
+          "resync": null,
+          "index": null,
+          "records": 0
+        }
+      },
+      "note": "A snapshot that declares no record list at all is not an intentional empty read: the producer refuses it, because only an explicit list can mean the browser reported no eligible tab. The wire contract carries the list as an explicit array, so the host field note records that the host boundary sees the same zero length and cannot repeat the producer decision."
+    },
+    {
+      "case_id": "snapshot_over_record_limit",
+      "acquisition_signal": "completed",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "snapshot",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+        "previous_revision": 0,
+        "projection_revision": 1,
+        "event_sequence": 1,
+        "effective_change": true,
+        "resync_required": false
+      },
+      "record_expansion": {
+        "template": {
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "context_kind": "normal",
+          "tab_identity": {
+            "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+            "context_kind": "normal",
+            "tab_id": 10
+          },
+          "window_id": 1,
+          "group_id": null,
+          "title_display": "Alpha",
+          "title_search": "alpha",
+          "url_display": "https://alpha.example/a",
+          "url_search": "https://alpha.example/a",
+          "domain_display": "alpha.example",
+          "domain_search": "alpha.example",
+          "pinned": false,
+          "active": true,
+          "eligible": true,
+          "observed_at": 1000,
+          "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+          "projection_revision": 1
+        },
+        "count": 10001,
+        "identity_path": "tab_identity.tab_id",
+        "identity_start": 10,
+        "identity_step": 1,
+        "expansion_note": "The record list is a bounded expansion rather than a literal body: 10001 records cannot be written as fixture text, and both consumers materialize the same deterministic list from this template before handing it to the real boundary. identity_path names the only field the expansion substitutes, so no other record value is generated."
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "snapshot_bounds_exceeded",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "snapshot",
+          "validation": "REFUSED",
+          "cause": "bounds_exceeded",
+          "code": "SNAPSHOT_REQUIRED",
+          "resync": null,
+          "index": -1,
+          "records": 0
+        }
+      },
+      "note": "A completed read of 10001 records is one record past the bound IP-02 and IP-07 share. Both boundaries refuse it at their own size gate before staging anything, so the partition keeps the snapshot the earlier completed read acquired instead of taking a truncated, replaced, or emptied projection, and the failure carries no record at all."
+    },
+    {
+      "case_id": "incomplete_read_resync_flagged_empty_snapshot",
+      "acquisition_signal": "incomplete",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "snapshot",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+        "previous_revision": 0,
+        "projection_revision": 1,
+        "event_sequence": 1,
+        "effective_change": true,
+        "resync_required": true,
+        "resync_reason": "missing_required_state",
+        "records": []
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "snapshot_resync_required",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "snapshot",
+          "validation": "ADMITTED",
+          "cause": null,
+          "code": null,
+          "resync": null,
+          "index": null,
+          "records": 0
+        }
+      },
+      "note": "This is the dangerous empty case: a partial read that reports no eligible tab while still declaring that a required browser state was missing. The producer keeps the IP-04 marker on the failure, carries no records, and requires a fresh read, so the empty list can never erase a valid projection."
+    },
+    {
+      "case_id": "empty_record_list_without_allocated_fence",
+      "acquisition_signal": "completed",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "snapshot",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "previous_revision": 0,
+        "projection_revision": 1,
+        "event_sequence": 1,
+        "effective_change": true,
+        "resync_required": false,
+        "records": []
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "missing_projection_epoch",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "snapshot",
+          "validation": "REFUSED",
+          "cause": "missing_projection_epoch",
+          "code": "SNAPSHOT_REQUIRED",
+          "resync": "revision_mismatch",
+          "index": -1,
+          "records": 0
+        }
+      },
+      "note": "A zero record list with no allocated epoch is unavailable profile state, not an empty profile: without the fence there is no lineage to publish and no authority to grant, so both boundaries refuse."
+    },
+    {
+      "case_id": "permission_denied_unavailable_profile_status",
+      "acquisition_signal": "denied",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "status",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "previous_revision": 0,
+        "projection_revision": 0,
+        "event_sequence": 0,
+        "effective_change": false,
+        "resync_required": true,
+        "resync_reason": "permission_denied"
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "missing_context_kind",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "handoff",
+          "validation": "REFUSED",
+          "cause": "missing_context_kind",
+          "code": "SNAPSHOT_REQUIRED",
+          "resync": "profile_changed",
+          "index": -1,
+          "records": 0
+        }
+      },
+      "note": "A denied read publishes a status handoff with no context and no allocated epoch, exactly as IP-04 does when the browser denies tab access. It cannot state a partition, so it is refused and never becomes an empty projection."
+    },
+    {
+      "case_id": "failed_snapshot_read_status",
+      "acquisition_signal": "failed",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "status",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "previous_revision": 0,
+        "projection_revision": 0,
+        "event_sequence": 0,
+        "effective_change": false,
+        "resync_required": true,
+        "resync_reason": "snapshot_failed"
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "missing_context_kind",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "handoff",
+          "validation": "REFUSED",
+          "cause": "missing_context_kind",
+          "code": "SNAPSHOT_REQUIRED",
+          "resync": "profile_changed",
+          "index": -1,
+          "records": 0
+        }
+      },
+      "note": "A failed read is a status handoff as well, so a denied read and a failed read are indistinguishable at this boundary by design: both are refused as an unpartitioned signal and both require a fresh authoritative read."
+    },
+    {
+      "case_id": "unsupported_private_context_status",
+      "acquisition_signal": "unsupported",
+      "partition_context": "private",
+      "handoff": {
+        "kind": "status",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "private",
+        "previous_revision": 1,
+        "projection_revision": 1,
+        "event_sequence": 2,
+        "effective_change": false,
+        "resync_required": true,
+        "resync_reason": "unsupported"
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "missing_projection_epoch",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "handoff",
+          "validation": "REFUSED",
+          "cause": "missing_projection_epoch",
+          "code": "SNAPSHOT_REQUIRED",
+          "resync": "revision_mismatch",
+          "index": -1,
+          "records": 0
+        }
+      },
+      "note": "An unreadable private context publishes a status handoff for that context with no allocated epoch. The partition exists, but with no fence there is no authoritative read of it, so it is refused instead of being published as a private partition with no tabs."
+    },
+    {
+      "case_id": "disposed_session_resync_required",
+      "acquisition_signal": "disconnect",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "disposed",
+        "previous_revision": 0,
+        "projection_revision": 0,
+        "event_sequence": 0,
+        "effective_change": true,
+        "resync_required": true,
+        "resync_reason": "disconnect"
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "unpartitioned_handoff",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "handoff",
+          "validation": "REFUSED",
+          "cause": "missing_profile_id",
+          "code": "SNAPSHOT_REQUIRED",
+          "resync": "profile_changed",
+          "index": -1,
+          "records": 0
+        }
+      },
+      "note": "A disposed session publishes a resync-required handoff that belongs to no partition at all. It is refused before any attribution, so a torn-down session can never be read as a snapshot that found no tabs; recovery is IP-05-T08 and IP-05-T12."
+    },
+    {
+      "case_id": "private_context_ended_zero_records",
+      "acquisition_signal": "completed",
+      "partition_context": "private",
+      "handoff": {
+        "kind": "private_context_ended",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "private",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+        "previous_revision": 0,
+        "projection_revision": 1,
+        "event_sequence": 2,
+        "effective_change": true,
+        "resync_required": false
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "non_snapshot_handoff",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "handoff",
+          "validation": "ADMITTED",
+          "cause": null,
+          "code": null,
+          "resync": null,
+          "index": null,
+          "records": 0
+        }
+      },
+      "note": "A fully fenced handoff that reports an event rather than a read is still not authority. Its zero record list is the absence of a read, not a completed read with no eligible tab, and the host handoff view it produces is never queryable."
+    },
+    {
+      "case_id": "invalid_record_epoch_mismatch",
+      "acquisition_signal": "completed",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "snapshot",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+        "previous_revision": 0,
+        "projection_revision": 1,
+        "event_sequence": 1,
+        "effective_change": true,
+        "resync_required": false,
+        "records": [
+          {
+            "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+            "context_kind": "normal",
+            "tab_identity": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_id": 10
+            },
+            "window_id": 1,
+            "group_id": 7,
+            "title_display": "Alpha",
+            "title_search": "alpha",
+            "url_display": "https://alpha.example/a",
+            "url_search": "https://alpha.example/a",
+            "domain_display": "alpha.example",
+            "domain_search": "alpha.example",
+            "pinned": false,
+            "active": true,
+            "eligible": true,
+            "observed_at": 1000,
+            "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+            "projection_revision": 1
+          },
+          {
+            "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+            "context_kind": "normal",
+            "tab_identity": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_id": 11
+            },
+            "window_id": 1,
+            "group_id": null,
+            "title_display": "Beta",
+            "title_search": "beta",
+            "url_display": "https://beta.example/b",
+            "url_search": "https://beta.example/b",
+            "domain_display": "beta.example",
+            "domain_search": "beta.example",
+            "pinned": false,
+            "active": false,
+            "eligible": true,
+            "observed_at": 1001,
+            "projection_epoch": "123e4567-e89b-42d3-a456-426614174003",
+            "projection_revision": 1
+          }
+        ]
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "invalid_record",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "snapshot",
+          "validation": "REFUSED",
+          "cause": "mismatched_projection_epoch",
+          "code": "SNAPSHOT_REQUIRED",
+          "resync": "revision_mismatch",
+          "index": 1,
+          "records": 0
+        }
+      },
+      "note": "A record that repeats a different lineage belongs to another snapshot. The first record is valid, so the refusal is proven to come from the second one and no partial list is published by either boundary."
+    },
+    {
+      "case_id": "invalid_record_missing_tab_identity_tab_id",
+      "acquisition_signal": "completed",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "snapshot",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+        "previous_revision": 0,
+        "projection_revision": 1,
+        "event_sequence": 1,
+        "effective_change": true,
+        "resync_required": false,
+        "records": [
+          {
+            "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+            "context_kind": "normal",
+            "tab_identity": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_id": 10
+            },
+            "window_id": 1,
+            "group_id": 7,
+            "title_display": "Alpha",
+            "title_search": "alpha",
+            "url_display": "https://alpha.example/a",
+            "url_search": "https://alpha.example/a",
+            "domain_display": "alpha.example",
+            "domain_search": "alpha.example",
+            "pinned": false,
+            "active": true,
+            "eligible": true,
+            "observed_at": 1000,
+            "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+            "projection_revision": 1
+          },
+          {
+            "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+            "context_kind": "normal",
+            "tab_identity": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal"
+            },
+            "window_id": 1,
+            "group_id": null,
+            "title_display": "Beta",
+            "title_search": "beta",
+            "url_display": "https://beta.example/b",
+            "url_search": "https://beta.example/b",
+            "domain_display": "beta.example",
+            "domain_search": "beta.example",
+            "pinned": false,
+            "active": false,
+            "eligible": true,
+            "observed_at": 1001,
+            "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+            "projection_revision": 1
+          }
+        ]
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "invalid_record",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "snapshot",
+          "validation": "REFUSED",
+          "cause": "missing_tab_identity_tab_id",
+          "code": "SNAPSHOT_REQUIRED",
+          "resync": null,
+          "index": 1,
+          "records": 0
+        }
+      },
+      "note": "A record without a browser tab id cannot carry a tab identity, and the zero a missing id decodes to is exactly the value a synthetic fallback would publish, so the snapshot is refused at the second record instead of containing a phantom tab."
+    },
+    {
+      "case_id": "invalid_record_ineligible_record",
+      "acquisition_signal": "completed",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "snapshot",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+        "previous_revision": 0,
+        "projection_revision": 1,
+        "event_sequence": 1,
+        "effective_change": true,
+        "resync_required": false,
+        "records": [
+          {
+            "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+            "context_kind": "normal",
+            "tab_identity": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_id": 10
+            },
+            "window_id": 1,
+            "group_id": 7,
+            "title_display": "Alpha",
+            "title_search": "alpha",
+            "url_display": "https://alpha.example/a",
+            "url_search": "https://alpha.example/a",
+            "domain_display": "alpha.example",
+            "domain_search": "alpha.example",
+            "pinned": false,
+            "active": true,
+            "eligible": true,
+            "observed_at": 1000,
+            "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+            "projection_revision": 1
+          },
+          {
+            "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+            "context_kind": "normal",
+            "tab_identity": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_id": 11
+            },
+            "window_id": 1,
+            "group_id": null,
+            "title_display": "Beta",
+            "title_search": "beta",
+            "url_display": "https://beta.example/b",
+            "url_search": "https://beta.example/b",
+            "domain_display": "beta.example",
+            "domain_search": "beta.example",
+            "pinned": false,
+            "active": false,
+            "eligible": false,
+            "observed_at": 1001,
+            "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+            "projection_revision": 1
+          }
+        ]
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "invalid_record",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "snapshot",
+          "validation": "REFUSED",
+          "cause": "invalid_record",
+          "code": "SNAPSHOT_REQUIRED",
+          "resync": "snapshot_stale",
+          "index": 1,
+          "records": 0
+        }
+      },
+      "note": "An ineligible tab is IP-04's decision, not a record the projection may hold: the IP-02 record contract only accepts eligible records, so a snapshot carrying one is refused at that record by both boundaries."
+    },
+    {
+      "case_id": "invalid_record_foreign_profile",
+      "acquisition_signal": "completed",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "snapshot",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+        "previous_revision": 0,
+        "projection_revision": 1,
+        "event_sequence": 1,
+        "effective_change": true,
+        "resync_required": false,
+        "records": [
+          {
+            "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+            "context_kind": "normal",
+            "tab_identity": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_id": 10
+            },
+            "window_id": 1,
+            "group_id": 7,
+            "title_display": "Alpha",
+            "title_search": "alpha",
+            "url_display": "https://alpha.example/a",
+            "url_search": "https://alpha.example/a",
+            "domain_display": "alpha.example",
+            "domain_search": "alpha.example",
+            "pinned": false,
+            "active": true,
+            "eligible": true,
+            "observed_at": 1000,
+            "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+            "projection_revision": 1
+          },
+          {
+            "profile_id": "123e4567-e89b-42d3-a456-4266141740ff",
+            "context_kind": "normal",
+            "tab_identity": {
+              "profile_id": "123e4567-e89b-42d3-a456-4266141740ff",
+              "context_kind": "normal",
+              "tab_id": 11
+            },
+            "window_id": 1,
+            "group_id": null,
+            "title_display": "Beta",
+            "title_search": "beta",
+            "url_display": "https://beta.example/b",
+            "url_search": "https://beta.example/b",
+            "domain_display": "beta.example",
+            "domain_search": "beta.example",
+            "pinned": false,
+            "active": false,
+            "eligible": true,
+            "observed_at": 1001,
+            "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+            "projection_revision": 1
+          }
+        ]
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "invalid_record",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "snapshot",
+          "validation": "REFUSED",
+          "cause": "mismatched_profile_id",
+          "code": "PROFILE_MISMATCH",
+          "resync": "profile_changed",
+          "index": 1,
+          "records": 0
+        }
+      },
+      "note": "A snapshot may not mix profiles: a record from another browser profile is refused at its own position, before any state is touched, so no cross-profile tab reaches this partition."
+    },
+    {
+      "case_id": "invalid_record_unbounded_tab_identity",
+      "acquisition_signal": "completed",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "snapshot",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+        "previous_revision": 0,
+        "projection_revision": 1,
+        "event_sequence": 1,
+        "effective_change": true,
+        "resync_required": false,
+        "records": [
+          {
+            "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+            "context_kind": "normal",
+            "tab_identity": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_id": 10
+            },
+            "window_id": 1,
+            "group_id": 7,
+            "title_display": "Alpha",
+            "title_search": "alpha",
+            "url_display": "https://alpha.example/a",
+            "url_search": "https://alpha.example/a",
+            "domain_display": "alpha.example",
+            "domain_search": "alpha.example",
+            "pinned": false,
+            "active": true,
+            "eligible": true,
+            "observed_at": 1000,
+            "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+            "projection_revision": 1
+          },
+          {
+            "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+            "context_kind": "normal",
+            "tab_identity": {
+              "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+              "context_kind": "normal",
+              "tab_id": 9007199254740992
+            },
+            "window_id": 1,
+            "group_id": null,
+            "title_display": "Beta",
+            "title_search": "beta",
+            "url_display": "https://beta.example/b",
+            "url_search": "https://beta.example/b",
+            "domain_display": "beta.example",
+            "domain_search": "beta.example",
+            "pinned": false,
+            "active": false,
+            "eligible": true,
+            "observed_at": 1001,
+            "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+            "projection_revision": 1
+          }
+        ]
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "invalid_record",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "snapshot",
+          "validation": "REFUSED",
+          "cause": "missing_tab_identity_tab_id",
+          "code": "SNAPSHOT_REQUIRED",
+          "resync": null,
+          "index": 1,
+          "records": 0
+        }
+      },
+      "note": "A tab id past the IP-02 projection bound is not a browser tab identity, so it is refused at its position rather than stored as a key that no activation reference could ever address."
+    },
+    {
+      "case_id": "snapshot_for_unbound_profile",
+      "acquisition_signal": "completed",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "snapshot",
+        "profile_id": "123e4567-e89b-42d3-a456-4266141740ff",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+        "previous_revision": 0,
+        "projection_revision": 1,
+        "event_sequence": 1,
+        "effective_change": true,
+        "resync_required": false,
+        "records": []
+      },
+      "acquisition": "PROFILE_MISMATCH",
+      "expected": {
+        "producer": {
+          "outcome": "PROFILE_MISMATCH",
+          "reason": "partition_profile_mismatch",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "snapshot",
+          "validation": "REFUSED",
+          "cause": "mismatched_profile_id",
+          "code": "PROFILE_MISMATCH",
+          "resync": "profile_changed",
+          "index": -1,
+          "records": 0
+        }
+      },
+      "note": "A complete read of another browser profile contradicts the bound partition instead of merely lacking a field, so it maps onto the non-retryable IP-07 code while every incomplete read stays retryable. Keeping two profiles apart is IP-05-T09; this case proves only that a snapshot for another profile is never authority here."
+    },
+    {
+      "case_id": "undeclared_read_outcome_empty_snapshot",
+      "acquisition_signal": "undeclared",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "snapshot",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+        "previous_revision": 0,
+        "projection_revision": 1,
+        "event_sequence": 1,
+        "effective_change": true,
+        "records": []
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "missing_resync_marker",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "snapshot",
+          "validation": "ADMITTED",
+          "cause": null,
+          "code": null,
+          "resync": null,
+          "index": null,
+          "records": 0
+        }
+      },
+      "note": "This is the dangerous empty case: the read looks complete because the fence is complete and the record list is an explicit empty array, but IP-04 left the mandatory resync_required marker undeclared, so whether the browser call finished is unknown. The producer reads the raw marker instead of the boundary normalization that would coerce an absent marker to false, publishes no record, requires a fresh authoritative read, and keeps the previously acquired snapshot; the host would admit this fence and empty list, which is exactly why the producer acquisition is the acquisition authority."
+    },
+    {
+      "case_id": "non_boolean_read_outcome_empty_snapshot",
+      "acquisition_signal": "undeclared",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "snapshot",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+        "previous_revision": 0,
+        "projection_revision": 1,
+        "event_sequence": 1,
+        "effective_change": true,
+        "records": [],
+        "resync_required": "false"
+      },
+      "acquisition": "SNAPSHOT_REQUIRED",
+      "expected": {
+        "producer": {
+          "outcome": "SNAPSHOT_REQUIRED",
+          "reason": "invalid_resync_marker",
+          "authoritative": false,
+          "resync_required": true,
+          "record_count": 0,
+          "explicitly_empty": false,
+          "retained": false
+        },
+        "host": {
+          "call": "snapshot",
+          "validation": "ADMITTED",
+          "cause": null,
+          "code": null,
+          "resync": null,
+          "index": null,
+          "records": 0
+        }
+      },
+      "note": "A marker of the wrong type is as undeclared as an absent one: the string \"false\" must not be read as a completed read, and a boundary that coerces it with a strict comparison against true would report this read as clean. The producer refuses it as an unusable marker, carries no record, and keeps the previously acquired snapshot, while the same explicit resync_required false with an empty record list stays authority."
+    },
+    {
+      "case_id": "successful_explicit_empty_snapshot",
+      "acquisition_signal": "completed",
+      "partition_context": "normal",
+      "handoff": {
+        "kind": "snapshot",
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174002",
+        "previous_revision": 0,
+        "projection_revision": 1,
+        "event_sequence": 1,
+        "effective_change": true,
+        "resync_required": false,
+        "records": []
+      },
+      "acquisition": "AUTHORITATIVE",
+      "expected": {
+        "producer": {
+          "outcome": "AUTHORITATIVE",
+          "reason": null,
+          "authoritative": true,
+          "resync_required": false,
+          "record_count": 0,
+          "explicitly_empty": true,
+          "retained": true
+        },
+        "host": {
+          "call": "snapshot",
+          "validation": "ADMITTED",
+          "cause": null,
+          "code": null,
+          "resync": null,
+          "index": null,
+          "records": 0
+        }
+      },
+      "note": "An explicit empty record list from a completed read is the intentional empty projection: it converges the partition on no eligible tab instead of waiting for data that will never arrive, and it is reported as explicitly empty so it can never be confused with a failed read. It runs last so the corpus shows one partition converging from a populated read to an explicitly empty read through refusals that changed nothing."
+    }
+  ],
+  "expected": {
+    "observations": [
+      {
+        "signal": "final_outcome",
+        "value": "AUTHORITATIVE"
+      },
+      {
+        "signal": "authoritative_cases",
+        "value": 2
+      },
+      {
+        "signal": "snapshot_required_cases",
+        "value": 16
+      },
+      {
+        "signal": "profile_mismatch_cases",
+        "value": 1
+      },
+      {
+        "signal": "explicitly_empty_cases",
+        "value": 1
+      },
+      {
+        "signal": "authoritative_record_count",
+        "value": 3
+      },
+      {
+        "signal": "non_authoritative_record_count",
+        "value": 0
+      },
+      {
+        "signal": "partial_outputs",
+        "value": 0
+      },
+      {
+        "signal": "committed_queryable_partitions",
+        "value": 0
+      }
+    ],
+    "invariants": {
+      "producer_retained_records": {
+        "authoritative_case": 3,
+        "after_first_refusal": 3
+      },
+      "host_committed_state": {
+        "status": "Uninitialized",
+        "epoch": "",
+        "revision": 0,
+        "count": 0,
+        "queryable": false
+      },
+      "note": "IP-05-T02 proves which read is authority and that no other read can erase or fake a projection. IP-05-T07 owns the atomic committed replacement, so a validated snapshot is still uncommitted here: every case leaves the partition uninitialized and unqueryable. The corpus runs the completed populated read first, so the first refusal proves it kept the acquired records, and the explicit empty read last, so the same partition converges on an explicitly empty snapshot without any case ever committing one."
+    },
+    "privacy_assertions": [
+      "Every acquisition outcome is one bounded protocol code and one bounded reject reason; no title, URL, query, token, or page value appears in an outcome, reason, resync marker, index, or retained-view field.",
+      "A non-authoritative acquisition carries no record at all, so a denied, failed, partial, unavailable, or resync-required read can never publish a tab, a field value, or an empty projection derived from one.",
+      "The fixture collects only the open-tab metadata the product contract allows: tab, window, and group ids, title, URL, domain, pinned, active, eligibility, observed_at, group and window labels, and the partition and fence fields. No cookie, storage, history, or page content is read, staged, or asserted.",
+      "The two UUID values outside the bound partition exist only to prove a snapshot for another profile or another lineage is refused; neither is a stored or reported identity.",
+      "An over-limit read is refused at the size gate, so no record of the oversized payload is retained, counted, forwarded, or reported; the failure names only the bound and the refusal."
+    ]
+  }
+}
