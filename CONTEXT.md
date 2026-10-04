@@ -32,7 +32,7 @@ This file is the shared language and operating context for agents working in thi
 - Naming conventions: Use product terms from this file; name artifacts under `docs/agent/` by decision or workflow purpose.
 - Preferred patterns: Explicit requirements, bounded local data, deterministic behavior, versioned protocols, measurable acceptance criteria, and recoverable failure states.
 - Patterns to avoid: MVP-first scope reduction, database-first design, broad browser permissions, cloud indexing, page-content collection, and copying retired InfoBoard contracts into the rebuilt product.
-- Relevant project instructions: The product source of truth is `docs/plan/refactor/`; implementation scope, dependencies, and execution status are maintained in `docs/plan/implementation/`. Detailed views under `docs/product/` and `docs/architecture/` are supporting references, not independent product contracts.
+- Relevant project instructions: The product source of truth is `docs/plan/refactor/`; implementation scope, dependencies, and execution status are maintained in `docs/plan/implementation/`. Detailed views under `docs/product/` and `docs/operations/architecture/` are supporting references, not independent product contracts.
 
 ## Testing and verification
 

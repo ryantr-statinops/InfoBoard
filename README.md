@@ -21,7 +21,7 @@ The product contract is ready and IP-01 is complete in `dev`: shared fixtures, p
 | [`docs/plan/implementation/`](docs/plan/implementation/README.md) | Phase plans, commit-to-task mapping, execution status, and evidence tracking |
 | [`fixtures/`](fixtures/catalog.json) | Shared contract fixture catalog and schema |
 | [`tests/implementation/validate_corpus.py`](tests/implementation/validate_corpus.py) | Standard-library phase, ownership, link, and fixture-contract validator |
-| [`docs/architecture/`](docs/architecture/README.md), [`docs/design/`](docs/design/README.md), [`docs/quality/`](docs/quality/README.md), [`docs/operations/`](docs/operations/README.md) | Preserved detailed views and supporting design/quality/operations references |
+| [`docs/operations/architecture/`](docs/operations/architecture/README.md), [`docs/design/`](docs/design/README.md), [`docs/quality/`](docs/quality/README.md), [`docs/operations/`](docs/operations/README.md) | Preserved detailed views and supporting design/quality/operations references |
 | [`.agent/skills/`](.agent/skills/) | Repository agent skills and templates |
 
 ## Starting implementation

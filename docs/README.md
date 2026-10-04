@@ -14,7 +14,7 @@ The detailed documents in the folders below explain the same contracts for diffe
 | Folder | Detailed responsibility |
 | --- | --- |
 | [`agent/`](agent/skill-integration.md) | Coding-agent skill routing and documentation boundaries; not product behavior |
-| [`architecture/`](architecture/README.md) | System shape, component ownership, runtime lifecycle, data flow, and failure isolation |
+| [`operations/architecture/`](operations/architecture/README.md) | System shape, component ownership, runtime lifecycle, data flow, and failure isolation |
 | [`design/`](design/README.md) | Search surface, interaction states, accessibility, ranking behavior, and optional mockups |
 | [`operations/`](operations/README.md) | Packaging, installation, update, rollback, repair, diagnostics, reset, and uninstall |
 | [`plan/`](plan/README.md) | Canonical product specification plus the retained implementation-plan tree |

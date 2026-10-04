@@ -49,4 +49,4 @@ The current tab projection is rebuildable. Persistence improves configuration an
 - A failed optional component cannot remove the normal lexical search path.
 - The architecture is measured at 1,000 open tabs per profile and remains correct above that envelope.
 
-See the [canonical target architecture](../plan/refactor/architecture.md) for the binding contract.
+See the [canonical target architecture](../../plan/refactor/architecture.md) for the binding contract.

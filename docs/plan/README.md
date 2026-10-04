@@ -14,7 +14,7 @@ Its documents cover:
 - persistence/lifecycle and packaging/operations;
 - verification/acceptance, decisions, and roadmap.
 
-Detailed reader views live in [`../architecture/`](../architecture/README.md), [`../design/`](../design/README.md), [`../operations/`](../operations/README.md), [`../product/`](../product/README.md), and [`../quality/`](../quality/README.md). They explain the canonical material without replacing it.
+Detailed reader views live in [`../operations/architecture/`](../operations/architecture/README.md), [`../design/`](../design/README.md), [`../operations/`](../operations/README.md), [`../product/`](../product/README.md), and [`../quality/`](../quality/README.md). They explain the canonical material without replacing it.
 
 ## Implementation plans
 

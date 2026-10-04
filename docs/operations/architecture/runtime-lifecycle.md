@@ -38,4 +38,4 @@ Browser events become ordered deltas. Each query carries the projection revision
 - SQLite failure affects persistence health, not the in-memory lexical path when the host can continue safely.
 - An incompatible handshake stops tab-data transmission and exposes repair guidance.
 
-The [runtime protocol](../plan/refactor/runtime-protocol.md) defines the wire-level messages and failure classes.
+The [runtime protocol](../../plan/refactor/runtime-protocol.md) defines the wire-level messages and failure classes.
