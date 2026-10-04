@@ -519,7 +519,9 @@ func (s *Session) Run(ctx context.Context) Outcome {
 	if err == nil {
 		err = s.serve()
 	}
-	if err != nil && !isCleanStreamEnd(err) && !s.stopped() {
+	// Parent cancellation can win before watch publishes stopCause or cancels root.
+	// Suppress a transient recoverable state when that cancellation is intentional.
+	if err != nil && !isCleanStreamEnd(err) && !s.stopped() && !ctxCancelled(ctx) {
 		failure, retryable := ClassifyFailure(err)
 		if failure != FailureNone {
 			s.reportFailure(failure, retryable)
