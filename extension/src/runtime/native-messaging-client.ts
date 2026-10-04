@@ -14,6 +14,7 @@ import {
   type EligibleTabRecord,
   type ProfileID,
   type ProjectionEpoch,
+  type ProjectionRevision,
   type TabIdentity,
 } from '../../domain/index.js';
 
@@ -138,6 +139,7 @@ export interface SnapshotSubmission {
   epoch: ProjectionEpoch;
   records: readonly EligibleTabRecord[];
   sequence: number;
+  projection_revision: ProjectionRevision;
 }
 
 export interface DeltaOperation {
@@ -741,7 +743,7 @@ export class NativeMessagingClient {
       tabs: submission.records.map(record => wireRecord(record)),
       sequence: submission.sequence,
     };
-    return this.dispatch<SyncAckResponse>('snapshot', payload, submission.records.length);
+    return this.dispatch<SyncAckResponse>('snapshot', payload, submission.projection_revision);
   }
 
   sendDelta(submission: DeltaSubmission): Promise<ClientRequestResult<SyncAckResponse>> {
@@ -812,6 +814,7 @@ export class NativeMessagingClient {
   private validateSnapshot(submission: SnapshotSubmission): ClientRequestResult<never> | undefined {
     if (submission.records.length > this.limits.snapshotRecords) return rejectLocal('PAYLOAD_LIMIT');
     if (!isNonNegativeInteger(submission.sequence)) return rejectLocal('INVALID_SUBMISSION');
+    if (!isNonNegativeInteger(submission.projection_revision)) return rejectLocal('INVALID_SUBMISSION');
     for (const record of submission.records) {
       if (!validateTab(record, this.options.profileId, this.options.contextKind, submission.epoch)) {
         return rejectLocal('SNAPSHOT_REQUIRED');
