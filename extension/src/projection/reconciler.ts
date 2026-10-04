@@ -1,4 +1,4 @@
-// Projection boundary for the extension producer (IP-05-T01).
+// Projection boundary for the extension producer (IP-05-T01, IP-05-T02).
 // IP-02 owns ProfileID, ContextKind, TabIdentity, ProjectionEpoch,
 // ProjectionRevision, EligibleTabRecord, and ProjectionState. IP-04 owns the
 // allocation of projection_epoch, previous_revision, projection_revision, and
@@ -7,9 +7,26 @@
 // forwards the IP-04-allocated fence values unchanged. It never manufactures an
 // identity, epoch, revision, or sequence and keeps no second counter: a handoff
 // that does not carry all mandatory partition and fence fields is rejected with
-// a bounded reason instead of being completed by a default. Snapshot authority,
-// canonical ordering, delta reduction, atomic commit, and recovery are later
-// IP-05 tasks and are intentionally not implemented here.
+// a bounded reason instead of being completed by a default.
+//
+// IP-05-T02 adds snapshot authority on top of that boundary: a handoff is the
+// authoritative browser read for a partition only when it is a kind=snapshot
+// handoff that cleared the T01 fence, carries the explicit records array IP-04
+// read, states a present boolean resync_required of false, and stays inside the
+// IP-02/IP-07 record bound. An empty records array from such a handoff is an
+// intentional successful empty read and is authoritative; a status, unavailable,
+// private-denied, partial, resync-required, or read-outcome-undeclared handoff is
+// never turned into an empty authoritative snapshot and never clears the
+// previously acquired snapshot of the partition. The producer hands the IP-07 seam
+// a typed result instead of a map, so an uncertain read cannot be published as a
+// converged projection. Those gates run on the raw handoff before any record is read
+// or staged, so a status, partial, resync-required, over-bound, or undeclared
+// handoff fails closed without materializing the payload it carries.
+//
+// Canonical ordering, lineage/ordering rules, delta reduction, atomic commit,
+// and restart recovery are later IP-05 tasks and are intentionally not
+// implemented here: the authoritative snapshot is retained as an acquisition
+// result only and never committed into a live projection map.
 
 import {
   emptyProjection,
@@ -46,6 +63,21 @@ export const PROJECTION_ADMISSION_KINDS = [
   'private_context_ended',
 ] as const;
 
+// The one bound every snapshot authority decision shares: IP-02 acceptSnapshot and
+// the IP-07 snapshot_records limit both cap a full browser read at 10000 eligible
+// records, so a larger payload is refused instead of being staged.
+export const PROJECTION_MAX_SNAPSHOT_RECORDS = 10000;
+
+// The typed outcomes an acquisition can report to the IP-07 seam. AUTHORITATIVE is
+// the only value that may carry records; the two failure values are the IP-07 wire
+// error codes an incomplete or contradicting handoff maps to, so this module never
+// invents a private error vocabulary beside the protocol's.
+export const PROJECTION_SNAPSHOT_OUTCOMES = [
+  'AUTHORITATIVE',
+  'SNAPSHOT_REQUIRED',
+  'PROFILE_MISMATCH',
+] as const;
+
 export const PROJECTION_REJECT_REASONS = [
   'unpartitioned_handoff',
   'unknown_handoff_kind',
@@ -69,10 +101,17 @@ export const PROJECTION_REJECT_REASONS = [
   'identity_partition_mismatch',
   'invalid_record',
   'tab_identity_mismatch',
+  'non_snapshot_handoff',
+  'missing_resync_marker',
+  'invalid_resync_marker',
+  'snapshot_resync_required',
+  'snapshot_bounds_exceeded',
 ] as const;
 
 export type ProjectionRejectReason = (typeof PROJECTION_REJECT_REASONS)[number];
 export type ProjectionSubmissionKind = (typeof PROJECTION_ADMISSION_KINDS)[number];
+export type ProjectionSnapshotOutcome = (typeof PROJECTION_SNAPSHOT_OUTCOMES)[number];
+export type ProjectionSnapshotFailure = Exclude<ProjectionSnapshotOutcome, 'AUTHORITATIVE'>;
 
 export interface ProjectionPartition {
   readonly profile_id: ProfileID;
@@ -106,15 +145,63 @@ export interface ProjectionPartitionView {
   readonly record_count: number;
 }
 
+// One authoritative browser read of a partition, exactly as IP-04 declared it. The
+// records are the validated IP-02 eligible records of the declared fence: the
+// authoritative list is the snapshot IP-04 read, not a projection this module
+// assembled. explicitly_empty states that the browser read completed and reported
+// no eligible tab, which is a converged projection and not a failed read.
+export interface ProjectionSnapshotAuthority {
+  readonly fence: ProjectionFence;
+  readonly records: readonly EligibleTabRecord[];
+  readonly record_count: number;
+  readonly explicitly_empty: boolean;
+}
+
+export type SnapshotAcquisition =
+  | {
+      readonly ok: true;
+      readonly authoritative: true;
+      readonly outcome: 'AUTHORITATIVE';
+      readonly snapshot: ProjectionSnapshotAuthority;
+    }
+  | {
+      readonly ok: false;
+      readonly authoritative: false;
+      readonly outcome: ProjectionSnapshotFailure;
+      readonly reason: ProjectionRejectReason;
+      readonly resync_required: true;
+      readonly fence?: ProjectionFence;
+      readonly resync_reason?: ResyncReason;
+    };
+
+// The observable acquisition state of one partition. epoch, projection_revision,
+// event_sequence, record_count, and explicitly_empty always describe the retained
+// authoritative snapshot, so a refused or partial read is observable as an outcome
+// while the previously acquired data stays intact.
+export interface ProjectionSnapshotPartitionView {
+  readonly context_kind: ContextKind;
+  readonly last_outcome: ProjectionSnapshotOutcome | 'UNINITIALIZED';
+  readonly retained_authoritative: boolean;
+  readonly epoch: ProjectionEpoch | null;
+  readonly projection_revision: ProjectionRevision | null;
+  readonly event_sequence: number | null;
+  readonly record_count: number;
+  readonly explicitly_empty: boolean;
+}
+
 export interface ProjectionBoundaryDiagnostics {
   handoffs_admitted: number;
   handoffs_rejected: number;
   rejections_by_reason: Record<ProjectionRejectReason, number>;
+  snapshots_authoritative: number;
+  snapshots_unauthoritative: number;
+  snapshot_refusals_by_reason: Record<ProjectionRejectReason, number>;
 }
 
 export interface ProjectionBoundaryView {
   readonly profile_id: ProfileID;
   readonly partitions: readonly ProjectionPartitionView[];
+  readonly snapshots: readonly ProjectionSnapshotPartitionView[];
   readonly diagnostics: ProjectionBoundaryDiagnostics;
 }
 
@@ -301,21 +388,155 @@ function readSequenceField(value: unknown): { ok: true; value: number } | { ok: 
   return { ok: true, value };
 }
 
+// IP-05-T02: snapshot authority.
+
+// snapshotOutcome maps one bounded boundary refusal onto the IP-07 code the
+// extension reports when it cannot present an authoritative snapshot. A handoff
+// that names another partition contradicts the bound profile rather than merely
+// lacking fields, so it maps to the non-retryable PROFILE_MISMATCH; every other
+// refusal is repaired by a complete authoritative read and stays the retryable
+// SNAPSHOT_REQUIRED. This is a mapping onto the protocol's own literals, not a
+// second error vocabulary.
+function snapshotOutcome(reason: ProjectionRejectReason): ProjectionSnapshotFailure {
+  return reason === 'partition_profile_mismatch' || reason === 'identity_partition_mismatch'
+    ? 'PROFILE_MISMATCH'
+    : 'SNAPSHOT_REQUIRED';
+}
+
+// unauthoritative builds the typed failure of one handoff that cannot stand as the
+// authoritative browser read of its partition. It carries no records at all, so a
+// downstream consumer can never read it as a converged empty projection, and it
+// always states that a fresh authoritative snapshot is required. fence is present
+// only when the handoff did state a valid one, and resync_reason is the IP-04
+// marker explaining the failed read; neither carries a title, URL, query, token, or
+// page value.
+function unauthoritative(
+  reason: ProjectionRejectReason,
+  handoff: ObserverHandoff,
+  fence?: ProjectionFence,
+): SnapshotAcquisition {
+  return compact({
+    ok: false,
+    authoritative: false,
+    outcome: snapshotOutcome(reason),
+    reason,
+    resync_required: true,
+    fence,
+    resync_reason: handoff.resync_reason,
+  }) as SnapshotAcquisition;
+}
+
+// acquireSnapshot decides whether one IP-04 handoff is the authoritative browser
+// read of the bound profile's partition. The checks are ordered so that no record is
+// read, copied, or staged before the handoff has proven it is a complete read worth
+// materializing: the raw kind, fence, marker, record-list, and record-count gates run
+// first, and only a handoff that clears all of them reaches the T01 record walk.
+//
+// 1. The kind is an admitted handoff kind at all: a disposed session is unpartitioned
+//    and an unknown kind is unknown, neither of which can name a read.
+// 2. The handoff states a usable fence: the bound profile, a known context, and the
+//    IP-04 allocated epoch, previous revision, revision, and sequence. Reading it
+//    costs a few scalar fields, refuses another profile or an unstated fence field,
+//    and gives every later refusal the partition it belongs to.
+// 3. Its kind is snapshot. A status, window, private_context_ended, upsert, or
+//    remove handoff reports an observation or an event, never a complete read, so
+//    it is refused instead of being completed into an empty snapshot.
+// 4. It states a usable read outcome. IP-04 declares resync_required as a
+//    mandatory boolean and sets it for an unavailable or permission-denied read,
+//    an incomplete or partial read, and an unreadable private context, so such a
+//    handoff is an uncertain read even when it arrives with an empty records
+//    array. The raw handoff field is read here instead of the admitted submission:
+//    the T01 boundary normalizes that marker with the strict comparison
+//    handoff.resync_required === true, which coerces an absent or non-boolean
+//    marker to false and would report an undeclared read as a completed one,
+//    letting it stand as an authoritative empty snapshot. Authority requires
+//    resync_required to be present and boolean, and false.
+// 5. It declares its record list explicitly and keeps it inside the IP-02/IP-07
+//    snapshot bound, so an oversized payload is refused by its length alone rather
+//    than after every record in it was copied.
+// 6. Every record passes the IP-02 bounds and identity checks against that fence,
+//    which is the only step that materializes records and the only one T01 owns.
+//
+// A snapshot that passes all six is authoritative, including one whose explicit
+// records array is empty: an empty array from a completed read means the browser
+// reports no eligible tab, and publishing it as authoritative is what lets the host
+// converge on an empty projection instead of waiting forever for data that will
+// never arrive. The fence and records are forwarded exactly as IP-04 declared them:
+// this function classifies a handoff and never repairs, renumbers, or allocates one.
+export function acquireSnapshot(boundProfile: ProfileID, handoff: ObserverHandoff): SnapshotAcquisition {
+  if (handoff.kind === 'disposed') return unauthoritative('unpartitioned_handoff', handoff);
+  if (!isAdmissionKind(handoff.kind)) return unauthoritative('unknown_handoff_kind', handoff);
+  // The fence is resolved before anything can allocate, so an unpartitioned, foreign,
+  // or unstated-fence handoff is refused on scalar fields alone.
+  const fence = readProjectionFence(handoff, boundProfile);
+  if (!fence.ok) return unauthoritative(fence.reason, handoff);
+  if (handoff.kind !== 'snapshot') return unauthoritative('non_snapshot_handoff', handoff, fence.fence);
+  if (isAbsent(handoff.resync_required)) return unauthoritative('missing_resync_marker', handoff, fence.fence);
+  if (typeof handoff.resync_required !== 'boolean') return unauthoritative('invalid_resync_marker', handoff, fence.fence);
+  if (handoff.resync_required) return unauthoritative('snapshot_resync_required', handoff, fence.fence);
+  if (!Array.isArray(handoff.records)) return unauthoritative('missing_records', handoff, fence.fence);
+  if (handoff.records.length > PROJECTION_MAX_SNAPSHOT_RECORDS) return unauthoritative('snapshot_bounds_exceeded', handoff, fence.fence);
+  // Only a handoff that may be authority now reaches the T01 boundary, which owns
+  // the per-record identity and bounds validation.
+  const admission = admitHandoff(boundProfile, handoff);
+  if (!admission.ok) return unauthoritative(admission.reason, handoff, fence.fence);
+  const submission = admission.submission;
+  return {
+    ok: true,
+    authoritative: true,
+    outcome: 'AUTHORITATIVE',
+    snapshot: {
+      fence: submission.fence,
+      records: submission.records,
+      record_count: submission.records.length,
+      explicitly_empty: submission.records.length === 0,
+    },
+  };
+}
+
 interface ForwardedFence {
   projection_epoch: ProjectionEpoch;
   projection_revision: ProjectionRevision;
   event_sequence: number;
 }
 
+interface RetainedSnapshot {
+  readonly fence: ProjectionFence;
+  readonly records: readonly EligibleTabRecord[];
+}
+
+// The acquisition state of one partition. The retained snapshot is only ever
+// replaced by another authoritative read, while last_outcome records the newest
+// attempt separately so a refused read is observable without disturbing the data.
+interface PartitionSnapshotState {
+  retained: RetainedSnapshot | undefined;
+  last_outcome: ProjectionSnapshotOutcome | 'UNINITIALIZED';
+}
+
+function zeroCounters(): Record<ProjectionRejectReason, number> {
+  const counters = {} as Record<ProjectionRejectReason, number>;
+  for (const reason of PROJECTION_REJECT_REASONS) counters[reason] = 0;
+  return counters;
+}
+
 function zeroDiagnostics(): ProjectionBoundaryDiagnostics {
-  const rejections_by_reason = {} as Record<ProjectionRejectReason, number>;
-  for (const reason of PROJECTION_REJECT_REASONS) rejections_by_reason[reason] = 0;
-  return { handoffs_admitted: 0, handoffs_rejected: 0, rejections_by_reason };
+  return {
+    handoffs_admitted: 0,
+    handoffs_rejected: 0,
+    rejections_by_reason: zeroCounters(),
+    snapshots_authoritative: 0,
+    snapshots_unauthoritative: 0,
+    snapshot_refusals_by_reason: zeroCounters(),
+  };
 }
 
 export class ProjectionReconciler {
   private readonly states: Record<ContextKind, ProjectionState>;
   private readonly forwarded: Record<ContextKind, ForwardedFence | undefined> = { normal: undefined, private: undefined };
+  private readonly snapshots: Record<ContextKind, PartitionSnapshotState> = {
+    normal: { retained: undefined, last_outcome: 'UNINITIALIZED' },
+    private: { retained: undefined, last_outcome: 'UNINITIALIZED' },
+  };
   private readonly diagnostics: ProjectionBoundaryDiagnostics = zeroDiagnostics();
 
   constructor(private readonly boundProfile: ProfileID) {
@@ -342,6 +563,47 @@ export class ProjectionReconciler {
     return admission;
   }
 
+  // acquire classifies one IP-04 handoff as the authoritative browser read of its
+  // partition and retains it as this partition's acquired snapshot. A refused,
+  // partial, unavailable, or resync-required handoff changes no retained snapshot:
+  // the previously acquired read of that partition stays exactly as it was, so a
+  // failed read can never be observed as an empty projection and never erases valid
+  // state. Acquisition is not commit: the retained snapshot is an input for the
+  // later atomic replacement task and is never written into the live projection map.
+  acquire(handoff: ObserverHandoff): SnapshotAcquisition {
+    const acquisition = acquireSnapshot(this.boundProfile, handoff);
+    if (!acquisition.ok) {
+      this.diagnostics.snapshots_unauthoritative += 1;
+      this.diagnostics.snapshot_refusals_by_reason[acquisition.reason] += 1;
+      // A handoff that stated no usable partition cannot be attributed to one, so
+      // only its bounded counter records it; its retained snapshot is untouched
+      // either way.
+      if (acquisition.fence !== undefined) this.snapshots[acquisition.fence.context_kind].last_outcome = acquisition.outcome;
+      return acquisition;
+    }
+    this.diagnostics.snapshots_authoritative += 1;
+    const { fence, records } = acquisition.snapshot;
+    const partition = this.snapshots[fence.context_kind];
+    partition.retained = { fence, records };
+    partition.last_outcome = acquisition.outcome;
+    return acquisition;
+  }
+
+  // acquiredSnapshot returns the retained authoritative snapshot of a partition, or
+  // undefined when no authoritative read has been acquired for it yet. The record
+  // list is copied out so a caller cannot mutate the retained state through it, and
+  // no other path changes this value: acquiring a newer snapshot is the only way.
+  acquiredSnapshot(context_kind: ContextKind): ProjectionSnapshotAuthority | undefined {
+    const retained = this.snapshots[context_kind].retained;
+    if (retained === undefined) return undefined;
+    return {
+      fence: retained.fence,
+      records: [...retained.records],
+      record_count: retained.records.length,
+      explicitly_empty: retained.records.length === 0,
+    };
+  }
+
   livePartition(context_kind: ContextKind): ProjectionState {
     return this.states[context_kind];
   }
@@ -359,7 +621,25 @@ export class ProjectionReconciler {
           record_count: this.states[context_kind].records.size,
         };
       }),
-      diagnostics: { ...this.diagnostics, rejections_by_reason: { ...this.diagnostics.rejections_by_reason } },
+      snapshots: (['normal', 'private'] as const).map(context_kind => {
+        const partition = this.snapshots[context_kind];
+        const retained = partition.retained;
+        return {
+          context_kind,
+          last_outcome: partition.last_outcome,
+          retained_authoritative: retained !== undefined,
+          epoch: retained?.fence.projection_epoch ?? null,
+          projection_revision: retained?.fence.projection_revision ?? null,
+          event_sequence: retained?.fence.event_sequence ?? null,
+          record_count: retained?.records.length ?? 0,
+          explicitly_empty: retained !== undefined && retained.records.length === 0,
+        };
+      }),
+      diagnostics: {
+        ...this.diagnostics,
+        rejections_by_reason: { ...this.diagnostics.rejections_by_reason },
+        snapshot_refusals_by_reason: { ...this.diagnostics.snapshot_refusals_by_reason },
+      },
     };
   }
 }

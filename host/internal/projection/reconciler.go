@@ -22,6 +22,7 @@ const (
 	CauseMissingTabIdentityContextKind Cause = "missing_tab_identity_context_kind"
 	CauseMissingTabIdentityTabID       Cause = "missing_tab_identity_tab_id"
 	CauseMissingRecord                 Cause = "missing_record"
+	CauseInvalidRecord                 Cause = "invalid_record"
 	CauseMismatchedProfileID           Cause = "mismatched_profile_id"
 	CauseMismatchedContextKind         Cause = "mismatched_context_kind"
 	CauseMismatchedProjectionEpoch     Cause = "mismatched_projection_epoch"
@@ -36,7 +37,7 @@ var causes = map[Cause]struct{}{
 	CausePartitionUnbound: {}, CauseMissingProfileID: {}, CauseMissingContextKind: {},
 	CauseMissingProjectionEpoch: {}, CauseMissingProjectionRevision: {},
 	CauseMissingTabIdentityProfileID: {}, CauseMissingTabIdentityContextKind: {},
-	CauseMissingTabIdentityTabID: {}, CauseMissingRecord: {},
+	CauseMissingTabIdentityTabID: {}, CauseMissingRecord: {}, CauseInvalidRecord: {},
 	CauseMismatchedProfileID: {}, CauseMismatchedContextKind: {},
 	CauseMismatchedProjectionEpoch: {}, CauseMismatchedProjectionRevision: {},
 	CauseMismatchedTabIdentity: {}, CauseUnexpectedRecord: {},
@@ -176,8 +177,18 @@ func (reconciler *Reconciler) State() *State { return reconciler.state }
 // its records into IP-02 domain records. Every record must repeat the declared
 // profile, context, epoch, and revision: a record missing one of them is refused as
 // an incomplete identity, and a record naming another partition or another lineage
-// is refused as a mismatch, before any state is touched. Text and count bounds stay
-// owned by the IP-07 decoder and are not re-implemented here.
+// is refused as a mismatch, before any state is touched.
+//
+// A fully fenced snapshot for the known profile/context is authority even when it
+// carries no record at all: zero records is an intentional successful empty
+// projection, not a permission failure, a partial read, or unavailable profile
+// state. The IP-07 payload has no field for how the browser read finished, so an
+// acquisition that did not complete is not a snapshot at all: it arrives as a
+// status or resync signal and leaves the committed lineage untouched. Because that
+// distinction is carried by the peer, the host accepts authority only for a
+// complete fence and proves every record against the IP-02 record contract before
+// returning it. Wire shape and scalar budgets stay owned by the IP-07 decoder and
+// are not re-implemented here.
 func (reconciler *Reconciler) BindSnapshot(request SnapshotRequest) (SnapshotInput, *Rejection) {
 	if len(request.Records) > protocol.MaxSnapshotRecords {
 		return SnapshotInput{}, missingIdentity(CauseBoundsExceeded, "", 0, 0, -1)
@@ -194,6 +205,15 @@ func (reconciler *Reconciler) BindSnapshot(request SnapshotRequest) (SnapshotInp
 		record, rejection := reconciler.record(request.Records[index], epoch, request.Revision, index)
 		if rejection != nil {
 			return SnapshotInput{}, rejection
+		}
+		// A record that IP-02 would refuse is refused here, so no record outside the
+		// domain contract can reach an accepted SnapshotInput. The IP-07 decoder
+		// bounds the same values more loosely than IP-02, and it cannot see the
+		// eligibility rule or the epoch shape at all. The remedy is a complete
+		// authoritative snapshot, so the snapshot is reported as stale rather than
+		// as an absent field.
+		if !record.Valid(reconciler.partition.ProfileID, reconciler.partition.ContextKind, epoch) {
+			return SnapshotInput{}, reject(protocol.CodeSnapshotRequired, CauseInvalidRecord, protocol.ResyncSnapshotStale, request.Revision, 0, index)
 		}
 		records = append(records, record)
 	}
