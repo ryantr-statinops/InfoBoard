@@ -440,10 +440,11 @@ type Session struct {
 	frames   chan frameResult
 	inflight sync.WaitGroup
 
-	mu           sync.Mutex
-	started      bool
-	readyReached bool
-	stopCause    error
+	counterSyncMu sync.Mutex
+	mu            sync.Mutex
+	started       bool
+	readyReached  bool
+	stopCause     error
 
 	finishOnce    sync.Once
 	finishOutcome Outcome
@@ -487,7 +488,7 @@ func (s *Session) WriteFrame(ctx context.Context, payload []byte) error {
 		s.diagnostics.Observe(s.health.current(), levelForError(err), EventFrameWriteFailed, 0, 1)
 		return fail(class, ErrSessionClosing)
 	}
-	s.health.count(func(snapshot *HealthSnapshot) { snapshot.FramesWritten = s.writer.count() })
+	s.syncCounters()
 	return nil
 }
 
@@ -787,6 +788,8 @@ func (s *Session) rejectFrame(failure FailureClass) {
 }
 
 func (s *Session) syncCounters() {
+	s.counterSyncMu.Lock()
+	defer s.counterSyncMu.Unlock()
 	started, completed, rejected := s.requests.counters()
 	framesRead, framesWritten := s.reader.count(), s.writer.count()
 	s.health.count(func(snapshot *HealthSnapshot) {

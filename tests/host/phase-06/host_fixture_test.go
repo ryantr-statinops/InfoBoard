@@ -509,9 +509,9 @@ func TestFixtureHostStdioOwnership(t *testing.T) {
 	if health := session.Health(); health.Availability != hostruntime.Availability(expectedStringOf(t, fixture, "availability_at_ready")) {
 		t.Fatalf("availability = %s, want healthy", health.Availability)
 	}
-	if completed := session.Health().RequestsCompleted; completed < uint64(concurrency) {
-		t.Fatalf("completed requests = %d, want %d", completed, concurrency)
-	}
+	waitForCondition(t, "all requests to complete", func() bool {
+		return session.Health().RequestsCompleted >= uint64(concurrency)
+	})
 
 	session.Close(nil)
 	if outcome := awaitOutcome(t, outcomes, rig.limits.ShutdownTimeout+slack); !outcome.Clean {
