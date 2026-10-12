@@ -383,6 +383,86 @@ export function admitHandoff(boundProfile: ProfileID, handoff: ObserverHandoff):
     }) as ProjectionSubmission,
   };
 }
+export type ProjectionReductionOutcome = 'APPLIED' | 'DUPLICATE' | 'SNAPSHOT_REQUIRED' | 'REVISION_MISMATCH';
+
+export interface ProjectionReductionResult {
+  readonly outcome: ProjectionReductionOutcome;
+  readonly revision: ProjectionRevision;
+  readonly event_sequence: number;
+  readonly record_count: number;
+}
+
+// reduceProjectionBatch stages a bounded stream of one partition's ordered
+// projection handoffs. Event sequence advances for every accepted handoff; the
+// projection revision advances only for an effective record transition.
+export function reduceProjectionBatch(
+  state: ProjectionState,
+  lastEventSequence: number,
+  submissions: readonly ProjectionSubmission[],
+): ProjectionReductionResult {
+  const refused = (outcome: ProjectionReductionOutcome): ProjectionReductionResult => ({
+    outcome, revision: state.revision, event_sequence: lastEventSequence, record_count: state.records.size,
+  });
+  if (state.epoch === null || !Number.isSafeInteger(lastEventSequence) || lastEventSequence < 0) return refused('SNAPSHOT_REQUIRED');
+  if (submissions.length === 0) return refused('DUPLICATE');
+  if (submissions.length > 1000) return refused('SNAPSHOT_REQUIRED');
+
+  let revision = Number(state.revision);
+  let sequence = lastEventSequence;
+  const records = new Map(state.records);
+  const sequences = new Map(state.sequences);
+  for (const submission of submissions) {
+    const { fence } = submission;
+    if (submission.kind !== 'upsert' && submission.kind !== 'remove') return refused('SNAPSHOT_REQUIRED');
+    if (fence.profile_id !== state.profile_id || fence.context_kind !== state.context_kind || fence.projection_epoch !== state.epoch) return refused('SNAPSHOT_REQUIRED');
+    if (!Number.isSafeInteger(fence.event_sequence) || fence.event_sequence <= sequence || fence.event_sequence > Number.MAX_SAFE_INTEGER) return refused('REVISION_MISMATCH');
+    if (Number(fence.previous_revision) !== revision) return refused('SNAPSHOT_REQUIRED');
+
+    if (submission.kind === 'remove') {
+      if (!submission.effective_change || submission.tab_identity === undefined || Number(fence.projection_revision) !== revision + 1) return refused('SNAPSHOT_REQUIRED');
+      const key = tabIdentityKey(submission.tab_identity);
+      if (!records.has(key)) return refused('SNAPSHOT_REQUIRED');
+      records.delete(key);
+      revision += 1;
+    } else {
+      const record = submission.record;
+      if (record === undefined || submission.tab_identity === undefined || tabIdentityKey(record.tab_identity) !== tabIdentityKey(submission.tab_identity)) return refused('SNAPSHOT_REQUIRED');
+      if (!validateTab(record, state.profile_id, state.context_kind, state.epoch)) return refused('SNAPSHOT_REQUIRED');
+      const key = tabIdentityKey(record.tab_identity);
+      const existing = records.get(key);
+      if (!submission.effective_change) {
+        if (existing === undefined || Number(fence.projection_revision) !== revision || Number(record.projection_revision) !== revision || !sameProjectionRecord(existing, record)) return refused('SNAPSHOT_REQUIRED');
+      } else {
+        if (revision >= Number.MAX_SAFE_INTEGER || Number(fence.projection_revision) !== revision + 1 || Number(record.projection_revision) !== revision + 1) return refused('REVISION_MISMATCH');
+        if (existing !== undefined && sameProjectionRecord(existing, record)) return refused('REVISION_MISMATCH');
+        records.set(key, record);
+        revision += 1;
+      }
+    }
+
+    sequence = fence.event_sequence;
+    sequences.set(sequence, JSON.stringify(submission));
+    while (sequences.size > 1000) {
+      const oldest = sequences.keys().next().value as number | undefined;
+      if (oldest === undefined) break;
+      sequences.delete(oldest);
+    }
+  }
+
+  state.revision = parseRevision(revision);
+  state.records = records;
+  state.sequences = sequences;
+  return { outcome: 'APPLIED', revision: state.revision, event_sequence: sequence, record_count: records.size };
+}
+
+function sameProjectionRecord(left: EligibleTabRecord, right: EligibleTabRecord): boolean {
+  return left.profile_id === right.profile_id && left.context_kind === right.context_kind && tabIdentityKey(left.tab_identity) === tabIdentityKey(right.tab_identity) &&
+    left.window_id === right.window_id && left.group_id === right.group_id && left.title_display === right.title_display && left.title_search === right.title_search &&
+    left.url_search === right.url_search && left.url_display === right.url_display && left.domain_display === right.domain_display && left.domain_search === right.domain_search &&
+    left.window_label_display === right.window_label_display && left.window_label_search === right.window_label_search && left.group_label_display === right.group_label_display &&
+    left.group_label_search === right.group_label_search && left.pinned === right.pinned && left.active === right.active && left.eligible === right.eligible &&
+    left.observed_at === right.observed_at && left.projection_epoch === right.projection_epoch && Number(left.projection_revision) === Number(right.projection_revision);
+}
 
 function readRevisionField(
   value: unknown,
@@ -548,6 +628,7 @@ function zeroDiagnostics(): ProjectionBoundaryDiagnostics {
 export class ProjectionReconciler {
   private readonly states: Record<ContextKind, ProjectionState>;
   private readonly forwarded: Record<ContextKind, ForwardedFence | undefined> = { normal: undefined, private: undefined };
+  private readonly appliedSequences: Record<ContextKind, number> = { normal: 0, private: 0 };
   private readonly snapshots: Record<ContextKind, PartitionSnapshotState> = {
     normal: { retained: undefined, last_outcome: 'UNINITIALIZED' },
     private: { retained: undefined, last_outcome: 'UNINITIALIZED' },
@@ -619,6 +700,11 @@ export class ProjectionReconciler {
     };
   }
 
+  reduceDeltas(context_kind: ContextKind, submissions: readonly ProjectionSubmission[]): ProjectionReductionResult {
+    const result = reduceProjectionBatch(this.states[context_kind], this.appliedSequences[context_kind], submissions);
+    if (result.outcome === 'APPLIED') this.appliedSequences[context_kind] = result.event_sequence;
+    return result;
+  }
   livePartition(context_kind: ContextKind): ProjectionState {
     return this.states[context_kind];
   }

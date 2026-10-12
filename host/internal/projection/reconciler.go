@@ -132,15 +132,27 @@ type DeltaRequest struct {
 	Delta       protocol.Delta
 }
 
-// DeltaInput is one validated ordered delta expressed as IP-02 projection events.
-// Sequence, predecessor revision, identity, and epoch are taken from the bound
-// partition and the declared fence; the host neither renumbers sequences nor
-// advances revisions here.
+// DeltaOperation is one validated IP-07 operation mapped onto the bound IP-02
+// identity. Record is nil only for remove; its projection_revision distinguishes an
+// effective upsert from an accepted no-op upsert.
+type DeltaOperation struct {
+	Sequence uint64
+	Kind     protocol.OperationKind
+	Identity domain.TabIdentity
+	Record   *domain.EligibleTabRecord
+}
+
+// DeltaInput is a fully validated, ordered delta batch. It preserves the wire
+// predecessor, target revision, and IP-04 sequence range for the reducer; no
+// sequence or revision is allocated at this boundary.
 type DeltaInput struct {
-	Partition Partition
-	Epoch     string
-	Revision  uint64
-	Events    []domain.ProjectionEvent
+	Partition     Partition
+	Epoch         string
+	BaseRevision  uint64
+	Revision      uint64
+	SequenceStart uint64
+	SequenceEnd   uint64
+	Operations    []DeltaOperation
 }
 
 // HandoffRequest is the boundary input for one published projection status or
@@ -268,43 +280,78 @@ func canonicalSnapshotDigest(records []domain.EligibleTabRecord) (string, error)
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-// BindDelta validates the mandatory fence of one ordered delta and maps its
-// operations into IP-02 projection events in the declared order. Each operation
-// inherits its sequence from the contiguous range the IP-07 decoder established and
-// its predecessor revision from the accepted revision plus its position, so an
-// accepted event advances the lineage exactly once. Unknown operations, records
-// without a browser tab identity, and records belonging to another partition, epoch,
-// or revision are rejected without partial staging.
+// BindDelta validates one bounded wire batch without deriving predecessor revisions
+// from operation position: no-op operations consume an IP-04 sequence without
+// advancing projection_revision. The state reducer checks the evolving predecessor
+// revision and decides which operations are effective.
 func (reconciler *Reconciler) BindDelta(request DeltaRequest) (DeltaInput, *Rejection) {
-	if len(request.Delta.Operations) == 0 || len(request.Delta.Operations) > protocol.MaxDeltaOperations {
+	delta := request.Delta
+	if len(delta.Operations) == 0 || len(delta.Operations) > protocol.MaxDeltaOperations {
 		return DeltaInput{}, missingIdentity(CauseBoundsExceeded, "", 0, 0, -1)
 	}
-	if request.Revision == 0 {
-		return DeltaInput{}, reject(protocol.CodeRevisionMismatch, CauseMissingProjectionRevision, protocol.ResyncRevisionMismatch, request.Delta.BaseRevision, request.Delta.SequenceStart, -1)
+	if request.Revision == 0 || delta.BaseRevision == 0 {
+		return DeltaInput{}, reject(protocol.CodeRevisionMismatch, CauseMissingProjectionRevision, protocol.ResyncRevisionMismatch, delta.BaseRevision, delta.SequenceStart, -1)
 	}
-	if request.Revision < request.Delta.BaseRevision {
-		return DeltaInput{}, reject(protocol.CodeRevisionMismatch, CauseMismatchedProjectionRevision, protocol.ResyncRevisionMismatch, request.Delta.BaseRevision, request.Delta.SequenceStart, -1)
+	if request.Revision < delta.BaseRevision || request.Revision > domain.MaxProjectionRevision {
+		return DeltaInput{}, reject(protocol.CodeRevisionMismatch, CauseMismatchedProjectionRevision, protocol.ResyncRevisionMismatch, delta.BaseRevision, delta.SequenceStart, -1)
 	}
-	if request.Delta.SequenceStart == 0 {
-		return DeltaInput{}, reject(protocol.CodeRevisionMismatch, CauseMissingProjectionRevision, protocol.ResyncSequenceGap, request.Delta.BaseRevision, 0, -1)
+	if delta.SequenceStart == 0 || delta.SequenceEnd < delta.SequenceStart || delta.SequenceEnd-delta.SequenceStart+1 != uint64(len(delta.Operations)) {
+		return DeltaInput{}, reject(protocol.CodeRevisionMismatch, CauseMismatchedProjectionRevision, protocol.ResyncSequenceGap, delta.BaseRevision, delta.SequenceStart, -1)
 	}
-	epoch, rejection := reconciler.fence(request.ProfileID, request.ContextKind, request.Epoch, request.Revision, request.Delta.SequenceStart)
+	epoch, rejection := reconciler.fence(request.ProfileID, request.ContextKind, request.Epoch, request.Revision, delta.SequenceStart)
 	if rejection != nil {
 		return DeltaInput{}, rejection
 	}
-	events := make([]domain.ProjectionEvent, 0, len(request.Delta.Operations))
-	for index := range request.Delta.Operations {
-		event, rejection := reconciler.event(request.Delta, index, epoch)
+	operations := make([]DeltaOperation, 0, len(delta.Operations))
+	for index, wire := range delta.Operations {
+		sequence := delta.SequenceStart + uint64(index)
+		if wire.Sequence != sequence {
+			return DeltaInput{}, reject(protocol.CodeRevisionMismatch, CauseMismatchedProjectionRevision, protocol.ResyncSequenceGap, delta.BaseRevision, sequence, index)
+		}
+		if !wire.Kind.KnownOperation() {
+			return DeltaInput{}, reject(protocol.CodeInvalidFrame, CauseUnknownOperation, "", delta.BaseRevision, sequence, index)
+		}
+		if !usableTabID(wire.TabID) {
+			return DeltaInput{}, missingIdentity(CauseMissingTabIdentityTabID, "", delta.BaseRevision, sequence, index)
+		}
+		identity := reconciler.partition.Identity(wire.TabID)
+		operation := DeltaOperation{Sequence: sequence, Kind: wire.Kind, Identity: identity}
+		if wire.Kind == protocol.OperationRemove {
+			if wire.Record != nil {
+				return DeltaInput{}, reject(protocol.CodeInvalidFrame, CauseUnexpectedRecord, "", delta.BaseRevision, sequence, index)
+			}
+			operations = append(operations, operation)
+			continue
+		}
+		if wire.Record == nil {
+			return DeltaInput{}, reject(protocol.CodeInvalidFrame, CauseMissingRecord, "", delta.BaseRevision, sequence, index)
+		}
+		recordRevision := wire.Record.ProjectionRevision
+		if recordRevision < delta.BaseRevision || recordRevision > request.Revision {
+			return DeltaInput{}, reject(protocol.CodeRevisionMismatch, CauseMismatchedProjectionRevision, protocol.ResyncRevisionMismatch, request.Revision, sequence, index)
+		}
+		record, rejection := reconciler.record(*wire.Record, epoch, recordRevision, index)
 		if rejection != nil {
+			rejection.ExpectedSequence = sequence
 			return DeltaInput{}, rejection
 		}
-		events = append(events, event)
+		if !record.Valid(reconciler.partition.ProfileID, reconciler.partition.ContextKind, epoch) {
+			return DeltaInput{}, reject(protocol.CodeSnapshotRequired, CauseInvalidRecord, protocol.ResyncSnapshotStale, request.Revision, sequence, index)
+		}
+		if record.TabIdentity != identity {
+			return DeltaInput{}, reject(protocol.CodeInvalidFrame, CauseMismatchedTabIdentity, "", request.Revision, sequence, index)
+		}
+		operation.Record = &record
+		operations = append(operations, operation)
 	}
 	return DeltaInput{
-		Partition: reconciler.partition,
-		Epoch:     epoch,
-		Revision:  request.Revision,
-		Events:    events,
+		Partition:     reconciler.partition,
+		Epoch:         epoch,
+		BaseRevision:  delta.BaseRevision,
+		Revision:      request.Revision,
+		SequenceStart: delta.SequenceStart,
+		SequenceEnd:   delta.SequenceEnd,
+		Operations:    operations,
 	}, nil
 }
 
@@ -404,55 +451,6 @@ func (reconciler *Reconciler) record(record protocol.TabRecord, epoch string, re
 	}, nil
 }
 
-// event maps one ordered IP-07 delta operation onto an IP-02 projection event. A
-// remove carries only the tab identity; every other operation carries the full
-// record of the tab it changes, and that record must describe the same tab in this
-// partition, epoch, and target revision.
-func (reconciler *Reconciler) event(delta protocol.Delta, index int, epoch string) (domain.ProjectionEvent, *Rejection) {
-	operation := delta.Operations[index]
-	sequence := delta.SequenceStart + uint64(index)
-	predecessor := delta.BaseRevision + uint64(index)
-	target := predecessor + 1
-	if !operation.Kind.KnownOperation() {
-		return domain.ProjectionEvent{}, reject(protocol.CodeInvalidFrame, CauseUnknownOperation, "", predecessor, sequence, index)
-	}
-	if operation.Sequence != sequence || sequence == 0 {
-		return domain.ProjectionEvent{}, reject(protocol.CodeRevisionMismatch, CauseMismatchedProjectionRevision, protocol.ResyncSequenceGap, predecessor, sequence, index)
-	}
-	if !usableTabID(operation.TabID) {
-		return domain.ProjectionEvent{}, missingIdentity(CauseMissingTabIdentityTabID, "", predecessor, sequence, index)
-	}
-	identity := reconciler.partition.Identity(operation.TabID)
-	event := domain.ProjectionEvent{
-		ProfileID:        reconciler.partition.ProfileID,
-		ContextKind:      reconciler.partition.ContextKind,
-		Epoch:            epoch,
-		Sequence:         sequence,
-		PreviousRevision: predecessor,
-		Identity:         identity,
-	}
-	if operation.Kind == protocol.OperationRemove {
-		if operation.Record != nil {
-			return domain.ProjectionEvent{}, reject(protocol.CodeInvalidFrame, CauseUnexpectedRecord, "", predecessor, sequence, index)
-		}
-		event.Operation = "remove"
-		return event, nil
-	}
-	if operation.Record == nil {
-		return domain.ProjectionEvent{}, reject(protocol.CodeInvalidFrame, CauseMissingRecord, "", predecessor, sequence, index)
-	}
-	record, rejection := reconciler.record(*operation.Record, epoch, target, index)
-	if rejection != nil {
-		rejection.ExpectedSequence = sequence
-		return domain.ProjectionEvent{}, rejection
-	}
-	if !record.TabIdentity.Equal(identity) {
-		return domain.ProjectionEvent{}, reject(protocol.CodeInvalidFrame, CauseMismatchedTabIdentity, "", predecessor, sequence, index)
-	}
-	event.Operation = "upsert"
-	event.Record = &record
-	return event, nil
-}
 
 // knownContext reports whether a context kind is one of the two supported
 // partitions. An absent or placeholder context such as "default" is not a partition,

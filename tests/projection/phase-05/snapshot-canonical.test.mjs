@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-import { parseProfileID } from '../../../extension/dist/domain/index.js';
-import { acquireSnapshot } from '../../../extension/dist/src/projection/reconciler.js';
+import { acceptSnapshot, emptyProjection, parseProfileID, parseProjectionEpoch } from '../../../extension/dist/domain/index.js';
+import { acquireSnapshot, admitHandoff, reduceProjectionBatch } from '../../../extension/dist/src/projection/reconciler.js';
 
 const corpus = JSON.parse(await readFile('fixtures/projection/phase-05/snapshot-authority.json', 'utf8'));
 const populated = corpus.cases.find((item) => item.case_id === 'complete_populated_snapshot');
@@ -48,4 +48,49 @@ test('IP-05-T04 accepts only a revision-1 snapshot with predecessor revision zer
     assert.equal(result.reason, 'invalid_snapshot_lineage');
   }
   assert.equal(acquireSnapshot(profile, handoff).ok, true, 'the initial revision-1 snapshot must remain authoritative');
+});
+function submissionOf(handoff) {
+  const admission = admitHandoff(profile, handoff);
+  assert.ok(admission.ok, "fixture handoff must be admitted");
+  return admission.submission;
+}
+
+test('IP-05-T05 reduces no-op and effective events atomically with independent sequence and revision', () => {
+  const epoch = parseProjectionEpoch(populated.handoff.projection_epoch);
+  const rows = structuredClone(populated.handoff.records);
+  const state = emptyProjection(profile, 'normal');
+  assert.equal(acceptSnapshot(state, epoch, rows), 'APPLIED');
+  const first = rows.find((row) => row.tab_identity.tab_id === 10);
+  const second = rows.find((row) => row.tab_identity.tab_id === 11);
+  assert.ok(first && second);
+
+  const noOp = { ...populated.handoff, kind: 'upsert', previous_revision: 1, projection_revision: 1, event_sequence: 2, effective_change: false, tab_identity: first.tab_identity, record: first };
+  const updated = { ...second, title_display: 'Beta updated', title_search: 'beta updated', projection_revision: 2 };
+  const update = { ...populated.handoff, kind: 'upsert', previous_revision: 1, projection_revision: 2, event_sequence: 3, effective_change: true, tab_identity: second.tab_identity, record: updated };
+  const remove = { ...populated.handoff, kind: 'remove', previous_revision: 2, projection_revision: 3, event_sequence: 4, effective_change: true, tab_identity: first.tab_identity };
+  const result = reduceProjectionBatch(state, 1, [noOp, update, remove].map(submissionOf));
+  assert.equal(result.outcome, 'APPLIED');
+  assert.equal(Number(state.revision), 3, 'the no-op sequence must not advance projection revision');
+  assert.equal(result.event_sequence, 4, 'every accepted handoff must advance event sequence');
+  assert.equal(state.records.size, 2, 'the reducer should not drop unrelated records');
+  assert.equal(state.records.has(JSON.stringify([profile, 'normal', 10])), false);
+  assert.equal(state.records.get(JSON.stringify([profile, 'normal', 11])).title_display, 'Beta updated');
+});
+
+test('IP-05-T05 rejects a failed batch without publishing earlier operations', () => {
+  const epoch = parseProjectionEpoch(populated.handoff.projection_epoch);
+  const rows = structuredClone(populated.handoff.records);
+  const state = emptyProjection(profile, 'normal');
+  assert.equal(acceptSnapshot(state, epoch, rows), 'APPLIED');
+  const beforeRecords = [...state.records];
+  const first = rows.find((row) => row.tab_identity.tab_id === 10);
+  const second = rows.find((row) => row.tab_identity.tab_id === 11);
+  assert.ok(first && second);
+  const updated = { ...second, title_display: 'Beta updated', title_search: 'beta updated', projection_revision: 2 };
+  const valid = { ...populated.handoff, kind: 'upsert', previous_revision: 1, projection_revision: 2, event_sequence: 2, effective_change: true, tab_identity: second.tab_identity, record: updated };
+  const invalid = { ...populated.handoff, kind: 'remove', previous_revision: 2, projection_revision: 3, event_sequence: 3, effective_change: true, tab_identity: { ...first.tab_identity, tab_id: 99 } };
+  const result = reduceProjectionBatch(state, 1, [valid, invalid].map(submissionOf));
+  assert.equal(result.outcome, 'SNAPSHOT_REQUIRED');
+  assert.equal(Number(state.revision), 1);
+  assert.deepEqual([...state.records], beforeRecords);
 });

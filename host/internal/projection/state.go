@@ -105,6 +105,7 @@ type Committed struct {
 	Status    Status
 	Epoch     string
 	Revision  uint64
+	Sequence  uint64
 	Counters  Counters
 	records   []domain.EligibleTabRecord
 }
