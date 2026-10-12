@@ -232,6 +232,49 @@ test('group updates can restore optional labels after the snapshot omitted group
   if (handoff.kind === 'upsert') expect(handoff.record.group_label_display).toBe('Arrived later');
 });
 
+test('one browser event assigns consecutive handoff sequences to per-tab changes', async () => {
+  const fake = fixture({
+    profile: true,
+    privateAccess: async () => true,
+    windows: [{ id: 1, incognito: false }],
+    groups: [{ id: 7, windowId: 1, title: 'Old label' }],
+    tabs: [
+      { id: 10, windowId: 1, groupId: 7, title: 'First', url: 'https://first.example/', pinned: false, active: true, incognito: false },
+      { id: 11, windowId: 1, groupId: 7, title: 'Second', url: 'https://second.example/', pinned: false, active: false, incognito: false },
+    ],
+  });
+  const observer = new TabObserver(fake.adapter, () => 100);
+  await observer.start();
+  const updates: ObserverHandoff[] = [];
+  const noOps: ObserverHandoff[] = [];
+  const updatesReady = Promise.withResolvers<void>();
+  const noOpsReady = Promise.withResolvers<void>();
+  const unsubscribe = observer.subscribe(event => {
+    if (event.kind !== 'upsert' || ![10, 11].includes(event.tab_identity.tab_id)) return;
+    if (event.effective_change) {
+      updates.push(event);
+      if (updates.length === 2) updatesReady.resolve();
+    } else {
+      noOps.push(event);
+      if (noOps.length === 2) noOpsReady.resolve();
+    }
+  });
+
+  fake.fire('tabGroups.onUpdated', { id: 7, windowId: 1, title: 'New label' });
+  await updatesReady.promise;
+  expect(updates.map(event => event.tab_identity.tab_id)).toEqual([10, 11]);
+  expect(updates[0]?.projection_revision).toBe(2);
+  expect(updates[1]?.projection_revision).toBe(3);
+  expect(updates[1]?.event_sequence).toBe((updates[0]?.event_sequence ?? 0) + 1);
+
+  fake.fire('tabGroups.onUpdated', { id: 7, windowId: 1, title: 'New label' });
+  await noOpsReady.promise;
+  unsubscribe();
+  expect(noOps.every(event => !event.effective_change)).toBe(true);
+  expect(noOps.map(event => event.projection_revision)).toEqual([3, 3]);
+  expect(noOps[0]?.event_sequence).toBe((updates[1]?.event_sequence ?? 0) + 1);
+  expect(noOps[1]?.event_sequence).toBe((noOps[0]?.event_sequence ?? 0) + 1);
+});
 test('optional group-query failure preserves eligible tabs with an absent group label', async () => {
   const fake = fixture({
     profile: true,
@@ -304,4 +347,31 @@ test('observer diagnostics never repeat raw tab title or URL values', async () =
   expect(joined).not.toContain(secretTitle);
   expect(joined).not.toContain('private-secret');
   expect(joined).not.toContain('private-fragment');
+});
+test('resync starts a fresh epoch at revision one and handoff sequences stay contiguous', async () => {
+  const fake = fixture({
+    profile: true,
+    privateAccess: async () => true,
+    windows: [{ id: 1, incognito: false }],
+    tabs: [{ id: 10, windowId: 1, title: 'Tab', url: 'https://tab.example/', pinned: false, active: true, incognito: false }],
+  });
+  const observer = new TabObserver(fake.adapter, () => 100);
+  const handoffs: ObserverHandoff[] = [];
+  const unsubscribe = observer.subscribe(event => handoffs.push(event));
+  await observer.start();
+  const initial = handoffs.find((event): event is Extract<ObserverHandoff, { kind: 'snapshot' }> => event.kind === 'snapshot' && event.context_kind === 'normal');
+  expect(initial).toBeDefined();
+  const initialCount = handoffs.length;
+
+  await observer.requestResync('uncertain_order');
+  const resynced = handoffs.slice(initialCount).find((event): event is Extract<ObserverHandoff, { kind: 'snapshot' }> => event.kind === 'snapshot' && event.context_kind === 'normal');
+  expect(resynced).toBeDefined();
+  if (initial?.kind !== 'snapshot' || resynced?.kind !== 'snapshot') return;
+  expect(resynced.projection_epoch).not.toBe(initial.projection_epoch);
+  expect(resynced.previous_revision).toBe(0);
+  expect(resynced.projection_revision).toBe(1);
+  for (let index = 1; index < handoffs.length; index += 1) {
+    expect(handoffs[index]?.event_sequence).toBe((handoffs[index - 1]?.event_sequence ?? 0) + 1);
+  }
+  unsubscribe();
 });

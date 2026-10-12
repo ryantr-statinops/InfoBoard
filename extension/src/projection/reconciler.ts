@@ -107,6 +107,7 @@ export const PROJECTION_REJECT_REASONS = [
   'invalid_resync_marker',
   'snapshot_resync_required',
   'snapshot_bounds_exceeded',
+  'invalid_snapshot_lineage',
 ] as const;
 
 export type ProjectionRejectReason = (typeof PROJECTION_REJECT_REASONS)[number];
@@ -482,6 +483,9 @@ export function acquireSnapshot(boundProfile: ProfileID, handoff: ObserverHandof
   const fence = readProjectionFence(handoff, boundProfile);
   if (!fence.ok) return unauthoritative(fence.reason, handoff);
   if (handoff.kind !== 'snapshot') return unauthoritative('non_snapshot_handoff', handoff, fence.fence);
+  if (Number(fence.fence.previous_revision) !== 0 || Number(fence.fence.projection_revision) !== 1) {
+    return unauthoritative('invalid_snapshot_lineage', handoff, fence.fence);
+  }
   if (isAbsent(handoff.resync_required)) return unauthoritative('missing_resync_marker', handoff, fence.fence);
   if (typeof handoff.resync_required !== 'boolean') return unauthoritative('invalid_resync_marker', handoff, fence.fence);
   if (handoff.resync_required) return unauthoritative('snapshot_resync_required', handoff, fence.fence);

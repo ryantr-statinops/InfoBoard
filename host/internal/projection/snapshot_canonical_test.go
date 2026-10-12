@@ -118,3 +118,13 @@ func TestBindSnapshot_RejectsDuplicateAndCrossProfileRecords(t *testing.T) {
 		t.Fatalf("cross-profile rejection = %v, want mismatched_profile_id", rejection)
 	}
 }
+func TestBindSnapshot_RequiresRevisionOneForFreshEpoch(t *testing.T) {
+	record := canonicalTestRecord(10)
+	record.ProjectionRevision = 2
+	request := canonicalTestRequest(record)
+	request.Revision = 2
+	_, rejection := canonicalTestReconciler(t).BindSnapshot(request)
+	if rejection == nil || rejection.Cause != CauseMismatchedProjectionRevision || rejection.Code != protocol.CodeSnapshotRequired {
+		t.Fatalf("revision-2 fresh snapshot rejection = %v, want SNAPSHOT_REQUIRED/mismatched_projection_revision", rejection)
+	}
+}

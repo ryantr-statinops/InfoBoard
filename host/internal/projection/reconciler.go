@@ -203,6 +203,9 @@ func (reconciler *Reconciler) BindSnapshot(request SnapshotRequest) (SnapshotInp
 	if request.Revision == 0 || request.Sequence == 0 {
 		return SnapshotInput{}, missingIdentity(CauseMissingProjectionRevision, protocol.ResyncRevisionMismatch, 0, 0, -1)
 	}
+	if request.Revision != 1 {
+		return SnapshotInput{}, reject(protocol.CodeSnapshotRequired, CauseMismatchedProjectionRevision, protocol.ResyncRevisionMismatch, 1, request.Sequence, -1)
+	}
 	epoch, rejection := reconciler.fence(request.ProfileID, request.ContextKind, request.Epoch, request.Revision, request.Sequence)
 	if rejection != nil {
 		return SnapshotInput{}, rejection

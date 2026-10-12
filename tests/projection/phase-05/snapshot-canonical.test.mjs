@@ -37,3 +37,15 @@ test('IP-05-T03 rejects duplicate identities before producing canonical output',
   assert.equal(duplicate.reason, 'duplicate_tab_identity');
   assert.equal(duplicate.snapshot, undefined);
 });
+test('IP-05-T04 accepts only a revision-1 snapshot with predecessor revision zero', () => {
+  const handoff = populated.handoff;
+  for (const invalid of [
+    { ...handoff, projection_revision: 2, previous_revision: 1 },
+    { ...handoff, previous_revision: 1 },
+  ]) {
+    const result = acquireSnapshot(profile, invalid);
+    assert.equal(result.ok, false, 'a snapshot from a non-initial lineage was authoritative');
+    assert.equal(result.reason, 'invalid_snapshot_lineage');
+  }
+  assert.equal(acquireSnapshot(profile, handoff).ok, true, 'the initial revision-1 snapshot must remain authoritative');
+});
