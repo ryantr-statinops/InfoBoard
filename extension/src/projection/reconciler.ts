@@ -773,6 +773,17 @@ export class ProjectionReconciler {
     };
     return { outcome: 'COMMITTED', revision: candidate.revision, event_sequence: fence.event_sequence, record_count: candidate.records.size, resync_required: false };
   }
+  // requireSnapshot quarantines session-scoped projection references. No old
+  // epoch, pending delta, or private record can be reused after reconnect.
+  requireSnapshot(context_kind?: ContextKind): void {
+    const contexts: readonly ContextKind[] = context_kind === undefined ? ['normal', 'private'] : [context_kind];
+    for (const kind of contexts) {
+      this.states[kind] = emptyProjection(this.boundProfile, kind);
+      this.appliedSequences[kind] = 0;
+      this.forwarded[kind] = undefined;
+      this.snapshots[kind] = { retained: undefined, last_outcome: 'UNINITIALIZED' };
+    }
+  }
   reduceDeltas(context_kind: ContextKind, submissions: readonly ProjectionSubmission[]): ProjectionReductionResult {
     const result = reduceProjectionBatch(this.states[context_kind], this.appliedSequences[context_kind], submissions);
     if (result.outcome === 'APPLIED') this.appliedSequences[context_kind] = result.event_sequence;

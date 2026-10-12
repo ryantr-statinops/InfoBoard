@@ -176,3 +176,50 @@ test('IP-05-T07 commits snapshots atomically, detaches records, and replaces old
   assert.equal(next.records.has(JSON.stringify([profile, 'normal', 10])), false);
   assert.equal(next.records.has(JSON.stringify([profile, 'normal', 11])), true);
 });
+test('IP-05-T08 requires a fresh snapshot after reconnect before deltas resume', () => {
+  const reconciler = new ProjectionReconciler(profile);
+  assert.equal(reconciler.acquire(structuredClone(populated.handoff)).ok, true);
+  assert.equal(reconciler.commitSnapshot('normal').outcome, 'COMMITTED');
+
+  reconciler.requireSnapshot('normal');
+  const quarantined = reconciler.livePartition('normal');
+  assert.equal(quarantined.records.size, 0, 'old session references must be cleared');
+  assert.equal(Number(quarantined.revision), 0, 'old revision must not survive reconnect');
+  assert.equal(reconciler.acquiredSnapshot('normal'), undefined, 'old acquired snapshot cannot be replayed');
+
+  const previous = populated.handoff.records.find((record) => record.tab_identity.tab_id === 11);
+  assert.ok(previous);
+  const stale = {
+    ...populated.handoff,
+    kind: 'upsert',
+    previous_revision: 1,
+    projection_revision: 2,
+    event_sequence: 2,
+    effective_change: true,
+    tab_identity: previous.tab_identity,
+    record: { ...previous, title_display: 'stale session', title_search: 'stale session', projection_revision: 2 },
+  };
+  const rejected = reconciler.reduceDeltas('normal', [submissionOf(stale)]);
+  assert.equal(rejected.outcome, 'SNAPSHOT_REQUIRED');
+  assert.equal(rejected.resync_required, true);
+  assert.equal(reconciler.livePartition('normal').records.size, 0);
+
+  const nextEpoch = '123e4567-e89b-42d3-a456-426614174004';
+  const freshRecord = structuredClone(previous);
+  freshRecord.projection_epoch = nextEpoch;
+  const fresh = {
+    ...populated.handoff,
+    projection_epoch: nextEpoch,
+    previous_revision: 0,
+    projection_revision: 1,
+    event_sequence: 1,
+    records: [freshRecord],
+  };
+  assert.equal(reconciler.acquire(fresh).ok, true);
+  assert.equal(reconciler.commitSnapshot('normal').outcome, 'COMMITTED');
+  const recovered = reconciler.livePartition('normal');
+  assert.equal(recovered.epoch, nextEpoch);
+  assert.equal(Number(recovered.revision), 1);
+  assert.equal(recovered.records.size, 1);
+  assert.equal(recovered.records.has(JSON.stringify([profile, 'normal', 10])), false);
+});

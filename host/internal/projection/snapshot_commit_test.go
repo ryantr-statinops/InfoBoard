@@ -120,3 +120,53 @@ func TestReconciler_ApplySnapshotPublishesOnlyAfterCommit(t *testing.T) {
 		t.Fatalf("snapshot replay outcome=%q rejection=%v", duplicate, rejection)
 	}
 }
+func TestReconciler_RequireSnapshotQuarantinesOldSessionUntilFreshEpoch(t *testing.T) {
+	reconciler := canonicalTestReconciler(t)
+	oldRecord := canonicalTestRecord(10)
+	oldSnapshot := SnapshotRequest{
+		ProfileID: canonicalTestProfile, ContextKind: domain.ContextNormal, Epoch: canonicalTestEpoch,
+		Revision: 1, Sequence: 1, Records: []protocol.TabRecord{oldRecord},
+	}
+	if _, _, rejection := reconciler.ApplySnapshot(oldSnapshot); rejection != nil {
+		t.Fatalf("commit old session snapshot: %v", rejection)
+	}
+	reconciler.RequireSnapshot()
+	quarantined := reconciler.State().Handoff()
+	if quarantined.Status != StatusResyncRequired || quarantined.Queryable || quarantined.Count != 1 {
+		t.Fatalf("old session was not quarantined: %+v", quarantined)
+	}
+
+	oldDeltaRecord := oldRecord
+	oldDeltaRecord.ProjectionRevision = 2
+	deltaInput, rejection := reconciler.BindDelta(DeltaRequest{
+		ProfileID: canonicalTestProfile, ContextKind: domain.ContextNormal, Epoch: canonicalTestEpoch, Revision: 2,
+		Delta: protocol.Delta{BaseRevision: 1, SequenceStart: 2, SequenceEnd: 2, Operations: []protocol.Operation{
+			{Sequence: 2, Kind: protocol.OperationUpdate, TabID: 10, Record: &oldDeltaRecord},
+		}},
+	})
+	if rejection != nil {
+		t.Fatalf("bind old-session delta: %v", rejection)
+	}
+	if _, rejection := reconciler.State().ApplyDelta(deltaInput); rejection == nil {
+		t.Fatal("old-session delta was accepted during recovery")
+	}
+	if handoff := reconciler.State().Handoff(); handoff.Queryable || handoff.Count != 1 {
+		t.Fatalf("old delta cleared quarantine or changed records: %+v", handoff)
+	}
+	if outcome, handoff, rejection := reconciler.ApplySnapshot(oldSnapshot); rejection != nil || outcome != SnapshotDuplicate || handoff.Status != StatusResyncRequired {
+		t.Fatalf("same-epoch replay cleared recovery gate: outcome=%q handoff=%+v rejection=%v", outcome, handoff, rejection)
+	}
+
+	freshRecord := canonicalTestRecord(11)
+	freshRecord.ProjectionEpoch = replacementEpoch
+	freshSnapshot := SnapshotRequest{
+		ProfileID: canonicalTestProfile, ContextKind: domain.ContextNormal, Epoch: replacementEpoch,
+		Revision: 1, Sequence: 3, Records: []protocol.TabRecord{freshRecord},
+	}
+	if outcome, handoff, rejection := reconciler.ApplySnapshot(freshSnapshot); rejection != nil || outcome != SnapshotCommitted || handoff.Status != StatusSnapshotReady {
+		t.Fatalf("fresh epoch recovery outcome=%q handoff=%+v rejection=%v", outcome, handoff, rejection)
+	}
+	if current := reconciler.State().Committed(); current.Epoch != replacementEpoch || current.Revision != 1 || current.Count() != 1 {
+		t.Fatalf("fresh snapshot did not replace quarantined state: %+v", current)
+	}
+}
