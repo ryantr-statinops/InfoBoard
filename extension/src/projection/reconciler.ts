@@ -29,6 +29,7 @@
 // commit, and restart recovery remain later IP-05 tasks.
 
 import {
+  acceptSnapshot,
   emptyProjection,
   parseProfileID,
   parseProjectionEpoch,
@@ -651,6 +652,15 @@ function zeroDiagnostics(): ProjectionBoundaryDiagnostics {
   };
 }
 
+export type ProjectionSnapshotCommitOutcome = 'COMMITTED' | 'DUPLICATE' | 'SNAPSHOT_REQUIRED';
+
+export interface ProjectionSnapshotCommitResult {
+  readonly outcome: ProjectionSnapshotCommitOutcome;
+  readonly revision: ProjectionRevision | null;
+  readonly event_sequence: number | null;
+  readonly record_count: number;
+  readonly resync_required: boolean;
+}
 export class ProjectionReconciler {
   private readonly states: Record<ContextKind, ProjectionState>;
   private readonly forwarded: Record<ContextKind, ForwardedFence | undefined> = { normal: undefined, private: undefined };
@@ -706,7 +716,7 @@ export class ProjectionReconciler {
     this.diagnostics.snapshots_authoritative += 1;
     const { fence, records } = acquisition.snapshot;
     const partition = this.snapshots[fence.context_kind];
-    partition.retained = { fence, records };
+    partition.retained = { fence, records: records.map(record => ({ ...record, tab_identity: { ...record.tab_identity } })) };
     partition.last_outcome = acquisition.outcome;
     return acquisition;
   }
@@ -720,12 +730,49 @@ export class ProjectionReconciler {
     if (retained === undefined) return undefined;
     return {
       fence: retained.fence,
-      records: [...retained.records],
+      records: retained.records.map(record => ({ ...record, tab_identity: { ...record.tab_identity } })),
       record_count: retained.records.length,
       explicitly_empty: retained.records.length === 0,
     };
   }
 
+  // commitSnapshot publishes a retained authority only after a detached IP-02
+  // projection accepts every row. A new epoch replaces the entire prior map.
+  commitSnapshot(context_kind: ContextKind): ProjectionSnapshotCommitResult {
+    const state = this.states[context_kind];
+    const retained = this.snapshots[context_kind].retained;
+    const failed = (): ProjectionSnapshotCommitResult => ({
+      outcome: 'SNAPSHOT_REQUIRED',
+      revision: state.epoch === null ? null : state.revision,
+      event_sequence: this.appliedSequences[context_kind] || null,
+      record_count: state.records.size,
+      resync_required: true,
+    });
+    if (retained === undefined) return failed();
+    const { fence, records } = retained;
+    if (Number(fence.previous_revision) !== 0 || Number(fence.projection_revision) !== 1 || !Number.isSafeInteger(fence.event_sequence) || fence.event_sequence <= 0) return failed();
+    if (state.epoch === fence.projection_epoch) {
+      const sameRecords = state.records.size === records.length && records.every(record => {
+        const current = state.records.get(tabIdentityKey(record.tab_identity));
+        return current !== undefined && sameProjectionRecord(current, record);
+      });
+      if (Number(state.revision) === 1 && this.appliedSequences[context_kind] === fence.event_sequence && sameRecords) {
+        return { outcome: 'DUPLICATE', revision: state.revision, event_sequence: fence.event_sequence, record_count: state.records.size, resync_required: false };
+      }
+      return failed();
+    }
+    const candidate = emptyProjection(this.boundProfile, context_kind);
+    const candidateRecords = records.map(record => ({ ...record, tab_identity: { ...record.tab_identity } }));
+    if (acceptSnapshot(candidate, fence.projection_epoch, candidateRecords) !== 'APPLIED') return failed();
+    this.states[context_kind] = candidate;
+    this.appliedSequences[context_kind] = fence.event_sequence;
+    this.forwarded[context_kind] = {
+      projection_epoch: fence.projection_epoch,
+      projection_revision: fence.projection_revision,
+      event_sequence: fence.event_sequence,
+    };
+    return { outcome: 'COMMITTED', revision: candidate.revision, event_sequence: fence.event_sequence, record_count: candidate.records.size, resync_required: false };
+  }
   reduceDeltas(context_kind: ContextKind, submissions: readonly ProjectionSubmission[]): ProjectionReductionResult {
     const result = reduceProjectionBatch(this.states[context_kind], this.appliedSequences[context_kind], submissions);
     if (result.outcome === 'APPLIED') this.appliedSequences[context_kind] = result.event_sequence;

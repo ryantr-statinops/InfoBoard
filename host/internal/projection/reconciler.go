@@ -467,8 +467,6 @@ func usableTabID(tabID int64) bool {
 }
 
 // validEpoch reports whether the declared epoch is a present, bounded, printable
-// opaque value. The exact epoch lineage shape stays the IP-02 domain validator's rule
-// at commit time; this boundary check only refuses an absent or unbounded epoch.
 func validEpoch(epoch string) bool {
 	if epoch == "" || len(epoch) > protocol.MaxEpochBytes {
 		return false

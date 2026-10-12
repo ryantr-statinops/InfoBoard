@@ -106,6 +106,7 @@ type Committed struct {
 	Epoch     string
 	Revision  uint64
 	Sequence  uint64
+	Digest    string
 	Counters  Counters
 	records   []domain.EligibleTabRecord
 	seen      map[uint64]string
@@ -121,7 +122,7 @@ func newCommitted(partition Partition, status Status, epoch string, revision uin
 	}
 	committed.records = make([]domain.EligibleTabRecord, 0, len(projection.Records))
 	for _, record := range projection.Records {
-		committed.records = append(committed.records, record)
+		committed.records = append(committed.records, cloneEligibleRecord(record))
 	}
 	sort.Slice(committed.records, func(i, j int) bool {
 		return identityLess(committed.records[i].TabIdentity, committed.records[j].TabIdentity)
@@ -148,7 +149,11 @@ func (committed Committed) Count() int { return len(committed.records) }
 // Records returns the committed records in canonical identity order. The result
 // is a copy of an immutable slice; mutating it cannot affect committed state.
 func (committed Committed) Records() []domain.EligibleTabRecord {
-	return append([]domain.EligibleTabRecord(nil), committed.records...)
+	records := make([]domain.EligibleTabRecord, len(committed.records))
+	for index, record := range committed.records {
+		records[index] = cloneEligibleRecord(record)
+	}
+	return records
 }
 
 // Identities returns the exact accepted identity set in canonical order.
@@ -167,7 +172,7 @@ func (committed Committed) Lookup(tabID int64) (domain.EligibleTabRecord, bool) 
 	if index >= len(committed.records) || committed.records[index].TabIdentity != target {
 		return domain.EligibleTabRecord{}, false
 	}
-	return committed.records[index], true
+	return cloneEligibleRecord(committed.records[index]), true
 }
 
 // Handoff is the bounded index-handoff view of a committed partition. It names

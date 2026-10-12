@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 import { acceptSnapshot, emptyProjection, parseProfileID, parseProjectionEpoch } from '../../../extension/dist/domain/index.js';
-import { acquireSnapshot, admitHandoff, reduceProjectionBatch } from '../../../extension/dist/src/projection/reconciler.js';
+import { ProjectionReconciler, acquireSnapshot, admitHandoff, reduceProjectionBatch } from '../../../extension/dist/src/projection/reconciler.js';
 
 const corpus = JSON.parse(await readFile('fixtures/projection/phase-05/snapshot-authority.json', 'utf8'));
 const populated = corpus.cases.find((item) => item.case_id === 'complete_populated_snapshot');
@@ -135,4 +135,44 @@ test('IP-05-T06 acknowledges exact replay and rejects conflicting or stale seque
   assert.equal(reduceProjectionBatch(state, 2, [stale]).outcome, 'SNAPSHOT_REQUIRED');
   assert.deepEqual([...state.records], beforeReplay);
   assert.equal(Number(state.revision), 2);
+});
+test('IP-05-T07 commits snapshots atomically, detaches records, and replaces old identities', () => {
+  const reconciler = new ProjectionReconciler(profile);
+  const initialHandoff = structuredClone(populated.handoff);
+  assert.equal(reconciler.acquire(initialHandoff).ok, true);
+  const acquiredCopy = reconciler.acquiredSnapshot('normal');
+  assert.ok(acquiredCopy);
+  initialHandoff.records[0].title_display = 'mutated source';
+  acquiredCopy.records[0].tab_identity.tab_id = 99;
+
+  const committed = reconciler.commitSnapshot('normal');
+  assert.equal(committed.outcome, 'COMMITTED');
+  assert.equal(committed.resync_required, false);
+  const initialState = reconciler.livePartition('normal');
+  const first = initialState.records.get(JSON.stringify([profile, 'normal', 10]));
+  assert.equal(first?.title_display, 'Alpha', 'the committed map must not alias acquisition input');
+  assert.equal(first?.tab_identity.tab_id, 10, 'mutating an acquired view must not alter the committed identity');
+  assert.equal(initialState.records.size, populated.handoff.records.length);
+
+  assert.equal(reconciler.commitSnapshot('normal').outcome, 'DUPLICATE');
+  const nextEpoch = '123e4567-e89b-42d3-a456-426614174003';
+  const replacementRecord = structuredClone(populated.handoff.records.find((record) => record.tab_identity.tab_id === 11));
+  replacementRecord.projection_epoch = nextEpoch;
+  const replacement = {
+    ...populated.handoff,
+    projection_epoch: nextEpoch,
+    previous_revision: 0,
+    projection_revision: 1,
+    event_sequence: 3,
+    records: [replacementRecord],
+  };
+  assert.equal(reconciler.acquire(replacement).ok, true);
+  const replaced = reconciler.commitSnapshot('normal');
+  assert.equal(replaced.outcome, 'COMMITTED');
+  const next = reconciler.livePartition('normal');
+  assert.equal(next.epoch, nextEpoch);
+  assert.equal(Number(next.revision), 1);
+  assert.equal(next.records.size, 1);
+  assert.equal(next.records.has(JSON.stringify([profile, 'normal', 10])), false);
+  assert.equal(next.records.has(JSON.stringify([profile, 'normal', 11])), true);
 });
