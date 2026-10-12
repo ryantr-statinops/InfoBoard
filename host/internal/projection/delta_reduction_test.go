@@ -61,8 +61,12 @@ func TestState_ApplyDeltaStagesEffectiveAndNoopOperations(t *testing.T) {
 			{Sequence: 6, Kind: protocol.OperationRemove, Identity: first.TabIdentity},
 		},
 	}
-	if rejection := state.ApplyDelta(input); rejection != nil {
+	outcome, rejection := state.ApplyDelta(input)
+	if rejection != nil {
 		t.Fatalf("apply ordered delta: %v", rejection)
+	}
+	if outcome != DeltaApplied {
+		t.Fatalf("delta outcome %q, want %q", outcome, DeltaApplied)
 	}
 	committed := state.Committed()
 	if committed.Revision != 3 || committed.Sequence != 6 || committed.Status != StatusReady || committed.Count() != 1 {
@@ -93,12 +97,16 @@ func TestState_ApplyDeltaRejectsInvalidMemberWithoutPartialPublication(t *testin
 			{Sequence: 5, Kind: protocol.OperationUpdate, Identity: unknown.TabIdentity, Record: &unknown},
 		},
 	}
-	if rejection := state.ApplyDelta(input); rejection == nil {
+	_, rejection := state.ApplyDelta(input)
+	if rejection == nil {
 		t.Fatal("batch containing an update for an unknown tab was accepted")
 	}
 	after := state.Committed()
 	if after.Revision != before.Revision || after.Sequence != before.Sequence || !reflect.DeepEqual(after.records, before.records) {
 		t.Fatalf("rejected batch partially changed committed state: before=%+v after=%+v", before, after)
+	}
+	if after.Status != StatusResyncRequired || state.Handoff().Queryable {
+		t.Fatalf("uncertain delta status=%s queryable=%t", after.Status, state.Handoff().Queryable)
 	}
 }
 func TestBindDeltaPreservesRecordRevisionAndSequence(t *testing.T) {
@@ -129,5 +137,47 @@ func TestBindDeltaPreservesRecordRevisionAndSequence(t *testing.T) {
 	}
 	if delta.Operations[0].Record == nil || delta.Operations[0].Record.ProjectionRevision != 1 || delta.Operations[1].Record == nil || delta.Operations[1].Record.ProjectionRevision != 2 {
 		t.Fatalf("operation record revisions were renumbered: %+v", delta.Operations)
+	}
+}
+func TestState_ApplyDeltaAcknowledgesExactReplayAndResyncsOnConflict(t *testing.T) {
+	state := deltaTestState()
+	updated := deltaTestRecord(11, 2, "Eleven updated")
+	input := DeltaInput{
+		Partition:     state.partition,
+		Epoch:         canonicalTestEpoch,
+		BaseRevision:  1,
+		Revision:      2,
+		SequenceStart: 4,
+		SequenceEnd:   4,
+		Operations:    []DeltaOperation{{Sequence: 4, Kind: protocol.OperationUpdate, Identity: updated.TabIdentity, Record: &updated}},
+	}
+	outcome, rejection := state.ApplyDelta(input)
+	if rejection != nil || outcome != DeltaApplied {
+		t.Fatalf("first application outcome=%q rejection=%v", outcome, rejection)
+	}
+	beforeReplay := state.Committed()
+	outcome, rejection = state.ApplyDelta(input)
+	if rejection != nil || outcome != DeltaDuplicate {
+		t.Fatalf("exact replay outcome=%q rejection=%v, want DUPLICATE", outcome, rejection)
+	}
+	afterReplay := state.Committed()
+	if afterReplay.Revision != beforeReplay.Revision || afterReplay.Sequence != beforeReplay.Sequence || afterReplay.Counters.EventsDuplicate != 1 {
+		t.Fatalf("duplicate replay advanced state: before=%+v after=%+v", beforeReplay, afterReplay)
+	}
+
+	conflictingRecord := updated
+	conflictingRecord.TitleDisplay = "Conflicting title"
+	conflicting := input
+	conflicting.Operations = append([]DeltaOperation(nil), input.Operations...)
+	conflicting.Operations[0].Record = &conflictingRecord
+	if _, rejection = state.ApplyDelta(conflicting); rejection == nil || rejection.Code != protocol.CodeRevisionMismatch {
+		t.Fatalf("changed duplicate rejection = %v, want REVISION_MISMATCH", rejection)
+	}
+	afterConflict := state.Committed()
+	if afterConflict.Status != StatusResyncRequired || afterConflict.Revision != beforeReplay.Revision || afterConflict.Sequence != beforeReplay.Sequence || state.Handoff().Queryable {
+		t.Fatalf("conflicting replay did not fence the old committed state: %+v", afterConflict)
+	}
+	if record, ok := afterConflict.Lookup(11); !ok || record.TitleDisplay != "Eleven updated" {
+		t.Fatalf("conflicting replay changed the accepted record: %+v present=%t", record, ok)
 	}
 }

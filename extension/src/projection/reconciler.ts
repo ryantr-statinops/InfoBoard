@@ -390,6 +390,8 @@ export interface ProjectionReductionResult {
   readonly revision: ProjectionRevision;
   readonly event_sequence: number;
   readonly record_count: number;
+  readonly resync_required: boolean;
+  readonly resync_reason?: ResyncReason;
 }
 
 // reduceProjectionBatch stages a bounded stream of one partition's ordered
@@ -400,22 +402,46 @@ export function reduceProjectionBatch(
   lastEventSequence: number,
   submissions: readonly ProjectionSubmission[],
 ): ProjectionReductionResult {
-  const refused = (outcome: ProjectionReductionOutcome): ProjectionReductionResult => ({
-    outcome, revision: state.revision, event_sequence: lastEventSequence, record_count: state.records.size,
-  });
+  const refused = (outcome: ProjectionReductionOutcome, reason: ResyncReason = 'uncertain_order'): ProjectionReductionResult => {
+    const resync_required = outcome === 'SNAPSHOT_REQUIRED' || outcome === 'REVISION_MISMATCH';
+    return compact({
+      outcome, revision: state.revision, event_sequence: lastEventSequence, record_count: state.records.size,
+      resync_required, resync_reason: resync_required ? reason : undefined,
+    }) as ProjectionReductionResult;
+  };
   if (state.epoch === null || !Number.isSafeInteger(lastEventSequence) || lastEventSequence < 0) return refused('SNAPSHOT_REQUIRED');
   if (submissions.length === 0) return refused('DUPLICATE');
   if (submissions.length > 1000) return refused('SNAPSHOT_REQUIRED');
+  const signatures = submissions.map(submission => JSON.stringify(submission));
+  let duplicateCount = 0;
+  for (let index = 0; index < submissions.length; index += 1) {
+    const submission = submissions[index]!;
+    const { fence } = submission;
+    if (submission.kind !== 'upsert' && submission.kind !== 'remove') return refused('SNAPSHOT_REQUIRED');
+    if (fence.profile_id !== state.profile_id || fence.context_kind !== state.context_kind || fence.projection_epoch !== state.epoch) return refused('SNAPSHOT_REQUIRED');
+    if (!Number.isSafeInteger(fence.event_sequence) || fence.event_sequence <= 0 || fence.event_sequence > Number.MAX_SAFE_INTEGER) return refused('REVISION_MISMATCH');
+    const existing = state.sequences.get(fence.event_sequence);
+    if (existing !== undefined) {
+      if (existing !== signatures[index]) return refused('REVISION_MISMATCH');
+      duplicateCount += 1;
+    }
+  }
+  if (duplicateCount > 0) {
+    if (duplicateCount !== submissions.length) return refused('SNAPSHOT_REQUIRED');
+    return { outcome: 'DUPLICATE', revision: state.revision, event_sequence: lastEventSequence, record_count: state.records.size, resync_required: false };
+  }
 
   let revision = Number(state.revision);
   let sequence = lastEventSequence;
   const records = new Map(state.records);
   const sequences = new Map(state.sequences);
-  for (const submission of submissions) {
+  for (let index = 0; index < submissions.length; index += 1) {
+    const submission = submissions[index]!;
     const { fence } = submission;
     if (submission.kind !== 'upsert' && submission.kind !== 'remove') return refused('SNAPSHOT_REQUIRED');
     if (fence.profile_id !== state.profile_id || fence.context_kind !== state.context_kind || fence.projection_epoch !== state.epoch) return refused('SNAPSHOT_REQUIRED');
-    if (!Number.isSafeInteger(fence.event_sequence) || fence.event_sequence <= sequence || fence.event_sequence > Number.MAX_SAFE_INTEGER) return refused('REVISION_MISMATCH');
+    if (!Number.isSafeInteger(fence.event_sequence) || fence.event_sequence > Number.MAX_SAFE_INTEGER) return refused('REVISION_MISMATCH');
+    if (fence.event_sequence <= sequence) return refused('SNAPSHOT_REQUIRED');
     if (Number(fence.previous_revision) !== revision) return refused('SNAPSHOT_REQUIRED');
 
     if (submission.kind === 'remove') {
@@ -441,7 +467,7 @@ export function reduceProjectionBatch(
     }
 
     sequence = fence.event_sequence;
-    sequences.set(sequence, JSON.stringify(submission));
+    sequences.set(sequence, signatures[index]!);
     while (sequences.size > 1000) {
       const oldest = sequences.keys().next().value as number | undefined;
       if (oldest === undefined) break;
@@ -452,7 +478,7 @@ export function reduceProjectionBatch(
   state.revision = parseRevision(revision);
   state.records = records;
   state.sequences = sequences;
-  return { outcome: 'APPLIED', revision: state.revision, event_sequence: sequence, record_count: records.size };
+  return { outcome: 'APPLIED', revision: state.revision, event_sequence: sequence, record_count: records.size, resync_required: false };
 }
 
 function sameProjectionRecord(left: EligibleTabRecord, right: EligibleTabRecord): boolean {

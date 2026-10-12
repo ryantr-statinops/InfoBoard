@@ -451,7 +451,6 @@ func (reconciler *Reconciler) record(record protocol.TabRecord, epoch string, re
 	}, nil
 }
 
-
 // knownContext reports whether a context kind is one of the two supported
 // partitions. An absent or placeholder context such as "default" is not a partition,
 // so it is refused instead of being treated as the normal context.

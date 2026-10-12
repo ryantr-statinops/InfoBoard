@@ -108,6 +108,7 @@ type Committed struct {
 	Sequence  uint64
 	Counters  Counters
 	records   []domain.EligibleTabRecord
+	seen      map[uint64]string
 }
 
 // newCommitted builds the immutable committed view from an already validated

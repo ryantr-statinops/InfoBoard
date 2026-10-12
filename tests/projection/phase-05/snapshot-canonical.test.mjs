@@ -68,13 +68,31 @@ test('IP-05-T05 reduces no-op and effective events atomically with independent s
   const updated = { ...second, title_display: 'Beta updated', title_search: 'beta updated', projection_revision: 2 };
   const update = { ...populated.handoff, kind: 'upsert', previous_revision: 1, projection_revision: 2, event_sequence: 3, effective_change: true, tab_identity: second.tab_identity, record: updated };
   const remove = { ...populated.handoff, kind: 'remove', previous_revision: 2, projection_revision: 3, event_sequence: 4, effective_change: true, tab_identity: first.tab_identity };
-  const result = reduceProjectionBatch(state, 1, [noOp, update, remove].map(submissionOf));
+  const batch = [noOp, update, remove].map(submissionOf);
+  const result = reduceProjectionBatch(state, 1, batch);
   assert.equal(result.outcome, 'APPLIED');
   assert.equal(Number(state.revision), 3, 'the no-op sequence must not advance projection revision');
   assert.equal(result.event_sequence, 4, 'every accepted handoff must advance event sequence');
   assert.equal(state.records.size, 2, 'the reducer should not drop unrelated records');
   assert.equal(state.records.has(JSON.stringify([profile, 'normal', 10])), false);
   assert.equal(state.records.get(JSON.stringify([profile, 'normal', 11])).title_display, 'Beta updated');
+  const beforeReplay = [...state.records];
+  const duplicate = reduceProjectionBatch(state, 4, batch);
+  assert.equal(duplicate.outcome, 'DUPLICATE');
+  assert.equal(duplicate.resync_required, false);
+  assert.equal(Number(state.revision), 3);
+  assert.deepEqual([...state.records], beforeReplay);
+
+  const changedRecord = { ...batch[1].record, title_display: 'Conflicting beta', title_search: 'conflicting beta' };
+  const conflict = reduceProjectionBatch(state, 4, [{ ...batch[1], record: changedRecord }]);
+  assert.equal(conflict.outcome, 'REVISION_MISMATCH');
+  assert.equal(conflict.resync_required, true);
+  assert.deepEqual([...state.records], beforeReplay);
+
+  const stale = reduceProjectionBatch(state, 4, [{ ...batch[0], fence: { ...batch[0].fence, event_sequence: 1 } }]);
+  assert.equal(stale.outcome, 'SNAPSHOT_REQUIRED');
+  assert.equal(stale.resync_required, true);
+  assert.deepEqual([...state.records], beforeReplay);
 });
 
 test('IP-05-T05 rejects a failed batch without publishing earlier operations', () => {
@@ -93,4 +111,28 @@ test('IP-05-T05 rejects a failed batch without publishing earlier operations', (
   assert.equal(result.outcome, 'SNAPSHOT_REQUIRED');
   assert.equal(Number(state.revision), 1);
   assert.deepEqual([...state.records], beforeRecords);
+});
+test('IP-05-T06 acknowledges exact replay and rejects conflicting or stale sequence keys', () => {
+  const epoch = parseProjectionEpoch(populated.handoff.projection_epoch);
+  const rows = structuredClone(populated.handoff.records);
+  const state = emptyProjection(profile, 'normal');
+  assert.equal(acceptSnapshot(state, epoch, rows), 'APPLIED');
+  const second = rows.find((row) => row.tab_identity.tab_id === 11);
+  assert.ok(second);
+  const updated = { ...second, title_display: 'Beta changed', title_search: 'beta changed', projection_revision: 2 };
+  const handoff = { ...populated.handoff, kind: 'upsert', previous_revision: 1, projection_revision: 2, event_sequence: 2, effective_change: true, tab_identity: second.tab_identity, record: updated };
+  const submission = submissionOf(handoff);
+  assert.equal(reduceProjectionBatch(state, 1, [submission]).outcome, 'APPLIED');
+
+  const beforeReplay = [...state.records];
+  assert.equal(reduceProjectionBatch(state, 2, [submission]).outcome, 'DUPLICATE');
+  assert.deepEqual([...state.records], beforeReplay);
+  assert.equal(Number(state.revision), 2);
+
+  const changed = { ...submission, record: { ...updated, title_display: 'Conflicting title' } };
+  assert.equal(reduceProjectionBatch(state, 2, [changed]).outcome, 'REVISION_MISMATCH');
+  const stale = { ...submission, fence: { ...submission.fence, event_sequence: 1 } };
+  assert.equal(reduceProjectionBatch(state, 2, [stale]).outcome, 'SNAPSHOT_REQUIRED');
+  assert.deepEqual([...state.records], beforeReplay);
+  assert.equal(Number(state.revision), 2);
 });
