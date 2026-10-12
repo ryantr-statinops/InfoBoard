@@ -1,6 +1,11 @@
 package projection
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"sort"
+
 	"github.com/ryantr-statinops/InfoBoard/host/internal/domain"
 	"github.com/ryantr-statinops/InfoBoard/host/internal/protocol"
 )
@@ -23,6 +28,7 @@ const (
 	CauseMissingTabIdentityTabID       Cause = "missing_tab_identity_tab_id"
 	CauseMissingRecord                 Cause = "missing_record"
 	CauseInvalidRecord                 Cause = "invalid_record"
+	CauseDuplicateTabIdentity          Cause = "duplicate_tab_identity"
 	CauseMismatchedProfileID           Cause = "mismatched_profile_id"
 	CauseMismatchedContextKind         Cause = "mismatched_context_kind"
 	CauseMismatchedProjectionEpoch     Cause = "mismatched_projection_epoch"
@@ -37,7 +43,7 @@ var causes = map[Cause]struct{}{
 	CausePartitionUnbound: {}, CauseMissingProfileID: {}, CauseMissingContextKind: {},
 	CauseMissingProjectionEpoch: {}, CauseMissingProjectionRevision: {},
 	CauseMissingTabIdentityProfileID: {}, CauseMissingTabIdentityContextKind: {},
-	CauseMissingTabIdentityTabID: {}, CauseMissingRecord: {}, CauseInvalidRecord: {},
+	CauseMissingTabIdentityTabID: {}, CauseMissingRecord: {}, CauseInvalidRecord: {}, CauseDuplicateTabIdentity: {},
 	CauseMismatchedProfileID: {}, CauseMismatchedContextKind: {},
 	CauseMismatchedProjectionEpoch: {}, CauseMismatchedProjectionRevision: {},
 	CauseMismatchedTabIdentity: {}, CauseUnexpectedRecord: {},
@@ -103,15 +109,16 @@ type SnapshotRequest struct {
 	Records     []protocol.TabRecord
 }
 
-// SnapshotInput is one validated authoritative snapshot. It carries the mandatory
-// fence exactly once plus the IP-02 records that belong to it, so a later commit
-// cannot re-derive or renumber the lineage.
+// SnapshotInput is one validated authoritative snapshot. Records are in canonical
+// TabIdentity order, and Digest is the fixed-length SHA-256 of their canonical JSON
+// encoding. The original IP-04 fence is carried unchanged to the later commit seam.
 type SnapshotInput struct {
 	Partition Partition
 	Epoch     string
 	Revision  uint64
 	Sequence  uint64
 	Records   []domain.EligibleTabRecord
+	Digest    string
 }
 
 // DeltaRequest is the boundary input for one ordered delta. Revision is the target
@@ -201,6 +208,7 @@ func (reconciler *Reconciler) BindSnapshot(request SnapshotRequest) (SnapshotInp
 		return SnapshotInput{}, rejection
 	}
 	records := make([]domain.EligibleTabRecord, 0, len(request.Records))
+	seen := make(map[domain.TabIdentity]struct{}, len(request.Records))
 	for index := range request.Records {
 		record, rejection := reconciler.record(request.Records[index], epoch, request.Revision, index)
 		if rejection != nil {
@@ -215,7 +223,18 @@ func (reconciler *Reconciler) BindSnapshot(request SnapshotRequest) (SnapshotInp
 		if !record.Valid(reconciler.partition.ProfileID, reconciler.partition.ContextKind, epoch) {
 			return SnapshotInput{}, reject(protocol.CodeSnapshotRequired, CauseInvalidRecord, protocol.ResyncSnapshotStale, request.Revision, 0, index)
 		}
+		if _, exists := seen[record.TabIdentity]; exists {
+			return SnapshotInput{}, reject(protocol.CodeSnapshotRequired, CauseDuplicateTabIdentity, protocol.ResyncSnapshotStale, request.Revision, 0, index)
+		}
+		seen[record.TabIdentity] = struct{}{}
 		records = append(records, record)
+	}
+	sort.Slice(records, func(i, j int) bool {
+		return identityLess(records[i].TabIdentity, records[j].TabIdentity)
+	})
+	digest, err := canonicalSnapshotDigest(records)
+	if err != nil {
+		return SnapshotInput{}, reject(protocol.CodeSnapshotRequired, CauseInvalidRecord, protocol.ResyncSnapshotStale, request.Revision, 0, -1)
 	}
 	return SnapshotInput{
 		Partition: reconciler.partition,
@@ -223,7 +242,27 @@ func (reconciler *Reconciler) BindSnapshot(request SnapshotRequest) (SnapshotInp
 		Revision:  request.Revision,
 		Sequence:  request.Sequence,
 		Records:   records,
+		Digest:    digest,
 	}, nil
+}
+
+// canonicalSnapshotDigest hashes the canonical JSON encoding of sorted records. Each
+// record is encoded separately so the digest does not allocate a second full snapshot.
+func canonicalSnapshotDigest(records []domain.EligibleTabRecord) (string, error) {
+	hash := sha256.New()
+	_, _ = hash.Write([]byte("InfoBoard projection snapshot v1\x00["))
+	for index, record := range records {
+		if index > 0 {
+			_, _ = hash.Write([]byte{','})
+		}
+		encoded, err := json.Marshal(record)
+		if err != nil {
+			return "", err
+		}
+		_, _ = hash.Write(encoded)
+	}
+	_, _ = hash.Write([]byte{']'})
+	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
 // BindDelta validates the mandatory fence of one ordered delta and maps its

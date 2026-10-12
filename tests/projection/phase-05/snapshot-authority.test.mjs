@@ -527,7 +527,10 @@ test('IP-05-T02 fails closed before it materializes a record payload', () => {
   // The bound itself is inclusive and is enforced by length alone: exactly the
   // declared maximum clears the gate, and one more record is refused before any of
   // them is validated.
-  const atBound = Array.from({ length: PROJECTION_MAX_SNAPSHOT_RECORDS }, () => valid);
+  const atBound = Array.from({ length: PROJECTION_MAX_SNAPSHOT_RECORDS }, (_, tabId) => ({
+    ...valid,
+    tab_identity: { ...valid.tab_identity, tab_id: tabId },
+  }));
   const admitted = acquireSnapshot(profile, { ...populated.handoff, records: atBound });
   assert.equal(admitted.ok, true, `${PROJECTION_MAX_SNAPSHOT_RECORDS} records must clear the bound`);
   assert.equal(admitted.snapshot.record_count, PROJECTION_MAX_SNAPSHOT_RECORDS);

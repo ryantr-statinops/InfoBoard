@@ -23,10 +23,10 @@
 // or staged, so a status, partial, resync-required, over-bound, or undeclared
 // handoff fails closed without materializing the payload it carries.
 //
-// Canonical ordering, lineage/ordering rules, delta reduction, atomic commit,
-// and restart recovery are later IP-05 tasks and are intentionally not
-// implemented here: the authoritative snapshot is retained as an acquisition
-// result only and never committed into a live projection map.
+// IP-05-T03 canonicalizes accepted snapshot records by TabIdentity and rejects
+// duplicate identities without materializing a partial authority. The host computes
+// a bounded SHA-256 digest from that canonical record order. Delta ordering, atomic
+// commit, and restart recovery remain later IP-05 tasks.
 
 import {
   emptyProjection,
@@ -96,6 +96,7 @@ export const PROJECTION_REJECT_REASONS = [
   'invalid_event_sequence',
   'missing_records',
   'missing_record',
+  'duplicate_tab_identity',
   'missing_tab_identity',
   'invalid_tab_identity',
   'identity_partition_mismatch',
@@ -314,6 +315,11 @@ export function readTabIdentity(value: unknown): IdentityAdmission {
   return { ok: true, identity, key: tabIdentityKey(identity) };
 }
 
+function compareTabIdentity(left: TabIdentity, right: TabIdentity): number {
+  if (left.profile_id !== right.profile_id) return left.profile_id < right.profile_id ? -1 : 1;
+  if (left.context_kind !== right.context_kind) return left.context_kind < right.context_kind ? -1 : 1;
+  return left.tab_id < right.tab_id ? -1 : left.tab_id > right.tab_id ? 1 : 0;
+}
 export function readProjectionRecord(value: unknown, fence: ProjectionFence, expectedKey?: string): RecordAdmission {
   if (isAbsent(value)) return rejected('missing_record');
   if (!isRecord(value)) return rejected('invalid_record');
@@ -343,11 +349,16 @@ export function admitHandoff(boundProfile: ProfileID, handoff: ObserverHandoff):
   if (handoff.kind === 'snapshot') {
     if (!Array.isArray(handoff.records)) return rejected('missing_records');
     const staged: EligibleTabRecord[] = [];
+    const seen = new Set<string>();
     for (const row of handoff.records) {
       const read = readProjectionRecord(row, fence.fence, identityKey);
       if (!read.ok) return read;
+      const key = tabIdentityKey(read.record.tab_identity);
+      if (seen.has(key)) return rejected('duplicate_tab_identity');
+      seen.add(key);
       staged.push(read.record);
     }
+    staged.sort((left, right) => compareTabIdentity(left.tab_identity, right.tab_identity));
     records = staged;
   }
   let record: EligibleTabRecord | undefined;
