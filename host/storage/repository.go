@@ -60,6 +60,11 @@ const (
 	ErrorStorageFailure        ErrorClass = "storage_failure"
 	ErrorSchemaUpgradeRequired ErrorClass = "schema_upgrade_required"
 	ErrorDatabaseQuarantined   ErrorClass = "database_quarantined"
+	ErrorDatabaseCorrupt       ErrorClass = "database_corrupt"
+	ErrorSchemaIntegrity       ErrorClass = "schema_integrity_failed"
+	ErrorQuarantineFailed      ErrorClass = "quarantine_failed"
+	ErrorRecoveryFailed        ErrorClass = "recovery_failed"
+	ErrorUnsafeDatabasePath    ErrorClass = "unsafe_database_path"
 )
 
 // Result is the bounded outcome of one repository operation.

@@ -14,6 +14,7 @@ const (
 	SupportedSchemaVersion uint64 = 1
 	DatabaseApplicationID  int64  = 0x494E464F // "INFO"
 	DatabaseOwnerID               = "infoboard"
+	DatabaseFileName              = "infoboard.sqlite"
 
 	MaxActivationRowsPerProfile     = 500
 	ActivationRetentionSeconds      = int64(30 * 24 * 60 * 60)
