@@ -97,7 +97,7 @@ func reduceDelta(current Committed, input DeltaInput) (Committed, DeltaOutcome, 
 		duplicate.Counters.EventsDuplicate += uint64(duplicateCount)
 		return duplicate, DeltaDuplicate, nil
 	}
-	if input.SequenceStart <= current.Sequence {
+	if input.SequenceStart != current.Sequence+1 {
 		return Committed{}, "", reject(protocol.CodeRevisionMismatch, CauseMismatchedProjectionRevision, protocol.ResyncSequenceGap, current.Revision, current.Sequence+1, -1)
 	}
 	if input.BaseRevision != current.Revision || input.Revision > domain.MaxProjectionRevision {

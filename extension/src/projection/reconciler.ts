@@ -442,7 +442,7 @@ export function reduceProjectionBatch(
     if (submission.kind !== 'upsert' && submission.kind !== 'remove') return refused('SNAPSHOT_REQUIRED');
     if (fence.profile_id !== state.profile_id || fence.context_kind !== state.context_kind || fence.projection_epoch !== state.epoch) return refused('SNAPSHOT_REQUIRED');
     if (!Number.isSafeInteger(fence.event_sequence) || fence.event_sequence > Number.MAX_SAFE_INTEGER) return refused('REVISION_MISMATCH');
-    if (fence.event_sequence <= sequence) return refused('SNAPSHOT_REQUIRED');
+    if (fence.event_sequence !== sequence + 1) return refused('SNAPSHOT_REQUIRED');
     if (Number(fence.previous_revision) !== revision) return refused('SNAPSHOT_REQUIRED');
 
     if (submission.kind === 'remove') {

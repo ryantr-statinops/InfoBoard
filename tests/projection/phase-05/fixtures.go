@@ -1,12 +1,7 @@
-// Package phase05 holds the shared IP-05-T01 projection boundary corpus and the
-// bounded probe the artifact declares for a synthetic identity fallback. The Go
-// consumer drives every case through the real host reconciler in
-// host/internal/projection and the Node consumer drives the same cases through the
-// real extension boundary in extension/src/projection/reconciler.ts; neither
-// consumer restates the boundary rules, so the loader here only reads and shapes
-// the artifact. Nothing here asserts snapshot authority, canonical ordering,
-// revision sequencing, duplicate or gap handling, profile isolation, atomic
-// replacement, or recovery: those are later IP-05 tasks with their own gates.
+// Package phase05 holds the IP-05-T01 boundary fixture types. Dedicated T02 and
+// T11 test consumers load the snapshot-authority and reconciliation artifacts;
+// this file describes only the T01 boundary cases and does not redefine those
+// later fixtures.
 package phase05
 
 import (
@@ -15,9 +10,10 @@ import (
 	"path/filepath"
 )
 
-// Artifact is the single shared IP-05 fixture corpus. The Go host consumer, the
-// extension consumer, and the Python runner all read this one file; no consumer
-// may restate the boundary in its own format.
+// Artifact is the shared IP-05-T01 boundary contract. The Go host consumer, the
+// extension consumer, and the Python runner read this file for the same boundary
+// cases; T02 authority and T11 reconciliation fixtures live in separate shared
+// artifacts with their own loaders.
 const Artifact = "../../../fixtures/projection/phase-05/phase-05.json"
 
 // RequiredFixtureIDs is the IP-05-T01 obligation from phase-05 section 6.

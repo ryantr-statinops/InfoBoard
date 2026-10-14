@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "phase": "IP-05",
+  "artifact": "projection-reconciliation",
+  "owner_task": "IP-05-T11",
+  "shared_consumers": ["go", "node"],
+  "base_artifact": "fixtures/projection/phase-05/snapshot-authority.json",
+  "base_case_id": "complete_populated_snapshot",
+  "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+  "other_profile_id": "123e4567-e89b-42d3-a456-426614174099",
+  "fresh_epoch": "123e4567-e89b-42d3-a456-426614174004",
+  "fixtures": [
+    {
+      "fixture_id": "FX-PROJECTION-ORDERED-DELTAS",
+      "owner_task": "IP-05-T05",
+      "events": [
+        {"kind": "upsert", "tab_id": 10, "sequence": 2, "previous_revision": 1, "revision": 1, "effective_change": false},
+        {"kind": "upsert", "tab_id": 11, "sequence": 3, "previous_revision": 1, "revision": 2, "effective_change": true, "title_display": "Beta updated", "title_search": "beta updated"},
+        {"kind": "remove", "tab_id": 10, "sequence": 4, "previous_revision": 2, "revision": 3, "effective_change": true}
+      ],
+      "expected": {"outcomes": ["APPLIED", "APPLIED", "APPLIED"], "revision": 3, "sequence": 4, "identity_ids": [11, 12], "record_title": "Beta updated"}
+    },
+    {
+      "fixture_id": "FX-PROJECTION-DUPLICATE-DELTA",
+      "owner_task": "IP-05-T06",
+      "events": [
+        {"kind": "upsert", "tab_id": 11, "sequence": 2, "previous_revision": 1, "revision": 2, "effective_change": true, "title_display": "Replay title", "title_search": "replay title"}
+      ],
+      "replay_exactly": true,
+      "expected": {"outcomes": ["APPLIED", "DUPLICATE"], "revision": 2, "sequence": 2, "identity_ids": [10, 11, 12], "record_title": "Replay title"}
+    },
+    {
+      "fixture_id": "FX-PROJECTION-STALE-REVISION",
+      "owner_task": "IP-05-T06",
+      "events": [
+        {"kind": "upsert", "tab_id": 11, "sequence": 2, "previous_revision": 2, "revision": 3, "effective_change": true, "title_display": "Stale revision", "title_search": "stale revision"}
+      ],
+      "expected": {"outcomes": ["SNAPSHOT_REQUIRED"], "revision": 1, "sequence": 1, "identity_ids": [10, 11, 12], "resync_required": true}
+    },
+    {
+      "fixture_id": "FX-PROJECTION-MISSED-EVENT",
+      "owner_task": "IP-05-T06",
+      "events": [
+        {"kind": "upsert", "tab_id": 11, "sequence": 3, "previous_revision": 1, "revision": 2, "effective_change": true, "title_display": "After dropped event", "title_search": "after dropped event"}
+      ],
+      "expected": {"outcomes": ["SNAPSHOT_REQUIRED"], "revision": 1, "sequence": 1, "identity_ids": [10, 11, 12], "resync_required": true}
+    },
+    {
+      "fixture_id": "FX-PROJECTION-RESTART",
+      "owner_task": "IP-05-T08",
+      "events": [
+        {"kind": "upsert", "tab_id": 11, "sequence": 2, "previous_revision": 1, "revision": 2, "effective_change": true, "title_display": "Old session", "title_search": "old session"}
+      ],
+      "fresh_snapshot": {"epoch": "123e4567-e89b-42d3-a456-426614174004", "record_ids": [11], "sequence": 1},
+      "expected": {"outcomes": ["SNAPSHOT_REQUIRED", "COMMITTED"], "epoch": "123e4567-e89b-42d3-a456-426614174004", "revision": 1, "sequence": 1, "identity_ids": [11]}
+    },
+    {
+      "fixture_id": "FX-PROJECTION-PROFILE-BOUNDARY",
+      "owner_task": "IP-05-T09",
+      "profiles": ["123e4567-e89b-42d3-a456-426614174000", "123e4567-e89b-42d3-a456-426614174099"],
+      "contexts": ["normal", "private"],
+      "same_tab_ids": [10, 11],
+      "expected": {"partition_count": 4, "records_per_partition": 2, "mismatched_profile_outcome": "PROFILE_MISMATCH", "mismatch_mutates": false}
+    },
+    {
+      "fixture_id": "FX-PROJECTION-ATOMIC-REPLACE",
+      "owner_task": "IP-05-T07",
+      "fresh_snapshot": {"epoch": "123e4567-e89b-42d3-a456-426614174004", "record_ids": [11], "sequence": 3},
+      "expected": {"outcome": "COMMITTED", "outcomes": ["COMMITTED"], "epoch": "123e4567-e89b-42d3-a456-426614174004", "revision": 1, "sequence": 3, "identity_ids": [11]}
+    },
+    {
+      "fixture_id": "FX-PROJECTION-CANONICAL-OUTPUT",
+      "owner_task": "IP-05-T03",
+      "input_record_order": [11, 10],
+      "expected": {"identity_ids": [10, 11], "optional_absence_tab_id": 11}
+    },
+    {
+      "fixture_id": "FX-PROJECTION-SAFE-HANDOFF-METADATA",
+      "owner_task": "IP-05-T10",
+      "raw_values": ["PRIVATE_TITLE_SENTINEL", "PRIVATE_QUERY_SENTINEL", "PRIVATE_PATH_SENTINEL"],
+      "expected": {"digest_version": "projection-snapshot-v1", "duration_nonnegative": true, "error_class_bounded": true, "raw_values_absent": true}
+    }
+  ]
+}
