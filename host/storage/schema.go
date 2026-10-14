@@ -7,6 +7,7 @@ import (
 
 	"github.com/ryantr-statinops/InfoBoard/host/internal/domain"
 	"github.com/ryantr-statinops/InfoBoard/host/internal/protocol"
+	"github.com/ryantr-statinops/InfoBoard/host/storage/migrations"
 )
 
 const (
@@ -59,6 +60,12 @@ func OwnedTableNames() []string {
 // every statement and postcondition succeeds.
 func SchemaStatements() []string {
 	return append([]string(nil), schemaStatements[:]...)
+}
+
+// InitialMigrations returns a detached registry for a new repository. Later
+// schema changes append migrations; an existing version is never rewritten.
+func InitialMigrations() []migrations.Migration {
+	return []migrations.Migration{{Version: 1, ID: "initial_schema_v1", Statements: SchemaStatements()}}
 }
 
 var schemaStatements = buildSchemaStatements()
