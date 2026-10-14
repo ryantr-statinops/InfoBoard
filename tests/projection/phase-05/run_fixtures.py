@@ -36,6 +36,7 @@ RECONCILIATION_FIXTURES = {
     'FX-PROJECTION-ATOMIC-REPLACE': 'IP-05-T07',
     'FX-PROJECTION-CANONICAL-OUTPUT': 'IP-05-T03',
     'FX-PROJECTION-SAFE-HANDOFF-METADATA': 'IP-05-T10',
+    'FX-PROJECTION-RECOVERY-SEQUENCE': 'IP-05-T12',
 }
 EXPECTED = {
     'FX-PROJECTION-BOUNDARY-HANDOFF-IDENTITY',
@@ -675,10 +676,11 @@ def reconciliation_errors(document: dict, authority_document: dict) -> tuple[lis
     fixtures = document.get('fixtures', [])
     by_id = {item.get('fixture_id'): item for item in fixtures if isinstance(item, dict)}
     if len(by_id) != len(fixtures) or set(by_id) != set(RECONCILIATION_FIXTURES):
-        errors.append('reconciliation corpus must contain every reserved T03-T10 fixture exactly once')
+        errors.append('reconciliation corpus must contain all T03-T12 fixtures exactly once')
     fixture_fields = {
         'fixture_id', 'owner_task', 'events', 'replay_exactly', 'fresh_snapshot',
         'profiles', 'contexts', 'same_tab_ids', 'input_record_order', 'raw_values', 'expected',
+        'cycles', 'eligible_browser_ids',
     }
     event_fields = {'kind', 'tab_id', 'sequence', 'previous_revision', 'revision', 'effective_change', 'title_display', 'title_search'}
     for fixture_id, owner in RECONCILIATION_FIXTURES.items():
@@ -734,6 +736,38 @@ def reconciliation_errors(document: dict, authority_document: dict) -> tuple[lis
         elif fixture_id == 'FX-PROJECTION-SAFE-HANDOFF-METADATA':
             if len(item.get('raw_values', [])) < 3 or expected.get('raw_values_absent') is not True or expected.get('error_class_bounded') is not True:
                 errors.append(f'{label} omits privacy-safe handoff assertions')
+        elif fixture_id == 'FX-PROJECTION-RECOVERY-SEQUENCE':
+            cycles = item.get('cycles', [])
+            if len(cycles) != 2:
+                errors.append(f'{label} must repeat recovery through two sessions')
+            base_case = next((entry for entry in authority_document.get('cases', []) if entry.get('case_id') == document.get('base_case_id')), {})
+            previous_epoch = base_case.get('handoff', {}).get('projection_epoch', '')
+            for index, cycle in enumerate(cycles):
+                accepted = cycle.get('accepted_event', {})
+                dropped = cycle.get('dropped_event', {})
+                recovery = cycle.get('recovery_snapshot', {})
+                expected_cycle = cycle.get('expected', {})
+                if accepted.get('sequence', 0) <= 0 or dropped.get('sequence') != accepted.get('sequence', 0) + 2:
+                    errors.append(f'{label} cycle {index + 1} does not model a dropped event')
+                if accepted.get('tab_id') not in base_ids or dropped.get('tab_id') not in base_ids:
+                    errors.append(f'{label} cycle {index + 1} names an identity outside the browser oracle')
+                if expected_cycle.get('dropped_outcome') != 'SNAPSHOT_REQUIRED' or expected_cycle.get('resync_required') is not True:
+                    errors.append(f'{label} cycle {index + 1} does not require recovery after the gap')
+                if not UUID_V4.fullmatch(recovery.get('epoch', '')) or recovery.get('epoch') == previous_epoch:
+                    errors.append(f'{label} cycle {index + 1} does not establish a fresh epoch')
+                if any(tab_id not in base_ids for tab_id in recovery.get('record_ids', [])):
+                    errors.append(f'{label} cycle {index + 1} recovery snapshot exceeds the oracle')
+                if expected_cycle.get('identity_ids') != recovery.get('record_ids'):
+                    errors.append(f'{label} cycle {index + 1} handoff differs from its recovery snapshot')
+                if index == 1 and (cycle.get('require_snapshot') is not True or cycle.get('start_snapshot', {}).get('epoch') == previous_epoch):
+                    errors.append(f'{label} does not restart the second cycle on a new session epoch')
+                previous_epoch = recovery.get('epoch', previous_epoch)
+            expected_ids = item.get('expected', {}).get('identity_ids', [])
+            oracle_ids = item.get('eligible_browser_ids', [])
+            if expected_ids != oracle_ids or len(set(expected_ids)) != item.get('expected', {}).get('unique_identity_count'):
+                errors.append(f'{label} final state is not exactly the unique browser oracle')
+            if item.get('expected', {}).get('final_epoch') != previous_epoch or item.get('expected', {}).get('handoff_status') != 'SnapshotReady':
+                errors.append(f'{label} final index handoff does not match the fresh committed epoch')
     evidence = {'fixture_id': 'reconciliation.json', 'owner_task': 'IP-05-T11', 'fixtures': len(by_id), 'shared_consumers': 'go,node'}
     return errors, evidence
 

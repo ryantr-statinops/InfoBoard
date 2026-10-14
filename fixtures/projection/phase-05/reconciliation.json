@@ -79,6 +79,28 @@
       "owner_task": "IP-05-T10",
       "raw_values": ["PRIVATE_TITLE_SENTINEL", "PRIVATE_QUERY_SENTINEL", "PRIVATE_PATH_SENTINEL"],
       "expected": {"digest_version": "projection-snapshot-v1", "duration_nonnegative": true, "error_class_bounded": true, "raw_values_absent": true}
-    }
-  ]
+    },
+    {
+      "fixture_id": "FX-PROJECTION-RECOVERY-SEQUENCE",
+      "owner_task": "IP-05-T12",
+      "cycles": [
+        {
+          "accepted_event": {"kind": "upsert", "tab_id": 11, "sequence": 2, "previous_revision": 1, "revision": 2, "effective_change": true, "title_display": "Cycle one update", "title_search": "cycle one update"},
+          "dropped_event": {"kind": "upsert", "tab_id": 12, "sequence": 4, "previous_revision": 2, "revision": 3, "effective_change": true, "title_display": "Must not apply", "title_search": "must not apply"},
+          "recovery_snapshot": {"epoch": "123e4567-e89b-42d3-a456-426614174005", "record_ids": [11, 12], "sequence": 1},
+          "expected": {"accepted_outcome": "APPLIED", "dropped_outcome": "SNAPSHOT_REQUIRED", "resync_required": true, "resync_revision": 2, "resync_sequence": 2, "resync_identity_ids": [10, 11, 12], "handoff_status": "SnapshotReady", "identity_ids": [11, 12]}
+        },
+        {
+          "start_snapshot": {"epoch": "123e4567-e89b-42d3-a456-426614174006", "record_ids": [11, 12], "sequence": 1},
+          "require_snapshot": true,
+          "accepted_event": {"kind": "upsert", "tab_id": 11, "sequence": 2, "previous_revision": 1, "revision": 2, "effective_change": true, "title_display": "Cycle two update", "title_search": "cycle two update"},
+          "dropped_event": {"kind": "upsert", "tab_id": 12, "sequence": 4, "previous_revision": 2, "revision": 3, "effective_change": true, "title_display": "Must not apply twice", "title_search": "must not apply twice"},
+          "recovery_snapshot": {"epoch": "123e4567-e89b-42d3-a456-426614174007", "record_ids": [11], "sequence": 1},
+          "expected": {"accepted_outcome": "APPLIED", "dropped_outcome": "SNAPSHOT_REQUIRED", "resync_required": true, "resync_revision": 2, "resync_sequence": 2, "resync_identity_ids": [11, 12], "handoff_status": "SnapshotReady", "identity_ids": [11]}
+        }
+      ],
+      "eligible_browser_ids": [11],
+      "expected": {"final_epoch": "123e4567-e89b-42d3-a456-426614174007", "final_revision": 1, "final_sequence": 1, "identity_ids": [11], "unique_identity_count": 1, "handoff_status": "SnapshotReady"}
+     }
+   ]
 }

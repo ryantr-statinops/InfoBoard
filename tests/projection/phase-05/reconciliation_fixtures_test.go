@@ -23,16 +23,18 @@ type reconciliationCorpus struct {
 }
 
 type reconciliationCase struct {
-	FixtureID        string                 `json:"fixture_id"`
-	Events           []reconciliationEvent  `json:"events"`
-	ReplayExactly    bool                   `json:"replay_exactly"`
-	FreshSnapshot    *fixtureSnapshot       `json:"fresh_snapshot"`
-	Profiles         []string               `json:"profiles"`
-	Contexts         []domain.ContextKind   `json:"contexts"`
-	SameTabIDs       []int64                `json:"same_tab_ids"`
-	InputRecordOrder []int64                `json:"input_record_order"`
-	RawValues        []string               `json:"raw_values"`
-	Expected         reconciliationExpected `json:"expected"`
+	FixtureID          string                 `json:"fixture_id"`
+	Events             []reconciliationEvent  `json:"events"`
+	ReplayExactly      bool                   `json:"replay_exactly"`
+	FreshSnapshot      *fixtureSnapshot       `json:"fresh_snapshot"`
+	Profiles           []string               `json:"profiles"`
+	Contexts           []domain.ContextKind   `json:"contexts"`
+	SameTabIDs         []int64                `json:"same_tab_ids"`
+	InputRecordOrder   []int64                `json:"input_record_order"`
+	RawValues          []string               `json:"raw_values"`
+	Expected           reconciliationExpected `json:"expected"`
+	Cycles             []reconciliationCycle  `json:"cycles"`
+	EligibleBrowserIDs []int64                `json:"eligible_browser_ids"`
 }
 
 type reconciliationEvent struct {
@@ -49,6 +51,25 @@ type fixtureSnapshot struct {
 	Epoch     string  `json:"epoch"`
 	RecordIDs []int64 `json:"record_ids"`
 	Sequence  uint64  `json:"sequence"`
+}
+type reconciliationCycle struct {
+	StartSnapshot    *fixtureSnapshot            `json:"start_snapshot"`
+	RequireSnapshot  bool                        `json:"require_snapshot"`
+	AcceptedEvent    reconciliationEvent         `json:"accepted_event"`
+	DroppedEvent     reconciliationEvent         `json:"dropped_event"`
+	RecoverySnapshot fixtureSnapshot             `json:"recovery_snapshot"`
+	Expected         reconciliationCycleExpected `json:"expected"`
+}
+
+type reconciliationCycleExpected struct {
+	AcceptedOutcome   string  `json:"accepted_outcome"`
+	DroppedOutcome    string  `json:"dropped_outcome"`
+	ResyncRequired    bool    `json:"resync_required"`
+	ResyncRevision    uint64  `json:"resync_revision"`
+	ResyncSequence    uint64  `json:"resync_sequence"`
+	ResyncIdentityIDs []int64 `json:"resync_identity_ids"`
+	HandoffStatus     string  `json:"handoff_status"`
+	IdentityIDs       []int64 `json:"identity_ids"`
 }
 
 type reconciliationExpected struct {
@@ -67,6 +88,11 @@ type reconciliationExpected struct {
 	DigestVersion            string   `json:"digest_version"`
 	ErrorClassBounded        bool     `json:"error_class_bounded"`
 	OptionalAbsenceTabID     int64    `json:"optional_absence_tab_id"`
+	FinalEpoch               string   `json:"final_epoch"`
+	FinalRevision            uint64   `json:"final_revision"`
+	FinalSequence            uint64   `json:"final_sequence"`
+	UniqueIdentityCount      int      `json:"unique_identity_count"`
+	HandoffStatus            string   `json:"handoff_status"`
 }
 
 type authorityProjectionCase struct {
@@ -396,5 +422,63 @@ func TestSharedSafeHandoffFixtureContainsNoRawPageValues(t *testing.T) {
 		if strings.Contains(string(encoded), raw) {
 			t.Fatalf("safe handoff leaked fixture value %q", raw)
 		}
+	}
+}
+func TestSharedRecoverySequenceFixtureMatchesOracleAndIndexHandoff(t *testing.T) {
+	corpus, base := loadReconciliationFixtures(t)
+	item := reconciliationCaseByID(t, corpus, "FX-PROJECTION-RECOVERY-SEQUENCE")
+	state := newReconciliationState(t, corpus.ProfileID, domain.ContextNormal, base.Handoff.ProjectionEpoch, base.Handoff.EventSequence, base.Handoff.Records, nil)
+	currentEpoch := base.Handoff.ProjectionEpoch
+
+	for index, cycle := range item.Cycles {
+		if cycle.RequireSnapshot {
+			state.RequireSnapshot()
+		}
+		if cycle.StartSnapshot != nil {
+			start := cycle.StartSnapshot
+			outcome, handoff, rejection := state.ApplySnapshot(projection.SnapshotRequest{
+				ProfileID: corpus.ProfileID, ContextKind: domain.ContextNormal, Epoch: start.Epoch,
+				Revision: 1, Sequence: start.Sequence,
+				Records: wireRecords(base.Handoff.Records, corpus.ProfileID, domain.ContextNormal, start.Epoch, start.RecordIDs),
+			})
+			if rejection != nil || outcome != projection.SnapshotCommitted || handoff.Epoch != start.Epoch {
+				t.Fatalf("cycle %d start snapshot outcome=%q handoff=%+v rejection=%v", index+1, outcome, handoff, rejection)
+			}
+			currentEpoch = start.Epoch
+		}
+
+		accepted, rejection := applyFixtureEvent(state, base.Handoff.Records, corpus.ProfileID, domain.ContextNormal, currentEpoch, cycle.AcceptedEvent)
+		if rejection != nil || accepted != cycle.Expected.AcceptedOutcome {
+			t.Fatalf("cycle %d accepted delta outcome=%q rejection=%v", index+1, accepted, rejection)
+		}
+		dropped, rejection := applyFixtureEvent(state, base.Handoff.Records, corpus.ProfileID, domain.ContextNormal, currentEpoch, cycle.DroppedEvent)
+		if rejection == nil || dropped != cycle.Expected.DroppedOutcome {
+			t.Fatalf("cycle %d dropped delta outcome=%q rejection=%v", index+1, dropped, rejection)
+		}
+		resync := state.State().Handoff()
+		committed := state.State().Committed()
+		if !cycle.Expected.ResyncRequired || resync.Status != projection.StatusResyncRequired || resync.Queryable || committed.Revision != cycle.Expected.ResyncRevision || committed.Sequence != cycle.Expected.ResyncSequence || !reflect.DeepEqual(identityTabIDs(committed), cycle.Expected.ResyncIdentityIDs) {
+			t.Fatalf("cycle %d did not quarantine the last complete state: handoff=%+v ids=%v", index+1, resync, identityTabIDs(committed))
+		}
+
+		recovery := cycle.RecoverySnapshot
+		outcome, handoff, rejection := state.ApplySnapshot(projection.SnapshotRequest{
+			ProfileID: corpus.ProfileID, ContextKind: domain.ContextNormal, Epoch: recovery.Epoch,
+			Revision: 1, Sequence: recovery.Sequence,
+			Records: wireRecords(base.Handoff.Records, corpus.ProfileID, domain.ContextNormal, recovery.Epoch, recovery.RecordIDs),
+		})
+		if rejection != nil || outcome != projection.SnapshotCommitted || handoff.Status.String() != cycle.Expected.HandoffStatus || handoff.Epoch != recovery.Epoch || !reflect.DeepEqual(handoff.Identities, state.State().Committed().Identities()) {
+			t.Fatalf("cycle %d recovery handoff outcome=%q handoff=%+v rejection=%v", index+1, outcome, handoff, rejection)
+		}
+		currentEpoch = recovery.Epoch
+		if !reflect.DeepEqual(identityTabIDs(state.State().Committed()), cycle.Expected.IdentityIDs) || handoff.Count != len(cycle.Expected.IdentityIDs) {
+			t.Fatalf("cycle %d recovery IDs=%v want=%v", index+1, identityTabIDs(state.State().Committed()), cycle.Expected.IdentityIDs)
+		}
+	}
+
+	final := state.State().Handoff()
+	ids := identityTabIDs(state.State().Committed())
+	if final.Epoch != item.Expected.FinalEpoch || final.Revision != item.Expected.FinalRevision || final.Sequence != item.Expected.FinalSequence || final.Status.String() != item.Expected.HandoffStatus || !reflect.DeepEqual(ids, item.EligibleBrowserIDs) || !reflect.DeepEqual(ids, item.Expected.IdentityIDs) || len(final.Identities) != item.Expected.UniqueIdentityCount {
+		t.Fatalf("final committed IDs diverge from browser oracle: handoff=%+v ids=%v oracle=%v", final, ids, item.EligibleBrowserIDs)
 	}
 }

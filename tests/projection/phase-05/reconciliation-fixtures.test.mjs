@@ -44,6 +44,19 @@ function partitionHandoff(profileId, contextKind, tabIds) {
   }
   return handoff;
 }
+function snapshotHandoff(epoch, tabIds, sequence) {
+  const handoff = structuredClone(base);
+  handoff.projection_epoch = epoch;
+  handoff.previous_revision = 0;
+  handoff.projection_revision = 1;
+  handoff.event_sequence = sequence;
+  handoff.records = handoff.records.filter((record) => tabIds.includes(record.tab_identity.tab_id));
+  for (const record of handoff.records) {
+    record.projection_epoch = epoch;
+    record.projection_revision = 1;
+  }
+  return handoff;
+}
 
 function admit(profileId, handoff) {
   const result = admitHandoff(parseProfileID(profileId), handoff);
@@ -184,4 +197,41 @@ test('IP-05-T11 canonical and safe-handoff fixtures preserve deterministic, cont
   const serialized = JSON.stringify(view);
   for (const raw of metadata.raw_values) assert.equal(serialized.includes(raw), false);
   assert.equal(view.profile_id, corpus.profile_id);
+});
+test('IP-05-T12 repeats recovery across a fresh session and epoch', () => {
+  const item = fixture('FX-PROJECTION-RECOVERY-SEQUENCE');
+  const reconciler = committedBase();
+  let currentSnapshot = structuredClone(base);
+
+  for (const [index, cycle] of item.cycles.entries()) {
+    if (cycle.require_snapshot) reconciler.requireSnapshot('normal');
+    if (cycle.start_snapshot !== undefined) {
+      currentSnapshot = snapshotHandoff(cycle.start_snapshot.epoch, cycle.start_snapshot.record_ids, cycle.start_snapshot.sequence);
+      assert.equal(reconciler.acquire(currentSnapshot).ok, true);
+      assert.equal(reconciler.commitSnapshot('normal').outcome, 'COMMITTED');
+    }
+
+    const accepted = reconciler.reduceDeltas('normal', [admit(corpus.profile_id, eventHandoff(cycle.accepted_event, currentSnapshot))]);
+    assert.equal(accepted.outcome, cycle.expected.accepted_outcome, 'cycle ' + (index + 1) + ' accepted delta');
+    const dropped = reconciler.reduceDeltas('normal', [admit(corpus.profile_id, eventHandoff(cycle.dropped_event, currentSnapshot))]);
+    assert.equal(dropped.outcome, cycle.expected.dropped_outcome, 'cycle ' + (index + 1) + ' dropped event');
+    assert.equal(dropped.resync_required, cycle.expected.resync_required, 'cycle ' + (index + 1) + ' requires a full snapshot');
+    assert.deepEqual([...reconciler.livePartition('normal').records.values()].map((record) => record.tab_identity.tab_id), cycle.expected.resync_identity_ids);
+
+    currentSnapshot = snapshotHandoff(cycle.recovery_snapshot.epoch, cycle.recovery_snapshot.record_ids, cycle.recovery_snapshot.sequence);
+    assert.equal(reconciler.acquire(currentSnapshot).ok, true);
+    assert.equal(reconciler.commitSnapshot('normal').outcome, 'COMMITTED');
+    const recovered = reconciler.livePartition('normal');
+    assert.equal(recovered.epoch, cycle.recovery_snapshot.epoch);
+    assert.equal(Number(recovered.revision), 1);
+    assert.deepEqual([...recovered.records.values()].map((record) => record.tab_identity.tab_id), cycle.expected.identity_ids);
+  }
+
+  const final = reconciler.livePartition('normal');
+  const identities = [...final.records.values()].map((record) => record.tab_identity.tab_id);
+  assert.deepEqual(identities, item.eligible_browser_ids, 'final committed identities must equal the eligible browser oracle');
+  assert.equal(new Set(identities).size, item.expected.unique_identity_count, 'the committed map must not duplicate identities');
+  assert.equal(final.epoch, item.expected.final_epoch);
+  assert.equal(Number(final.revision), item.expected.final_revision);
+  assert.equal(Number(reconciler.view().snapshots.find((entry) => entry.context_kind === 'normal').projection_revision), item.expected.final_revision);
 });
