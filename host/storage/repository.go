@@ -25,6 +25,29 @@ const (
 	StatusRebuilt         Status = "rebuilt"
 )
 
+// CompatibilityStatus distinguishes stored protocol/ranking versions from
+// persistence health; a mismatch never degrades the in-memory lexical path.
+type CompatibilityStatus string
+
+const (
+	CompatibilityUnknown                    CompatibilityStatus = "unknown"
+	CompatibilityCompatible                 CompatibilityStatus = "compatible"
+	CompatibilityProtocolMismatch           CompatibilityStatus = "protocol_mismatch"
+	CompatibilityRankingMismatch            CompatibilityStatus = "ranking_mismatch"
+	CompatibilityProtocolAndRankingMismatch CompatibilityStatus = "protocol_and_ranking_mismatch"
+)
+
+// CompatibilityVersions are supplied by the running host, not loaded from the
+// database being checked.
+type CompatibilityVersions struct {
+	ProtocolVersion     int
+	RankingModelVersion string
+}
+
+func (versions CompatibilityVersions) valid() bool {
+	return versions.ProtocolVersion > 0 && boundedString(versions.RankingModelVersion, MaxStoredVersionBytes, true)
+}
+
 // ErrorClass contains only closed storage failure categories. It never carries
 // SQLite text, file paths, SQL, browser data, or caller-provided strings.
 type ErrorClass string
@@ -41,9 +64,10 @@ const (
 
 // Result is the bounded outcome of one repository operation.
 type Result struct {
-	Status     Status
-	ErrorClass ErrorClass
-	Retryable  bool
+	Status        Status
+	ErrorClass    ErrorClass
+	Retryable     bool
+	Compatibility CompatibilityStatus
 }
 
 // Configuration contains durable profile-scoped user preferences and the
@@ -68,6 +92,27 @@ func DefaultConfiguration(profileID domain.ProfileID) Configuration {
 		Theme: DefaultTheme, ShowContextLabels: DefaultShowContextLabels != 0,
 		PersistActivationRecency: DefaultPersistActivationRecency != 0,
 		ProtocolVersion:          protocol.CurrentVersion,
+	}
+}
+func defaultsForVersions(profile domain.ProfileID, versions CompatibilityVersions) Configuration {
+	configuration := DefaultConfiguration(profile)
+	configuration.ProtocolVersion = versions.ProtocolVersion
+	configuration.RankingModelVersion = versions.RankingModelVersion
+	return configuration
+}
+
+func compatibilityOf(configuration Configuration, versions CompatibilityVersions) CompatibilityStatus {
+	protocolMismatch := configuration.ProtocolVersion != versions.ProtocolVersion
+	rankingMismatch := configuration.RankingModelVersion != versions.RankingModelVersion
+	switch {
+	case protocolMismatch && rankingMismatch:
+		return CompatibilityProtocolAndRankingMismatch
+	case protocolMismatch:
+		return CompatibilityProtocolMismatch
+	case rankingMismatch:
+		return CompatibilityRankingMismatch
+	default:
+		return CompatibilityCompatible
 	}
 }
 
@@ -96,7 +141,7 @@ func NewRepository(db *sql.DB) *Repository {
 // error text, paths, or SQL.
 func (repository *Repository) CurrentResult() Result {
 	if repository == nil {
-		return Result{Status: StatusDegraded, ErrorClass: ErrorStorageUnavailable, Retryable: true}
+		return Result{Status: StatusDegraded, ErrorClass: ErrorStorageUnavailable, Retryable: true, Compatibility: CompatibilityUnknown}
 	}
 	repository.mu.RLock()
 	defer repository.mu.RUnlock()
@@ -115,7 +160,7 @@ func (repository *Repository) resultLocked() Result {
 			class = ErrorDatabaseQuarantined
 		}
 	}
-	return Result{Status: repository.status, ErrorClass: class, Retryable: repository.status == StatusDegraded || repository.status == StatusQuarantined}
+	return Result{Status: repository.status, ErrorClass: class, Retryable: repository.status == StatusDegraded || repository.status == StatusQuarantined, Compatibility: CompatibilityUnknown}
 }
 
 func (repository *Repository) markReady() Result {
@@ -131,12 +176,16 @@ func (repository *Repository) markReady() Result {
 
 // LoadConfiguration reads only the requested profile. Missing rows return safe
 // defaults; storage failures also return defaults but mark persistence degraded.
-func (repository *Repository) LoadConfiguration(ctx context.Context, profileID string) (Configuration, Result) {
+// Version mismatches are reported independently from storage health.
+func (repository *Repository) LoadConfiguration(ctx context.Context, profileID string, versions CompatibilityVersions) (Configuration, Result) {
 	profile, err := domain.ParseProfileID(profileID)
 	if err != nil {
-		return Configuration{}, Result{Status: repository.currentStatus(), ErrorClass: ErrorProfileMismatch}
+		return Configuration{}, Result{Status: repository.currentStatus(), ErrorClass: ErrorProfileMismatch, Compatibility: CompatibilityUnknown}
 	}
-	defaults := DefaultConfiguration(profile)
+	if !versions.valid() {
+		return Configuration{}, Result{Status: repository.currentStatus(), ErrorClass: ErrorInvalidConfiguration, Compatibility: CompatibilityUnknown}
+	}
+	defaults := defaultsForVersions(profile, versions)
 	if repository == nil || repository.db == nil {
 		return defaults, repository.fail(ctx, errStorageUnavailable)
 	}
@@ -147,17 +196,19 @@ func (repository *Repository) LoadConfiguration(ctx context.Context, profileID s
 
 	var configuration Configuration
 	var showContextLabels, persistRecency int
-	err = repository.db.QueryRowContext(ctx, `
-		SELECT profile_id, result_limit, density, theme, show_context_labels,
-			persist_activation_recency, protocol_version, ranking_model_version, updated_at
-		FROM configuration WHERE profile_id = ?`, profileID).Scan(
+	query := "SELECT profile_id, result_limit, density, theme, show_context_labels, " +
+		"persist_activation_recency, protocol_version, ranking_model_version, updated_at " +
+		"FROM configuration WHERE profile_id = ?"
+	err = repository.db.QueryRowContext(ctx, query, profileID).Scan(
 		&configuration.ProfileID, &configuration.ResultLimit, &configuration.Density,
 		&configuration.Theme, &showContextLabels, &persistRecency,
 		&configuration.ProtocolVersion, &configuration.RankingModelVersion,
 		&configuration.UpdatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
-		return defaults, repository.markReady()
+		result := repository.markReady()
+		result.Compatibility = CompatibilityCompatible
+		return defaults, result
 	}
 	if err != nil {
 		return defaults, repository.fail(ctx, err)
@@ -167,17 +218,28 @@ func (repository *Repository) LoadConfiguration(ctx context.Context, profileID s
 	if configuration.ProfileID != profile || !configuration.valid() {
 		return defaults, repository.fail(ctx, errors.New("invalid stored configuration"))
 	}
-	return configuration, repository.markReady()
+	result := repository.markReady()
+	result.Compatibility = compatibilityOf(configuration, versions)
+	if result.Compatibility != CompatibilityCompatible {
+		return defaults, result
+	}
+	return configuration, result
 }
 
 // SaveConfiguration validates every field and upserts exactly one profile row.
 // Errors are reduced to a closed class; callers must not log the raw SQL error.
-func (repository *Repository) SaveConfiguration(ctx context.Context, configuration Configuration) Result {
+func (repository *Repository) SaveConfiguration(ctx context.Context, configuration Configuration, versions CompatibilityVersions) Result {
 	if _, err := domain.ParseProfileID(string(configuration.ProfileID)); err != nil {
-		return Result{Status: repository.currentStatus(), ErrorClass: ErrorProfileMismatch}
+		return Result{Status: repository.currentStatus(), ErrorClass: ErrorProfileMismatch, Compatibility: CompatibilityUnknown}
 	}
-	if !configuration.valid() {
-		return Result{Status: repository.currentStatus(), ErrorClass: ErrorInvalidConfiguration}
+	if !configuration.valid() || !versions.valid() {
+		return Result{Status: repository.currentStatus(), ErrorClass: ErrorInvalidConfiguration, Compatibility: CompatibilityUnknown}
+	}
+	compatibility := compatibilityOf(configuration, versions)
+	if compatibility != CompatibilityCompatible {
+		result := repository.CurrentResult()
+		result.Compatibility = compatibility
+		return result
 	}
 	current := repository.CurrentResult()
 	if current.Status == StatusUpgradeRequired || current.Status == StatusQuarantined {
@@ -211,7 +273,9 @@ func (repository *Repository) SaveConfiguration(ctx context.Context, configurati
 	if err != nil {
 		return repository.fail(ctx, err)
 	}
-	return repository.markReady()
+	result := repository.markReady()
+	result.Compatibility = CompatibilityCompatible
+	return result
 }
 
 func (configuration Configuration) valid() bool {
@@ -237,7 +301,7 @@ func (repository *Repository) fail(ctx context.Context, err error) Result {
 		class = ErrorStorageTimeout
 	}
 	if repository == nil {
-		return Result{Status: StatusDegraded, ErrorClass: ErrorStorageUnavailable, Retryable: true}
+		return Result{Status: StatusDegraded, ErrorClass: ErrorStorageUnavailable, Retryable: true, Compatibility: CompatibilityUnknown}
 	}
 	repository.mu.Lock()
 	if repository.status != StatusUpgradeRequired && repository.status != StatusQuarantined {

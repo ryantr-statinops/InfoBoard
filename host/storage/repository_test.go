@@ -32,9 +32,10 @@ func TestRepositoryConfigurationIsProfileScopedAndDefaultsWhenMissing(t *testing
 	_, repository := newSchemaRepository(t)
 	profileA := domain.ProfileID("123e4567-e89b-42d3-a456-426614174000")
 	profileB := domain.ProfileID("123e4567-e89b-42d3-a456-426614174099")
+	versions := CompatibilityVersions{ProtocolVersion: protocol.CurrentVersion, RankingModelVersion: "rank-current"}
 
-	defaults, result := repository.LoadConfiguration(context.Background(), string(profileA))
-	if result.Status != StatusReady || result.ErrorClass != "" || defaults != DefaultConfiguration(profileA) {
+	defaults, result := repository.LoadConfiguration(context.Background(), string(profileA), versions)
+	if result.Status != StatusReady || result.ErrorClass != "" || result.Compatibility != CompatibilityCompatible || defaults != defaultsForVersions(profileA, versions) {
 		t.Fatalf("missing profile configuration=%+v result=%+v", defaults, result)
 	}
 
@@ -46,15 +47,15 @@ func TestRepositoryConfigurationIsProfileScopedAndDefaultsWhenMissing(t *testing
 	configuration.PersistActivationRecency = true
 	configuration.RankingModelVersion = "rank-current"
 	configuration.UpdatedAt = 1_800_000_000
-	if result := repository.SaveConfiguration(context.Background(), configuration); result.Status != StatusReady || result.ErrorClass != "" {
+	if result := repository.SaveConfiguration(context.Background(), configuration, versions); result.Status != StatusReady || result.ErrorClass != "" {
 		t.Fatalf("save configuration result=%+v", result)
 	}
-	loaded, result := repository.LoadConfiguration(context.Background(), string(profileA))
+	loaded, result := repository.LoadConfiguration(context.Background(), string(profileA), versions)
 	if result.Status != StatusReady || loaded != configuration {
 		t.Fatalf("loaded profile A=%+v result=%+v want=%+v", loaded, result, configuration)
 	}
-	profileBDefaults, result := repository.LoadConfiguration(context.Background(), string(profileB))
-	if result.Status != StatusReady || profileBDefaults != DefaultConfiguration(profileB) {
+	profileBDefaults, result := repository.LoadConfiguration(context.Background(), string(profileB), versions)
+	if result.Status != StatusReady || profileBDefaults != defaultsForVersions(profileB, versions) {
 		t.Fatalf("profile B read leaked profile A configuration: config=%+v result=%+v", profileBDefaults, result)
 	}
 }
@@ -62,20 +63,21 @@ func TestRepositoryConfigurationIsProfileScopedAndDefaultsWhenMissing(t *testing
 func TestRepositoryRejectsInvalidProfileAndConfigurationWithoutMutation(t *testing.T) {
 	_, repository := newSchemaRepository(t)
 	profile := domain.ProfileID("123e4567-e89b-42d3-a456-426614174000")
-	defaults, result := repository.LoadConfiguration(context.Background(), string(profile))
+	versions := CompatibilityVersions{ProtocolVersion: protocol.CurrentVersion}
+	defaults, result := repository.LoadConfiguration(context.Background(), string(profile), versions)
 	if result.Status != StatusReady {
 		t.Fatalf("initial result=%+v", result)
 	}
 
-	if _, result := repository.LoadConfiguration(context.Background(), "not-a-profile"); result.ErrorClass != ErrorProfileMismatch || result.Status != StatusReady {
+	if _, result := repository.LoadConfiguration(context.Background(), "not-a-profile", versions); result.ErrorClass != ErrorProfileMismatch || result.Status != StatusReady {
 		t.Fatalf("malformed profile result=%+v", result)
 	}
 	invalid := defaults
 	invalid.ResultLimit = protocol.MaxResults + 1
-	if result := repository.SaveConfiguration(context.Background(), invalid); result.ErrorClass != ErrorInvalidConfiguration || result.Status != StatusReady || result.Retryable {
+	if result := repository.SaveConfiguration(context.Background(), invalid, versions); result.ErrorClass != ErrorInvalidConfiguration || result.Status != StatusReady || result.Retryable {
 		t.Fatalf("invalid configuration result=%+v", result)
 	}
-	stillDefault, result := repository.LoadConfiguration(context.Background(), string(profile))
+	stillDefault, result := repository.LoadConfiguration(context.Background(), string(profile), versions)
 	if result.Status != StatusReady || stillDefault != defaults {
 		t.Fatalf("invalid write mutated configuration: value=%+v result=%+v", stillDefault, result)
 	}
@@ -87,11 +89,12 @@ func TestRepositoryStorageFailureReturnsDefaultsAndDegradesOnlyPersistence(t *te
 		t.Fatal(err)
 	}
 	profile := domain.ProfileID("123e4567-e89b-42d3-a456-426614174000")
-	configuration, result := repository.LoadConfiguration(context.Background(), string(profile))
-	if configuration != DefaultConfiguration(profile) || result.Status != StatusDegraded || !result.Retryable || result.ErrorClass != ErrorStorageFailure {
+	versions := CompatibilityVersions{ProtocolVersion: protocol.CurrentVersion}
+	configuration, result := repository.LoadConfiguration(context.Background(), string(profile), versions)
+	if configuration != defaultsForVersions(profile, versions) || result.Status != StatusDegraded || !result.Retryable || result.ErrorClass != ErrorStorageFailure {
 		t.Fatalf("storage failure configuration=%+v result=%+v", configuration, result)
 	}
-	writeResult := repository.SaveConfiguration(context.Background(), configuration)
+	writeResult := repository.SaveConfiguration(context.Background(), configuration, versions)
 	if writeResult.Status != StatusDegraded || !writeResult.Retryable || writeResult.ErrorClass != ErrorStorageFailure {
 		t.Fatalf("failed write result=%+v", writeResult)
 	}
@@ -105,8 +108,9 @@ func TestRepositoryDeadlineReturnsOnlyBoundedTimeoutClass(t *testing.T) {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Unix(1, 0))
 	defer cancel()
 	profile := domain.ProfileID("123e4567-e89b-42d3-a456-426614174000")
-	configuration, result := repository.LoadConfiguration(ctx, string(profile))
-	if configuration != DefaultConfiguration(profile) || result.Status != StatusDegraded || result.ErrorClass != ErrorStorageTimeout || !result.Retryable {
+	versions := CompatibilityVersions{ProtocolVersion: protocol.CurrentVersion}
+	configuration, result := repository.LoadConfiguration(ctx, string(profile), versions)
+	if configuration != defaultsForVersions(profile, versions) || result.Status != StatusDegraded || result.ErrorClass != ErrorStorageTimeout || !result.Retryable {
 		t.Fatalf("deadline result configuration=%+v result=%+v", configuration, result)
 	}
 }
