@@ -143,6 +143,25 @@ func NewRepository(db *sql.DB) *Repository {
 	return &Repository{db: db, status: status, errorClass: class}
 }
 
+// Close releases the SQLite handle. It is safe to call repeatedly.
+func (repository *Repository) Close() error {
+	if repository == nil {
+		return nil
+	}
+	repository.mu.Lock()
+	db := repository.db
+	repository.db = nil
+	if repository.status != StatusDisabled {
+		repository.status = StatusDegraded
+		repository.errorClass = ErrorStorageUnavailable
+	}
+	repository.mu.Unlock()
+	if db == nil {
+		return nil
+	}
+	return db.Close()
+}
+
 // CurrentResult returns the repository's safe state without exposing database
 // error text, paths, or SQL.
 func (repository *Repository) CurrentResult() Result {

@@ -171,6 +171,9 @@ func QuarantineAndRebuild(ctx context.Context, databasePath string, db *sql.DB) 
 	if check.Status != StatusQuarantined || (check.ErrorClass != ErrorDatabaseCorrupt && check.ErrorClass != ErrorSchemaIntegrity) {
 		return nil, RecoveryResult{Status: check.Status, ErrorClass: check.ErrorClass, Retryable: check.Retryable}
 	}
+	if check.ErrorClass == ErrorSchemaIntegrity && !databaseClaimsInfoBoard(ctx, db) {
+		return nil, RecoveryResult{Status: StatusQuarantined, ErrorClass: ErrorUnsafeDatabasePath}
+	}
 	if !filepath.IsAbs(databasePath) || filepath.Base(databasePath) != DatabaseFileName {
 		return nil, RecoveryResult{Status: StatusQuarantined, ErrorClass: ErrorUnsafeDatabasePath}
 	}
