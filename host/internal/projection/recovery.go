@@ -1,15 +1,20 @@
 package projection
 
+import "time"
+
 // RequireSnapshot quarantines the committed lineage after reconnect or uncertainty.
 // The last complete records remain available for inspection, but the partition is
 // not queryable until a new authoritative snapshot establishes a fresh epoch.
 func (state *State) RequireSnapshot() {
+	started := time.Now()
 	state.mu.Lock()
 	defer state.mu.Unlock()
 	if state.committed == nil || state.committed.Status == StatusResyncRequired {
 		return
 	}
 	current := *state.committed
+	current.ErrorClass = CauseRecoveryRequired
+	current.DurationMillis = time.Since(started).Milliseconds()
 	current.Status = StatusResyncRequired
 	if current.Counters.ResyncRequests < ^uint64(0) {
 		current.Counters.ResyncRequests++

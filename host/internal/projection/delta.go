@@ -3,6 +3,7 @@ package projection
 import (
 	"encoding/json"
 	"sort"
+	"time"
 
 	"github.com/ryantr-statinops/InfoBoard/host/internal/domain"
 	"github.com/ryantr-statinops/InfoBoard/host/internal/protocol"
@@ -22,6 +23,7 @@ const (
 // Readers observe the previous immutable value until every operation succeeds,
 // then see the new canonical state through one pointer replacement.
 func (state *State) ApplyDelta(input DeltaInput) (DeltaOutcome, *Rejection) {
+	started := time.Now()
 	state.mu.Lock()
 	defer state.mu.Unlock()
 	if state.committed == nil {
@@ -32,6 +34,8 @@ func (state *State) ApplyDelta(input DeltaInput) (DeltaOutcome, *Rejection) {
 		if rejection.ResyncRequired() {
 			current := *state.committed
 			current.Status = StatusResyncRequired
+			current.ErrorClass = rejection.Cause
+			current.DurationMillis = time.Since(started).Milliseconds()
 			if current.Counters.ResyncRequests < ^uint64(0) {
 				current.Counters.ResyncRequests++
 			}
@@ -46,6 +50,8 @@ func (state *State) ApplyDelta(input DeltaInput) (DeltaOutcome, *Rejection) {
 		}
 		return "", rejection
 	}
+	next.DurationMillis = time.Since(started).Milliseconds()
+	next.ErrorClass = ""
 	state.committed = &next
 	return outcome, nil
 }
@@ -169,20 +175,22 @@ func reduceDelta(current Committed, input DeltaInput) (Committed, DeltaOutcome, 
 		}
 	}
 	next := Committed{
-		Partition: current.Partition,
-		Status:    current.Status,
-		Epoch:     current.Epoch,
-		Revision:  revision,
-		Sequence:  input.SequenceEnd,
-		Counters:  current.Counters,
-		records:   make([]domain.EligibleTabRecord, 0, len(staged)),
-		seen:      seen,
+		Partition: current.Partition, Status: current.Status, Epoch: current.Epoch,
+		Revision: revision, Sequence: input.SequenceEnd,
+		DigestVersion: current.DigestVersion, Counters: current.Counters,
+		records: make([]domain.EligibleTabRecord, 0, len(staged)), seen: seen,
 	}
 	next.Counters.EventsAccepted += accepted
 	for _, record := range staged {
 		next.records = append(next.records, record)
 	}
 	sortCommitted(next.records)
+	digest, err := canonicalSnapshotDigest(next.records)
+	if err != nil {
+		return Committed{}, "", reject(protocol.CodeSnapshotRequired, CauseInvalidRecord, protocol.ResyncSnapshotStale, revision, input.SequenceEnd, -1)
+	}
+	next.Digest = digest
+	next.DigestVersion = ProjectionDigestVersion
 	return next, DeltaApplied, nil
 }
 

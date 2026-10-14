@@ -15,6 +15,9 @@ import (
 // session failed to send, and the mismatched_* values name a field that contradicts
 // the bound partition or lineage. No cause carries a title, URL, query, token, page
 // value, or free-form text.
+// ProjectionDigestVersion names the canonical committed-record digest encoding.
+const ProjectionDigestVersion = "projection-snapshot-v1"
+
 type Cause string
 
 const (
@@ -37,6 +40,7 @@ const (
 	CauseUnexpectedRecord              Cause = "unexpected_record"
 	CauseUnknownOperation              Cause = "unknown_operation"
 	CauseBoundsExceeded                Cause = "bounds_exceeded"
+	CauseRecoveryRequired              Cause = "recovery_required"
 )
 
 var causes = map[Cause]struct{}{
@@ -47,7 +51,7 @@ var causes = map[Cause]struct{}{
 	CauseMismatchedProfileID: {}, CauseMismatchedContextKind: {},
 	CauseMismatchedProjectionEpoch: {}, CauseMismatchedProjectionRevision: {},
 	CauseMismatchedTabIdentity: {}, CauseUnexpectedRecord: {},
-	CauseUnknownOperation: {}, CauseBoundsExceeded: {},
+	CauseUnknownOperation: {}, CauseBoundsExceeded: {}, CauseRecoveryRequired: {},
 }
 
 // KnownCause reports whether a cause belongs to the closed vocabulary. An unknown

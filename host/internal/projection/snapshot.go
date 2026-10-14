@@ -2,6 +2,7 @@ package projection
 
 import (
 	"sort"
+	"time"
 
 	"github.com/ryantr-statinops/InfoBoard/host/internal/domain"
 	"github.com/ryantr-statinops/InfoBoard/host/internal/protocol"
@@ -19,12 +20,15 @@ const (
 // immutable committed-state pointer replaces the current view. A failed candidate
 // leaves the previous records and lineage intact and removes query readiness.
 func (state *State) CommitSnapshot(input SnapshotInput) (SnapshotCommitOutcome, *Rejection) {
+	started := time.Now()
 	state.mu.Lock()
 	defer state.mu.Unlock()
 
 	rejectCandidate := func(code protocol.ErrorCode, cause Cause, reason protocol.ResyncReason, index int) (SnapshotCommitOutcome, *Rejection) {
 		if state.committed != nil && input.Partition == state.partition {
 			current := *state.committed
+			current.ErrorClass = cause
+			current.DurationMillis = time.Since(started).Milliseconds()
 			current.Status = StatusResyncRequired
 			if current.Counters.SnapshotsRejected < ^uint64(0) {
 				current.Counters.SnapshotsRejected++
@@ -86,15 +90,17 @@ func (state *State) CommitSnapshot(input SnapshotInput) (SnapshotCommitOutcome, 
 	}
 	counters.SnapshotsCommitted++
 	state.committed = &Committed{
-		Partition: state.partition,
-		Status:    StatusSnapshotReady,
-		Epoch:     input.Epoch,
-		Revision:  1,
-		Sequence:  input.Sequence,
-		Digest:    digest,
-		Counters:  counters,
-		records:   candidateRecords,
-		seen:      make(map[uint64]string),
+		Partition:      state.partition,
+		Status:         StatusSnapshotReady,
+		Epoch:          input.Epoch,
+		Revision:       1,
+		Sequence:       input.Sequence,
+		Digest:         digest,
+		DigestVersion:  ProjectionDigestVersion,
+		DurationMillis: time.Since(started).Milliseconds(),
+		Counters:       counters,
+		records:        candidateRecords,
+		seen:           make(map[uint64]string),
 	}
 	return SnapshotCommitted, nil
 }
