@@ -792,6 +792,11 @@ export class ProjectionReconciler {
   livePartition(context_kind: ContextKind): ProjectionState {
     return this.states[context_kind];
   }
+  // disposePrivateContext drops every in-memory reference owned by the private
+  // partition without touching the normal partition or any durable store.
+  disposePrivateContext(): void {
+    this.requireSnapshot('private');
+  }
 
   view(): ProjectionBoundaryView {
     return {

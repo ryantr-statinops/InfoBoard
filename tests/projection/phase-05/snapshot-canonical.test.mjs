@@ -223,3 +223,49 @@ test('IP-05-T08 requires a fresh snapshot after reconnect before deltas resume',
   assert.equal(recovered.records.size, 1);
   assert.equal(recovered.records.has(JSON.stringify([profile, 'normal', 10])), false);
 });
+function handoffFor(profileId, contextKind) {
+  const handoff = structuredClone(populated.handoff);
+  handoff.profile_id = profileId;
+  handoff.context_kind = contextKind;
+  for (const record of handoff.records) {
+    record.profile_id = profileId;
+    record.context_kind = contextKind;
+    record.tab_identity.profile_id = profileId;
+    record.tab_identity.context_kind = contextKind;
+  }
+  return handoff;
+}
+
+test('IP-05-T09 isolates profile and context maps and disposes private references only', () => {
+  const otherProfile = parseProfileID('123e4567-e89b-42d3-a456-426614174099');
+  const first = new ProjectionReconciler(profile);
+  const second = new ProjectionReconciler(otherProfile);
+  for (const contextKind of ['normal', 'private']) {
+    const handoff = handoffFor(profile, contextKind);
+    assert.equal(first.acquire(handoff).ok, true);
+    assert.equal(first.commitSnapshot(contextKind).outcome, 'COMMITTED');
+  }
+  const otherProfileHandoff = handoffFor(otherProfile, 'normal');
+  assert.equal(second.acquire(otherProfileHandoff).ok, true);
+  assert.equal(second.commitSnapshot('normal').outcome, 'COMMITTED');
+
+  const key = (profileId, contextKind, tabId) => JSON.stringify([profileId, contextKind, tabId]);
+  assert.equal(first.livePartition('normal').records.has(key(profile, 'normal', 10)), true);
+  assert.equal(first.livePartition('private').records.has(key(profile, 'private', 10)), true);
+  assert.equal(second.livePartition('normal').records.has(key(otherProfile, 'normal', 10)), true);
+  assert.equal(first.livePartition('normal').records.size, populated.handoff.records.length);
+  assert.equal(first.livePartition('private').records.size, populated.handoff.records.length);
+  assert.equal(second.livePartition('normal').records.size, populated.handoff.records.length);
+
+  const beforeMismatch = [...first.livePartition('normal').records];
+  const mismatch = first.acquire(otherProfileHandoff);
+  assert.equal(mismatch.ok, false);
+  assert.equal(mismatch.reason, 'partition_profile_mismatch');
+  assert.deepEqual([...first.livePartition('normal').records], beforeMismatch, 'another profile must not mutate this partition');
+
+  first.disposePrivateContext();
+  assert.equal(first.livePartition('private').records.size, 0, 'private records must be discarded on disposal');
+  assert.equal(first.acquiredSnapshot('private'), undefined, 'private snapshot references must be discarded');
+  assert.equal(first.livePartition('normal').records.size, populated.handoff.records.length, 'normal state must survive private disposal');
+  assert.equal(second.livePartition('normal').records.size, populated.handoff.records.length, 'other profile state must survive private disposal');
+});
