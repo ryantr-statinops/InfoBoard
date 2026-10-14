@@ -23,6 +23,7 @@ const (
 	StatusUpgradeRequired Status = "upgrade_required"
 	StatusQuarantined     Status = "quarantined"
 	StatusRebuilt         Status = "rebuilt"
+	StatusDisabled        Status = "disabled"
 )
 
 // CompatibilityStatus distinguishes stored protocol/ranking versions from
@@ -309,6 +310,10 @@ func (repository *Repository) fail(ctx context.Context, err error) Result {
 		return Result{Status: StatusDegraded, ErrorClass: ErrorStorageUnavailable, Retryable: true, Compatibility: CompatibilityUnknown}
 	}
 	repository.mu.Lock()
+	if repository.status == StatusDisabled {
+		repository.mu.Unlock()
+		return Result{Status: StatusDisabled, ErrorClass: ErrorStorageUnavailable, Compatibility: CompatibilityUnknown}
+	}
 	if repository.status != StatusUpgradeRequired && repository.status != StatusQuarantined {
 		repository.status = StatusDegraded
 		repository.errorClass = class
