@@ -72,7 +72,7 @@ func (repository *Repository) RecordActivation(ctx context.Context, record Activ
 		string(profile), record.TabID, record.Domain, record.ActivatedAt, record.Source); err != nil {
 		return repository.fail(ctx, err)
 	}
-	if err := pruneRetentionTx(ctx, tx, time.Now()); err != nil {
+	if err := pruneActivationProfileTx(ctx, tx, time.Now(), string(profile)); err != nil {
 		return repository.fail(ctx, err)
 	}
 	if err := tx.Commit(); err != nil {
@@ -121,7 +121,7 @@ func (repository *Repository) AppendDiagnostic(ctx context.Context, record Diagn
 		len(record.RedactedPayload), record.RedactedPayload); err != nil {
 		return repository.fail(ctx, err)
 	}
-	if err := pruneRetentionTx(ctx, tx, time.Now()); err != nil {
+	if err := pruneDiagnosticsTx(ctx, tx, time.Now()); err != nil {
 		return repository.fail(ctx, err)
 	}
 	if err := tx.Commit(); err != nil {
@@ -166,22 +166,59 @@ func (repository *Repository) database() *sql.DB {
 }
 
 func pruneRetentionTx(ctx context.Context, tx *sql.Tx, now time.Time) error {
+	if err := pruneActivationsTx(ctx, tx, now); err != nil {
+		return err
+	}
+	return pruneDiagnosticsTx(ctx, tx, now)
+}
+
+func pruneActivationsTx(ctx context.Context, tx *sql.Tx, now time.Time) error {
 	activationCutoff := now.Unix() - ActivationRetentionSeconds
 	if _, err := tx.ExecContext(ctx, `DELETE FROM activation_metadata WHERE activated_at < ?`, activationCutoff); err != nil {
 		return err
 	}
-	if _, err := tx.ExecContext(ctx, `DELETE FROM activation_metadata WHERE activation_id IN (
+	_, err := tx.ExecContext(ctx, `DELETE FROM activation_metadata WHERE activation_id IN (
 		SELECT activation_id FROM (
 			SELECT activation_id, ROW_NUMBER() OVER (
 				PARTITION BY profile_id ORDER BY activated_at DESC, activation_id DESC
 			) AS retention_rank FROM activation_metadata
 		) WHERE retention_rank > ?
-	)`, MaxActivationRowsPerProfile); err != nil {
+	)`, MaxActivationRowsPerProfile)
+	return err
+}
+
+func pruneActivationProfileTx(ctx context.Context, tx *sql.Tx, now time.Time, profileID string) error {
+	activationCutoff := now.Unix() - ActivationRetentionSeconds
+	if _, err := tx.ExecContext(ctx, `DELETE FROM activation_metadata WHERE profile_id = ? AND activated_at < ?`, profileID, activationCutoff); err != nil {
 		return err
 	}
+	var count int
+	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM activation_metadata WHERE profile_id = ?`, profileID).Scan(&count); err != nil {
+		return err
+	}
+	if count <= MaxActivationRowsPerProfile {
+		return nil
+	}
+	_, err := tx.ExecContext(ctx, `DELETE FROM activation_metadata WHERE profile_id = ? AND activation_id IN (
+		SELECT activation_id FROM (
+			SELECT activation_id, ROW_NUMBER() OVER (ORDER BY activated_at DESC, activation_id DESC) AS retention_rank
+			FROM activation_metadata WHERE profile_id = ?
+		) WHERE retention_rank > ?
+	)`, profileID, profileID, MaxActivationRowsPerProfile)
+	return err
+}
+
+func pruneDiagnosticsTx(ctx context.Context, tx *sql.Tx, now time.Time) error {
 	diagnosticCutoff := now.UnixMilli() - DiagnosticsRetentionMillis
 	if _, err := tx.ExecContext(ctx, `DELETE FROM diagnostics WHERE occurred_at < ?`, diagnosticCutoff); err != nil {
 		return err
+	}
+	var payloadBytes int64
+	if err := tx.QueryRowContext(ctx, `SELECT coalesce(sum(payload_bytes), 0) FROM diagnostics`).Scan(&payloadBytes); err != nil {
+		return err
+	}
+	if payloadBytes <= MaxDiagnosticsPayloadBytes {
+		return nil
 	}
 	_, err := tx.ExecContext(ctx, `DELETE FROM diagnostics WHERE diagnostic_id IN (
 		SELECT diagnostic_id FROM (

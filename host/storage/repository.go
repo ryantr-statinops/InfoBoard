@@ -322,8 +322,10 @@ func (repository *Repository) currentStatus() Status {
 
 func (repository *Repository) fail(ctx context.Context, err error) Result {
 	class := ErrorStorageFailure
-	if ctx != nil && errors.Is(ctx.Err(), context.DeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {
+	if (ctx != nil && errors.Is(ctx.Err(), context.DeadlineExceeded)) || errors.Is(err, context.DeadlineExceeded) {
 		class = ErrorStorageTimeout
+	} else if errors.Is(err, errStorageUnavailable) {
+		class = ErrorStorageUnavailable
 	}
 	if repository == nil {
 		return Result{Status: StatusDegraded, ErrorClass: ErrorStorageUnavailable, Retryable: true, Compatibility: CompatibilityUnknown}
