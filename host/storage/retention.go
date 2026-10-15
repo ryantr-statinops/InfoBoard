@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"time"
-	"unicode/utf8"
 
 	"github.com/ryantr-statinops/InfoBoard/host/internal/domain"
 )
@@ -82,8 +81,10 @@ func (repository *Repository) RecordActivation(ctx context.Context, record Activ
 }
 
 // AppendDiagnostic stores one bounded diagnostic event and prunes expired or
-// excess payload rows atomically. The caller must supply a redacted payload;
-// IP-08 T10 owns the redaction policy and allowed event vocabulary.
+// excess payload rows atomically. Event kind, error class, and ranking label must
+// use the closed diagnostic vocabulary, and RedactedPayload must already be
+// redacted: values that still carry titles, URLs, queries, tokens, SQL, or paths
+// are rejected with ErrorInvalidConfiguration rather than stored.
 func (repository *Repository) AppendDiagnostic(ctx context.Context, record DiagnosticRecord) Result {
 	profileID := any(nil)
 	if record.ProfileID != "" {
@@ -93,14 +94,11 @@ func (repository *Repository) AppendDiagnostic(ctx context.Context, record Diagn
 		}
 		profileID = string(profile)
 	}
-	if !boundedString(record.EventKind, MaxStoredVersionBytes, false) ||
-		!boundedString(string(record.ErrorClass), MaxStoredVersionBytes, false) ||
-		record.OccurredAt < 0 || record.DurationMillis < 0 ||
+	if record.OccurredAt < 0 || record.DurationMillis < 0 ||
 		record.ProjectionRevision > domain.MaxProjectionRevision ||
 		record.ProtocolVersion <= 0 ||
-		!boundedString(record.RankingModelVersion, MaxStoredVersionBytes, true) ||
 		record.SchemaVersion == 0 || record.SchemaVersion > SupportedSchemaVersion ||
-		!utf8.ValidString(record.RedactedPayload) || len(record.RedactedPayload) > MaxDiagnosticRowBytes {
+		ValidateDiagnosticRecord(record) != "" {
 		return Result{Status: repository.currentStatus(), ErrorClass: ErrorInvalidConfiguration}
 	}
 	if ctx == nil || ctx.Err() != nil {

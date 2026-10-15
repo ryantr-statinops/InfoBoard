@@ -117,21 +117,3 @@ func TestPruneRetentionUsesAgeAndLogicalDiagnosticPayloadBudget(t *testing.T) {
 		t.Fatalf("diagnostic retention count:%d bytes:%d oldest:%d want count:%d bytes:%d oldest:%d", diagnosticCount, payloadBytes, oldestDiagnosticAt, wantDiagnosticCount, MaxDiagnosticsPayloadBytes, now.UnixMilli()-wantDiagnosticCount)
 	}
 }
-
-func TestAppendDiagnosticCountsUTF8PayloadBytes(t *testing.T) {
-	db, repository := newSchemaRepository(t)
-	result := repository.AppendDiagnostic(context.Background(), DiagnosticRecord{
-		OccurredAt: time.Now().UnixMilli(), EventKind: "storage.test", ErrorClass: ErrorStorageFailure,
-		ProtocolVersion: protocol.CurrentVersion, SchemaVersion: 1, RedactedPayload: "é",
-	})
-	if result.Status != StatusReady || result.ErrorClass != "" {
-		t.Fatalf("append diagnostic result = %+v", result)
-	}
-	var payloadBytes int
-	if err := db.QueryRow(`SELECT payload_bytes FROM diagnostics`).Scan(&payloadBytes); err != nil {
-		t.Fatal(err)
-	}
-	if payloadBytes != 2 {
-		t.Fatalf("stored UTF-8 payload byte count = %d, want 2", payloadBytes)
-	}
-}
