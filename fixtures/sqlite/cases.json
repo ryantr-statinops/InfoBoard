@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "SQL-001",
+      "scenario": "Fresh database migrates to schema v1 and missing-profile reads return safe defaults.",
+      "expected_status": "ready",
+      "expected_rows": {"configuration": 0, "activation_metadata": 0, "diagnostics": 0, "schema_migrations": 1},
+      "boundary": "No profile row exists; recency persistence defaults off.",
+      "ownership": "Database application_id and owner_id belong to InfoBoard."
+    },
+    {
+      "id": "SQL-002",
+      "scenario": "Normal profile configuration and activation metadata remain isolated by profile_id.",
+      "expected_status": "ready",
+      "expected_rows": {"configuration_profile_a": 1, "configuration_profile_b": 0, "activation_profile_a": 1, "activation_profile_b": 0},
+      "boundary": "Read for profile B returns its own defaults, not profile A values.",
+      "ownership": "Only the requested profile's rows are visible or resettable."
+    },
+    {
+      "id": "SQL-003",
+      "scenario": "Initial migration is transactional and idempotent across reopen.",
+      "expected_status": "ready",
+      "expected_rows": {"schema_migrations": 1, "schema_meta_owner": 1},
+      "boundary": "Repeated migration does not duplicate history or change schema version.",
+      "ownership": "Migration history and application_id remain InfoBoard-owned."
+    },
+    {
+      "id": "SQL-004",
+      "scenario": "A failed migration rolls back DDL, migration history, and user_version.",
+      "expected_status": "degraded",
+      "expected_rows": {"user_version": 1, "failed_table": 0, "version_2_history": 0},
+      "boundary": "Failure occurs after one valid DDL statement in the same migration transaction.",
+      "ownership": "The previous supported schema remains reopenable."
+    },
+    {
+      "id": "SQL-005",
+      "scenario": "A future schema version is reported without modifying its database file.",
+      "expected_status": "upgrade_required",
+      "expected_rows": {"database_file_changes": 0},
+      "boundary": "On-disk user_version exceeds the running host's supported version.",
+      "ownership": "Future-version file bytes remain unchanged."
+    },
+    {
+      "id": "SQL-006",
+      "scenario": "Corrupt SQLite bytes are quarantined and a fresh schema is rebuilt.",
+      "expected_status": "rebuilt",
+      "expected_rows": {"owned_tables": 6, "quarantine_artifacts": 1},
+      "boundary": "Original bytes and owner marker survive in the timestamped quarantine directory.",
+      "ownership": "Only the reserved InfoBoard database and sidecars move; quarantine is retained."
+    },
+    {
+      "id": "SQL-007",
+      "scenario": "Activation retention removes records older than 30 days and keeps at most 500 per profile.",
+      "expected_status": "ready",
+      "expected_rows": {"profile_a": 500, "profile_b": 1},
+      "boundary": "An activation exactly at the 30-day cutoff is retained; ties use activation_id order.",
+      "ownership": "Profile A pruning does not consume or delete profile B rows."
+    },
+    {
+      "id": "SQL-008",
+      "scenario": "Diagnostics retention removes records older than 7 days and limits logical payload to 10 MiB.",
+      "expected_status": "ready",
+      "expected_rows": {"retained_diagnostic_payload_bytes": 10485760, "expired_rows": 0},
+      "boundary": "UTF-8 payload_bytes counts encoded bytes; the oldest diagnostic is pruned first.",
+      "ownership": "Only redacted diagnostic payload bytes contribute to the cap."
+    },
+    {
+      "id": "SQL-009",
+      "scenario": "Unavailable persistence returns defaults and does not expose database error text.",
+      "expected_status": "degraded",
+      "expected_rows": {"configuration": 0, "error_class_is_closed": 1},
+      "boundary": "Repository has no database handle; query and activation runtime state remain independent.",
+      "ownership": "No memory database or substitute persistence is created."
+    },
+    {
+      "id": "SQL-010",
+      "scenario": "Profile reset, full reset, and uninstall are idempotent and preserve unrelated artifacts.",
+      "expected_status": "disabled",
+      "expected_rows": {"profile_a_rows_after_reset": 0, "profile_b_rows_after_reset": 1, "owned_db_after_uninstall": 0},
+      "boundary": "Global diagnostics survive profile reset; browser-state and unowned file sentinels survive uninstall.",
+      "ownership": "Only InfoBoard rows, its fixed database/sidecars, and marker-owned quarantine directories are removed."
+    }
+  ]
+}

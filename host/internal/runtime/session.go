@@ -335,6 +335,12 @@ type Persistence interface {
 	Close() error
 }
 
+// ProfilePersistence loads profile-scoped preferences after protocol negotiation
+// but before the session publishes Ready. Private profiles must remain session-only.
+type ProfilePersistence interface {
+	PrepareProfile(ctx context.Context, binding Binding) (PersistenceStatus, error)
+}
+
 // NotificationReason marks why the runtime is pushing a lifecycle notice to the
 // protocol owner. The protocol layer owns the resulting wire representation.
 type NotificationReason string
@@ -640,6 +646,7 @@ func (s *Session) startup() error {
 	if err := s.negotiate(); err != nil {
 		return err
 	}
+	s.prepareProfilePersistence()
 	return s.synchronize()
 }
 
@@ -666,6 +673,22 @@ func (s *Session) preparePersistence() {
 	s.diagnostics.Observe(s.health.current(), LevelInfo, EventPersistenceSettled, 0, 0)
 }
 
+func (s *Session) prepareProfilePersistence() {
+	store, ok := s.persistence().(ProfilePersistence)
+	if !ok {
+		return
+	}
+	snapshot := s.health.current()
+	binding := Binding{ProfileID: snapshot.ProfileID, ContextKind: snapshot.ContextKind, ProtocolVersion: snapshot.ProtocolVersion, HostVersion: snapshot.HostVersion}
+	ctx, cancel := withBudget(s.root(), s.limits.StartupTimeout, ErrStartupBudget)
+	defer cancel()
+	status, err := boundedCall(ctx, func() (PersistenceStatus, error) { return store.PrepareProfile(ctx, binding) })
+	if err != nil || (status != PersistenceReady && status != PersistenceDegraded && status != PersistenceDisabled) {
+		status = PersistenceDegraded
+	}
+	s.health.mutate(func(snapshot *HealthSnapshot) { snapshot.Persistence = status })
+	s.diagnostics.Observe(s.health.current(), LevelInfo, EventPersistenceSettled, 0, 0)
+}
 func (s *Session) negotiate() error {
 	s.publish(StateHandshaking, FailureNone, false)
 	s.diagnostics.Observe(s.health.current(), LevelInfo, EventHandshakeStarted, 0, 0)
