@@ -4,8 +4,9 @@ import "context"
 
 // Orchestrator coordinates hello->snapshot->index->ready and revision-safe handoff.
 type Orchestrator struct {
-	readyRevision int64
-	readyProfile  string
+	readyRevision       int64
+	readyProfile        string
+	persistenceDegraded bool
 }
 
 func NewOrchestrator() *Orchestrator { return &Orchestrator{} }
@@ -28,6 +29,13 @@ func (o *Orchestrator) PublishSnapshot(ctx context.Context, profileID string, re
 	o.readyProfile = profileID
 	return rev, nil
 }
+
+// T07: persistence-degraded continuation. Keep lexical index queryable; surface
+// PERSISTENCE_DEGRADED without blocking synchronization.
+func (o *Orchestrator) SetPersistenceDegraded(degraded bool) {
+	o.persistenceDegraded = degraded
+}
+func (o *Orchestrator) IsPersistenceDegraded() bool { return o.persistenceDegraded }
 
 // T04: ordered delta processing. Requires expected predecessor; exact duplicate
 // is idempotent ack; gap/conflict/stale/out-of-order -> no-op + resync_required.
