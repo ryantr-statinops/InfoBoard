@@ -72,7 +72,7 @@ updated_at: <UTC timestamp>
 | IP-09 | [Phase 09](phase-09-projection-sync-and-recovery.md) | Not started | — | — | — | — | — | — | — |
 | IP-10 | [Phase 10](phase-10-lexical-normalization-and-index.md) | Not started | — | — | — | — | — | — | — |
 | IP-11 | [Phase 11](phase-11-deterministic-ranking-and-explanations.md) | Not started | — | — | — | — | — | — | — |
-| IP-12 | [Phase 12](phase-12-query-api-and-degraded-results.md) | Not started | — | — | — | — | — | — | — |
+| IP-12 | [Phase 12](phase-12-query-api-and-degraded-results.md) | In progress | — | — | — | — | — | — | — |
 | IP-13 | [Phase 13](phase-13-search-surface-and-accessibility.md) | Not started | — | — | — | — | — | — | — |
 | IP-14 | [Phase 14](phase-14-activation-and-stale-result-guard.md) | Not started | — | — | — | — | — | — | — |
 | IP-15 | [Phase 15](phase-15-configuration-reset-and-uninstall.md) | Not started | — | — | — | — | — | — | — |
