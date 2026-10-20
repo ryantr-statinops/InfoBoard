@@ -29,6 +29,23 @@ func (o *Orchestrator) PublishSnapshot(ctx context.Context, profileID string, re
 	return rev, nil
 }
 
+// T04: ordered delta processing. Requires expected predecessor; exact duplicate
+// is idempotent ack; gap/conflict/stale/out-of-order -> no-op + resync_required.
+func (o *Orchestrator) ProcessDelta(ctx context.Context, profileID string, expectedRev int64, newRev int64) (int64, error) {
+	if profileID != o.readyProfile {
+		return o.readyRevision, &syncError{code: "PROFILE_MISMATCH"}
+	}
+	if expectedRev != o.readyRevision {
+		// duplicate ack if newRev == readyRevision
+		if newRev == o.readyRevision {
+			return o.readyRevision, nil
+		}
+		return o.readyRevision, &syncError{code: "resync_required"}
+	}
+	o.readyRevision = newRev
+	return newRev, nil
+}
+
 var errSnapshotRequired = &syncError{code: "SNAPSHOT_REQUIRED"}
 
 type syncError struct{ code string }
