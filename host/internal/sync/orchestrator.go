@@ -54,6 +54,15 @@ func (o *Orchestrator) ProcessDelta(ctx context.Context, profileID string, expec
 	return newRev, nil
 }
 
+// T08: revision-safe query handoff. Unknown/old revision -> REVISION_MISMATCH;
+// staging revision -> INDEX_REBUILDING; no result payload in either case.
+func (o *Orchestrator) QueryAllowed(requestedRev int64) error {
+	if requestedRev != o.readyRevision {
+		return &syncError{code: "REVISION_MISMATCH"}
+	}
+	return nil
+}
+
 var errSnapshotRequired = &syncError{code: "SNAPSHOT_REQUIRED"}
 
 type syncError struct{ code string }
