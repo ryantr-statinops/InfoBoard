@@ -23,12 +23,13 @@
 // or staged, so a status, partial, resync-required, over-bound, or undeclared
 // handoff fails closed without materializing the payload it carries.
 //
-// Canonical ordering, lineage/ordering rules, delta reduction, atomic commit,
-// and restart recovery are later IP-05 tasks and are intentionally not
-// implemented here: the authoritative snapshot is retained as an acquisition
-// result only and never committed into a live projection map.
+// IP-05-T03 canonicalizes accepted snapshot records by TabIdentity and rejects
+// duplicate identities without materializing a partial authority. The host computes
+// a bounded SHA-256 digest from that canonical record order. Delta ordering, atomic
+// commit, and restart recovery remain later IP-05 tasks.
 
 import {
+  acceptSnapshot,
   emptyProjection,
   parseProfileID,
   parseProjectionEpoch,
@@ -96,6 +97,7 @@ export const PROJECTION_REJECT_REASONS = [
   'invalid_event_sequence',
   'missing_records',
   'missing_record',
+  'duplicate_tab_identity',
   'missing_tab_identity',
   'invalid_tab_identity',
   'identity_partition_mismatch',
@@ -106,6 +108,7 @@ export const PROJECTION_REJECT_REASONS = [
   'invalid_resync_marker',
   'snapshot_resync_required',
   'snapshot_bounds_exceeded',
+  'invalid_snapshot_lineage',
 ] as const;
 
 export type ProjectionRejectReason = (typeof PROJECTION_REJECT_REASONS)[number];
@@ -314,6 +317,11 @@ export function readTabIdentity(value: unknown): IdentityAdmission {
   return { ok: true, identity, key: tabIdentityKey(identity) };
 }
 
+function compareTabIdentity(left: TabIdentity, right: TabIdentity): number {
+  if (left.profile_id !== right.profile_id) return left.profile_id < right.profile_id ? -1 : 1;
+  if (left.context_kind !== right.context_kind) return left.context_kind < right.context_kind ? -1 : 1;
+  return left.tab_id < right.tab_id ? -1 : left.tab_id > right.tab_id ? 1 : 0;
+}
 export function readProjectionRecord(value: unknown, fence: ProjectionFence, expectedKey?: string): RecordAdmission {
   if (isAbsent(value)) return rejected('missing_record');
   if (!isRecord(value)) return rejected('invalid_record');
@@ -343,11 +351,16 @@ export function admitHandoff(boundProfile: ProfileID, handoff: ObserverHandoff):
   if (handoff.kind === 'snapshot') {
     if (!Array.isArray(handoff.records)) return rejected('missing_records');
     const staged: EligibleTabRecord[] = [];
+    const seen = new Set<string>();
     for (const row of handoff.records) {
       const read = readProjectionRecord(row, fence.fence, identityKey);
       if (!read.ok) return read;
+      const key = tabIdentityKey(read.record.tab_identity);
+      if (seen.has(key)) return rejected('duplicate_tab_identity');
+      seen.add(key);
       staged.push(read.record);
     }
+    staged.sort((left, right) => compareTabIdentity(left.tab_identity, right.tab_identity));
     records = staged;
   }
   let record: EligibleTabRecord | undefined;
@@ -370,6 +383,112 @@ export function admitHandoff(boundProfile: ProfileID, handoff: ObserverHandoff):
       identity_keys: identityKey === undefined ? [] : [identityKey],
     }) as ProjectionSubmission,
   };
+}
+export type ProjectionReductionOutcome = 'APPLIED' | 'DUPLICATE' | 'SNAPSHOT_REQUIRED' | 'REVISION_MISMATCH';
+
+export interface ProjectionReductionResult {
+  readonly outcome: ProjectionReductionOutcome;
+  readonly revision: ProjectionRevision;
+  readonly event_sequence: number;
+  readonly record_count: number;
+  readonly resync_required: boolean;
+  readonly resync_reason?: ResyncReason;
+}
+
+// reduceProjectionBatch stages a bounded stream of one partition's ordered
+// projection handoffs. Event sequence advances for every accepted handoff; the
+// projection revision advances only for an effective record transition.
+export function reduceProjectionBatch(
+  state: ProjectionState,
+  lastEventSequence: number,
+  submissions: readonly ProjectionSubmission[],
+): ProjectionReductionResult {
+  const refused = (outcome: ProjectionReductionOutcome, reason: ResyncReason = 'uncertain_order'): ProjectionReductionResult => {
+    const resync_required = outcome === 'SNAPSHOT_REQUIRED' || outcome === 'REVISION_MISMATCH';
+    return compact({
+      outcome, revision: state.revision, event_sequence: lastEventSequence, record_count: state.records.size,
+      resync_required, resync_reason: resync_required ? reason : undefined,
+    }) as ProjectionReductionResult;
+  };
+  if (state.epoch === null || !Number.isSafeInteger(lastEventSequence) || lastEventSequence < 0) return refused('SNAPSHOT_REQUIRED');
+  if (submissions.length === 0) return refused('DUPLICATE');
+  if (submissions.length > 1000) return refused('SNAPSHOT_REQUIRED');
+  const signatures = submissions.map(submission => JSON.stringify(submission));
+  let duplicateCount = 0;
+  for (let index = 0; index < submissions.length; index += 1) {
+    const submission = submissions[index]!;
+    const { fence } = submission;
+    if (submission.kind !== 'upsert' && submission.kind !== 'remove') return refused('SNAPSHOT_REQUIRED');
+    if (fence.profile_id !== state.profile_id || fence.context_kind !== state.context_kind || fence.projection_epoch !== state.epoch) return refused('SNAPSHOT_REQUIRED');
+    if (!Number.isSafeInteger(fence.event_sequence) || fence.event_sequence <= 0 || fence.event_sequence > Number.MAX_SAFE_INTEGER) return refused('REVISION_MISMATCH');
+    const existing = state.sequences.get(fence.event_sequence);
+    if (existing !== undefined) {
+      if (existing !== signatures[index]) return refused('REVISION_MISMATCH');
+      duplicateCount += 1;
+    }
+  }
+  if (duplicateCount > 0) {
+    if (duplicateCount !== submissions.length) return refused('SNAPSHOT_REQUIRED');
+    return { outcome: 'DUPLICATE', revision: state.revision, event_sequence: lastEventSequence, record_count: state.records.size, resync_required: false };
+  }
+
+  let revision = Number(state.revision);
+  let sequence = lastEventSequence;
+  const records = new Map(state.records);
+  const sequences = new Map(state.sequences);
+  for (let index = 0; index < submissions.length; index += 1) {
+    const submission = submissions[index]!;
+    const { fence } = submission;
+    if (submission.kind !== 'upsert' && submission.kind !== 'remove') return refused('SNAPSHOT_REQUIRED');
+    if (fence.profile_id !== state.profile_id || fence.context_kind !== state.context_kind || fence.projection_epoch !== state.epoch) return refused('SNAPSHOT_REQUIRED');
+    if (!Number.isSafeInteger(fence.event_sequence) || fence.event_sequence > Number.MAX_SAFE_INTEGER) return refused('REVISION_MISMATCH');
+    if (fence.event_sequence !== sequence + 1) return refused('SNAPSHOT_REQUIRED');
+    if (Number(fence.previous_revision) !== revision) return refused('SNAPSHOT_REQUIRED');
+
+    if (submission.kind === 'remove') {
+      if (!submission.effective_change || submission.tab_identity === undefined || Number(fence.projection_revision) !== revision + 1) return refused('SNAPSHOT_REQUIRED');
+      const key = tabIdentityKey(submission.tab_identity);
+      if (!records.has(key)) return refused('SNAPSHOT_REQUIRED');
+      records.delete(key);
+      revision += 1;
+    } else {
+      const record = submission.record;
+      if (record === undefined || submission.tab_identity === undefined || tabIdentityKey(record.tab_identity) !== tabIdentityKey(submission.tab_identity)) return refused('SNAPSHOT_REQUIRED');
+      if (!validateTab(record, state.profile_id, state.context_kind, state.epoch)) return refused('SNAPSHOT_REQUIRED');
+      const key = tabIdentityKey(record.tab_identity);
+      const existing = records.get(key);
+      if (!submission.effective_change) {
+        if (existing === undefined || Number(fence.projection_revision) !== revision || Number(record.projection_revision) !== revision || !sameProjectionRecord(existing, record)) return refused('SNAPSHOT_REQUIRED');
+      } else {
+        if (revision >= Number.MAX_SAFE_INTEGER || Number(fence.projection_revision) !== revision + 1 || Number(record.projection_revision) !== revision + 1) return refused('REVISION_MISMATCH');
+        if (existing !== undefined && sameProjectionRecord(existing, record)) return refused('REVISION_MISMATCH');
+        records.set(key, record);
+        revision += 1;
+      }
+    }
+
+    sequence = fence.event_sequence;
+    sequences.set(sequence, signatures[index]!);
+    while (sequences.size > 1000) {
+      const oldest = sequences.keys().next().value as number | undefined;
+      if (oldest === undefined) break;
+      sequences.delete(oldest);
+    }
+  }
+
+  state.revision = parseRevision(revision);
+  state.records = records;
+  state.sequences = sequences;
+  return { outcome: 'APPLIED', revision: state.revision, event_sequence: sequence, record_count: records.size, resync_required: false };
+}
+
+function sameProjectionRecord(left: EligibleTabRecord, right: EligibleTabRecord): boolean {
+  return left.profile_id === right.profile_id && left.context_kind === right.context_kind && tabIdentityKey(left.tab_identity) === tabIdentityKey(right.tab_identity) &&
+    left.window_id === right.window_id && left.group_id === right.group_id && left.title_display === right.title_display && left.title_search === right.title_search &&
+    left.url_search === right.url_search && left.url_display === right.url_display && left.domain_display === right.domain_display && left.domain_search === right.domain_search &&
+    left.window_label_display === right.window_label_display && left.window_label_search === right.window_label_search && left.group_label_display === right.group_label_display &&
+    left.group_label_search === right.group_label_search && left.pinned === right.pinned && left.active === right.active && left.eligible === right.eligible &&
+    left.observed_at === right.observed_at && left.projection_epoch === right.projection_epoch && Number(left.projection_revision) === Number(right.projection_revision);
 }
 
 function readRevisionField(
@@ -471,6 +590,9 @@ export function acquireSnapshot(boundProfile: ProfileID, handoff: ObserverHandof
   const fence = readProjectionFence(handoff, boundProfile);
   if (!fence.ok) return unauthoritative(fence.reason, handoff);
   if (handoff.kind !== 'snapshot') return unauthoritative('non_snapshot_handoff', handoff, fence.fence);
+  if (Number(fence.fence.previous_revision) !== 0 || Number(fence.fence.projection_revision) !== 1) {
+    return unauthoritative('invalid_snapshot_lineage', handoff, fence.fence);
+  }
   if (isAbsent(handoff.resync_required)) return unauthoritative('missing_resync_marker', handoff, fence.fence);
   if (typeof handoff.resync_required !== 'boolean') return unauthoritative('invalid_resync_marker', handoff, fence.fence);
   if (handoff.resync_required) return unauthoritative('snapshot_resync_required', handoff, fence.fence);
@@ -530,9 +652,19 @@ function zeroDiagnostics(): ProjectionBoundaryDiagnostics {
   };
 }
 
+export type ProjectionSnapshotCommitOutcome = 'COMMITTED' | 'DUPLICATE' | 'SNAPSHOT_REQUIRED';
+
+export interface ProjectionSnapshotCommitResult {
+  readonly outcome: ProjectionSnapshotCommitOutcome;
+  readonly revision: ProjectionRevision | null;
+  readonly event_sequence: number | null;
+  readonly record_count: number;
+  readonly resync_required: boolean;
+}
 export class ProjectionReconciler {
   private readonly states: Record<ContextKind, ProjectionState>;
   private readonly forwarded: Record<ContextKind, ForwardedFence | undefined> = { normal: undefined, private: undefined };
+  private readonly appliedSequences: Record<ContextKind, number> = { normal: 0, private: 0 };
   private readonly snapshots: Record<ContextKind, PartitionSnapshotState> = {
     normal: { retained: undefined, last_outcome: 'UNINITIALIZED' },
     private: { retained: undefined, last_outcome: 'UNINITIALIZED' },
@@ -584,7 +716,7 @@ export class ProjectionReconciler {
     this.diagnostics.snapshots_authoritative += 1;
     const { fence, records } = acquisition.snapshot;
     const partition = this.snapshots[fence.context_kind];
-    partition.retained = { fence, records };
+    partition.retained = { fence, records: records.map(record => ({ ...record, tab_identity: { ...record.tab_identity } })) };
     partition.last_outcome = acquisition.outcome;
     return acquisition;
   }
@@ -598,14 +730,72 @@ export class ProjectionReconciler {
     if (retained === undefined) return undefined;
     return {
       fence: retained.fence,
-      records: [...retained.records],
+      records: retained.records.map(record => ({ ...record, tab_identity: { ...record.tab_identity } })),
       record_count: retained.records.length,
       explicitly_empty: retained.records.length === 0,
     };
   }
 
+  // commitSnapshot publishes a retained authority only after a detached IP-02
+  // projection accepts every row. A new epoch replaces the entire prior map.
+  commitSnapshot(context_kind: ContextKind): ProjectionSnapshotCommitResult {
+    const state = this.states[context_kind];
+    const retained = this.snapshots[context_kind].retained;
+    const failed = (): ProjectionSnapshotCommitResult => ({
+      outcome: 'SNAPSHOT_REQUIRED',
+      revision: state.epoch === null ? null : state.revision,
+      event_sequence: this.appliedSequences[context_kind] || null,
+      record_count: state.records.size,
+      resync_required: true,
+    });
+    if (retained === undefined) return failed();
+    const { fence, records } = retained;
+    if (Number(fence.previous_revision) !== 0 || Number(fence.projection_revision) !== 1 || !Number.isSafeInteger(fence.event_sequence) || fence.event_sequence <= 0) return failed();
+    if (state.epoch === fence.projection_epoch) {
+      const sameRecords = state.records.size === records.length && records.every(record => {
+        const current = state.records.get(tabIdentityKey(record.tab_identity));
+        return current !== undefined && sameProjectionRecord(current, record);
+      });
+      if (Number(state.revision) === 1 && this.appliedSequences[context_kind] === fence.event_sequence && sameRecords) {
+        return { outcome: 'DUPLICATE', revision: state.revision, event_sequence: fence.event_sequence, record_count: state.records.size, resync_required: false };
+      }
+      return failed();
+    }
+    const candidate = emptyProjection(this.boundProfile, context_kind);
+    const candidateRecords = records.map(record => ({ ...record, tab_identity: { ...record.tab_identity } }));
+    if (acceptSnapshot(candidate, fence.projection_epoch, candidateRecords) !== 'APPLIED') return failed();
+    this.states[context_kind] = candidate;
+    this.appliedSequences[context_kind] = fence.event_sequence;
+    this.forwarded[context_kind] = {
+      projection_epoch: fence.projection_epoch,
+      projection_revision: fence.projection_revision,
+      event_sequence: fence.event_sequence,
+    };
+    return { outcome: 'COMMITTED', revision: candidate.revision, event_sequence: fence.event_sequence, record_count: candidate.records.size, resync_required: false };
+  }
+  // requireSnapshot quarantines session-scoped projection references. No old
+  // epoch, pending delta, or private record can be reused after reconnect.
+  requireSnapshot(context_kind?: ContextKind): void {
+    const contexts: readonly ContextKind[] = context_kind === undefined ? ['normal', 'private'] : [context_kind];
+    for (const kind of contexts) {
+      this.states[kind] = emptyProjection(this.boundProfile, kind);
+      this.appliedSequences[kind] = 0;
+      this.forwarded[kind] = undefined;
+      this.snapshots[kind] = { retained: undefined, last_outcome: 'UNINITIALIZED' };
+    }
+  }
+  reduceDeltas(context_kind: ContextKind, submissions: readonly ProjectionSubmission[]): ProjectionReductionResult {
+    const result = reduceProjectionBatch(this.states[context_kind], this.appliedSequences[context_kind], submissions);
+    if (result.outcome === 'APPLIED') this.appliedSequences[context_kind] = result.event_sequence;
+    return result;
+  }
   livePartition(context_kind: ContextKind): ProjectionState {
     return this.states[context_kind];
+  }
+  // disposePrivateContext drops every in-memory reference owned by the private
+  // partition without touching the normal partition or any durable store.
+  disposePrivateContext(): void {
+    this.requireSnapshot('private');
   }
 
   view(): ProjectionBoundaryView {

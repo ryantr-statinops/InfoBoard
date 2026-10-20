@@ -493,7 +493,7 @@ func (session *Session) handleActivation(ctx context.Context, channel runtime.Fr
 	defer cancel()
 	if session.hooks.activation != nil {
 		if err := session.hooks.activation.RecordActivation(budgeted, session.requestContext(envelope), status); err != nil {
-			acknowledgement.Accepted = false
+			session.SetPersistence(runtime.PersistenceDegraded)
 		}
 	}
 	return session.respond(ctx, channel, envelope, TypeActivationAck, acknowledgement, digest)

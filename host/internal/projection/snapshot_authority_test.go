@@ -99,7 +99,7 @@ func assertNoAuthority(t *testing.T, reconciler *Reconciler, input SnapshotInput
 	if !rejection.Cause.KnownCause() {
 		t.Fatalf("cause %q is outside the closed cause vocabulary", rejection.Cause)
 	}
-	if input.Partition != (Partition{}) || input.Epoch != "" || input.Revision != 0 || input.Sequence != 0 || len(input.Records) != 0 {
+	if input.Partition != (Partition{}) || input.Epoch != "" || input.Revision != 0 || input.Sequence != 0 || len(input.Records) != 0 || input.Digest != "" {
 		t.Fatalf("a refused snapshot returned a partial input %+v", input)
 	}
 	committed := reconciler.State().Committed()
@@ -298,12 +298,15 @@ func TestBindSnapshot_AcceptsRecordsThatSatisfyIP02(t *testing.T) {
 			t.Fatalf("mapped %d records, want %d", len(input.Records), len(declared))
 		}
 		for index, record := range input.Records {
-			// The boundary preserves the declared order; canonical ordering is
-			// IP-05-T03's rule, so this asserts nothing about sorted output.
-			source := records[index]
-			wanted := declared[source.TabID]
-			if wanted.TabID != source.TabID || wanted.TitleDisplay != source.TitleDisplay {
-				t.Fatal("the declared record table does not describe the sent record")
+			wanted, ok := declared[record.TabIdentity.TabID]
+			if !ok {
+				t.Fatalf("canonical output contains unknown tab id %d", record.TabIdentity.TabID)
+			}
+			if index > 0 && input.Records[index-1].TabIdentity.TabID >= record.TabIdentity.TabID {
+				t.Fatalf("snapshot identities are not in canonical order: %+v", input.Records)
+			}
+			if wanted.TitleDisplay != record.TitleDisplay {
+				t.Fatalf("record %d metadata differs from the declared tab: %+v", index, record)
 			}
 			identity := reconciler.Partition().Identity(wanted.TabID)
 			if record.TabIdentity != identity || record.ProfileID != identity.ProfileID || record.ContextKind != identity.ContextKind {

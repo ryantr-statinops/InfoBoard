@@ -25,6 +25,19 @@ SUITE = 'phase-05'
 FIXTURE_DIRECTORY = f'fixtures/projection/{SUITE}'
 ARTIFACT = FIXTURE_DIRECTORY + '/phase-05.json'
 AUTHORITY_ARTIFACT = FIXTURE_DIRECTORY + '/snapshot-authority.json'
+RECONCILIATION_ARTIFACT = FIXTURE_DIRECTORY + '/reconciliation.json'
+RECONCILIATION_FIXTURES = {
+    'FX-PROJECTION-ORDERED-DELTAS': 'IP-05-T05',
+    'FX-PROJECTION-DUPLICATE-DELTA': 'IP-05-T06',
+    'FX-PROJECTION-STALE-REVISION': 'IP-05-T06',
+    'FX-PROJECTION-MISSED-EVENT': 'IP-05-T06',
+    'FX-PROJECTION-RESTART': 'IP-05-T08',
+    'FX-PROJECTION-PROFILE-BOUNDARY': 'IP-05-T09',
+    'FX-PROJECTION-ATOMIC-REPLACE': 'IP-05-T07',
+    'FX-PROJECTION-CANONICAL-OUTPUT': 'IP-05-T03',
+    'FX-PROJECTION-SAFE-HANDOFF-METADATA': 'IP-05-T10',
+    'FX-PROJECTION-RECOVERY-SEQUENCE': 'IP-05-T12',
+}
 EXPECTED = {
     'FX-PROJECTION-BOUNDARY-HANDOFF-IDENTITY',
     'FX-PROJECTION-BOUNDARY-REQUIRED-FIELDS',
@@ -642,7 +655,124 @@ def authority_errors(document: dict, boundary_document: dict) -> tuple[list[str]
     return errors, evidence
 
 
-def validate() -> tuple[list[str], list[tuple[str, str, str, int, int]], dict]:
+def reconciliation_errors(document: dict, authority_document: dict) -> tuple[list[str], dict]:
+    errors: list[str] = []
+    if document.get('schema_version') != 1 or document.get('phase') != 'IP-05' or document.get('artifact') != 'projection-reconciliation':
+        errors.append('reconciliation artifact header disagrees with its contract')
+    if document.get('owner_task') != 'IP-05-T11' or document.get('shared_consumers') != ['go', 'node']:
+        errors.append('reconciliation fixture corpus must be owned by T11 and shared by Go and Node')
+    if not (ROOT / document.get('base_artifact', '')).is_file():
+        errors.append('reconciliation base authority artifact is absent')
+    base = next((item for item in authority_document.get('cases', []) if item.get('case_id') == document.get('base_case_id')), None)
+    if base is None:
+        errors.append('reconciliation base snapshot case is absent')
+        base_ids: set[int] = set()
+        base_sequence = 0
+    else:
+        handoff = base.get('handoff', {})
+        base_ids = {record.get('tab_identity', {}).get('tab_id') for record in handoff.get('records', [])}
+        base_sequence = handoff.get('event_sequence', 0)
+
+    fixtures = document.get('fixtures', [])
+    by_id = {item.get('fixture_id'): item for item in fixtures if isinstance(item, dict)}
+    if len(by_id) != len(fixtures) or set(by_id) != set(RECONCILIATION_FIXTURES):
+        errors.append('reconciliation corpus must contain all T03-T12 fixtures exactly once')
+    fixture_fields = {
+        'fixture_id', 'owner_task', 'events', 'replay_exactly', 'fresh_snapshot',
+        'profiles', 'contexts', 'same_tab_ids', 'input_record_order', 'raw_values', 'expected',
+        'cycles', 'eligible_browser_ids',
+    }
+    event_fields = {'kind', 'tab_id', 'sequence', 'previous_revision', 'revision', 'effective_change', 'title_display', 'title_search'}
+    for fixture_id, owner in RECONCILIATION_FIXTURES.items():
+        item = by_id.get(fixture_id)
+        if item is None:
+            continue
+        label = fixture_id
+        if set(item) - fixture_fields:
+            errors.append(f'{label} contains undeclared fields')
+        if item.get('owner_task') != owner:
+            errors.append(f'{label} has the wrong task owner')
+        expected = item.get('expected', {})
+        events = item.get('events', [])
+        for event in events:
+            if not isinstance(event, dict) or set(event) - event_fields:
+                errors.append(f'{label} has an invalid event shape')
+                continue
+            if event.get('kind') not in {'upsert', 'remove'} or event.get('tab_id') not in base_ids:
+                errors.append(f'{label} event names an unsupported operation or unknown base identity')
+            if not isinstance(event.get('sequence'), int) or event.get('sequence', 0) <= 0:
+                errors.append(f'{label} event sequence is not a positive integer')
+        if fixture_id == 'FX-PROJECTION-ORDERED-DELTAS':
+            if [event.get('sequence') for event in events] != list(range(base_sequence + 1, base_sequence + 1 + len(events))):
+                errors.append(f'{label} does not declare a contiguous event sequence')
+            if expected.get('identity_ids') != sorted(set(expected.get('identity_ids', []))) or expected.get('revision') != 3:
+                errors.append(f'{label} expected state is not canonical')
+        elif fixture_id == 'FX-PROJECTION-DUPLICATE-DELTA':
+            if item.get('replay_exactly') is not True or expected.get('outcomes') != ['APPLIED', 'DUPLICATE']:
+                errors.append(f'{label} does not assert exact duplicate acknowledgement')
+        elif fixture_id == 'FX-PROJECTION-STALE-REVISION':
+            if not expected.get('resync_required') or expected.get('outcomes') != ['SNAPSHOT_REQUIRED']:
+                errors.append(f'{label} does not fence a stale revision')
+        elif fixture_id == 'FX-PROJECTION-MISSED-EVENT':
+            if not events or events[0].get('sequence') != base_sequence + 2 or expected.get('outcomes') != ['SNAPSHOT_REQUIRED']:
+                errors.append(f'{label} does not prove a dropped event forces resync')
+        elif fixture_id in {'FX-PROJECTION-RESTART', 'FX-PROJECTION-ATOMIC-REPLACE'}:
+            snapshot = item.get('fresh_snapshot', {})
+            if not UUID_V4.fullmatch(snapshot.get('epoch', '')) or not snapshot.get('record_ids'):
+                errors.append(f'{label} lacks a bounded new-epoch snapshot')
+            if any(tab_id not in base_ids for tab_id in snapshot.get('record_ids', [])):
+                errors.append(f'{label} snapshot names an identity outside the base oracle')
+        elif fixture_id == 'FX-PROJECTION-PROFILE-BOUNDARY':
+            profiles = item.get('profiles', [])
+            contexts = item.get('contexts', [])
+            if len(profiles) != 2 or len(contexts) != 2 or expected.get('partition_count') != len(profiles) * len(contexts):
+                errors.append(f'{label} does not cover both profiles and both contexts')
+            if expected.get('mismatch_mutates') is not False or expected.get('records_per_partition') != len(item.get('same_tab_ids', [])):
+                errors.append(f'{label} does not require isolated state after mismatch')
+        elif fixture_id == 'FX-PROJECTION-CANONICAL-OUTPUT':
+            order = item.get('input_record_order', [])
+            if len(order) < 2 or expected.get('identity_ids') != sorted(order) or expected.get('optional_absence_tab_id') not in order:
+                errors.append(f'{label} does not state canonical identity order and optional-field absence')
+        elif fixture_id == 'FX-PROJECTION-SAFE-HANDOFF-METADATA':
+            if len(item.get('raw_values', [])) < 3 or expected.get('raw_values_absent') is not True or expected.get('error_class_bounded') is not True:
+                errors.append(f'{label} omits privacy-safe handoff assertions')
+        elif fixture_id == 'FX-PROJECTION-RECOVERY-SEQUENCE':
+            cycles = item.get('cycles', [])
+            if len(cycles) != 2:
+                errors.append(f'{label} must repeat recovery through two sessions')
+            base_case = next((entry for entry in authority_document.get('cases', []) if entry.get('case_id') == document.get('base_case_id')), {})
+            previous_epoch = base_case.get('handoff', {}).get('projection_epoch', '')
+            for index, cycle in enumerate(cycles):
+                accepted = cycle.get('accepted_event', {})
+                dropped = cycle.get('dropped_event', {})
+                recovery = cycle.get('recovery_snapshot', {})
+                expected_cycle = cycle.get('expected', {})
+                if accepted.get('sequence', 0) <= 0 or dropped.get('sequence') != accepted.get('sequence', 0) + 2:
+                    errors.append(f'{label} cycle {index + 1} does not model a dropped event')
+                if accepted.get('tab_id') not in base_ids or dropped.get('tab_id') not in base_ids:
+                    errors.append(f'{label} cycle {index + 1} names an identity outside the browser oracle')
+                if expected_cycle.get('dropped_outcome') != 'SNAPSHOT_REQUIRED' or expected_cycle.get('resync_required') is not True:
+                    errors.append(f'{label} cycle {index + 1} does not require recovery after the gap')
+                if not UUID_V4.fullmatch(recovery.get('epoch', '')) or recovery.get('epoch') == previous_epoch:
+                    errors.append(f'{label} cycle {index + 1} does not establish a fresh epoch')
+                if any(tab_id not in base_ids for tab_id in recovery.get('record_ids', [])):
+                    errors.append(f'{label} cycle {index + 1} recovery snapshot exceeds the oracle')
+                if expected_cycle.get('identity_ids') != recovery.get('record_ids'):
+                    errors.append(f'{label} cycle {index + 1} handoff differs from its recovery snapshot')
+                if index == 1 and (cycle.get('require_snapshot') is not True or cycle.get('start_snapshot', {}).get('epoch') == previous_epoch):
+                    errors.append(f'{label} does not restart the second cycle on a new session epoch')
+                previous_epoch = recovery.get('epoch', previous_epoch)
+            expected_ids = item.get('expected', {}).get('identity_ids', [])
+            oracle_ids = item.get('eligible_browser_ids', [])
+            if expected_ids != oracle_ids or len(set(expected_ids)) != item.get('expected', {}).get('unique_identity_count'):
+                errors.append(f'{label} final state is not exactly the unique browser oracle')
+            if item.get('expected', {}).get('final_epoch') != previous_epoch or item.get('expected', {}).get('handoff_status') != 'SnapshotReady':
+                errors.append(f'{label} final index handoff does not match the fresh committed epoch')
+    evidence = {'fixture_id': 'reconciliation.json', 'owner_task': 'IP-05-T11', 'fixtures': len(by_id), 'shared_consumers': 'go,node'}
+    return errors, evidence
+
+
+def validate() -> tuple[list[str], list[tuple[str, str, str, int, int]], dict, dict]:
     errors: list[str] = []
     document = json.loads((ROOT / ARTIFACT).read_text(encoding='utf-8'))
     fixtures = {fixture['fixture_id']: fixture for fixture in document['fixtures']}
@@ -675,8 +805,11 @@ def validate() -> tuple[list[str], list[tuple[str, str, str, int, int]], dict]:
         ))
     authority_document = json.loads((ROOT / AUTHORITY_ARTIFACT).read_text(encoding='utf-8'))
     authority_failures, authority_evidence = authority_errors(authority_document, document)
+    reconciliation_document = json.loads((ROOT / RECONCILIATION_ARTIFACT).read_text(encoding='utf-8'))
+    reconciliation_failures, reconciliation_evidence = reconciliation_errors(reconciliation_document, authority_document)
+    errors.extend(reconciliation_failures)
     errors.extend(authority_failures)
-    return errors, evidence, authority_evidence
+    return errors, evidence, authority_evidence, reconciliation_evidence
 
 
 def main() -> int:
@@ -687,7 +820,7 @@ def main() -> int:
     if arguments != ['--suite', SUITE, '--fixtures', FIXTURE_DIRECTORY, '--strict']:
         print(f'FAIL: invalid arguments; run --suite {SUITE} --fixtures {FIXTURE_DIRECTORY} --strict')
         return 2
-    errors, evidence, authority_evidence = validate()
+    errors, evidence, authority_evidence, reconciliation_evidence = validate()
     for message in errors:
         print(f'FAIL: {message}')
     if errors:
@@ -701,6 +834,10 @@ def main() -> int:
         f' explicitly_empty={authority_evidence["empty_reads"]} over_limit={authority_evidence["over_limit"]}'
         f' refusal_reasons={authority_evidence["reasons"]}'
         ' partial_outputs=0 committed_queryable=0'
+    )
+    print(
+        f'PASS: {reconciliation_evidence["fixture_id"]} owner={reconciliation_evidence["owner_task"]}'
+        f' fixtures={reconciliation_evidence["fixtures"]} consumers={reconciliation_evidence["shared_consumers"]}'
     )
     return 0
 

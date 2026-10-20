@@ -287,12 +287,6 @@ export class TabObserver {
 
   private async handleEvent(input: BrowserApiEvent): Promise<void> {
     this.diagnostics.eventsReceived += 1;
-    this.eventSequence += 1;
-    if (!Number.isSafeInteger(this.eventSequence)) {
-      this.eventSequence = 1;
-      await this.refreshSnapshot('uncertain_order');
-      return;
-    }
     const sequence = this.eventSequence;
     const result = normalizeBrowserEvent(input);
     if (!result.ok) {
@@ -681,7 +675,14 @@ export class TabObserver {
   }
 
   private publish(event: Omit<ObserverHandoff, 'diagnostics'>): void {
-    const handoff: ObserverHandoff = { ...event, diagnostics: { ...this.diagnostics } };
+    if (!Number.isSafeInteger(this.eventSequence + 1)) {
+      this.resyncRequired = true;
+      this.resyncReason = 'uncertain_order';
+      this.status = 'degraded';
+      return;
+    }
+    const event_sequence = ++this.eventSequence;
+    const handoff: ObserverHandoff = { ...event, event_sequence, diagnostics: { ...this.diagnostics } };
     for (const listener of this.listeners) {
       try { listener(handoff); }
       catch { this.diagnostics.handoffListenerErrors += 1; }

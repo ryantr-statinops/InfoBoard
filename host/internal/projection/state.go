@@ -101,12 +101,18 @@ type Counters struct {
 // from the accepted lineage. Every accessor returns a copy; the map that backs a
 // committed state is never exposed, so no caller can mutate it.
 type Committed struct {
-	Partition Partition
-	Status    Status
-	Epoch     string
-	Revision  uint64
-	Counters  Counters
-	records   []domain.EligibleTabRecord
+	Partition      Partition
+	Status         Status
+	Epoch          string
+	Revision       uint64
+	Sequence       uint64
+	Digest         string
+	DigestVersion  string
+	DurationMillis int64
+	ErrorClass     Cause
+	Counters       Counters
+	records        []domain.EligibleTabRecord
+	seen           map[uint64]string
 }
 
 // newCommitted builds the immutable committed view from an already validated
@@ -114,12 +120,15 @@ type Committed struct {
 // the accepted identity set does not depend on Go map iteration order.
 func newCommitted(partition Partition, status Status, epoch string, revision uint64, counters Counters, projection *domain.ProjectionState) Committed {
 	committed := Committed{Partition: partition, Status: status, Epoch: epoch, Revision: revision, Counters: counters}
+	if epoch != "" {
+		committed.DigestVersion = ProjectionDigestVersion
+	}
 	if projection == nil {
 		return committed
 	}
 	committed.records = make([]domain.EligibleTabRecord, 0, len(projection.Records))
 	for _, record := range projection.Records {
-		committed.records = append(committed.records, record)
+		committed.records = append(committed.records, cloneEligibleRecord(record))
 	}
 	sort.Slice(committed.records, func(i, j int) bool {
 		return identityLess(committed.records[i].TabIdentity, committed.records[j].TabIdentity)
@@ -146,7 +155,11 @@ func (committed Committed) Count() int { return len(committed.records) }
 // Records returns the committed records in canonical identity order. The result
 // is a copy of an immutable slice; mutating it cannot affect committed state.
 func (committed Committed) Records() []domain.EligibleTabRecord {
-	return append([]domain.EligibleTabRecord(nil), committed.records...)
+	records := make([]domain.EligibleTabRecord, len(committed.records))
+	for index, record := range committed.records {
+		records[index] = cloneEligibleRecord(record)
+	}
+	return records
 }
 
 // Identities returns the exact accepted identity set in canonical order.
@@ -165,7 +178,7 @@ func (committed Committed) Lookup(tabID int64) (domain.EligibleTabRecord, bool) 
 	if index >= len(committed.records) || committed.records[index].TabIdentity != target {
 		return domain.EligibleTabRecord{}, false
 	}
-	return committed.records[index], true
+	return cloneEligibleRecord(committed.records[index]), true
 }
 
 // Handoff is the bounded index-handoff view of a committed partition. It names
@@ -173,14 +186,19 @@ func (committed Committed) Lookup(tabID int64) (domain.EligibleTabRecord, bool) 
 // so IP-09, IP-10, IP-12, and IP-16 never need access to the committed map. It
 // carries no tab metadata and no raw title, URL, query, token, or page value.
 type Handoff struct {
-	ProfileID   domain.ProfileID
-	ContextKind domain.ContextKind
-	Epoch       string
-	Revision    uint64
-	Status      Status
-	Count       int
-	Identities  []domain.TabIdentity
-	Queryable   bool
+	ProfileID      domain.ProfileID
+	ContextKind    domain.ContextKind
+	Epoch          string
+	Revision       uint64
+	Sequence       uint64
+	Status         Status
+	Count          int
+	Identities     []domain.TabIdentity
+	Digest         string
+	DigestVersion  string
+	DurationMillis int64
+	ErrorClass     Cause
+	Queryable      bool
 }
 
 // State is the single owner of one partition's committed state. It publishes one
@@ -232,13 +250,11 @@ func (state *State) Handoff() Handoff {
 	committed := state.Committed()
 	identities := committed.Identities()
 	return Handoff{
-		ProfileID:   committed.Partition.ProfileID,
-		ContextKind: committed.Partition.ContextKind,
-		Epoch:       committed.Epoch,
-		Revision:    committed.Revision,
-		Status:      committed.Status,
-		Count:       len(identities),
-		Identities:  identities,
-		Queryable:   committed.Status == StatusReady,
+		ProfileID: committed.Partition.ProfileID, ContextKind: committed.Partition.ContextKind,
+		Epoch: committed.Epoch, Revision: committed.Revision, Sequence: committed.Sequence,
+		Status: committed.Status, Count: len(identities), Identities: identities,
+		Digest: committed.Digest, DigestVersion: committed.DigestVersion,
+		DurationMillis: committed.DurationMillis, ErrorClass: committed.ErrorClass,
+		Queryable: committed.Status == StatusReady,
 	}
 }
