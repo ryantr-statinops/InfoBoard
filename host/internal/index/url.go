@@ -24,7 +24,7 @@ func ParseURLSegments(raw string) (URLSegments, *NormalizeError) {
 	host := strings.Split(parsed.Hostname(), ".")
 	path := strings.FieldsFunc(parsed.EscapedPath(), func(r rune) bool { return r == '/' })
 	return URLSegments{
-		Host: tokenize(strings.Join(host, " ")),
-		Path: tokenize(strings.Join(path, " ")),
+		Host: tokenize(normalizeForm(strings.Join(host, " "))),
+		Path: tokenize(normalizeForm(strings.Join(path, " "))),
 	}, nil
 }
