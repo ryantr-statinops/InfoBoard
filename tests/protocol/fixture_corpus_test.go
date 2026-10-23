@@ -727,8 +727,21 @@ func TestSharedCatalogKeepsTheIP07ReconnectSeam(t *testing.T) {
 	if err := json.Unmarshal(raw, &catalog); err != nil {
 		t.Fatal(err)
 	}
-	if len(catalog.Fixtures) != 9 {
-		t.Fatalf("shared catalog fixture count = %d, want the fixed 9 IDs", len(catalog.Fixtures))
+	stable := []string{
+		"FX-SHORTCUT-FOCUS", "FX-QUERY-LIVE", "FX-RANKING-DETERMINISTIC",
+		"FX-TAB-EVENTS", "FX-RECONNECT", "FX-STALE-ACTIVATION",
+		"FX-HOST-DOWN", "FX-RESET-OWNED-DATA", "FX-PERMISSION-DENIED",
+	}
+	present := make(map[string]bool, len(catalog.Fixtures))
+	for _, fixture := range catalog.Fixtures {
+		if id, ok := fixture["fixture_id"].(string); ok {
+			present[id] = true
+		}
+	}
+	for _, id := range stable {
+		if !present[id] {
+			t.Fatalf("shared catalog missing stable fixture %s", id)
+		}
 	}
 	seams := 0
 	for _, seam := range catalog.PhaseSeams {
