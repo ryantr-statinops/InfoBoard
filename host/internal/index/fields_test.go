@@ -28,10 +28,10 @@ func TestOptionalLabelDoesNotFabricateToken(t *testing.T) {
 }
 
 func TestEligibilityGatesPostings(t *testing.T) {
-	if Eligibility{Eligible: false}.AllowsPostings() {
+	if (Eligibility{Eligible: false}).AllowsPostings() {
 		t.Fatalf("ineligible record allowed postings")
 	}
-	if !Eligibility{Eligible: true}.AllowsPostings() {
+	if !(Eligibility{Eligible: true}).AllowsPostings() {
 		t.Fatalf("eligible record blocked")
 	}
 }
