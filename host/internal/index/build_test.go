@@ -2,6 +2,12 @@ package index
 
 import "testing"
 
+func TestStageRejectsEmptyProfile(t *testing.T) {
+	if _, err := Stage("", 1, nil); err == nil {
+		t.Fatalf("empty profile accepted")
+	}
+}
+
 func TestStageRejectsDuplicateIDs(t *testing.T) {
 	_, err := Stage("p", 1, []Record{{TabID: 1}, {TabID: 1}})
 	if err == nil {
@@ -40,5 +46,35 @@ func TestIneligibleRecordHasNoPostings(t *testing.T) {
 	state := staged.Commit()
 	if len(state.Postings) != 0 {
 		t.Fatalf("ineligible record produced postings: %v", state.Postings)
+	}
+	if len(state.Provenance[1]) != 0 {
+		t.Fatalf("ineligible record produced provenance: %v", state.Provenance[1])
+	}
+}
+
+func TestCommitRetainsFieldProvenance(t *testing.T) {
+	staged, err := Stage("p", 1, []Record{{
+		TabID: 7, Eligible: true, Pinned: true,
+		Title: "Example Guide", Domain: "example.test",
+	}})
+	if err != nil {
+		t.Fatalf("stage: %v", err)
+	}
+	state := staged.Commit()
+	refs := state.Provenance[7]
+	if len(refs) == 0 {
+		t.Fatalf("missing provenance")
+	}
+	fields := make(map[Field]bool)
+	for _, ref := range refs {
+		fields[ref.Field] = true
+		if ref.Position < 0 {
+			t.Fatalf("negative position: %+v", ref)
+		}
+	}
+	for _, want := range []Field{FieldTitle, FieldDomain, FieldPinned} {
+		if !fields[want] {
+			t.Fatalf("missing field provenance %s: %+v", want, refs)
+		}
 	}
 }

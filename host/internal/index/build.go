@@ -28,6 +28,7 @@ type State struct {
 	NormalizerVersion string
 	Records           map[int64]Record
 	Postings          map[string][]int64
+	Provenance        map[int64][]TokenRef
 	Count             int
 }
 
@@ -40,6 +41,9 @@ type Staged struct {
 
 // Stage validates the boundary and records before any postings are allocated.
 func Stage(profileID string, revision uint64, records []Record) (*Staged, error) {
+	if profileID == "" {
+		return nil, fmt.Errorf("INVALID_PROFILE")
+	}
 	seen := make(map[int64]struct{}, len(records))
 	staged := &Staged{
 		profileID: profileID,

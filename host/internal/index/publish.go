@@ -9,13 +9,16 @@ import (
 func (s *Staged) Commit() *State {
 	postings := make(map[string][]int64)
 	records := make(map[int64]Record, len(s.records))
+	provenance := make(map[int64][]TokenRef, len(s.records))
 	for _, id := range s.sortedIDs() {
 		record := s.records[id]
 		records[id] = record
 		if !(Eligibility{Eligible: record.Eligible}).AllowsPostings() {
 			continue
 		}
-		for _, token := range recordTokens(record) {
+		tokens, refs := recordTokens(record)
+		provenance[id] = refs
+		for _, token := range tokens {
 			postings[token] = append(postings[token], id)
 		}
 	}
@@ -30,6 +33,7 @@ func (s *Staged) Commit() *State {
 		NormalizerVersion: NormalizerVersion,
 		Records:           records,
 		Postings:          postings,
+		Provenance:        provenance,
 		Count:             len(records),
 	}
 }
@@ -47,29 +51,48 @@ func uniqueSorted(ids []int64) []int64 {
 	return out
 }
 
-// recordTokens returns the normalized tokens contributed by one record.
-func recordTokens(record Record) []string {
-	forms := []struct {
-		field Field
-		raw   string
-		max   int
-	}{
-		{FieldTitle, record.Title, MaxTitleScalars},
-		{FieldURL, record.URL, MaxURIScalars},
-		{FieldDomain, record.Domain, MaxDomainScalars},
-		{FieldWindowLabel, record.WindowLabel, MaxLabelScalars},
-		{FieldGroupLabel, record.GroupLabel, MaxLabelScalars},
-	}
+// recordTokens returns the normalized tokens and provenance contributed by one
+// record. Iteration follows the closed field table so field order is stable.
+func recordTokens(record Record) ([]string, []TokenRef) {
 	tokens := make([]string, 0, 16)
-	for _, item := range forms {
-		form, err := BuildForm(item.field, item.raw, item.max)
+	refs := make([]TokenRef, 0, 16)
+	for _, spec := range FieldTable {
+		if spec.Field == FieldPinned || spec.Field == FieldActive {
+			continue
+		}
+		form, err := BuildForm(spec.Field, fieldValue(record, spec.Field), spec.MaxScalars)
 		if err != nil || form.Search == "" {
 			continue
 		}
-		tokens = append(tokens, tokenize(form.Search)...)
+		for position, token := range tokenize(form.Search) {
+			tokens = append(tokens, token)
+			refs = append(refs, TokenRef{Field: spec.Field, Position: position, Source: string(spec.Field)})
+		}
 	}
 	for _, label := range StateLabels(record.Pinned, record.Active) {
-		tokens = append(tokens, tokenize(label.Search)...)
+		for position, token := range tokenize(label.Search) {
+			tokens = append(tokens, token)
+			refs = append(refs, TokenRef{Field: label.Field, Position: position, Source: string(label.Field)})
+		}
 	}
-	return tokens
+	return tokens, refs
+}
+
+// fieldValue maps a record to the closed field table without accepting unknown
+// field names from callers.
+func fieldValue(record Record, field Field) string {
+	switch field {
+	case FieldTitle:
+		return record.Title
+	case FieldURL:
+		return record.URL
+	case FieldDomain:
+		return record.Domain
+	case FieldWindowLabel:
+		return record.WindowLabel
+	case FieldGroupLabel:
+		return record.GroupLabel
+	default:
+		return ""
+	}
 }
