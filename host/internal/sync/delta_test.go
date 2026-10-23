@@ -37,7 +37,7 @@ func TestDeltaAppliesAfterSnapshot(t *testing.T) {
 		Epoch:    epoch,
 		Revision: 1,
 		Sequence: 1,
-		Snapshot: &protocol.Snapshot{Records: []protocol.TabRecord{tabRecord(1, epoch, 1)}},
+		Snapshot: &protocol.Snapshot{Tabs: []protocol.TabRecord{tabRecord(1, epoch, 1)}},
 	}); err != nil {
 		t.Fatalf("snapshot: %v", err)
 	}
@@ -48,7 +48,7 @@ func TestDeltaAppliesAfterSnapshot(t *testing.T) {
 		SequenceEnd:   2,
 		Operations: []protocol.Operation{{
 			Sequence: 2,
-			Kind:     protocol.OperationUpsert,
+			Kind:     protocol.OperationUpdate,
 			TabID:    2,
 			Record:   ptrRecord(tabRecord(2, epoch, 2)),
 		}},
@@ -92,7 +92,7 @@ func TestGapDeltaRequestsResync(t *testing.T) {
 			SequenceEnd:   5,
 			Operations: []protocol.Operation{{
 				Sequence: 5,
-				Kind:     protocol.OperationUpsert,
+				Kind:     protocol.OperationUpdate,
 				TabID:    2,
 				Record:   ptrRecord(tabRecord(2, epoch, 2)),
 			}},

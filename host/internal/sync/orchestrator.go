@@ -56,7 +56,7 @@ func (o *Orchestrator) ApplySnapshot(ctx context.Context, request protocol.SyncR
 		Epoch:       request.Epoch,
 		Revision:    request.Revision,
 		Sequence:    request.Sequence,
-		Records:     request.Snapshot.Records,
+		Records:     request.Snapshot.Tabs,
 	}
 	_, handoff, rejection := o.reconciler.ApplySnapshot(input)
 	if rejection != nil {
