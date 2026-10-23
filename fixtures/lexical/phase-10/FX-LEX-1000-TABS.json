@@ -1,0 +1,1 @@
+{"fixture_id":"FX-LEX-1000-TABS","owner_phase":"IP-10","input":{"eligible_tabs":1000,"query_scalars":64},"expected":{"p95_ms_max":50,"normalizer_version":"lex-1"}}
