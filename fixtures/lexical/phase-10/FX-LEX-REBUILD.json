@@ -1,1 +1,18 @@
-{"fixture_id":"FX-LEX-REBUILD","owner_phase":"IP-10","input":{"revision":2,"rebuild":true},"expected":{"query_gate":"INDEX_REBUILDING","published_on_success":true,"previous_state_on_failure":true}}
+{
+  "fixture_id": "FX-LEX-REBUILD",
+  "owner_phase": "IP-10",
+  "input": {
+    "revisions": [1, 2],
+    "fail_second_build": false
+  },
+  "expected": {
+    "sequence": [
+      "ready(1)",
+      "rebuilding(2)",
+      "INDEX_REBUILDING",
+      "ready(2)"
+    ],
+    "published_on_success": true,
+    "previous_state_on_failure": true
+  }
+}

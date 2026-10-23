@@ -1,1 +1,16 @@
-{"fixture_id":"FX-LEX-DETERMINISTIC","owner_phase":"IP-10","input":{"records":["b","a"],"shuffle":true},"expected":{"postings_digest_equal":true,"candidate_ids_equal":true}}
+{
+  "fixture_id": "FX-LEX-DETERMINISTIC",
+  "owner_phase": "IP-10",
+  "input": {
+    "records": [
+      {"tab_id": 2, "title": "example page"},
+      {"tab_id": 1, "title": "example"}
+    ],
+    "shuffle": true,
+    "runs": 5
+  },
+  "expected": {
+    "postings_digest_equal": true,
+    "candidate_ids_equal": true
+  }
+}
