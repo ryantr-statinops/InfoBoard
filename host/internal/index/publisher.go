@@ -10,9 +10,10 @@ import (
 // Publisher implements the IP-09 index publication seam. It publishes one
 // immutable state per revision and reports rebuilding while a build is staged.
 type Publisher struct {
-	mu         sync.RWMutex
-	state      *State
-	rebuilding bool
+	mu          sync.RWMutex
+	state       *State
+	rebuilding  bool
+	lastFailure string
 }
 
 func NewPublisher() *Publisher { return &Publisher{} }
@@ -44,6 +45,7 @@ func (p *Publisher) Publish(ctx context.Context, profileID string, kind domain.C
 	if err != nil {
 		p.mu.Lock()
 		p.rebuilding = false
+		p.lastFailure = err.Error()
 		p.mu.Unlock()
 		return err
 	}
@@ -52,8 +54,16 @@ func (p *Publisher) Publish(ctx context.Context, profileID string, kind domain.C
 	p.mu.Lock()
 	p.state = published
 	p.rebuilding = false
+	p.lastFailure = ""
 	p.mu.Unlock()
 	return nil
+}
+
+// Failure returns the bounded last build failure code, or an empty string.
+func (p *Publisher) Failure() string {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	return p.lastFailure
 }
 
 // Ready returns the published revision and whether it is queryable.
