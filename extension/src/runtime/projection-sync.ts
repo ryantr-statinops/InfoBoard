@@ -52,6 +52,20 @@ export class ProjectionSyncController {
     return this.state === "ready" || this.state === "synchronizing";
   }
 
+  // T02: snapshot may only be sent after a successful hello_ack and while the
+  // controller is synchronizing; everything else is a protocol violation.
+  canSendSnapshot(): boolean {
+    return this.helloAck !== null && (this.state === "synchronizing" || this.state === "rebuilding");
+  }
+
+  async sendSnapshot<T>(send: () => Promise<T>): Promise<T> {
+    if (!this.canSendSnapshot()) {
+      this.lastError = "SNAPSHOT_BEFORE_HELLO_ACK";
+      throw new Error(this.lastError);
+    }
+    return send();
+  }
+
   transition(next: SyncState): void {
     const allowed = TRANSITIONS[this.state];
     if (!allowed.includes(next)) {
