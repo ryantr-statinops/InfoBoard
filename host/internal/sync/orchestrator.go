@@ -136,3 +136,20 @@ func (o *Orchestrator) ApplyDelta(ctx context.Context, request protocol.SyncRequ
 // SetPersistenceDegraded records IP-08 storage health without blocking sync.
 func (o *Orchestrator) SetPersistenceDegraded(degraded bool) { o.degraded = degraded }
 func (o *Orchestrator) IsPersistenceDegraded() bool         { return o.degraded }
+
+// PersistenceHealth is the bounded, redacted health view exposed to IP-12/IP-16.
+type PersistenceHealth struct {
+	Degraded  bool
+	Revision  uint64
+	Queryable bool
+}
+
+// PersistenceHealth reports storage posture without ever exposing tab fields.
+func (o *Orchestrator) PersistenceHealth() PersistenceHealth {
+	state := o.State()
+	return PersistenceHealth{
+		Degraded:  o.degraded,
+		Revision:  state.Revision,
+		Queryable: state.Known && !state.Rebuilding,
+	}
+}
