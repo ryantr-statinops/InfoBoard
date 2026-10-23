@@ -1,0 +1,1 @@
+{"id":"SYNC-002","name":"dropped-event-convergence","input":{"gap":{"sequence_start":5}},"expected":{"state":"synchronizing","resync_required":true,"final_ids_equal_browser":true}}

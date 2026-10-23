@@ -1,0 +1,1 @@
+{"id":"SYNC-004","name":"host-reconnect","input":{"disconnect":true,"reconnect":true},"expected":{"state":"ready","fresh_snapshot_required":true}}
