@@ -48,7 +48,7 @@ func TestDeltaAppliesAfterSnapshot(t *testing.T) {
 		SequenceEnd:   2,
 		Operations: []protocol.Operation{{
 			Sequence: 2,
-			Kind:     protocol.OperationUpdate,
+			Kind:     protocol.OperationCreate,
 			TabID:    2,
 			Record:   ptrRecord(tabRecord(2, epoch, 2)),
 		}},
@@ -92,7 +92,7 @@ func TestGapDeltaRequestsResync(t *testing.T) {
 			SequenceEnd:   5,
 			Operations: []protocol.Operation{{
 				Sequence: 5,
-				Kind:     protocol.OperationUpdate,
+				Kind:     protocol.OperationCreate,
 				TabID:    2,
 				Record:   ptrRecord(tabRecord(2, epoch, 2)),
 			}},

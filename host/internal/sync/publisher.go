@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/ryantr-statinops/InfoBoard/host/internal/domain"
-	"github.com/ryantr-statinops/InfoBoard/host/internal/protocol"
 )
 
 // IndexPublisher is the IP-10 seam. IP-09 stages a validated snapshot/delta and

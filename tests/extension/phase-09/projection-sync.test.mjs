@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ProjectionSyncController } from "../../../extension/dist/runtime/projection-sync.js";
+import { ProjectionSyncController } from "../../../extension/dist/src/runtime/projection-sync.js";
 
 const ack = (profileId) => ({ protocolVersion: "1", profileId, persistenceDegraded: false });
 
