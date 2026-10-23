@@ -355,6 +355,38 @@
       "scope": "Planning corpus traceability and fixture validation",
       "selection_rule": "Run `python3 tests/implementation/validate_corpus.py` from repository root. The stdlib-only validator is established by IP-01; extend it only when the catalog or phase contract changes.",
       "pass_signal": "Exit zero only when requirement ownership, task/commit mappings, fixture schema shape, stable IDs, local links, and all phase acceptance seams validate; a malformed corpus exits nonzero."
+    },
+    {
+      "fixture_id": "FX-LEX-UNICODE-CASE",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "FR-005",
+        "NFR-004"
+      ],
+      "category": "query",
+      "input": {
+        "title": "CAFÉ ﬁle",
+        "raw": "  CAFÉ  ﬁle  "
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "display_form",
+            "value": "CAFÉ ﬁle"
+          },
+          {
+            "signal": "search_form",
+            "value": "café file"
+          },
+          {
+            "signal": "normalizer_version",
+            "value": "lex-1"
+          }
+        ],
+        "privacy_assertions": [
+          "Only normalized display and search forms are retained; no page content is captured."
+        ]
+      }
     }
   ],
   "global_invariants": [
