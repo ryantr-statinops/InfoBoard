@@ -1,0 +1,1 @@
+{"id":"SYNC-001","name":"hello-to-ready","input":{"hello":{"profile_id":"123e4567-e89b-42d3-a456-426614174000"},"snapshot":{"revision":1,"sequence":1}},"expected":{"state":"ready","revision":1,"accepted":true}}
