@@ -1,0 +1,18 @@
+{
+  "fixture_id": "FX-LEX-FIELD-BOUNDS",
+  "owner_phase": "IP-10",
+  "input": {
+    "fields": {
+      "title": "Example",
+      "url": "https://example.test/",
+      "domain": "example.test",
+      "window_label": null,
+      "group_label": null
+    }
+  },
+  "expected": {
+    "missing_optional_fields_emit_tokens": false,
+    "title_bounded_scalars": 512,
+    "url_bounded_scalars": 2048
+  }
+}

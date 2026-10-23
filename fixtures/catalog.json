@@ -387,6 +387,69 @@
           "Only normalized display and search forms are retained; no page content is captured."
         ]
       }
+    },
+    {
+      "fixture_id": "FX-LEX-URL-SEGMENTS",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "FR-005"
+      ],
+      "category": "query",
+      "input": {
+        "url": "https://Docs.Example.test/guide/start"
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "host_tokens",
+            "value": ["docs", "example", "test"]
+          },
+          {
+            "signal": "path_tokens",
+            "value": ["guide", "start"]
+          }
+        ],
+        "privacy_assertions": [
+          "Only URL host and path segments are tokenized; no network request is made."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-LEX-FIELD-BOUNDS",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "FR-005",
+        "NFR-004"
+      ],
+      "category": "query",
+      "input": {
+        "fields": {
+          "title": "Example",
+          "url": "https://example.test/",
+          "domain": "example.test",
+          "window_label": null,
+          "group_label": null
+        }
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "missing_optional_fields_emit_tokens",
+            "value": false
+          },
+          {
+            "signal": "title_bounded_scalars",
+            "value": 512
+          },
+          {
+            "signal": "url_bounded_scalars",
+            "value": 2048
+          }
+        ],
+        "privacy_assertions": [
+          "Missing optional fields never fabricate tokens."
+        ]
+      }
     }
   ],
   "global_invariants": [
