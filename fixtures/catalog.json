@@ -305,6 +305,289 @@
           "Denied or excluded browser data is not requested, collected, persisted, or transmitted."
         ]
       }
+    },
+    {
+      "fixture_id": "FX-LEX-UNICODE-CASE",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "FR-005",
+        "NFR-004"
+      ],
+      "category": "query",
+      "input": {
+        "title": "CAFÉ ﬁle",
+        "raw": "  CAFÉ  ﬁle  "
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "display_form",
+            "value": "CAFÉ ﬁle"
+          },
+          {
+            "signal": "search_form",
+            "value": "café file"
+          },
+          {
+            "signal": "normalizer_version",
+            "value": "lex-1"
+          }
+        ],
+        "privacy_assertions": [
+          "Only normalized display and search forms are retained; no page content is captured."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-LEX-URL-SEGMENTS",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "FR-005"
+      ],
+      "category": "query",
+      "input": {
+        "url": "https://Docs.Example.test/guide/start"
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "host_tokens",
+            "value": [
+              "docs",
+              "example",
+              "test"
+            ]
+          },
+          {
+            "signal": "path_tokens",
+            "value": [
+              "guide",
+              "start"
+            ]
+          }
+        ],
+        "privacy_assertions": [
+          "Only URL host and path segments are tokenized; no network request is made."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-LEX-FIELD-BOUNDS",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "FR-005",
+        "NFR-004"
+      ],
+      "category": "query",
+      "input": {
+        "fields": {
+          "title": "Example",
+          "url": "https://example.test/",
+          "domain": "example.test",
+          "window_label": null,
+          "group_label": null
+        }
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "missing_optional_fields_emit_tokens",
+            "value": false
+          },
+          {
+            "signal": "title_bounded_scalars",
+            "value": 512
+          },
+          {
+            "signal": "url_bounded_scalars",
+            "value": 2048
+          }
+        ],
+        "privacy_assertions": [
+          "Missing optional fields never fabricate tokens."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-LEX-STATE-PROVENANCE",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "FR-005"
+      ],
+      "category": "query",
+      "input": {
+        "pinned": true,
+        "active": false
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "state_labels",
+            "value": [
+              "pinned"
+            ]
+          },
+          {
+            "signal": "provenance_fields",
+            "value": [
+              "pinned"
+            ]
+          },
+          {
+            "signal": "ineligible_emits_postings",
+            "value": false
+          }
+        ],
+        "privacy_assertions": [
+          "State labels are closed values and carry no tab content."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-LEX-EMPTY",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "FR-005"
+      ],
+      "category": "query",
+      "input": {
+        "records": []
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "status",
+            "value": "ready"
+          },
+          {
+            "signal": "count",
+            "value": 0
+          },
+          {
+            "signal": "postings",
+            "value": 0
+          }
+        ],
+        "privacy_assertions": [
+          "An empty snapshot is a successful ready index, not a host failure."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-LEX-MALFORMED",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "FR-005"
+      ],
+      "category": "query",
+      "input": {
+        "raw": "invalid-utf8",
+        "query": "   "
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "invalid_utf8",
+            "value": "INVALID_UTF8"
+          },
+          {
+            "signal": "empty_query_equal",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Malformed input is rejected without mutating the index or echoing input."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-LEX-REBUILD",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "FR-005",
+        "NFR-004"
+      ],
+      "category": "query",
+      "input": {
+        "revision": 2,
+        "rebuild": true
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "query_gate",
+            "value": "INDEX_REBUILDING"
+          },
+          {
+            "signal": "published_on_success",
+            "value": true
+          },
+          {
+            "signal": "previous_state_on_failure",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Rebuilding never exposes a partial index."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-LEX-DETERMINISTIC",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "NFR-004"
+      ],
+      "category": "query",
+      "input": {
+        "records": [
+          "b",
+          "a"
+        ],
+        "shuffle": true
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "postings_digest_equal",
+            "value": true
+          },
+          {
+            "signal": "candidate_ids_equal",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Insertion and map order cannot change output."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-LEX-1000-TABS",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "NFR-004"
+      ],
+      "category": "query",
+      "input": {
+        "eligible_tabs": 1000,
+        "query_scalars": 64
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "p95_ms_max",
+            "value": 50
+          },
+          {
+            "signal": "normalizer_version",
+            "value": "lex-1"
+          }
+        ],
+        "privacy_assertions": [
+          "Benchmark data is synthetic and contains no real browsing records."
+        ]
+      }
     }
   ],
   "future_check_contracts": [

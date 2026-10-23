@@ -1,0 +1,11 @@
+{
+  "fixture_id": "FX-LEX-URL-SEGMENTS",
+  "owner_phase": "IP-10",
+  "input": {
+    "url": "https://Docs.Example.test/guide/start"
+  },
+  "expected": {
+    "host_tokens": ["docs", "example", "test"],
+    "path_tokens": ["guide", "start"]
+  }
+}

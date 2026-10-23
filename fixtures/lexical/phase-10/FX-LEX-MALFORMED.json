@@ -1,0 +1,13 @@
+{
+  "fixture_id": "FX-LEX-MALFORMED",
+  "owner_phase": "IP-10",
+  "input": {
+    "invalid_utf8_hex": "fffe",
+    "query": "   "
+  },
+  "expected": {
+    "invalid_utf8": "INVALID_UTF8",
+    "empty_query_equal": true,
+    "index_unchanged": true
+  }
+}

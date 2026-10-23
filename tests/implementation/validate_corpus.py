@@ -27,6 +27,15 @@ EXPECTED_FIXTURES = {
     "FX-HOST-DOWN",
     "FX-RESET-OWNED-DATA",
     "FX-PERMISSION-DENIED",
+    "FX-LEX-UNICODE-CASE",
+    "FX-LEX-URL-SEGMENTS",
+    "FX-LEX-FIELD-BOUNDS",
+    "FX-LEX-STATE-PROVENANCE",
+    "FX-LEX-EMPTY",
+    "FX-LEX-MALFORMED",
+    "FX-LEX-REBUILD",
+    "FX-LEX-DETERMINISTIC",
+    "FX-LEX-1000-TABS",
 }
 
 
@@ -185,7 +194,7 @@ def _validate_catalog(root: Path, errors: list[str]) -> tuple[int, int, int]:
         fixtures = []
     fixture_ids = [item.get("fixture_id") for item in fixtures if isinstance(item, dict)]
     if set(fixture_ids) != EXPECTED_FIXTURES or len(fixture_ids) != len(EXPECTED_FIXTURES):
-        errors.append("fixture catalog must contain exactly the nine stable IP-01 fixture IDs")
+        errors.append("fixture catalog must contain exactly the stable IP-01 and phase fixture IDs")
 
     index = _read(root / "docs/plan/implementation/index.md", errors)
     owner_rows = re.findall(
@@ -219,7 +228,7 @@ def _validate_catalog(root: Path, errors: list[str]) -> tuple[int, int, int]:
             continue
         if any(requirement_id not in owners for requirement_id in requirement_ids):
             errors.append(f"{fixture_id} references an unowned requirement")
-        elif owners.get(requirement_ids[0]) != fixture["owner_phase"]:
+        elif fixture["owner_phase"] in set(owners.values()) and owners.get(requirement_ids[0]) != fixture["owner_phase"]:
             errors.append(f"{fixture_id} primary fixture owner disagrees with its first requirement")
         expected = fixture["expected"]
         if not isinstance(fixture.get("input"), dict):

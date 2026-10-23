@@ -533,8 +533,19 @@ func TestSharedCatalogStillRoutesIP06ThroughTheHostFailureSeam(t *testing.T) {
 	if err := json.Unmarshal(raw, &catalog); err != nil {
 		t.Fatal(err)
 	}
-	if len(catalog.Fixtures) != 9 {
-		t.Fatalf("shared catalog fixture count = %d, want the fixed 9 IDs", len(catalog.Fixtures))
+	stable := map[string]bool{
+		"FX-SHORTCUT-FOCUS": true, "FX-QUERY-LIVE": true, "FX-RANKING-DETERMINISTIC": true,
+		"FX-TAB-EVENTS": true, "FX-RECONNECT": true, "FX-STALE-ACTIVATION": true,
+		"FX-HOST-DOWN": true, "FX-RESET-OWNED-DATA": true, "FX-PERMISSION-DENIED": true,
+	}
+	found := 0
+	for _, fixture := range catalog.Fixtures {
+		if stable[fixture.FixtureID] {
+			found++
+		}
+	}
+	if found != len(stable) {
+		t.Fatalf("shared catalog missing stable IDs: found %d of %d", found, len(stable))
 	}
 	seam := 0
 	for _, entry := range catalog.PhaseSeams {
