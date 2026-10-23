@@ -37,6 +37,12 @@ func TestPrepareQueryRejectsMalformedAndOverlong(t *testing.T) {
 	}
 }
 
+func TestPrepareQueryRejectsUnbalancedPhraseDelimiter(t *testing.T) {
+	if _, err := PrepareQuery(`alpha "beta gamma`); err == nil || err.Code != ErrPhraseDelimiter {
+		t.Fatalf("unbalanced phrase accepted: %+v", err)
+	}
+}
+
 func TestPrepareQueryPhraseBoundaries(t *testing.T) {
 	prepared, err := PrepareQuery(`alpha "beta gamma"`)
 	if err != nil {

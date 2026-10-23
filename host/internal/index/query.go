@@ -21,6 +21,9 @@ func PrepareQuery(raw string) (PreparedQuery, *NormalizeError) {
 		return PreparedQuery{}, &NormalizeError{Code: ErrQueryTooLong}
 	}
 	normalized := collapseWhitespace(normalizeForm(raw))
+	if strings.Count(normalized, `"`)%2 != 0 {
+		return PreparedQuery{}, &NormalizeError{Code: ErrPhraseDelimiter}
+	}
 	if normalized == "" {
 		return PreparedQuery{Empty: true}, nil
 	}

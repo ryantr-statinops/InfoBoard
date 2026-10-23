@@ -9,9 +9,10 @@ import (
 type NormalizeErrorCode string
 
 const (
-	ErrInvalidUTF8  NormalizeErrorCode = "INVALID_UTF8"
-	ErrControlChar  NormalizeErrorCode = "CONTROL_CHAR"
-	ErrQueryTooLong NormalizeErrorCode = "QUERY_TOO_LONG"
+	ErrInvalidUTF8     NormalizeErrorCode = "INVALID_UTF8"
+	ErrControlChar     NormalizeErrorCode = "CONTROL_CHAR"
+	ErrPhraseDelimiter NormalizeErrorCode = "PHRASE_DELIMITER"
+	ErrQueryTooLong    NormalizeErrorCode = "QUERY_TOO_LONG"
 )
 
 // NormalizeError is a typed, redacted failure. It never carries input values.
