@@ -2,7 +2,6 @@ package sync
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/ryantr-statinops/InfoBoard/host/internal/domain"
@@ -84,9 +83,54 @@ func (o *Orchestrator) records() []domain.EligibleTabRecord {
 	return o.reconciler.State().Committed().Records()
 }
 
-// ApplyDelta is implemented in the ordered-delta task.
+// ApplyDelta stages one ordered batch and acknowledges it only after the
+// projection and index publish the same revision. Duplicates are idempotent.
 func (o *Orchestrator) ApplyDelta(ctx context.Context, request protocol.SyncRequest) (protocol.SyncOutcome, error) {
-	return protocol.SyncOutcome{}, fmt.Errorf("delta not implemented")
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	if request.Delta == nil {
+		return protocol.SyncOutcome{Accepted: false, Reason: protocol.ResyncRevisionMismatch}, nil
+	}
+	input, rejection := o.reconciler.BindDelta(projection.DeltaRequest{
+		ProfileID:   string(request.Context.ProfileID),
+		ContextKind: request.Context.ContextKind,
+		Epoch:       request.Epoch,
+		Revision:    request.Revision,
+		Delta:       *request.Delta,
+	})
+	if rejection != nil {
+		return protocol.SyncOutcome{
+			Accepted: false,
+			Revision: rejection.ExpectedRevision,
+			Sequence: rejection.ExpectedSequence,
+			Reason:   rejection.Resync,
+			Rebuild:  rejection.ResyncRequired(),
+		}, nil
+	}
+	outcome, rejection := o.reconciler.State().ApplyDelta(input)
+	if rejection != nil {
+		return protocol.SyncOutcome{
+			Accepted: false,
+			Revision: rejection.ExpectedRevision,
+			Sequence: rejection.ExpectedSequence,
+			Reason:   rejection.Resync,
+			Rebuild:  rejection.ResyncRequired(),
+		}, nil
+	}
+	handoff := o.reconciler.State().Handoff()
+	if outcome == projection.DeltaApplied {
+		if err := o.publisher.Publish(ctx, string(handoff.ProfileID), handoff.ContextKind, handoff.Epoch, handoff.Revision, o.records()); err != nil {
+			return protocol.SyncOutcome{Accepted: false, Reason: protocol.ResyncRevisionMismatch}, err
+		}
+	}
+	return protocol.SyncOutcome{
+		Accepted: true,
+		Revision: handoff.Revision,
+		Sequence: handoff.Sequence,
+		Count:    uint64(handoff.Count),
+		Epoch:    handoff.Epoch,
+	}, nil
 }
 
 // SetPersistenceDegraded records IP-08 storage health without blocking sync.
