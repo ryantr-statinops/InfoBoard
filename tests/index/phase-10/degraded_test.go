@@ -9,8 +9,13 @@ import (
 
 	"github.com/ryantr-statinops/InfoBoard/host/internal/domain"
 	"github.com/ryantr-statinops/InfoBoard/host/internal/index"
+	"github.com/ryantr-statinops/InfoBoard/host/internal/sync"
 	"github.com/ryantr-statinops/InfoBoard/host/storage"
 )
+
+// Publisher satisfies the IP-09 publication seam without the sync package
+// depending on implementation details of the lexical index.
+var _ sync.IndexPublisher = (*index.Publisher)(nil)
 
 // TestLexicalQuerySurvivesPersistenceFailure proves durable persistence is
 // optional for the lexical hot path: a storage open failure leaves the
