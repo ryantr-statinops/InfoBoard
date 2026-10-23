@@ -137,6 +137,20 @@ func (o *Orchestrator) ApplyDelta(ctx context.Context, request protocol.SyncRequ
 func (o *Orchestrator) SetPersistenceDegraded(degraded bool) { o.degraded = degraded }
 func (o *Orchestrator) IsPersistenceDegraded() bool         { return o.degraded }
 
+// CheckQuery enforces the revision fence for a query handoff. It never falls back
+// to an older ready revision: unknown/old revisions are REVISION_MISMATCH and a
+// staging index is INDEX_REBUILDING, both without a result payload.
+func (o *Orchestrator) CheckQuery(revision uint64) (bool, protocol.ErrorCode) {
+	state := o.State()
+	if state.Rebuilding {
+		return false, protocol.CodeIndexRebuilding
+	}
+	if !state.Known || revision != state.Revision {
+		return false, protocol.CodeRevisionMismatch
+	}
+	return true, ""
+}
+
 // PersistenceHealth is the bounded, redacted health view exposed to IP-12/IP-16.
 type PersistenceHealth struct {
 	Degraded  bool
