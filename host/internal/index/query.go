@@ -17,7 +17,10 @@ func PrepareQuery(raw string) (PreparedQuery, *NormalizeError) {
 	if err := validate(raw); err != nil {
 		return PreparedQuery{}, err
 	}
-	normalized := collapseWhitespace(normalizeForm(truncateScalars(raw, MaxQueryScalars)))
+	if len([]rune(raw)) > MaxQueryScalars {
+		return PreparedQuery{}, &NormalizeError{Code: ErrQueryTooLong}
+	}
+	normalized := collapseWhitespace(normalizeForm(raw))
 	if normalized == "" {
 		return PreparedQuery{Empty: true}, nil
 	}
