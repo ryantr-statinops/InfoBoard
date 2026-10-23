@@ -305,56 +305,6 @@
           "Denied or excluded browser data is not requested, collected, persisted, or transmitted."
         ]
       }
-    }
-  ],
-  "future_check_contracts": [
-    {
-      "check_id": "CHECK-FORMAT-LINT",
-      "scope": "Formatting and static lint by language",
-      "selection_rule": "Select formatter and linter only after each implementation module and its language toolchain are observed; do not choose a project command now.",
-      "pass_signal": "All changed source and fixture files pass the selected deterministic formatter/linter with no diagnostics."
-    },
-    {
-      "check_id": "CHECK-UNIT",
-      "scope": "Package-level unit behavior",
-      "selection_rule": "Use the test runner established by the owning language/module scaffold; exercise phase fixtures and observable contracts.",
-      "pass_signal": "Every targeted behavior and boundary assertion passes with no external service or live user data."
-    },
-    {
-      "check_id": "CHECK-INTEGRATION",
-      "scope": "Cross-component protocol and lifecycle",
-      "selection_rule": "Choose integration harness after extension/host interfaces and their fixture adapters exist; use local deterministic inputs.",
-      "pass_signal": "Handshake, snapshot, query, activation, recovery, and persistence seams report their declared states and no partial/stale result."
-    },
-    {
-      "check_id": "CHECK-BROWSER-MATRIX",
-      "scope": "Chrome and Edge user journeys",
-      "selection_rule": "Select browser binaries and runner after IP-03 establishes the adapter and supported browser harness.",
-      "pass_signal": "The same fixtures pass in Chrome and Edge with focused input, expected results, safe activation, and unchanged browser state on dismissal."
-    },
-    {
-      "check_id": "CHECK-ACCESSIBILITY",
-      "scope": "Search surface accessibility",
-      "selection_rule": "Choose automated audit and screen-reader procedures after IP-13 provides a rendered surface and browser harness.",
-      "pass_signal": "Keyboard, visible focus, semantics, contrast, reduced motion, scaling, and narrow-window acceptance all pass."
-    },
-    {
-      "check_id": "CHECK-PERFORMANCE",
-      "scope": "Hot-path latency and bounded resources",
-      "selection_rule": "Choose benchmark runner only after IP-01/phase owners declare the implementation runtime and reference hardware; retain the stated NFR budgets.",
-      "pass_signal": "Measured p95 values meet the owned NFR thresholds and reports include sample counts, environment, and allocation or memory evidence."
-    },
-    {
-      "check_id": "CHECK-PACKAGE-SMOKE",
-      "scope": "Install, update, repair, and removal",
-      "selection_rule": "Use the package entry points and disposable profiles defined by IP-18; do not invent an installer or platform command before then.",
-      "pass_signal": "Install/upgrade/repair/uninstall reach their expected health and ownership postconditions without unrelated browser-data mutation."
-    },
-    {
-      "check_id": "CHECK-CORPUS",
-      "scope": "Planning corpus traceability and fixture validation",
-      "selection_rule": "Run `python3 tests/implementation/validate_corpus.py` from repository root. The stdlib-only validator is established by IP-01; extend it only when the catalog or phase contract changes.",
-      "pass_signal": "Exit zero only when requirement ownership, task/commit mappings, fixture schema shape, stable IDs, local links, and all phase acceptance seams validate; a malformed corpus exits nonzero."
     },
     {
       "fixture_id": "FX-LEX-UNICODE-CASE",
@@ -402,11 +352,18 @@
         "observations": [
           {
             "signal": "host_tokens",
-            "value": ["docs", "example", "test"]
+            "value": [
+              "docs",
+              "example",
+              "test"
+            ]
           },
           {
             "signal": "path_tokens",
-            "value": ["guide", "start"]
+            "value": [
+              "guide",
+              "start"
+            ]
           }
         ],
         "privacy_assertions": [
@@ -466,11 +423,15 @@
         "observations": [
           {
             "signal": "state_labels",
-            "value": ["pinned"]
+            "value": [
+              "pinned"
+            ]
           },
           {
             "signal": "provenance_fields",
-            "value": ["pinned"]
+            "value": [
+              "pinned"
+            ]
           },
           {
             "signal": "ineligible_emits_postings",
@@ -511,6 +472,172 @@
           "An empty snapshot is a successful ready index, not a host failure."
         ]
       }
+    },
+    {
+      "fixture_id": "FX-LEX-MALFORMED",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "FR-005"
+      ],
+      "category": "query",
+      "input": {
+        "raw": "invalid-utf8",
+        "query": "   "
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "invalid_utf8",
+            "value": "INVALID_UTF8"
+          },
+          {
+            "signal": "empty_query_equal",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Malformed input is rejected without mutating the index or echoing input."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-LEX-REBUILD",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "FR-005",
+        "NFR-004"
+      ],
+      "category": "query",
+      "input": {
+        "revision": 2,
+        "rebuild": true
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "query_gate",
+            "value": "INDEX_REBUILDING"
+          },
+          {
+            "signal": "published_on_success",
+            "value": true
+          },
+          {
+            "signal": "previous_state_on_failure",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Rebuilding never exposes a partial index."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-LEX-DETERMINISTIC",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "NFR-004"
+      ],
+      "category": "query",
+      "input": {
+        "records": [
+          "b",
+          "a"
+        ],
+        "shuffle": true
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "postings_digest_equal",
+            "value": true
+          },
+          {
+            "signal": "candidate_ids_equal",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Insertion and map order cannot change output."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-LEX-1000-TABS",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "NFR-004"
+      ],
+      "category": "query",
+      "input": {
+        "eligible_tabs": 1000,
+        "query_scalars": 64
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "p95_ms_max",
+            "value": 50
+          },
+          {
+            "signal": "normalizer_version",
+            "value": "lex-1"
+          }
+        ],
+        "privacy_assertions": [
+          "Benchmark data is synthetic and contains no real browsing records."
+        ]
+      }
+    }
+  ],
+  "future_check_contracts": [
+    {
+      "check_id": "CHECK-FORMAT-LINT",
+      "scope": "Formatting and static lint by language",
+      "selection_rule": "Select formatter and linter only after each implementation module and its language toolchain are observed; do not choose a project command now.",
+      "pass_signal": "All changed source and fixture files pass the selected deterministic formatter/linter with no diagnostics."
+    },
+    {
+      "check_id": "CHECK-UNIT",
+      "scope": "Package-level unit behavior",
+      "selection_rule": "Use the test runner established by the owning language/module scaffold; exercise phase fixtures and observable contracts.",
+      "pass_signal": "Every targeted behavior and boundary assertion passes with no external service or live user data."
+    },
+    {
+      "check_id": "CHECK-INTEGRATION",
+      "scope": "Cross-component protocol and lifecycle",
+      "selection_rule": "Choose integration harness after extension/host interfaces and their fixture adapters exist; use local deterministic inputs.",
+      "pass_signal": "Handshake, snapshot, query, activation, recovery, and persistence seams report their declared states and no partial/stale result."
+    },
+    {
+      "check_id": "CHECK-BROWSER-MATRIX",
+      "scope": "Chrome and Edge user journeys",
+      "selection_rule": "Select browser binaries and runner after IP-03 establishes the adapter and supported browser harness.",
+      "pass_signal": "The same fixtures pass in Chrome and Edge with focused input, expected results, safe activation, and unchanged browser state on dismissal."
+    },
+    {
+      "check_id": "CHECK-ACCESSIBILITY",
+      "scope": "Search surface accessibility",
+      "selection_rule": "Choose automated audit and screen-reader procedures after IP-13 provides a rendered surface and browser harness.",
+      "pass_signal": "Keyboard, visible focus, semantics, contrast, reduced motion, scaling, and narrow-window acceptance all pass."
+    },
+    {
+      "check_id": "CHECK-PERFORMANCE",
+      "scope": "Hot-path latency and bounded resources",
+      "selection_rule": "Choose benchmark runner only after IP-01/phase owners declare the implementation runtime and reference hardware; retain the stated NFR budgets.",
+      "pass_signal": "Measured p95 values meet the owned NFR thresholds and reports include sample counts, environment, and allocation or memory evidence."
+    },
+    {
+      "check_id": "CHECK-PACKAGE-SMOKE",
+      "scope": "Install, update, repair, and removal",
+      "selection_rule": "Use the package entry points and disposable profiles defined by IP-18; do not invent an installer or platform command before then.",
+      "pass_signal": "Install/upgrade/repair/uninstall reach their expected health and ownership postconditions without unrelated browser-data mutation."
+    },
+    {
+      "check_id": "CHECK-CORPUS",
+      "scope": "Planning corpus traceability and fixture validation",
+      "selection_rule": "Run `python3 tests/implementation/validate_corpus.py` from repository root. The stdlib-only validator is established by IP-01; extend it only when the catalog or phase contract changes.",
+      "pass_signal": "Exit zero only when requirement ownership, task/commit mappings, fixture schema shape, stable IDs, local links, and all phase acceptance seams validate; a malformed corpus exits nonzero."
     }
   ],
   "global_invariants": [
