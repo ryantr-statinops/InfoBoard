@@ -12,10 +12,10 @@ import (
 // Orchestrator coordinates hello->snapshot->index->ready and revision-safe handoff.
 // It implements protocol.SyncOwner.
 type Orchestrator struct {
-	mu          sync.Mutex
-	reconciler  *projection.Reconciler
-	publisher   IndexPublisher
-	degraded    bool
+	mu         sync.Mutex
+	reconciler *projection.Reconciler
+	publisher  IndexPublisher
+	degraded   bool
 }
 
 func NewOrchestrator(partition projection.Partition, publisher IndexPublisher) (*Orchestrator, error) {
@@ -135,7 +135,7 @@ func (o *Orchestrator) ApplyDelta(ctx context.Context, request protocol.SyncRequ
 
 // SetPersistenceDegraded records IP-08 storage health without blocking sync.
 func (o *Orchestrator) SetPersistenceDegraded(degraded bool) { o.degraded = degraded }
-func (o *Orchestrator) IsPersistenceDegraded() bool         { return o.degraded }
+func (o *Orchestrator) IsPersistenceDegraded() bool          { return o.degraded }
 
 // CheckQuery enforces the revision fence for a query handoff. It never falls back
 // to an older ready revision: unknown/old revisions are REVISION_MISMATCH and a
