@@ -60,20 +60,32 @@ func recordTokens(record Record) ([]string, []TokenRef) {
 		if spec.Field == FieldPinned || spec.Field == FieldActive {
 			continue
 		}
+		if spec.Field == FieldURL {
+			segments, err := ParseURLSegments(fieldValue(record, spec.Field))
+			if err != nil {
+				continue
+			}
+			tokens, refs = appendField(tokens, refs, spec.Field, segments.Host)
+			tokens, refs = appendField(tokens, refs, spec.Field, segments.Path)
+			continue
+		}
 		form, err := BuildForm(spec.Field, fieldValue(record, spec.Field), spec.MaxScalars)
 		if err != nil || form.Search == "" {
 			continue
 		}
-		for position, token := range tokenize(form.Search) {
-			tokens = append(tokens, token)
-			refs = append(refs, TokenRef{Field: spec.Field, Position: position, Source: string(spec.Field)})
-		}
+		tokens, refs = appendField(tokens, refs, spec.Field, tokenize(form.Search))
 	}
 	for _, label := range StateLabels(record.Pinned, record.Active) {
-		for position, token := range tokenize(label.Search) {
-			tokens = append(tokens, token)
-			refs = append(refs, TokenRef{Field: label.Field, Position: position, Source: string(label.Field)})
-		}
+		tokens, refs = appendField(tokens, refs, label.Field, tokenize(label.Search))
+	}
+	return tokens, refs
+}
+
+// appendField records token positions in emission order for one source field.
+func appendField(tokens []string, refs []TokenRef, field Field, values []string) ([]string, []TokenRef) {
+	for position, token := range values {
+		tokens = append(tokens, token)
+		refs = append(refs, TokenRef{Field: field, Position: position, Source: string(field)})
 	}
 	return tokens, refs
 }

@@ -52,6 +52,25 @@ func TestIneligibleRecordHasNoPostings(t *testing.T) {
 	}
 }
 
+func TestCommitEmitsURLSegmentsNotScheme(t *testing.T) {
+	staged, err := Stage("p", 1, []Record{{
+		TabID: 1, Eligible: true, Title: "Guide",
+		URL: "https://Docs.Example.test/guide/start",
+	}})
+	if err != nil {
+		t.Fatalf("stage: %v", err)
+	}
+	state := staged.Commit()
+	for _, token := range []string{"docs", "example", "test", "guide", "start"} {
+		if len(state.Postings[token]) != 1 {
+			t.Fatalf("missing url segment %q in postings", token)
+		}
+	}
+	if _, ok := state.Postings["https"]; ok {
+		t.Fatalf("scheme emitted as a token")
+	}
+}
+
 func TestCommitRetainsFieldProvenance(t *testing.T) {
 	staged, err := Stage("p", 1, []Record{{
 		TabID: 7, Eligible: true, Pinned: true,
