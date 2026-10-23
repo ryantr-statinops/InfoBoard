@@ -1,0 +1,13 @@
+{
+  "fixture_id": "FX-LEX-STATE-PROVENANCE",
+  "owner_phase": "IP-10",
+  "input": {
+    "pinned": true,
+    "active": false
+  },
+  "expected": {
+    "state_labels": ["pinned"],
+    "provenance_fields": ["pinned"],
+    "ineligible_emits_postings": false
+  }
+}

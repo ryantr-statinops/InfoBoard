@@ -450,6 +450,67 @@
           "Missing optional fields never fabricate tokens."
         ]
       }
+    },
+    {
+      "fixture_id": "FX-LEX-STATE-PROVENANCE",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "FR-005"
+      ],
+      "category": "query",
+      "input": {
+        "pinned": true,
+        "active": false
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "state_labels",
+            "value": ["pinned"]
+          },
+          {
+            "signal": "provenance_fields",
+            "value": ["pinned"]
+          },
+          {
+            "signal": "ineligible_emits_postings",
+            "value": false
+          }
+        ],
+        "privacy_assertions": [
+          "State labels are closed values and carry no tab content."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-LEX-EMPTY",
+      "owner_phase": "IP-10",
+      "requirement_ids": [
+        "FR-005"
+      ],
+      "category": "query",
+      "input": {
+        "records": []
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "status",
+            "value": "ready"
+          },
+          {
+            "signal": "count",
+            "value": 0
+          },
+          {
+            "signal": "postings",
+            "value": 0
+          }
+        ],
+        "privacy_assertions": [
+          "An empty snapshot is a successful ready index, not a host failure."
+        ]
+      }
     }
   ],
   "global_invariants": [
