@@ -1,0 +1,1 @@
+{"id":"SYNC-007","name":"sqlite-persistence-degraded","input":{"persistence":"degraded"},"expected":{"accepted":true,"degraded":true,"queryable":true}}

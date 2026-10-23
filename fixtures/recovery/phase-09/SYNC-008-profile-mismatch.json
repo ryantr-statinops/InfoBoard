@@ -1,0 +1,1 @@
+{"id":"SYNC-008","name":"profile-mismatch","input":{"request_profile":"p1","bound_profile":"p2"},"expected":{"accepted":false,"error":"PROFILE_MISMATCH"}}

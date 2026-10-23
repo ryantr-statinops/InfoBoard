@@ -1,0 +1,1 @@
+{"id":"SYNC-006","name":"unknown-rebuilding-revision","input":{"revision":99,"rebuilding":true},"expected":{"allowed":false,"error":"REVISION_MISMATCH"}}
