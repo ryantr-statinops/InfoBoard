@@ -57,7 +57,7 @@ func TestRecencyBonusUsesOneMinuteBuckets(t *testing.T) {
 		{-10, 30},
 	}
 	for _, test := range cases {
-		if got := recencyBonus(1000, 1000-test.age); got != test.want {
+		if got := recencyBonus(10000, 10000-test.age); got != test.want {
 			t.Fatalf("age %d: bonus = %d, want %d", test.age, got, test.want)
 		}
 	}
