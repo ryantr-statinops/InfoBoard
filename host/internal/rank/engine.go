@@ -22,7 +22,7 @@ func Rank(input Input) (Output, error) {
 			Components:   scored.components,
 			BestClass:    scored.bestClass,
 			Evidence:     canonicalEvidence(scored.evidence),
-			Explanations: nil,
+			Explanations: explanationsFor(input, scored),
 		})
 	}
 	return output, nil
