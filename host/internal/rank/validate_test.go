@@ -46,6 +46,10 @@ func TestValidateRejectsMalformedInput(t *testing.T) {
 	for i := range manyFieldTokens {
 		manyFieldTokens[i] = "token"
 	}
+	manyPhrases := make([][]string, MaxPhrases+1)
+	for i := range manyPhrases {
+		manyPhrases[i] = []string{"token"}
+	}
 	manyCandidates := make([]Candidate, MaxCandidates+1)
 	for i := range manyCandidates {
 		manyCandidates[i] = Candidate{ProfileID: "profile", TabID: int64(i + 1), WindowID: 1}
@@ -71,6 +75,7 @@ func TestValidateRejectsMalformedInput(t *testing.T) {
 		{"invalid utf8 token", func(in *Input) { in.QueryTokens = []string{string([]byte{0xff})} }, ErrInvalidQueryToken},
 		{"empty phrase", func(in *Input) { in.Phrases = [][]string{{}} }, ErrInvalidPhrase},
 		{"invalid phrase token", func(in *Input) { in.Phrases = [][]string{{""}} }, ErrInvalidPhrase},
+		{"too many phrases", func(in *Input) { in.Phrases = manyPhrases }, ErrTooManyPhrases},
 		{"too many candidates", func(in *Input) { in.Candidates = manyCandidates }, ErrTooManyCandidates},
 		{"cross profile", func(in *Input) { in.Candidates[0].ProfileID = "other" }, ErrCrossProfile},
 		{"tab identity", func(in *Input) { in.Candidates[0].TabID = 0 }, ErrInvalidIdentity},

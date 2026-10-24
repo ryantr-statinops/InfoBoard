@@ -6,6 +6,7 @@ import "unicode/utf8"
 const (
 	MaxCandidates       = 10000
 	MaxQueryTokens      = 64
+	MaxPhrases          = 8
 	MaxTokenScalars     = 64
 	MaxFieldTextScalars = 2048
 	MaxTokensPerField   = 64
@@ -25,6 +26,7 @@ const (
 	ErrTooManyQueryTokens ErrorCode = "TOO_MANY_QUERY_TOKENS"
 	ErrInvalidQueryToken  ErrorCode = "INVALID_QUERY_TOKEN"
 	ErrInvalidPhrase      ErrorCode = "INVALID_PHRASE"
+	ErrTooManyPhrases     ErrorCode = "TOO_MANY_PHRASES"
 	ErrTooManyCandidates  ErrorCode = "TOO_MANY_CANDIDATES"
 	ErrInvalidIdentity    ErrorCode = "INVALID_CANDIDATE_IDENTITY"
 	ErrCrossProfile       ErrorCode = "CROSS_PROFILE_CANDIDATE"
@@ -69,6 +71,9 @@ func validate(input Input) *Error {
 		if !boundedToken(token) {
 			return &Error{Code: ErrInvalidQueryToken}
 		}
+	}
+	if len(input.Phrases) > MaxPhrases {
+		return &Error{Code: ErrTooManyPhrases}
 	}
 	for _, phrase := range input.Phrases {
 		if len(phrase) == 0 || len(phrase) > MaxQueryTokens {
