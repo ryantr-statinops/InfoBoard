@@ -588,6 +588,293 @@
           "Benchmark data is synthetic and contains no real browsing records."
         ]
       }
+    },
+    {
+      "fixture_id": "FX-RANKING-EXACT-PRECEDENCE",
+      "owner_phase": "IP-11",
+      "requirement_ids": [
+        "FR-005",
+        "NFR-004"
+      ],
+      "category": "ranking",
+      "input": {
+        "query_tokens": [
+          "example",
+          "page"
+        ],
+        "candidate_count": 4,
+        "limit": 10
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "first_tab_id",
+            "value": 10
+          },
+          {
+            "signal": "top_score",
+            "value": 1080
+          },
+          {
+            "signal": "best_class",
+            "value": "exact_full_field"
+          }
+        ],
+        "privacy_assertions": [
+          "Ranking consumes only synthetic normalized field tokens; no raw title, URL, query text, page content, or real browsing record is retained."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-RANKING-DUPLICATE-TITLE",
+      "owner_phase": "IP-11",
+      "requirement_ids": [
+        "FR-005",
+        "NFR-004"
+      ],
+      "category": "ranking",
+      "input": {
+        "query_tokens": [
+          "example",
+          "page"
+        ],
+        "candidate_count": 3,
+        "limit": 10
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "first_tab_id",
+            "value": 2
+          },
+          {
+            "signal": "top_score",
+            "value": 1110
+          },
+          {
+            "signal": "opaque_identity_tie_break",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Ranking consumes only synthetic normalized field tokens; no raw title, URL, query text, page content, or real browsing record is retained."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-RANKING-TYPO-FUZZY",
+      "owner_phase": "IP-11",
+      "requirement_ids": [
+        "FR-005",
+        "NFR-004"
+      ],
+      "category": "ranking",
+      "input": {
+        "query_tokens": [
+          "exampld"
+        ],
+        "candidate_count": 5,
+        "limit": 10
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "first_tab_id",
+            "value": 1
+          },
+          {
+            "signal": "fuzzy_score",
+            "value": 480
+          },
+          {
+            "signal": "best_class",
+            "value": "exact_full_field"
+          }
+        ],
+        "privacy_assertions": [
+          "Ranking consumes only synthetic normalized field tokens; no raw title, URL, query text, page content, or real browsing record is retained."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-RANKING-MULTI-WINDOW-CONTEXT",
+      "owner_phase": "IP-11",
+      "requirement_ids": [
+        "FR-005",
+        "NFR-004"
+      ],
+      "category": "ranking",
+      "input": {
+        "query_tokens": [
+          "example",
+          "work"
+        ],
+        "candidate_count": 4,
+        "limit": 10
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "first_tab_id",
+            "value": 1
+          },
+          {
+            "signal": "context_bonus",
+            "value": 10
+          },
+          {
+            "signal": "active_window_bonus",
+            "value": 20
+          }
+        ],
+        "privacy_assertions": [
+          "Ranking consumes only synthetic normalized field tokens; no raw title, URL, query text, page content, or real browsing record is retained."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-RANKING-PINNED-GROUP-CONTEXT",
+      "owner_phase": "IP-11",
+      "requirement_ids": [
+        "FR-005",
+        "NFR-004"
+      ],
+      "category": "ranking",
+      "input": {
+        "query_tokens": [
+          "example",
+          "team"
+        ],
+        "candidate_count": 4,
+        "limit": 10
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "first_tab_id",
+            "value": 1
+          },
+          {
+            "signal": "pinned_or_group_bonus",
+            "value": 10
+          },
+          {
+            "signal": "pinned_tie_break",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Ranking consumes only synthetic normalized field tokens; no raw title, URL, query text, page content, or real browsing record is retained."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-RANKING-STALE-MISSING",
+      "owner_phase": "IP-11",
+      "requirement_ids": [
+        "FR-005",
+        "NFR-004"
+      ],
+      "category": "ranking",
+      "input": {
+        "query_tokens": [
+          "example"
+        ],
+        "candidate_count": 5,
+        "limit": 10
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "missing_optional_penalty",
+            "value": 40
+          },
+          {
+            "signal": "stale_penalty",
+            "value": 200
+          },
+          {
+            "signal": "first_tab_id",
+            "value": 1
+          }
+        ],
+        "privacy_assertions": [
+          "Ranking consumes only synthetic normalized field tokens; no raw title, URL, query text, page content, or real browsing record is retained."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-RANKING-EXPLANATION-REPRODUCIBILITY",
+      "owner_phase": "IP-11",
+      "requirement_ids": [
+        "FR-005",
+        "NFR-004"
+      ],
+      "category": "ranking",
+      "input": {
+        "query_tokens": [
+          "example",
+          "work",
+          "team",
+          "pinned",
+          "docs",
+          "guide"
+        ],
+        "candidate_count": 2,
+        "limit": 10
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "explanation_count",
+            "value": 11
+          },
+          {
+            "signal": "first_tab_id",
+            "value": 1
+          },
+          {
+            "signal": "ranking_model_version",
+            "value": "rank-v1"
+          }
+        ],
+        "privacy_assertions": [
+          "Ranking consumes only synthetic normalized field tokens; no raw title, URL, query text, page content, or real browsing record is retained."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-RANKING-1000-TABS",
+      "owner_phase": "IP-11",
+      "requirement_ids": [
+        "FR-005",
+        "NFR-004"
+      ],
+      "category": "ranking",
+      "input": {
+        "eligible_candidates": 1000,
+        "query_scalars": 64,
+        "limit": 100
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "result_count",
+            "value": 100
+          },
+          {
+            "signal": "ranking_model_version",
+            "value": "rank-v1"
+          },
+          {
+            "signal": "p95_ms_max",
+            "value": 50
+          }
+        ],
+        "privacy_assertions": [
+          "Ranking consumes only synthetic normalized field tokens; no raw title, URL, query text, page content, or real browsing record is retained."
+        ]
+      }
     }
   ],
   "future_check_contracts": [
@@ -798,15 +1085,22 @@
     {
       "phase": "IP-11",
       "fixture_ids": [
-        "FX-RANKING-DETERMINISTIC"
+        "FX-RANKING-EXACT-PRECEDENCE",
+        "FX-RANKING-DUPLICATE-TITLE",
+        "FX-RANKING-TYPO-FUZZY",
+        "FX-RANKING-MULTI-WINDOW-CONTEXT",
+        "FX-RANKING-PINNED-GROUP-CONTEXT",
+        "FX-RANKING-STALE-MISSING",
+        "FX-RANKING-EXPLANATION-REPRODUCIBILITY",
+        "FX-RANKING-1000-TABS"
       ],
       "requirement_ids": [
         "FR-005"
       ],
       "ownership_relation": "primary",
-      "fixture_signal": "repeat_run_order_and_scores_equal",
-      "acceptance_signal": "Repeated identical ranking inputs produce the same ordered identities and scores.",
-      "handoff_note": "IP-11 owns deterministic ranking behavior and extends this fixture."
+      "fixture_signal": "first_tab_id",
+      "acceptance_signal": "Exact, token, prefix, phrase, fuzzy, and context evidence produce deterministic ordered identities, named components, and bounded explanations.",
+      "handoff_note": "IP-11 owns rank-v1 behavior; IP-12 consumes the versioned output and IP-14 gates activation."
     },
     {
       "phase": "IP-12",

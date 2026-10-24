@@ -1,0 +1,247 @@
+{
+  "fixture_id": "FX-RANKING-EXACT-PRECEDENCE",
+  "owner_phase": "IP-11",
+  "input": {
+    "profile_id": "profile-a",
+    "projection_revision": 7,
+    "ranking_model_version": "rank-v1",
+    "ranking_timestamp": 1000,
+    "query_tokens": [
+      "example",
+      "page"
+    ],
+    "limit": 10,
+    "candidates": [
+      {
+        "profile_id": "profile-a",
+        "tab_id": 10,
+        "window_id": 1,
+        "fields": [
+          {
+            "field": "title",
+            "text": "example page",
+            "tokens": [
+              "example",
+              "page"
+            ]
+          }
+        ]
+      },
+      {
+        "profile_id": "profile-a",
+        "tab_id": 20,
+        "window_id": 1,
+        "fields": [
+          {
+            "field": "title",
+            "text": "example",
+            "tokens": [
+              "example"
+            ]
+          },
+          {
+            "field": "url",
+            "text": "https://example.test/page",
+            "tokens": [
+              "example",
+              "test",
+              "page"
+            ]
+          }
+        ]
+      },
+      {
+        "profile_id": "profile-a",
+        "tab_id": 30,
+        "window_id": 1,
+        "fields": [
+          {
+            "field": "title",
+            "text": "example page extra",
+            "tokens": [
+              "example",
+              "page",
+              "extra"
+            ]
+          }
+        ]
+      },
+      {
+        "profile_id": "profile-a",
+        "tab_id": 40,
+        "window_id": 1,
+        "fields": [
+          {
+            "field": "domain",
+            "text": "example",
+            "tokens": [
+              "example"
+            ]
+          },
+          {
+            "field": "url",
+            "text": "https://example.test/page",
+            "tokens": [
+              "example",
+              "test",
+              "page"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "profile_id": "profile-a",
+    "projection_revision": 7,
+    "ranking_model_version": "rank-v1",
+    "explanation_schema_version": 1,
+    "results": [
+      {
+        "tab_id": 10,
+        "window_id": 1,
+        "score": 1080,
+        "components": {
+          "lexical": 1000,
+          "field_weight": 80,
+          "context_bonus": 0,
+          "recency_bonus": 0,
+          "active_window_bonus": 0,
+          "pinned_or_group_bonus": 0,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "exact_full_field",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_full_field",
+            "position": 0,
+            "contribution": 1000
+          },
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_token",
+            "position": 0,
+            "contribution": 900
+          },
+          {
+            "token_index": 1,
+            "field": "title",
+            "class": "exact_token",
+            "position": 1,
+            "contribution": 900
+          }
+        ],
+        "explanations": [
+          "title_match"
+        ]
+      },
+      {
+        "tab_id": 20,
+        "window_id": 1,
+        "score": 1080,
+        "components": {
+          "lexical": 1000,
+          "field_weight": 80,
+          "context_bonus": 0,
+          "recency_bonus": 0,
+          "active_window_bonus": 0,
+          "pinned_or_group_bonus": 0,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "exact_full_field",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_full_field",
+            "position": 0,
+            "contribution": 1000
+          },
+          {
+            "token_index": 1,
+            "field": "url",
+            "class": "exact_token",
+            "position": 2,
+            "contribution": 900
+          }
+        ],
+        "explanations": [
+          "title_match",
+          "url_match"
+        ]
+      },
+      {
+        "tab_id": 40,
+        "window_id": 1,
+        "score": 1060,
+        "components": {
+          "lexical": 1000,
+          "field_weight": 60,
+          "context_bonus": 0,
+          "recency_bonus": 0,
+          "active_window_bonus": 0,
+          "pinned_or_group_bonus": 0,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "exact_full_field",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "domain",
+            "class": "exact_full_field",
+            "position": 0,
+            "contribution": 1000
+          },
+          {
+            "token_index": 1,
+            "field": "url",
+            "class": "exact_token",
+            "position": 2,
+            "contribution": 900
+          }
+        ],
+        "explanations": [
+          "domain_match",
+          "url_match"
+        ]
+      },
+      {
+        "tab_id": 30,
+        "window_id": 1,
+        "score": 980,
+        "components": {
+          "lexical": 900,
+          "field_weight": 80,
+          "context_bonus": 0,
+          "recency_bonus": 0,
+          "active_window_bonus": 0,
+          "pinned_or_group_bonus": 0,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "exact_token",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_token",
+            "position": 0,
+            "contribution": 900
+          },
+          {
+            "token_index": 1,
+            "field": "title",
+            "class": "exact_token",
+            "position": 1,
+            "contribution": 900
+          }
+        ],
+        "explanations": [
+          "title_match"
+        ]
+      }
+    ]
+  }
+}
