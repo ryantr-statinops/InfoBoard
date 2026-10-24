@@ -22,9 +22,10 @@ func scoreCandidate(input Input, candidate Candidate) (scoredCandidate, bool) {
 		return scoredCandidate{}, false
 	}
 	components := Components{
-		Lexical:      best.Class.base(),
-		FieldWeight:  best.Field.weight(),
-		ContextBonus: contextBonus(evidence),
+		Lexical:               best.Class.base(),
+		FieldWeight:           best.Field.weight(),
+		ContextBonus:          contextBonus(evidence),
+		StaleOrMissingPenalty: staleOrMissingPenalty(candidate),
 	}
 	return scoredCandidate{
 		candidate:  candidate,
@@ -38,6 +39,26 @@ const (
 	contextBonusPerField = 10
 	maxContextBonus      = 20
 )
+
+const (
+	stalePenalty             = 100
+	missingOptionalPenalty   = 50
+	maxStaleOrMissingPenalty = 150
+)
+
+func staleOrMissingPenalty(candidate Candidate) int64 {
+	penalty := int64(0)
+	if candidate.Stale {
+		penalty += stalePenalty
+	}
+	if candidate.MissingOptional {
+		penalty += missingOptionalPenalty
+	}
+	if penalty > maxStaleOrMissingPenalty {
+		return maxStaleOrMissingPenalty
+	}
+	return penalty
+}
 
 func contextBonus(evidence []Evidence) int64 {
 	seen := make(map[Field]struct{}, 3)
