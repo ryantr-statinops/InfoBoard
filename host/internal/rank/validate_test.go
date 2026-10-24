@@ -68,6 +68,8 @@ func TestValidateRejectsMalformedInput(t *testing.T) {
 		{"timestamp", func(in *Input) { in.RankingTimestamp = -1 }, ErrInvalidTimestamp},
 		{"limit low", func(in *Input) { in.Limit = 0 }, ErrInvalidLimit},
 		{"limit high", func(in *Input) { in.Limit = MaxResultLimit + 1 }, ErrInvalidLimit},
+		{"current window identity", func(in *Input) { in.CurrentWindowID = -1 }, ErrInvalidIdentity},
+		{"current group identity", func(in *Input) { in.CurrentGroupID = &zeroGroup }, ErrInvalidIdentity},
 		{"empty query", func(in *Input) { in.QueryTokens = nil }, ErrEmptyQuery},
 		{"many query tokens", func(in *Input) { in.QueryTokens = manyTokens }, ErrTooManyQueryTokens},
 		{"empty query token", func(in *Input) { in.QueryTokens = []string{""} }, ErrInvalidQueryToken},

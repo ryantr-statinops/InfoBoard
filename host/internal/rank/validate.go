@@ -61,6 +61,12 @@ func validate(input Input) *Error {
 	if input.Limit < 1 || input.Limit > MaxResultLimit {
 		return &Error{Code: ErrInvalidLimit}
 	}
+	if input.CurrentWindowID < 0 {
+		return &Error{Code: ErrInvalidIdentity}
+	}
+	if input.CurrentGroupID != nil && *input.CurrentGroupID <= 0 {
+		return &Error{Code: ErrInvalidIdentity}
+	}
 	if len(input.QueryTokens) == 0 {
 		return &Error{Code: ErrEmptyQuery}
 	}
