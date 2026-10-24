@@ -47,38 +47,92 @@ func buildCandidateIndex(candidate Candidate) candidateIndex {
 	return candidateIndex{fields: fields}
 }
 
-// exactEvidence returns the strongest exact-token match for one token. Primary
-// fields outrank context fields regardless of their canonical order.
+// exactEvidence returns the strongest token-level match. Exact matches outrank
+// prefixes, and primary fields outrank context fields.
 func (index candidateIndex) exactEvidence(token string) (Evidence, bool) {
-	var context *Evidence
 	for _, field := range index.fields {
+		if field.field.isContext() {
+			continue
+		}
 		for position, fieldToken := range field.tokens {
 			if fieldToken != token {
 				continue
 			}
 			class := ClassExactToken
-			if field.field.isContext() {
-				class = ClassContextOnly
+			if field.text == token {
+				class = ClassExactFullField
 			}
-			evidence := Evidence{
+			return Evidence{
 				Field:        field.field,
 				Class:        class,
 				Position:     position,
 				Contribution: class.base(),
+			}, true
+		}
+	}
+	if runeCount(token) >= 2 {
+		for _, field := range index.fields {
+			if field.field.isContext() {
+				continue
 			}
-			if !field.field.isContext() {
-				return evidence, true
-			}
-			if context == nil {
-				copy := evidence
-				context = &copy
+			for position, fieldToken := range field.tokens {
+				if !hasPrefix(fieldToken, token) {
+					continue
+				}
+				return Evidence{
+					Field:        field.field,
+					Class:        ClassTokenPrefix,
+					Position:     position,
+					Contribution: ClassTokenPrefix.base(),
+				}, true
 			}
 		}
 	}
-	if context != nil {
-		return *context, true
+	for _, field := range index.fields {
+		if !field.field.isContext() {
+			continue
+		}
+		for position, fieldToken := range field.tokens {
+			if fieldToken == token {
+				return Evidence{
+					Field:        field.field,
+					Class:        ClassContextOnly,
+					Position:     position,
+					Contribution: ClassContextOnly.base(),
+				}, true
+			}
+		}
 	}
 	return Evidence{}, false
+}
+
+// fullFieldEvidence reports when the complete normalized query equals a
+// complete primary field.
+func (index candidateIndex) fullFieldEvidence(tokens []string) (Evidence, bool) {
+	query := strings.Join(uniqueTokens(tokens), " ")
+	if query == "" {
+		return Evidence{}, false
+	}
+	for _, field := range index.fields {
+		if field.field.isContext() || field.text != query {
+			continue
+		}
+		return Evidence{
+			Field:        field.field,
+			Class:        ClassExactFullField,
+			Position:     0,
+			Contribution: ClassExactFullField.base(),
+		}, true
+	}
+	return Evidence{}, false
+}
+
+func runeCount(value string) int {
+	return len([]rune(value))
+}
+
+func hasPrefix(value, prefix string) bool {
+	return len(value) >= len(prefix) && value[:len(prefix)] == prefix
 }
 
 func stateTokens(candidate Candidate) []string {

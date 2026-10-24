@@ -1,7 +1,5 @@
 package rank
 
-import "strings"
-
 // matchCandidate requires token coverage and every explicit phrase.
 func matchCandidate(index candidateIndex, tokens []string, phrases [][]string) ([]Evidence, bool) {
 	evidence, ok := matchCoverage(index, tokens)
@@ -12,7 +10,11 @@ func matchCandidate(index candidateIndex, tokens []string, phrases [][]string) (
 	if !ok {
 		return nil, false
 	}
-	return append(evidence, phraseEvidence...), true
+	evidence = append(evidence, phraseEvidence...)
+	if full, ok := index.fullFieldEvidence(tokens); ok {
+		evidence = append(evidence, full)
+	}
+	return evidence, true
 }
 
 // matchPhrases requires each phrase to occur contiguously inside one field.
@@ -94,9 +96,4 @@ func phraseTokenIndex(queryTokens, phrase []string) int {
 		return 0
 	}
 	return position
-}
-
-// phraseText joins normalized phrase tokens for exact whole-field checks.
-func phraseText(phrase []string) string {
-	return strings.Join(phrase, " ")
 }
