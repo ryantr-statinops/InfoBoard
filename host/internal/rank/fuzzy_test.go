@@ -10,7 +10,7 @@ func TestExactEvidenceUsesBoundedFuzzyMatch(t *testing.T) {
 	if !ok || evidence.Class != ClassFuzzy || evidence.Field != FieldTitle {
 		t.Fatalf("fuzzy evidence = %+v, %v", evidence, ok)
 	}
-	if _, ok := index.exactEvidence("ex"); ok {
+	if _, ok := index.exactEvidence("exz"); ok {
 		t.Fatal("short token matched fuzzily")
 	}
 	if _, ok := index.exactEvidence("exampel"); ok {
