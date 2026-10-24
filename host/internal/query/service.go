@@ -55,7 +55,7 @@ func New(source Source, defaults Defaults, recency Recency, health Health, obser
 // Query validates the request before any index work and returns a bounded
 // result bound to the current profile and projection revision.
 func (s *Service) Query(ctx context.Context, request protocol.QueryRequest) (protocol.QueryResult, error) {
-	started := s.config.Now()
+	started := time.Now()
 	if err := validateRequest(request); err != nil {
 		return protocol.QueryResult{}, err
 	}
@@ -66,11 +66,17 @@ func (s *Service) Query(ctx context.Context, request protocol.QueryRequest) (pro
 	if failure != nil {
 		return protocol.QueryResult{}, failure
 	}
-	if _, failure := s.readyState(request); failure != nil {
+	state, failure := s.readyState(request)
+	if failure != nil {
 		return protocol.QueryResult{}, failure
 	}
 	if err := ctx.Err(); err != nil {
 		return protocol.QueryResult{}, err
+	}
+
+	prepared, normalizeFailure := index.PrepareQuery(request.Text)
+	if normalizeFailure != nil {
+		return protocol.QueryResult{}, queryNormalizeFailure(normalizeFailure, request.Text)
 	}
 	result := protocol.QueryResult{
 		Results:             make([]protocol.ResultRow, 0),
@@ -81,12 +87,61 @@ func (s *Service) Query(ctx context.Context, request protocol.QueryRequest) (pro
 		IndexState:          "ready",
 		PersistenceState:    s.persistenceState(),
 		FreshnessAgeMillis:  0,
-		Counters: protocol.QueryCounters{
-			TotalMicros: time.Since(started).Microseconds(),
-		},
 	}
+	if prepared.Empty {
+		result.Counters.TotalMicros = time.Since(started).Microseconds()
+		s.observe(result)
+		return result, nil
+	}
+
+	candidates, err := s.candidates(state, request)
+	if err != nil {
+		return protocol.QueryResult{}, protocol.NewError(protocol.CodeInternalFailure)
+	}
+	output, err := rank.Rank(rank.Input{
+		ProfileID:          state.ProfileID,
+		ProjectionRevision: state.Revision,
+		ModelVersion:       s.config.RankingModelVersion,
+		RankingTimestamp:   s.config.Now().Unix(),
+		QueryTokens:        prepared.Tokens,
+		Phrases:            prepared.Phrases,
+		CurrentWindowID:    request.CurrentWindowID,
+		CurrentGroupID:     rankGroupID(request.CurrentGroupID),
+		Limit:              limit,
+		Candidates:         candidates,
+	})
+	if err != nil {
+		return protocol.QueryResult{}, rankFailure(err)
+	}
+	if err := ctx.Err(); err != nil {
+		return protocol.QueryResult{}, err
+	}
+
+	result.Results = resultRows(state, output.Results)
+	if len(result.Results) > 0 {
+		result.Status = protocol.QueryStatusResults
+	}
+	result.RankingModelVersion = output.ModelVersion
+	result.Counters.Candidates = int64(len(candidates))
+	result.Counters.Returned = int64(len(result.Results))
+	result.Counters.TotalMicros = time.Since(started).Microseconds()
 	s.observe(result)
 	return result, nil
+}
+
+func queryNormalizeFailure(failure *index.NormalizeError, raw string) *protocol.Error {
+	if failure.Code == index.ErrQueryTooLong {
+		return protocol.NewError(protocol.CodePayloadLimit).WithBound("query_scalars", index.MaxQueryScalars, utf8.RuneCountInString(raw))
+	}
+	return protocol.NewError(protocol.CodeInvalidFrame)
+}
+
+func rankFailure(err error) *protocol.Error {
+	var failure *rank.Error
+	if errors.As(err, &failure) && failure.Code == rank.ErrEmptyQuery {
+		return protocol.NewError(protocol.CodeInvalidFrame)
+	}
+	return protocol.NewError(protocol.CodeInternalFailure)
 }
 
 func validateRequest(request protocol.QueryRequest) *protocol.Error {

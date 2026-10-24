@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ryantr-statinops/InfoBoard/host/internal/domain"
 	"github.com/ryantr-statinops/InfoBoard/host/internal/index"
@@ -54,6 +55,7 @@ func testService(t *testing.T, source Source, defaults Defaults, health Health, 
 	service, err := New(source, defaults, nil, health, observer, Config{
 		FallbackResultLimit: 5,
 		MaxResultLimit:      5,
+		Now:                 func() time.Time { return time.Unix(100, 0) },
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -225,5 +227,129 @@ func TestQueryObservesBoundedStatus(t *testing.T) {
 	}
 	if len(observer.observations) != 1 || observer.observations[0].Status != protocol.QueryStatusNoResults {
 		t.Fatalf("observations = %+v", observer.observations)
+	}
+}
+
+func testState(t *testing.T, records ...index.Record) *index.State {
+	t.Helper()
+	staged, err := index.Stage(testProfile, 4, records)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return staged.Commit()
+}
+
+func sourceFor(state *index.State) *fakeSource {
+	return &fakeSource{state: state, ready: state.Revision, readyOK: true}
+}
+
+func record(id int64, title string) index.Record {
+	return index.Record{
+		TabID:         id,
+		ProfileID:     testProfile,
+		Revision:      4,
+		Eligible:      true,
+		Active:        id == 10,
+		WindowID:      1,
+		Title:         title,
+		URL:           "https://example.test/docs",
+		Domain:        "example.test",
+		TitleDisplay:  title,
+		URLDisplay:    "https://example.test/docs",
+		DomainDisplay: "example.test",
+	}
+}
+
+func hasString(values []string, want string) bool {
+	for _, value := range values {
+		if value == want {
+			return true
+		}
+	}
+	return false
+}
+
+func TestQueryRanksIndexedRecords(t *testing.T) {
+	group := int64(7)
+	item := record(10, "example docs")
+	item.GroupID = &group
+	state := testState(t, item)
+	service := testService(t, sourceFor(state), nil, fakeHealth("ready"), nil)
+	request := testRequest()
+	request.Text = "example"
+	request.CurrentGroupID = &group
+
+	result, err := service.Query(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Status != protocol.QueryStatusResults || len(result.Results) != 1 {
+		t.Fatalf("query result = %+v", result)
+	}
+	row := result.Results[0]
+	if row.TabID != 10 || row.WindowID != 1 || row.GroupID == nil || *row.GroupID != 7 {
+		t.Fatalf("row identity = %+v", row)
+	}
+	if row.TitleDisplay != "example docs" || row.DomainDisplay != "example.test" || row.Score <= 0 {
+		t.Fatalf("row metadata = %+v", row)
+	}
+	if row.ResultID == "" || len(row.ResultID) != 32 {
+		t.Fatalf("result id = %q", row.ResultID)
+	}
+	if !hasString(row.Explanation, "title_match") || !hasString(row.Explanation, "current_window") || !hasString(row.Explanation, "same_group") {
+		t.Fatalf("explanations = %v", row.Explanation)
+	}
+	if result.RankingModelVersion != "rank-v1" || result.AcceptedLimit != 5 || result.PersistenceState != "healthy" {
+		t.Fatalf("result metadata = %+v", result)
+	}
+	if result.Counters.Candidates != 1 || result.Counters.Returned != 1 || result.Counters.TotalMicros < 0 {
+		t.Fatalf("counters = %+v", result.Counters)
+	}
+
+	repeated, err := service.Query(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if repeated.Results[0].ResultID != row.ResultID || repeated.Results[0].Score != row.Score {
+		t.Fatalf("repeated result differs: %+v vs %+v", repeated.Results[0], row)
+	}
+}
+
+func TestQueryCapsResultsAndReportsNoResults(t *testing.T) {
+	state := testState(t, record(10, "example docs"), record(11, "example notes"))
+	service := testService(t, sourceFor(state), nil, fakeHealth("ready"), nil)
+
+	request := testRequest()
+	request.Text = "example"
+	request.ResultLimit = 1
+	result, err := service.Query(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Status != protocol.QueryStatusResults || len(result.Results) != 1 {
+		t.Fatalf("limited result = %+v", result)
+	}
+
+	request = testRequest()
+	request.Text = "absent"
+	result, err = service.Query(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Status != protocol.QueryStatusNoResults || len(result.Results) != 0 {
+		t.Fatalf("no-result response = %+v", result)
+	}
+}
+
+func TestQueryRejectsMalformedQueryWithoutMutation(t *testing.T) {
+	state := testState(t, record(10, "example docs"))
+	service := testService(t, sourceFor(state), nil, fakeHealth("ready"), nil)
+	request := testRequest()
+	request.Text = `alpha "beta`
+	if _, err := service.Query(context.Background(), request); failureCode(t, err) != protocol.CodeInvalidFrame {
+		t.Fatal("unbalanced phrase accepted")
+	}
+	if state.Count != 1 {
+		t.Fatalf("index mutated: %+v", state)
 	}
 }
