@@ -41,23 +41,19 @@ const (
 )
 
 const (
-	stalePenalty             = 100
-	missingOptionalPenalty   = 50
-	maxStaleOrMissingPenalty = 150
+	stalePenalty             int64 = 200
+	missingOptionalPenalty   int64 = 40
+	maxStaleOrMissingPenalty int64 = 200
 )
 
 func staleOrMissingPenalty(candidate Candidate) int64 {
-	penalty := int64(0)
 	if candidate.Stale {
-		penalty += stalePenalty
+		return stalePenalty
 	}
 	if candidate.MissingOptional {
-		penalty += missingOptionalPenalty
+		return missingOptionalPenalty
 	}
-	if penalty > maxStaleOrMissingPenalty {
-		return maxStaleOrMissingPenalty
-	}
-	return penalty
+	return 0
 }
 
 func contextBonus(evidence []Evidence) int64 {
