@@ -88,6 +88,24 @@ func (index candidateIndex) exactEvidence(token string) (Evidence, bool) {
 			}
 		}
 	}
+	if runeCount(token) >= 4 {
+		for _, field := range index.fields {
+			if field.field.isContext() {
+				continue
+			}
+			for position, fieldToken := range field.tokens {
+				if !withinOneEdit(token, fieldToken) {
+					continue
+				}
+				return Evidence{
+					Field:        field.field,
+					Class:        ClassFuzzy,
+					Position:     position,
+					Contribution: ClassFuzzy.base(),
+				}, true
+			}
+		}
+	}
 	for _, field := range index.fields {
 		if !field.field.isContext() {
 			continue
@@ -133,6 +151,47 @@ func runeCount(value string) int {
 
 func hasPrefix(value, prefix string) bool {
 	return len(value) >= len(prefix) && value[:len(prefix)] == prefix
+}
+
+// withinOneEdit reports Levenshtein distance at most one over runes.
+func withinOneEdit(left, right string) bool {
+	a := []rune(left)
+	b := []rune(right)
+	difference := len(a) - len(b)
+	if difference < -1 || difference > 1 {
+		return false
+	}
+	if difference == 0 {
+		differences := 0
+		for index := range a {
+			if a[index] != b[index] {
+				differences++
+				if differences > 1 {
+					return false
+				}
+			}
+		}
+		return true
+	}
+	shorter, longer := a, b
+	if len(shorter) > len(longer) {
+		shorter, longer = longer, shorter
+	}
+	shortIndex, longIndex := 0, 0
+	skipped := false
+	for shortIndex < len(shorter) && longIndex < len(longer) {
+		if shorter[shortIndex] == longer[longIndex] {
+			shortIndex++
+			longIndex++
+			continue
+		}
+		if skipped {
+			return false
+		}
+		skipped = true
+		longIndex++
+	}
+	return true
 }
 
 func stateTokens(candidate Candidate) []string {
