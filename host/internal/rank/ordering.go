@@ -77,5 +77,8 @@ func lessScored(input Input, left, right scoredCandidate) bool {
 	if left.candidate.Pinned != right.candidate.Pinned {
 		return left.candidate.Pinned
 	}
-	return false
+	if left.candidate.TabID != right.candidate.TabID {
+		return left.candidate.TabID < right.candidate.TabID
+	}
+	return left.candidate.WindowID < right.candidate.WindowID
 }
