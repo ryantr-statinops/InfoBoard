@@ -157,8 +157,10 @@ export interface DeltaSubmission {
 
 export interface QuerySubmission {
   query: string;
-  result_limit: number;
+  result_limit?: number;
   current_window_id: number | null;
+  current_group_id?: number | null;
+  query_sequence?: number;
 }
 
 export interface ActivationSubmission {
@@ -169,17 +171,27 @@ export interface ActivationSubmission {
   error_class?: string;
 }
 
+export type QueryStatus = 'results' | 'no_results' | 'empty_query';
+
 export interface QueryResultReference {
   result_id: string;
   tab_id: number;
   window_id: number;
   display: Record<string, string | number | boolean | null>;
+  explanations: readonly string[];
 }
 
 export interface QueryResponse {
   results: readonly QueryResultReference[];
   ranking_model_version: string;
   projection_revision: number;
+  projection_epoch: string;
+  status: QueryStatus;
+  accepted_limit: number;
+  query_sequence: number;
+  index_state: string;
+  persistence_state: string;
+  freshness_age_ms: number;
   timing: Record<string, number>;
 }
 
@@ -507,7 +519,7 @@ function parseDisplayItem(
   const display: Record<string, string | number | boolean | null> = {};
   let count = 0;
   for (const [key, value] of Object.entries(item)) {
-    if (key === 'result_id' || key === 'tab_id' || key === 'window_id') continue;
+    if (key === 'result_id' || key === 'tab_id' || key === 'window_id' || key === 'explanation') continue;
     if (count >= limits.displayKeys) return undefined;
     if (byteLength(key) > limits.displayKeyBytes) return undefined;
     if (value === null || typeof value === 'boolean') {
@@ -524,6 +536,23 @@ function parseDisplayItem(
     count += 1;
   }
   return display;
+}
+
+function parseExplanations(value: unknown, limits: typeof PROTOCOL_LIMITS): readonly string[] | undefined {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > limits.displayKeys) return undefined;
+  const explanations: string[] = [];
+  for (const item of value) {
+    if (!isBoundedString(item, limits.displayValueBytes)) return undefined;
+    explanations.push(item);
+  }
+  return explanations;
+}
+
+function parseQueryStatus(value: unknown, resultCount: number): QueryStatus | undefined {
+  if (value === undefined) return resultCount > 0 ? 'results' : 'no_results';
+  if (value === 'results' || value === 'no_results' || value === 'empty_query') return value;
+  return undefined;
 }
 
 function parseQueryResult(
@@ -547,13 +576,30 @@ function parseQueryResult(
     if (!isNonNegativeInteger(entry.tab_id) || !isNonNegativeInteger(entry.window_id)) return { ok: false };
     const display = parseDisplayItem(entry, limits);
     if (display === undefined) return { ok: false };
-    results.push({ result_id: entry.result_id, tab_id: entry.tab_id, window_id: entry.window_id, display });
+    const explanations = parseExplanations(entry.explanation, limits);
+    if (explanations === undefined) return { ok: false };
+    results.push({ result_id: entry.result_id, tab_id: entry.tab_id, window_id: entry.window_id, display, explanations });
   }
+  const status = parseQueryStatus(payload.status, results.length);
+  if (status === undefined) return { ok: false };
+  const acceptedLimit = payload.accepted_limit === undefined ? limits.results : payload.accepted_limit;
+  if (!isNonNegativeInteger(acceptedLimit)) return { ok: false };
+  const querySequence = payload.query_sequence === undefined ? 0 : payload.query_sequence;
+  if (!isNonNegativeInteger(querySequence)) return { ok: false };
+  const projectionEpoch = payload.projection_epoch === undefined ? '' : payload.projection_epoch;
+  if (projectionEpoch !== '' && !isBoundedString(projectionEpoch, limits.versionBytes)) return { ok: false };
+  const indexState = payload.index_state === undefined ? '' : payload.index_state;
+  if (indexState !== '' && !isBoundedString(indexState, limits.versionBytes)) return { ok: false };
+  const persistenceState = payload.persistence_state === undefined ? '' : payload.persistence_state;
+  if (persistenceState !== '' && !isBoundedString(persistenceState, limits.versionBytes)) return { ok: false };
+  const freshnessAgeMs = payload.freshness_age_ms === undefined ? 0 : payload.freshness_age_ms;
+  if (!isNonNegativeInteger(freshnessAgeMs)) return { ok: false };
   const timing: Record<string, number> = {};
-  const rawTiming = payload.timing;
+  const rawTiming = payload.timing ?? payload.counters;
   if (rawTiming !== undefined) {
     if (!isRecord(rawTiming)) return { ok: false };
     for (const [key, value] of Object.entries(rawTiming)) {
+      if (key === 'degraded_code') continue;
       if (!Number.isSafeInteger(value) || (value as number) < 0) return { ok: false };
       timing[key] = value as number;
     }
@@ -565,6 +611,13 @@ function parseQueryResult(
       results,
       ranking_model_version: rankingModelVersion ?? '',
       projection_revision: revision,
+      projection_epoch: projectionEpoch,
+      status,
+      accepted_limit: acceptedLimit,
+      query_sequence: querySequence,
+      index_state: indexState,
+      persistence_state: persistenceState,
+      freshness_age_ms: freshnessAgeMs,
       timing,
     },
   };
@@ -770,8 +823,19 @@ export class NativeMessagingClient {
   query(submission: QuerySubmission): Promise<ClientRequestResult<QueryResponse>> {
     if (typeof submission.query !== 'string') return Promise.resolve<ClientRequestResult<QueryResponse>>(rejectLocal<QueryResponse>('INVALID_SUBMISSION'));
     if (scalarLength(submission.query) > this.limits.queryScalars) return Promise.resolve<ClientRequestResult<QueryResponse>>(rejectLocal<QueryResponse>('PAYLOAD_LIMIT'));
-    if (!isNonNegativeInteger(submission.result_limit)) return Promise.resolve<ClientRequestResult<QueryResponse>>(rejectLocal<QueryResponse>('INVALID_SUBMISSION'));
-    if (submission.result_limit > this.limits.results) return Promise.resolve<ClientRequestResult<QueryResponse>>(rejectLocal<QueryResponse>('PAYLOAD_LIMIT'));
+    if (submission.result_limit !== undefined) {
+      if (!isNonNegativeInteger(submission.result_limit)) return Promise.resolve<ClientRequestResult<QueryResponse>>(rejectLocal<QueryResponse>('INVALID_SUBMISSION'));
+      if (submission.result_limit > this.limits.results) return Promise.resolve<ClientRequestResult<QueryResponse>>(rejectLocal<QueryResponse>('PAYLOAD_LIMIT'));
+    }
+    if (submission.current_window_id !== null && !isNonNegativeInteger(submission.current_window_id)) {
+      return Promise.resolve<ClientRequestResult<QueryResponse>>(rejectLocal<QueryResponse>('INVALID_SUBMISSION'));
+    }
+    if (submission.current_group_id !== undefined && submission.current_group_id !== null && !isNonNegativeInteger(submission.current_group_id)) {
+      return Promise.resolve<ClientRequestResult<QueryResponse>>(rejectLocal<QueryResponse>('INVALID_SUBMISSION'));
+    }
+    if (submission.query_sequence !== undefined && !isNonNegativeInteger(submission.query_sequence)) {
+      return Promise.resolve<ClientRequestResult<QueryResponse>>(rejectLocal<QueryResponse>('INVALID_SUBMISSION'));
+    }
     if (this.terminal || this.state === 'Incompatible' || this.state === 'Shutdown') {
       return Promise.resolve<ClientRequestResult<QueryResponse>>(rejectLocal<QueryResponse>('HOST_UNAVAILABLE'));
     }
@@ -781,6 +845,8 @@ export class NativeMessagingClient {
       query: submission.query,
       result_limit: submission.result_limit,
       current_window_id: submission.current_window_id,
+      current_group_id: submission.current_group_id,
+      query_sequence: submission.query_sequence,
     };
     return this.dispatch<QueryResponse>('query', payload, this.acknowledgedRevision);
   }
