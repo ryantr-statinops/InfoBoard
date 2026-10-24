@@ -22,8 +22,9 @@ func scoreCandidate(input Input, candidate Candidate) (scoredCandidate, bool) {
 		return scoredCandidate{}, false
 	}
 	components := Components{
-		Lexical:     best.Class.base(),
-		FieldWeight: best.Field.weight(),
+		Lexical:      best.Class.base(),
+		FieldWeight:  best.Field.weight(),
+		ContextBonus: contextBonus(evidence),
 	}
 	return scoredCandidate{
 		candidate:  candidate,
@@ -31,4 +32,23 @@ func scoreCandidate(input Input, candidate Candidate) (scoredCandidate, bool) {
 		components: components,
 		bestClass:  best.Class,
 	}, true
+}
+
+const (
+	contextBonusPerField = 10
+	maxContextBonus      = 20
+)
+
+func contextBonus(evidence []Evidence) int64 {
+	seen := make(map[Field]struct{}, 3)
+	for _, item := range evidence {
+		if item.Field.isContext() {
+			seen[item.Field] = struct{}{}
+		}
+	}
+	bonus := int64(len(seen) * contextBonusPerField)
+	if bonus > maxContextBonus {
+		return maxContextBonus
+	}
+	return bonus
 }
