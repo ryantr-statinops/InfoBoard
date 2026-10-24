@@ -38,6 +38,13 @@ type fakeHealth string
 
 func (health fakeHealth) PersistenceState() string { return string(health) }
 
+type fakeRecency map[int64]int64
+
+func (recency fakeRecency) ActivatedAt(_ string, tabID int64) (int64, bool) {
+	value, ok := recency[tabID]
+	return value, ok
+}
+
 type fakeObserver struct {
 	observations []Observation
 }
@@ -52,7 +59,12 @@ func readySource() *fakeSource {
 
 func testService(t *testing.T, source Source, defaults Defaults, health Health, observer Observer) *Service {
 	t.Helper()
-	service, err := New(source, defaults, nil, health, observer, Config{
+	return testServiceWithRecency(t, source, defaults, nil, health, observer)
+}
+
+func testServiceWithRecency(t *testing.T, source Source, defaults Defaults, recency Recency, health Health, observer Observer) *Service {
+	t.Helper()
+	service, err := New(source, defaults, recency, health, observer, Config{
 		FallbackResultLimit: 5,
 		MaxResultLimit:      5,
 		Now:                 func() time.Time { return time.Unix(100, 0) },
@@ -349,7 +361,76 @@ func TestQueryRejectsMalformedQueryWithoutMutation(t *testing.T) {
 	if _, err := service.Query(context.Background(), request); failureCode(t, err) != protocol.CodeInvalidFrame {
 		t.Fatal("unbalanced phrase accepted")
 	}
+	request.Text = "safe\x00value"
+	if _, err := service.Query(context.Background(), request); failureCode(t, err) != protocol.CodeInvalidFrame {
+		t.Fatal("control character accepted")
+	}
 	if state.Count != 1 {
 		t.Fatalf("index mutated: %+v", state)
+	}
+}
+
+func TestEmptyQueryReturnsBoundedContextList(t *testing.T) {
+	group7 := int64(7)
+	group8 := int64(8)
+	current := record(10, "current")
+	current.GroupID = &group7
+	current.Pinned = true
+	otherWindow := record(11, "other")
+	otherWindow.WindowID = 2
+	otherWindow.GroupID = &group8
+	sameWindow := record(12, "same-window")
+	sameWindow.GroupID = &group8
+
+	state := testState(t, current, otherWindow, sameWindow)
+	service := testServiceWithRecency(t, sourceFor(state), nil, fakeRecency{10: 100, 11: 300, 12: 200}, fakeHealth("ready"), nil)
+	request := testRequest()
+	request.Text = "   "
+	request.CurrentWindowID = 1
+	request.CurrentGroupID = &group7
+	request.ResultLimit = 2
+
+	result, err := service.Query(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Status != protocol.QueryStatusEmptyQuery || len(result.Results) != 2 {
+		t.Fatalf("empty-query result = %+v", result)
+	}
+	if result.Results[0].TabID != 10 || result.Results[1].TabID != 12 {
+		t.Fatalf("context order = %+v", result.Results)
+	}
+	if result.Counters.Candidates != 3 || result.Counters.Returned != 2 {
+		t.Fatalf("context counters = %+v", result.Counters)
+	}
+	if !hasString(result.Results[0].Explanation, "current_window") ||
+		!hasString(result.Results[0].Explanation, "same_group") ||
+		!hasString(result.Results[0].Explanation, "pinned") ||
+		!hasString(result.Results[0].Explanation, "recent_activation") {
+		t.Fatalf("context explanations = %v", result.Results[0].Explanation)
+	}
+	repeated, err := service.Query(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if repeated.Results[0].ResultID != result.Results[0].ResultID {
+		t.Fatalf("context result id is not deterministic: %q vs %q", repeated.Results[0].ResultID, result.Results[0].ResultID)
+	}
+}
+
+func TestEmptyProjectionReturnsEmptyQuery(t *testing.T) {
+	state := testState(t)
+	service := testService(t, sourceFor(state), nil, fakeHealth("ready"), nil)
+	request := testRequest()
+	request.Text = ""
+	result, err := service.Query(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Status != protocol.QueryStatusEmptyQuery || len(result.Results) != 0 {
+		t.Fatalf("empty projection result = %+v", result)
+	}
+	if result.Counters.Candidates != 0 || result.Counters.Returned != 0 {
+		t.Fatalf("empty projection counters = %+v", result.Counters)
 	}
 }

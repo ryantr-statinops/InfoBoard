@@ -89,6 +89,11 @@ func (s *Service) Query(ctx context.Context, request protocol.QueryRequest) (pro
 		FreshnessAgeMillis:  0,
 	}
 	if prepared.Empty {
+		rows, candidates := s.contextRows(state, request, limit)
+		result.Results = rows
+		result.Status = protocol.QueryStatusEmptyQuery
+		result.Counters.Candidates = int64(candidates)
+		result.Counters.Returned = int64(len(rows))
 		result.Counters.TotalMicros = time.Since(started).Microseconds()
 		s.observe(result)
 		return result, nil
