@@ -1,6 +1,8 @@
 package rank
 
 import (
+	"bytes"
+	"encoding/json"
 	"reflect"
 	"testing"
 )
@@ -61,5 +63,28 @@ func TestRankIsIndependentOfCandidateOrder(t *testing.T) {
 	}
 	if !reflect.DeepEqual(forward, reversed) {
 		t.Fatalf("order-dependent output:\nforward=%+v\nreversed=%+v", forward, reversed)
+	}
+	forwardJSON, err := json.Marshal(forward)
+	if err != nil {
+		t.Fatalf("marshal forward: %v", err)
+	}
+	reversedJSON, err := json.Marshal(reversed)
+	if err != nil {
+		t.Fatalf("marshal reversed: %v", err)
+	}
+	if !bytes.Equal(forwardJSON, reversedJSON) {
+		t.Fatalf("payload differs:\n%s\n%s", forwardJSON, reversedJSON)
+	}
+}
+
+func TestRankReturnsEmptyResultsForEmptyCandidates(t *testing.T) {
+	input := validInput()
+	input.Candidates = nil
+	output, err := Rank(input)
+	if err != nil {
+		t.Fatalf("rank failed: %v", err)
+	}
+	if output.Results == nil || len(output.Results) != 0 {
+		t.Fatalf("results = %+v", output.Results)
 	}
 }

@@ -10,11 +10,28 @@ func matchCandidate(index candidateIndex, tokens []string, phrases [][]string) (
 	if !ok {
 		return nil, false
 	}
-	evidence = append(evidence, phraseEvidence...)
-	if full, ok := index.fullFieldEvidence(tokens); ok {
-		evidence = append(evidence, full)
+	unique := uniqueTokens(tokens)
+	replaced := make(map[int]struct{}, len(phraseEvidence))
+	for _, phrase := range phrases {
+		start, found := contiguousPosition(unique, phrase)
+		if !found {
+			continue
+		}
+		for offset := range phrase {
+			replaced[start+offset] = struct{}{}
+		}
 	}
-	return evidence, true
+	filtered := make([]Evidence, 0, len(evidence)+len(phraseEvidence)+1)
+	for _, item := range evidence {
+		if _, drop := replaced[item.TokenIndex]; !drop {
+			filtered = append(filtered, item)
+		}
+	}
+	filtered = append(filtered, phraseEvidence...)
+	if full, ok := index.fullFieldEvidence(tokens); ok {
+		filtered = append(filtered, full)
+	}
+	return filtered, true
 }
 
 // matchPhrases requires each phrase to occur contiguously inside one field.

@@ -32,6 +32,31 @@ func TestMatchPhrasesRequiresOneField(t *testing.T) {
 	}
 }
 
+func TestMatchCandidateReplacesCoveredTokenEvidence(t *testing.T) {
+	index := buildCandidateIndex(Candidate{
+		Fields: []FieldText{
+			{Field: FieldTitle, Text: "quick brown fox", Tokens: []string{"quick", "brown", "fox"}},
+		},
+	})
+	evidence, ok := matchCandidate(index, []string{"quick", "brown", "fox"}, [][]string{{"quick", "brown"}})
+	if !ok {
+		t.Fatal("candidate was rejected")
+	}
+	phrases := 0
+	tokens := 0
+	for _, item := range evidence {
+		if item.Class == ClassContiguousPhrase {
+			phrases++
+		}
+		if item.Class == ClassExactToken {
+			tokens++
+		}
+	}
+	if phrases != 1 || tokens != 1 {
+		t.Fatalf("evidence = %+v, want one phrase and one remaining token", evidence)
+	}
+}
+
 func TestMatchCandidateCombinesCoverageAndPhrases(t *testing.T) {
 	index := buildCandidateIndex(Candidate{
 		Fields: []FieldText{
