@@ -24,7 +24,7 @@ func TestMatchCoveragePrefersPrimaryFields(t *testing.T) {
 	index := buildCandidateIndex(Candidate{
 		Fields: []FieldText{
 			{Field: FieldWindow, Text: "example", Tokens: []string{"example"}},
-			{Field: FieldTitle, Text: "example", Tokens: []string{"example"}},
+			{Field: FieldTitle, Text: "example page", Tokens: []string{"example", "page"}},
 		},
 	})
 	evidence, ok := matchCoverage(index, []string{"example"})
