@@ -52,6 +52,7 @@ func TestLessScoredOrdersByActivationAndFlags(t *testing.T) {
 		t.Fatal("active window did not sort first")
 	}
 
+	input.CurrentWindowID = 0
 	pinned := orderItem(1, 1, 100, []Class{ClassExactToken}, []Field{FieldTitle})
 	pinned.candidate.Pinned = true
 	unpinned := orderItem(2, 2, 100, []Class{ClassExactToken}, []Field{FieldTitle})
