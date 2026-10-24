@@ -1,0 +1,199 @@
+{
+  "fixture_id": "FX-RANKING-DUPLICATE-TITLE",
+  "owner_phase": "IP-11",
+  "input": {
+    "profile_id": "profile-a",
+    "projection_revision": 7,
+    "ranking_model_version": "rank-v1",
+    "ranking_timestamp": 1000,
+    "query_tokens": [
+      "example",
+      "page"
+    ],
+    "limit": 10,
+    "candidates": [
+      {
+        "profile_id": "profile-a",
+        "tab_id": 9,
+        "window_id": 1,
+        "fields": [
+          {
+            "field": "title",
+            "text": "example page",
+            "tokens": [
+              "example",
+              "page"
+            ]
+          }
+        ],
+        "activated_at": 990
+      },
+      {
+        "profile_id": "profile-a",
+        "tab_id": 2,
+        "window_id": 1,
+        "fields": [
+          {
+            "field": "title",
+            "text": "example page",
+            "tokens": [
+              "example",
+              "page"
+            ]
+          }
+        ],
+        "activated_at": 990
+      },
+      {
+        "profile_id": "profile-a",
+        "tab_id": 1,
+        "window_id": 2,
+        "fields": [
+          {
+            "field": "title",
+            "text": "example page",
+            "tokens": [
+              "example",
+              "page"
+            ]
+          }
+        ]
+      }
+    ],
+    "current_window_id": 2
+  },
+  "expected": {
+    "profile_id": "profile-a",
+    "projection_revision": 7,
+    "ranking_model_version": "rank-v1",
+    "explanation_schema_version": 1,
+    "results": [
+      {
+        "tab_id": 2,
+        "window_id": 1,
+        "score": 1110,
+        "components": {
+          "lexical": 1000,
+          "field_weight": 80,
+          "context_bonus": 0,
+          "recency_bonus": 30,
+          "active_window_bonus": 0,
+          "pinned_or_group_bonus": 0,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "exact_full_field",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_full_field",
+            "position": 0,
+            "contribution": 1000
+          },
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_token",
+            "position": 0,
+            "contribution": 900
+          },
+          {
+            "token_index": 1,
+            "field": "title",
+            "class": "exact_token",
+            "position": 1,
+            "contribution": 900
+          }
+        ],
+        "explanations": [
+          "title_match",
+          "recent_activation"
+        ]
+      },
+      {
+        "tab_id": 9,
+        "window_id": 1,
+        "score": 1110,
+        "components": {
+          "lexical": 1000,
+          "field_weight": 80,
+          "context_bonus": 0,
+          "recency_bonus": 30,
+          "active_window_bonus": 0,
+          "pinned_or_group_bonus": 0,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "exact_full_field",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_full_field",
+            "position": 0,
+            "contribution": 1000
+          },
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_token",
+            "position": 0,
+            "contribution": 900
+          },
+          {
+            "token_index": 1,
+            "field": "title",
+            "class": "exact_token",
+            "position": 1,
+            "contribution": 900
+          }
+        ],
+        "explanations": [
+          "title_match",
+          "recent_activation"
+        ]
+      },
+      {
+        "tab_id": 1,
+        "window_id": 2,
+        "score": 1100,
+        "components": {
+          "lexical": 1000,
+          "field_weight": 80,
+          "context_bonus": 0,
+          "recency_bonus": 0,
+          "active_window_bonus": 20,
+          "pinned_or_group_bonus": 0,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "exact_full_field",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_full_field",
+            "position": 0,
+            "contribution": 1000
+          },
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_token",
+            "position": 0,
+            "contribution": 900
+          },
+          {
+            "token_index": 1,
+            "field": "title",
+            "class": "exact_token",
+            "position": 1,
+            "contribution": 900
+          }
+        ],
+        "explanations": [
+          "title_match",
+          "current_window"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,245 @@
+{
+  "fixture_id": "FX-RANKING-TYPO-FUZZY",
+  "owner_phase": "IP-11",
+  "input": {
+    "profile_id": "profile-a",
+    "projection_revision": 7,
+    "ranking_model_version": "rank-v1",
+    "ranking_timestamp": 1000,
+    "query_tokens": [
+      "exampld"
+    ],
+    "limit": 10,
+    "candidates": [
+      {
+        "profile_id": "profile-a",
+        "tab_id": 1,
+        "window_id": 1,
+        "fields": [
+          {
+            "field": "title",
+            "text": "exampld",
+            "tokens": [
+              "exampld"
+            ]
+          }
+        ]
+      },
+      {
+        "profile_id": "profile-a",
+        "tab_id": 2,
+        "window_id": 1,
+        "fields": [
+          {
+            "field": "title",
+            "text": "exampld extra",
+            "tokens": [
+              "exampld",
+              "extra"
+            ]
+          }
+        ]
+      },
+      {
+        "profile_id": "profile-a",
+        "tab_id": 3,
+        "window_id": 1,
+        "fields": [
+          {
+            "field": "title",
+            "text": "example",
+            "tokens": [
+              "example"
+            ]
+          }
+        ]
+      },
+      {
+        "profile_id": "profile-a",
+        "tab_id": 4,
+        "window_id": 1,
+        "fields": [
+          {
+            "field": "title",
+            "text": "example page",
+            "tokens": [
+              "example",
+              "page"
+            ]
+          }
+        ]
+      },
+      {
+        "profile_id": "profile-a",
+        "tab_id": 5,
+        "window_id": 1,
+        "fields": [
+          {
+            "field": "domain",
+            "text": "exampld",
+            "tokens": [
+              "exampld"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "profile_id": "profile-a",
+    "projection_revision": 7,
+    "ranking_model_version": "rank-v1",
+    "explanation_schema_version": 1,
+    "results": [
+      {
+        "tab_id": 1,
+        "window_id": 1,
+        "score": 1080,
+        "components": {
+          "lexical": 1000,
+          "field_weight": 80,
+          "context_bonus": 0,
+          "recency_bonus": 0,
+          "active_window_bonus": 0,
+          "pinned_or_group_bonus": 0,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "exact_full_field",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_full_field",
+            "position": 0,
+            "contribution": 1000
+          },
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_full_field",
+            "position": 0,
+            "contribution": 1000
+          }
+        ],
+        "explanations": [
+          "title_match"
+        ]
+      },
+      {
+        "tab_id": 5,
+        "window_id": 1,
+        "score": 1060,
+        "components": {
+          "lexical": 1000,
+          "field_weight": 60,
+          "context_bonus": 0,
+          "recency_bonus": 0,
+          "active_window_bonus": 0,
+          "pinned_or_group_bonus": 0,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "exact_full_field",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "domain",
+            "class": "exact_full_field",
+            "position": 0,
+            "contribution": 1000
+          },
+          {
+            "token_index": 0,
+            "field": "domain",
+            "class": "exact_full_field",
+            "position": 0,
+            "contribution": 1000
+          }
+        ],
+        "explanations": [
+          "domain_match"
+        ]
+      },
+      {
+        "tab_id": 2,
+        "window_id": 1,
+        "score": 980,
+        "components": {
+          "lexical": 900,
+          "field_weight": 80,
+          "context_bonus": 0,
+          "recency_bonus": 0,
+          "active_window_bonus": 0,
+          "pinned_or_group_bonus": 0,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "exact_token",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_token",
+            "position": 0,
+            "contribution": 900
+          }
+        ],
+        "explanations": [
+          "title_match"
+        ]
+      },
+      {
+        "tab_id": 3,
+        "window_id": 1,
+        "score": 480,
+        "components": {
+          "lexical": 400,
+          "field_weight": 80,
+          "context_bonus": 0,
+          "recency_bonus": 0,
+          "active_window_bonus": 0,
+          "pinned_or_group_bonus": 0,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "fuzzy",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "fuzzy",
+            "position": 0,
+            "contribution": 400
+          }
+        ],
+        "explanations": [
+          "title_match"
+        ]
+      },
+      {
+        "tab_id": 4,
+        "window_id": 1,
+        "score": 480,
+        "components": {
+          "lexical": 400,
+          "field_weight": 80,
+          "context_bonus": 0,
+          "recency_bonus": 0,
+          "active_window_bonus": 0,
+          "pinned_or_group_bonus": 0,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "fuzzy",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "fuzzy",
+            "position": 0,
+            "contribution": 400
+          }
+        ],
+        "explanations": [
+          "title_match"
+        ]
+      }
+    ]
+  }
+}

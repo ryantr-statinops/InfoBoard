@@ -1,0 +1,255 @@
+{
+  "fixture_id": "FX-RANKING-MULTI-WINDOW-CONTEXT",
+  "owner_phase": "IP-11",
+  "input": {
+    "profile_id": "profile-a",
+    "projection_revision": 7,
+    "ranking_model_version": "rank-v1",
+    "ranking_timestamp": 1000,
+    "query_tokens": [
+      "example",
+      "work"
+    ],
+    "limit": 10,
+    "candidates": [
+      {
+        "profile_id": "profile-a",
+        "tab_id": 1,
+        "window_id": 2,
+        "fields": [
+          {
+            "field": "title",
+            "text": "example",
+            "tokens": [
+              "example"
+            ]
+          },
+          {
+            "field": "window",
+            "text": "work",
+            "tokens": [
+              "work"
+            ]
+          }
+        ]
+      },
+      {
+        "profile_id": "profile-a",
+        "tab_id": 2,
+        "window_id": 1,
+        "fields": [
+          {
+            "field": "title",
+            "text": "example",
+            "tokens": [
+              "example"
+            ]
+          },
+          {
+            "field": "group",
+            "text": "work",
+            "tokens": [
+              "work"
+            ]
+          }
+        ],
+        "group_id": 3
+      },
+      {
+        "profile_id": "profile-a",
+        "tab_id": 3,
+        "window_id": 1,
+        "fields": [
+          {
+            "field": "title",
+            "text": "example",
+            "tokens": [
+              "example"
+            ]
+          },
+          {
+            "field": "window",
+            "text": "work",
+            "tokens": [
+              "work"
+            ]
+          }
+        ]
+      },
+      {
+        "profile_id": "profile-a",
+        "tab_id": 4,
+        "window_id": 1,
+        "fields": [
+          {
+            "field": "title",
+            "text": "example work",
+            "tokens": [
+              "example",
+              "work"
+            ]
+          }
+        ]
+      }
+    ],
+    "current_window_id": 2,
+    "current_group_id": 3
+  },
+  "expected": {
+    "profile_id": "profile-a",
+    "projection_revision": 7,
+    "ranking_model_version": "rank-v1",
+    "explanation_schema_version": 1,
+    "results": [
+      {
+        "tab_id": 1,
+        "window_id": 2,
+        "score": 1110,
+        "components": {
+          "lexical": 1000,
+          "field_weight": 80,
+          "context_bonus": 10,
+          "recency_bonus": 0,
+          "active_window_bonus": 20,
+          "pinned_or_group_bonus": 0,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "exact_full_field",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_full_field",
+            "position": 0,
+            "contribution": 1000
+          },
+          {
+            "token_index": 1,
+            "field": "window",
+            "class": "context_only",
+            "position": 0,
+            "contribution": 100
+          }
+        ],
+        "explanations": [
+          "title_match",
+          "window_context",
+          "current_window"
+        ]
+      },
+      {
+        "tab_id": 2,
+        "window_id": 1,
+        "group_id": 3,
+        "score": 1095,
+        "components": {
+          "lexical": 1000,
+          "field_weight": 80,
+          "context_bonus": 10,
+          "recency_bonus": 0,
+          "active_window_bonus": 0,
+          "pinned_or_group_bonus": 5,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "exact_full_field",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_full_field",
+            "position": 0,
+            "contribution": 1000
+          },
+          {
+            "token_index": 1,
+            "field": "group",
+            "class": "context_only",
+            "position": 0,
+            "contribution": 100
+          }
+        ],
+        "explanations": [
+          "title_match",
+          "group_context",
+          "same_group"
+        ]
+      },
+      {
+        "tab_id": 3,
+        "window_id": 1,
+        "score": 1090,
+        "components": {
+          "lexical": 1000,
+          "field_weight": 80,
+          "context_bonus": 10,
+          "recency_bonus": 0,
+          "active_window_bonus": 0,
+          "pinned_or_group_bonus": 0,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "exact_full_field",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_full_field",
+            "position": 0,
+            "contribution": 1000
+          },
+          {
+            "token_index": 1,
+            "field": "window",
+            "class": "context_only",
+            "position": 0,
+            "contribution": 100
+          }
+        ],
+        "explanations": [
+          "title_match",
+          "window_context"
+        ]
+      },
+      {
+        "tab_id": 4,
+        "window_id": 1,
+        "score": 1080,
+        "components": {
+          "lexical": 1000,
+          "field_weight": 80,
+          "context_bonus": 0,
+          "recency_bonus": 0,
+          "active_window_bonus": 0,
+          "pinned_or_group_bonus": 0,
+          "stale_or_missing_penalty": 0
+        },
+        "best_class": "exact_full_field",
+        "evidence": [
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_full_field",
+            "position": 0,
+            "contribution": 1000
+          },
+          {
+            "token_index": 0,
+            "field": "title",
+            "class": "exact_token",
+            "position": 0,
+            "contribution": 900
+          },
+          {
+            "token_index": 1,
+            "field": "title",
+            "class": "exact_token",
+            "position": 1,
+            "contribution": 900
+          }
+        ],
+        "explanations": [
+          "title_match"
+        ]
+      }
+    ]
+  }
+}
