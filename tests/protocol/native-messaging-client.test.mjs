@@ -120,9 +120,28 @@ async function acceptSnapshot(harness, projectionRevision = 42, sequence = 7) {
 
 function queryResultPayload() {
   return {
-    results: [{ result_id: 'result-1', tab_id: 9, window_id: 2, title_display: 'Example' }],
+    results: [{
+      result_id: 'result-1',
+      tab_id: 9,
+      window_id: 2,
+      group_id: 4,
+      title_display: 'Example',
+      domain_display: 'example.test',
+      window_label_display: 'Work',
+      pinned: true,
+      score: 900,
+      best_class: 'exact_token',
+      explanation: ['title_match'],
+    }],
     ranking_model_version: 'rank-1',
-    timing: { elapsed_ms: 3 },
+    projection_epoch: 'epoch-1',
+    status: 'results',
+    accepted_limit: 10,
+    query_sequence: 0,
+    index_state: 'ready',
+    persistence_state: 'healthy',
+    freshness_age_ms: 0,
+    counters: { candidates: 1, returned: 1, total_micros: 3, degraded_code: 'PERSISTENCE_DEGRADED' },
   };
 }
 
@@ -224,10 +243,31 @@ test('query results resolve only for the correlated request and acknowledged rev
   assert.deepEqual(await pending, {
     ok: true,
     value: {
-      results: [{ result_id: 'result-1', tab_id: 9, window_id: 2, display: { title_display: 'Example' } }],
+      results: [{
+        result_id: 'result-1',
+        tab_id: 9,
+        window_id: 2,
+        display: {
+          group_id: 4,
+          title_display: 'Example',
+          domain_display: 'example.test',
+          window_label_display: 'Work',
+          pinned: true,
+          score: 900,
+          best_class: 'exact_token',
+        },
+        explanations: ['title_match'],
+      }],
       ranking_model_version: 'rank-1',
       projection_revision: 42,
-      timing: { elapsed_ms: 3 },
+      projection_epoch: 'epoch-1',
+      status: 'results',
+      accepted_limit: 10,
+      query_sequence: 0,
+      index_state: 'ready',
+      persistence_state: 'healthy',
+      freshness_age_ms: 0,
+      timing: { candidates: 1, returned: 1, total_micros: 3 },
     },
   });
 });
