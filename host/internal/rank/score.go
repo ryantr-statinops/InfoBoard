@@ -1,0 +1,34 @@
+package rank
+
+// scoredCandidate carries the matched evidence and named score components for
+// one eligible candidate.
+type scoredCandidate struct {
+	candidate  Candidate
+	evidence   []Evidence
+	components Components
+	bestClass  Class
+}
+
+// scoreCandidate matches one candidate and computes its lexical and field
+// components. It returns false when token coverage or a phrase fails.
+func scoreCandidate(input Input, candidate Candidate) (scoredCandidate, bool) {
+	index := buildCandidateIndex(candidate)
+	evidence, ok := matchCandidate(index, input.QueryTokens, input.Phrases)
+	if !ok {
+		return scoredCandidate{}, false
+	}
+	best, ok := bestEvidence(evidence)
+	if !ok {
+		return scoredCandidate{}, false
+	}
+	components := Components{
+		Lexical:     best.Class.base(),
+		FieldWeight: best.Field.weight(),
+	}
+	return scoredCandidate{
+		candidate:  candidate,
+		evidence:   evidence,
+		components: components,
+		bestClass:  best.Class,
+	}, true
+}
