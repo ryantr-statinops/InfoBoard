@@ -85,6 +85,62 @@ func TestHandleQueryDefaultsStatusAndBindsEpoch(t *testing.T) {
 	}
 }
 
+func lastErrorPayload(t *testing.T, out *recorder) ErrorPayload {
+	t.Helper()
+	frames := out.envelopes(t)
+	for index := len(frames) - 1; index >= 0; index-- {
+		if frames[index].Type != TypeError {
+			continue
+		}
+		var payload ErrorPayload
+		if err := json.Unmarshal(frames[index].Payload, &payload); err != nil {
+			t.Fatal(err)
+		}
+		return payload
+	}
+	t.Fatalf("no error frame among %d frames", len(frames))
+	return ErrorPayload{}
+}
+
+func TestHandleQueryPreservesRevisionExpectation(t *testing.T) {
+	out := &recorder{}
+	expected := uint64(5)
+	owner := &fakeQuery{fail: NewError(CodeRevisionMismatch).WithExpectation(&expected, nil)}
+	session := newSession(t, &fakeSync{}, owner)
+	mustBind(t, session, out)
+	if err := session.Accept(context.Background(), out, frame(t, TypeSnapshot, "r-q7", 1, snapshotPayload(2))); err != nil {
+		t.Fatal(err)
+	}
+	out.reset()
+	if err := session.Accept(context.Background(), out, frame(t, TypeQuery, "r-q8", 1, `{"query":"go","result_limit":5}`)); err == nil {
+		t.Fatal("typed revision failure was answered")
+	}
+	payload := lastErrorPayload(t, out)
+	if payload.Code != CodeRevisionMismatch || payload.ExpectedRevision == nil || *payload.ExpectedRevision != 5 {
+		t.Fatalf("revision failure payload = %+v", payload)
+	}
+}
+
+func TestHandleQueryRejectsRevisionBeforeOwner(t *testing.T) {
+	out := &recorder{}
+	owner := &fakeQuery{}
+	session := newSession(t, &fakeSync{}, owner)
+	mustBind(t, session, out)
+	if err := session.Accept(context.Background(), out, frame(t, TypeSnapshot, "r-q9", 1, snapshotPayload(2))); err != nil {
+		t.Fatal(err)
+	}
+	out.reset()
+	if err := session.Accept(context.Background(), out, frame(t, TypeQuery, "r-q10", 2, `{"query":"go","result_limit":5}`)); err == nil {
+		t.Fatal("unknown revision query was answered")
+	}
+	if owner.seen != 0 {
+		t.Fatalf("owner was called for unknown revision: %d", owner.seen)
+	}
+	if code := lastErrorCode(t, out); code != CodeRevisionMismatch {
+		t.Fatalf("unknown revision code = %s", code)
+	}
+}
+
 func TestHandleQueryReportsNoResultsAsSuccess(t *testing.T) {
 	out := &recorder{}
 	owner := &fakeQuery{result: QueryResult{Results: []ResultRow{}}}

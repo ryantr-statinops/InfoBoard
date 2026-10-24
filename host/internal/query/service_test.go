@@ -194,8 +194,10 @@ func TestQueryRevisionGates(t *testing.T) {
 	service := testService(t, source, nil, nil, nil)
 	request := testRequest()
 	request.Context.ProjectionRevision = 3
-	if _, err := service.Query(context.Background(), request); failureCode(t, err) != protocol.CodeRevisionMismatch {
-		t.Fatal("unknown revision accepted")
+	var mismatch *protocol.Error
+	if _, err := service.Query(context.Background(), request); !errors.As(err, &mismatch) ||
+		mismatch.Code != protocol.CodeRevisionMismatch || mismatch.ExpectedRevision == nil || *mismatch.ExpectedRevision != 4 {
+		t.Fatalf("unknown revision error = %+v", err)
 	}
 
 	source.rebuilding = true
