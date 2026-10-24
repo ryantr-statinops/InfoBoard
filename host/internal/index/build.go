@@ -8,17 +8,24 @@ import (
 // Record is the bounded input to one index build. It carries display metadata,
 // never cookies, tokens, page bodies, or full query history.
 type Record struct {
-	TabID       int64
-	ProfileID   string
-	Revision    uint64
-	Eligible    bool
-	Pinned      bool
-	Active      bool
-	Title       string
-	URL         string
-	Domain      string
-	WindowLabel string
-	GroupLabel  string
+	TabID              int64
+	ProfileID          string
+	Revision           uint64
+	Eligible           bool
+	Pinned             bool
+	Active             bool
+	WindowID           int64
+	GroupID            *int64
+	Title              string
+	URL                string
+	Domain             string
+	WindowLabel        string
+	GroupLabel         string
+	TitleDisplay       string
+	URLDisplay         string
+	DomainDisplay      string
+	WindowLabelDisplay *string
+	GroupLabelDisplay  *string
 }
 
 // State is one immutable published index generation.

@@ -5,6 +5,12 @@ import (
 	"unicode"
 )
 
+// TokenizeSearch exposes the exact tokenization used by index postings so query
+// orchestration can hand the same normalized tokens to the ranking contract.
+func TokenizeSearch(text string) []string {
+	return tokenize(text)
+}
+
 // tokenize splits normalized search text on Unicode whitespace and punctuation.
 // Separators are boundaries only; no generic stop-word list is applied.
 func tokenize(text string) []string {
