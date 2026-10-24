@@ -25,6 +25,9 @@ func scoreCandidate(input Input, candidate Candidate) (scoredCandidate, bool) {
 		Lexical:               best.Class.base(),
 		FieldWeight:           best.Field.weight(),
 		ContextBonus:          contextBonus(evidence),
+		RecencyBonus:          recencyBonus(input.RankingTimestamp, candidate.ActivatedAt),
+		ActiveWindowBonus:     activeWindowBonusFor(input, candidate),
+		PinnedOrGroupBonus:    pinnedOrGroupBonusFor(input, candidate),
 		StaleOrMissingPenalty: staleOrMissingPenalty(candidate),
 	}
 	return scoredCandidate{
