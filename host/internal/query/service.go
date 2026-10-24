@@ -95,6 +95,7 @@ func (s *Service) Query(ctx context.Context, request protocol.QueryRequest) (pro
 		result.Counters.Candidates = int64(candidates)
 		result.Counters.Returned = int64(len(rows))
 		result.Counters.TotalMicros = time.Since(started).Microseconds()
+		s.annotatePersistence(&result)
 		s.observe(result)
 		return result, nil
 	}
@@ -130,8 +131,17 @@ func (s *Service) Query(ctx context.Context, request protocol.QueryRequest) (pro
 	result.Counters.Candidates = int64(len(candidates))
 	result.Counters.Returned = int64(len(result.Results))
 	result.Counters.TotalMicros = time.Since(started).Microseconds()
+	s.annotatePersistence(&result)
 	s.observe(result)
 	return result, nil
+}
+
+// annotatePersistence keeps SQLite health observable without making it a
+// prerequisite for the in-memory lexical path.
+func (s *Service) annotatePersistence(result *protocol.QueryResult) {
+	if result.PersistenceState == "degraded" {
+		result.Counters.DegradedCode = protocol.CodePersistenceDegraded
+	}
 }
 
 func queryNormalizeFailure(failure *index.NormalizeError, raw string) *protocol.Error {

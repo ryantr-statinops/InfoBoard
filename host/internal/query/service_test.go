@@ -239,8 +239,40 @@ func TestQueryObservesBoundedStatus(t *testing.T) {
 	if result.Status != protocol.QueryStatusNoResults || result.PersistenceState != "degraded" || result.IndexState != "ready" {
 		t.Fatalf("query status = %+v", result)
 	}
+	if result.Counters.DegradedCode != protocol.CodePersistenceDegraded {
+		t.Fatalf("degraded code = %s", result.Counters.DegradedCode)
+	}
 	if len(observer.observations) != 1 || observer.observations[0].Status != protocol.QueryStatusNoResults {
 		t.Fatalf("observations = %+v", observer.observations)
+	}
+}
+
+func TestQueryDegradedPersistenceStillReturnsRows(t *testing.T) {
+	state := testState(t, record(10, "example docs"))
+	service := testService(t, sourceFor(state), nil, fakeHealth("degraded"), nil)
+	request := testRequest()
+	request.Text = "example"
+	result, err := service.Query(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Status != protocol.QueryStatusResults || len(result.Results) != 1 {
+		t.Fatalf("degraded lexical result = %+v", result)
+	}
+	if result.PersistenceState != "degraded" || result.Counters.DegradedCode != protocol.CodePersistenceDegraded {
+		t.Fatalf("degraded annotation = %+v", result)
+	}
+
+	request.Text = ""
+	result, err = service.Query(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Status != protocol.QueryStatusEmptyQuery || len(result.Results) != 1 {
+		t.Fatalf("degraded context result = %+v", result)
+	}
+	if result.PersistenceState != "degraded" || result.Counters.DegradedCode != protocol.CodePersistenceDegraded {
+		t.Fatalf("degraded context annotation = %+v", result)
 	}
 }
 
