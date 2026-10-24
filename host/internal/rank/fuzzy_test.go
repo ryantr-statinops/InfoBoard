@@ -6,7 +6,7 @@ func TestExactEvidenceUsesBoundedFuzzyMatch(t *testing.T) {
 	index := buildCandidateIndex(Candidate{
 		Fields: []FieldText{{Field: FieldTitle, Text: "example page", Tokens: []string{"example", "page"}}},
 	})
-	evidence, ok := index.exactEvidence("exampl")
+	evidence, ok := index.exactEvidence("exampld")
 	if !ok || evidence.Class != ClassFuzzy || evidence.Field != FieldTitle {
 		t.Fatalf("fuzzy evidence = %+v, %v", evidence, ok)
 	}
