@@ -190,7 +190,7 @@ func (record fixtureRecord) toIndex(profileID string, revision uint64) index.Rec
 	}
 }
 
-func buildFixtureState(t *testing.T, input fixtureInput) *index.State {
+func buildFixtureState(t testing.TB, input fixtureInput) *index.State {
 	t.Helper()
 	revision := input.IndexRevision
 	if revision == 0 {
@@ -238,7 +238,7 @@ func (recency fixtureRecency) ActivatedAt(_ string, tabID int64) (int64, bool) {
 	return value, ok
 }
 
-func fixtureService(t *testing.T, input fixtureInput, source query.Source) *query.Service {
+func fixtureService(t testing.TB, input fixtureInput, source query.Source) *query.Service {
 	t.Helper()
 	var defaults query.Defaults
 	if input.DefaultResultLimit > 0 {
