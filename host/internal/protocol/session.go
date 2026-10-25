@@ -83,7 +83,10 @@ type QueryRequest struct {
 	Context         RequestContext
 	Text            string
 	ResultLimit     int
+	HasResultLimit  bool
 	CurrentWindowID int64
+	CurrentGroupID  *int64
+	QuerySequence   uint64
 }
 
 // QueryOwner is the lexical index hook supplied by IP-10 and IP-12.
@@ -438,7 +441,10 @@ func (session *Session) handleQuery(ctx context.Context, channel runtime.FrameCh
 		Context:         session.requestContext(envelope),
 		Text:            query.Text,
 		ResultLimit:     query.ResultLimit,
+		HasResultLimit:  query.HasResultLimit,
 		CurrentWindowID: query.CurrentWindowID,
+		CurrentGroupID:  query.CurrentGroupID,
+		QuerySequence:   query.QuerySequence,
 	})
 	if err != nil {
 		if errors.Is(context.Cause(budgeted), ErrQueryBudget) {
@@ -449,18 +455,54 @@ func (session *Session) handleQuery(ctx context.Context, channel runtime.FrameCh
 			session.forget(envelope.RequestID)
 			return nil
 		}
+		var typed *Error
+		if errors.As(err, &typed) {
+			return session.refuse(ctx, channel, envelope.RequestID, typed, typed.Retryable)
+		}
 		return session.refuse(ctx, channel, envelope.RequestID, NewError(CodeInternalFailure), false)
 	}
 	if len(result.Results) > session.config.Limits.MaxResults {
 		return session.refuse(ctx, channel, envelope.RequestID, NewError(CodePayloadLimit).WithBound("result_count", session.config.Limits.MaxResults, len(result.Results)), false)
 	}
 	result.ProjectionRevision = state.Revision
+	result.ProjectionEpoch = state.Epoch
 	result.RankingModelVersion = session.config.RankingModelVersion
 	result.Counters.Returned = int64(len(result.Results))
+	if result.Status == "" {
+		if len(result.Results) == 0 {
+			result.Status = QueryStatusNoResults
+		} else {
+			result.Status = QueryStatusResults
+		}
+	}
+	if result.AcceptedLimit <= 0 {
+		if query.ResultLimit > 0 {
+			result.AcceptedLimit = query.ResultLimit
+		} else {
+			result.AcceptedLimit = session.config.Limits.MaxResults
+		}
+	}
+	if result.QuerySequence == 0 {
+		result.QuerySequence = query.QuerySequence
+	}
+	if result.IndexState == "" {
+		result.IndexState = "ready"
+	}
+	persistenceState := session.persistenceState()
+	if result.PersistenceState == "" {
+		if persistenceState == string(runtime.PersistenceReady) {
+			result.PersistenceState = "healthy"
+		} else {
+			result.PersistenceState = persistenceState
+		}
+	}
 	// A degraded store stays visible in the counters annotation while the
 	// lexical result remains available.
-	if session.persistenceState() == string(runtime.PersistenceDegraded) {
+	if persistenceState == string(runtime.PersistenceDegraded) {
 		result.Counters.DegradedCode = CodePersistenceDegraded
+		if result.PersistenceState == "" || result.PersistenceState == "healthy" {
+			result.PersistenceState = "degraded"
+		}
 	}
 	return session.respond(ctx, channel, envelope, TypeQueryResult, result, digest)
 }

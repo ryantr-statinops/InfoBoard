@@ -314,31 +314,77 @@ type ResyncRequired struct {
 type Query struct {
 	Text            string `json:"query"`
 	ResultLimit     int    `json:"result_limit"`
+	HasResultLimit  bool   `json:"-"`
 	CurrentWindowID int64  `json:"current_window_id"`
+	CurrentGroupID  *int64 `json:"current_group_id,omitempty"`
+	QuerySequence   uint64 `json:"query_sequence,omitempty"`
 }
 
-// DecodeQuery validates the query payload before any index work.
+// DecodeQuery validates the query payload before any index work. An omitted
+// result_limit is resolved by the query orchestrator from the profile default;
+// an explicitly supplied limit must already be within the negotiated bound.
 func DecodeQuery(payload []byte, limits Limits) (Query, *Error) {
 	var query Query
-	failure := DecodePayloadObject(payload, map[string]fieldDecoder{
+	decodeLimit := func(decoder *json.Decoder) *Error {
+		query.HasResultLimit = true
+		return decodeIntField(&query.ResultLimit, true)(decoder)
+	}
+	failure := decodePayload(payload, map[string]fieldDecoder{
 		"query":             decodeStringField(&query.Text, limits.MaxQueryScalars*4, false),
-		"result_limit":      decodeIntField(&query.ResultLimit, true),
+		"result_limit":      decodeLimit,
 		"current_window_id": decodeInt64Field(&query.CurrentWindowID, false),
-	})
+		"current_group_id":  decodeOptionalInt64Pointer(&query.CurrentGroupID),
+		"query_sequence":    decodeUint64Field(&query.QuerySequence, false),
+	}, []string{"query"})
 	if failure != nil {
 		return Query{}, failure
 	}
 	if utf8.RuneCountInString(query.Text) > limits.MaxQueryScalars {
 		return Query{}, NewError(CodePayloadLimit).WithBound("query_scalars", limits.MaxQueryScalars, utf8.RuneCountInString(query.Text))
 	}
-	if query.ResultLimit <= 0 || query.ResultLimit > limits.MaxResults {
+	if query.HasResultLimit && (query.ResultLimit <= 0 || query.ResultLimit > limits.MaxResults) {
 		return Query{}, NewError(CodePayloadLimit).WithBound("result_limit", limits.MaxResults, query.ResultLimit)
 	}
 	if query.CurrentWindowID < 0 {
 		return Query{}, NewError(CodeInvalidFrame)
 	}
+	if query.CurrentGroupID != nil && *query.CurrentGroupID < 0 {
+		return Query{}, NewError(CodeInvalidFrame)
+	}
 	return query, nil
 }
+
+func decodeOptionalInt64Pointer(target **int64) fieldDecoder {
+	return func(decoder *json.Decoder) *Error {
+		token, err := decoder.Token()
+		if err != nil {
+			return NewError(CodeInvalidFrame)
+		}
+		if token == nil {
+			*target = nil
+			return nil
+		}
+		number, ok := token.(json.Number)
+		if !ok {
+			return NewError(CodeInvalidFrame)
+		}
+		value, err := number.Int64()
+		if err != nil {
+			return NewError(CodeInvalidFrame)
+		}
+		*target = &value
+		return nil
+	}
+}
+
+// QueryStatus is the bounded success status carried by query_result.
+type QueryStatus string
+
+const (
+	QueryStatusResults    QueryStatus = "results"
+	QueryStatusNoResults  QueryStatus = "no_results"
+	QueryStatusEmptyQuery QueryStatus = "empty_query"
+)
 
 // QueryResult is the host answer payload. It carries bounded display metadata
 // and opaque identities only.
@@ -346,6 +392,13 @@ type QueryResult struct {
 	Results             []ResultRow   `json:"results"`
 	RankingModelVersion string        `json:"ranking_model_version"`
 	ProjectionRevision  uint64        `json:"projection_revision"`
+	ProjectionEpoch     string        `json:"projection_epoch,omitempty"`
+	Status              QueryStatus   `json:"status"`
+	AcceptedLimit       int           `json:"accepted_limit"`
+	QuerySequence       uint64        `json:"query_sequence,omitempty"`
+	IndexState          string        `json:"index_state,omitempty"`
+	PersistenceState    string        `json:"persistence_state,omitempty"`
+	FreshnessAgeMillis  int64         `json:"freshness_age_ms"`
 	Counters            QueryCounters `json:"counters"`
 }
 
@@ -361,14 +414,18 @@ type QueryCounters struct {
 
 // ResultRow is one bounded, renderable result row.
 type ResultRow struct {
-	ResultID          string   `json:"result_id"`
-	TabID             int64    `json:"tab_id"`
-	WindowID          int64    `json:"window_id"`
-	TitleDisplay      string   `json:"title_display"`
-	DomainDisplay     string   `json:"domain_display"`
-	GroupLabelDisplay *string  `json:"group_label_display,omitempty"`
-	Pinned            bool     `json:"pinned"`
-	Explanation       []string `json:"explanation,omitempty"`
+	ResultID           string   `json:"result_id"`
+	TabID              int64    `json:"tab_id"`
+	WindowID           int64    `json:"window_id"`
+	GroupID            *int64   `json:"group_id,omitempty"`
+	TitleDisplay       string   `json:"title_display"`
+	DomainDisplay      string   `json:"domain_display"`
+	WindowLabelDisplay *string  `json:"window_label_display,omitempty"`
+	GroupLabelDisplay  *string  `json:"group_label_display,omitempty"`
+	Pinned             bool     `json:"pinned"`
+	Score              int64    `json:"score,omitempty"`
+	BestClass          string   `json:"best_class,omitempty"`
+	Explanation        []string `json:"explanation,omitempty"`
 }
 
 // ResultReference is the opaque, bounded reference the extension echoes when it

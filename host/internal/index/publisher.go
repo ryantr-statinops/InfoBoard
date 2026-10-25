@@ -28,17 +28,24 @@ func (p *Publisher) Publish(ctx context.Context, profileID string, kind domain.C
 	converted := make([]Record, 0, len(records))
 	for _, record := range records {
 		converted = append(converted, Record{
-			TabID:       record.TabIdentity.TabID,
-			ProfileID:   string(record.ProfileID),
-			Revision:    revision,
-			Eligible:    record.Eligible,
-			Pinned:      record.Pinned,
-			Active:      record.Active,
-			Title:       record.TitleSearch,
-			URL:         record.URLSearch,
-			Domain:      record.DomainSearch,
-			WindowLabel: deref(record.WindowLabelSearch),
-			GroupLabel:  deref(record.GroupLabelSearch),
+			TabID:              record.TabIdentity.TabID,
+			ProfileID:          string(record.ProfileID),
+			Revision:           revision,
+			Eligible:           record.Eligible,
+			Pinned:             record.Pinned,
+			Active:             record.Active,
+			WindowID:           record.WindowID,
+			GroupID:            cloneInt64(record.GroupID),
+			Title:              record.TitleSearch,
+			URL:                record.URLSearch,
+			Domain:             record.DomainSearch,
+			WindowLabel:        deref(record.WindowLabelSearch),
+			GroupLabel:         deref(record.GroupLabelSearch),
+			TitleDisplay:       record.TitleDisplay,
+			URLDisplay:         record.URLDisplay,
+			DomainDisplay:      record.DomainDisplay,
+			WindowLabelDisplay: cloneString(record.WindowLabelDisplay),
+			GroupLabelDisplay:  cloneString(record.GroupLabelDisplay),
 		})
 	}
 	staged, err := Stage(profileID, revision, converted)
@@ -95,4 +102,20 @@ func deref(value *string) string {
 		return ""
 	}
 	return *value
+}
+
+func cloneInt64(value *int64) *int64 {
+	if value == nil {
+		return nil
+	}
+	cloned := *value
+	return &cloned
+}
+
+func cloneString(value *string) *string {
+	if value == nil {
+		return nil
+	}
+	cloned := *value
+	return &cloned
 }

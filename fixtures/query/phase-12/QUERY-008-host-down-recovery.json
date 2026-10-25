@@ -1,0 +1,107 @@
+{
+  "fixture_id": "FX-QUERY-HOST-DOWN-RECOVERY",
+  "owner_phase": "IP-12",
+  "requirement_ids": [
+    "FR-013"
+  ],
+  "category": "query",
+  "input": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "projection_revision": 7,
+    "ranking_timestamp": 1000,
+    "records": [
+      {
+        "tab_id": 10,
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "revision": 7,
+        "eligible": true,
+        "pinned": true,
+        "active": true,
+        "window_id": 1,
+        "group_id": 4,
+        "title": "example docs",
+        "url": "https://example.test/docs",
+        "domain": "example.test",
+        "window_label": "work",
+        "group_label": "research",
+        "title_display": "Example Docs",
+        "url_display": "https://example.test/docs",
+        "domain_display": "example.test",
+        "window_label_display": "Work",
+        "group_label_display": "Research"
+      },
+      {
+        "tab_id": 11,
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "revision": 7,
+        "eligible": true,
+        "pinned": false,
+        "active": false,
+        "window_id": 2,
+        "group_id": 5,
+        "title": "work portal",
+        "url": "https://work.test",
+        "domain": "work.test",
+        "window_label": "work",
+        "group_label": "operations",
+        "title_display": "Work Portal",
+        "url_display": "https://work.test",
+        "domain_display": "work.test",
+        "window_label_display": "Work",
+        "group_label_display": "Operations"
+      },
+      {
+        "tab_id": 12,
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "revision": 7,
+        "eligible": true,
+        "pinned": false,
+        "active": false,
+        "window_id": 3,
+        "group_id": 4,
+        "title": "research notes",
+        "url": "https://research.test",
+        "domain": "research.test",
+        "window_label": "personal",
+        "group_label": "research",
+        "title_display": "Research Notes",
+        "url_display": "https://research.test",
+        "domain_display": "research.test",
+        "window_label_display": "Personal",
+        "group_label_display": "Research"
+      }
+    ],
+    "scenario": "host_down",
+    "query": "example",
+    "result_limit": 5,
+    "client_sequence": 1,
+    "recovery_revision": 8
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "client_status",
+        "value": "unavailable"
+      },
+      {
+        "signal": "retryable",
+        "value": true
+      },
+      {
+        "signal": "rows_before_recovery",
+        "value": 0
+      },
+      {
+        "signal": "recovery_status",
+        "value": "results"
+      },
+      {
+        "signal": "recovery_projection_revision",
+        "value": 8
+      }
+    ],
+    "privacy_assertions": [
+      "Host-down state never claims results; a fresh ready revision becomes queryable after reconnect."
+    ]
+  }
+}

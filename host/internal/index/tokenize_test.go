@@ -13,6 +13,14 @@ func TestTokenizeSplitsOnWhitespaceAndPunctuation(t *testing.T) {
 	}
 }
 
+func TestTokenizeSearchMatchesIndexTokenization(t *testing.T) {
+	got := TokenizeSearch("alpha-beta, gamma.delta")
+	want := []string{"alpha", "beta", "gamma", "delta"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("tokens: %v", got)
+	}
+}
+
 func TestParseURLSegments(t *testing.T) {
 	segments, err := ParseURLSegments("https://Docs.Example.test/guide/start")
 	if err != nil {

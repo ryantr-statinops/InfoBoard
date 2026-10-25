@@ -875,6 +875,510 @@
           "Ranking consumes only synthetic normalized field tokens; no raw title, URL, query text, page content, or real browsing record is retained."
         ]
       }
+    },
+    {
+      "fixture_id": "FX-QUERY-FIELD-MATCH",
+      "owner_phase": "IP-12",
+      "requirement_ids": [
+        "FR-003"
+      ],
+      "category": "query",
+      "input": {
+        "query_cases": 6,
+        "record_count": 3,
+        "projection_revision": 7
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "case_results",
+            "value": [
+              {
+                "query": "example",
+                "tab_ids": [
+                  10
+                ]
+              },
+              {
+                "query": "personal",
+                "tab_ids": [
+                  12
+                ]
+              },
+              {
+                "query": "operations",
+                "tab_ids": [
+                  11
+                ]
+              },
+              {
+                "query": "docs",
+                "tab_ids": [
+                  10
+                ]
+              },
+              {
+                "query": "example.test",
+                "tab_ids": [
+                  10
+                ]
+              },
+              {
+                "query": "pinned",
+                "tab_ids": [
+                  10
+                ]
+              }
+            ]
+          },
+          {
+            "signal": "profile_bound",
+            "value": true
+          },
+          {
+            "signal": "status",
+            "value": "results"
+          },
+          {
+            "signal": "persistence_state",
+            "value": "healthy"
+          }
+        ],
+        "privacy_assertions": [
+          "Query text, titles, URLs, and domains are never logged by the query path."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-QUERY-LIVE-REVISIONS",
+      "owner_phase": "IP-12",
+      "requirement_ids": [
+        "FR-004"
+      ],
+      "category": "query",
+      "input": {
+        "accepted_query_revisions": [
+          1,
+          2
+        ],
+        "superseded_revision": 1,
+        "record_count": 3
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "query_sequences",
+            "value": [
+              1,
+              2
+            ]
+          },
+          {
+            "signal": "latest_query_sequence",
+            "value": 2
+          },
+          {
+            "signal": "latest_result_tab_ids",
+            "value": [
+              10
+            ]
+          },
+          {
+            "signal": "superseded_response_ignored",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "A superseded query response is not rendered over the latest accepted input."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-QUERY-EMPTY-NO-RESULTS",
+      "owner_phase": "IP-12",
+      "requirement_ids": [
+        "FR-003"
+      ],
+      "category": "query",
+      "input": {
+        "empty_query": "",
+        "unmatched_query": "missing",
+        "record_count": 3
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "empty_status",
+            "value": "empty_query"
+          },
+          {
+            "signal": "empty_context_count",
+            "value": 3
+          },
+          {
+            "signal": "empty_context_first_tab_id",
+            "value": 10
+          },
+          {
+            "signal": "no_result_status",
+            "value": "no_results"
+          },
+          {
+            "signal": "no_result_count",
+            "value": 0
+          }
+        ],
+        "privacy_assertions": [
+          "Empty input returns only bounded context metadata and never fabricates a match."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-QUERY-INVALID-OVERLONG",
+      "owner_phase": "IP-12",
+      "requirement_ids": [
+        "FR-003"
+      ],
+      "category": "query",
+      "input": {
+        "invalid_query": "unbalanced phrase",
+        "overlong_scalars": 65
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "invalid_phrase_error",
+            "value": "INVALID_FRAME"
+          },
+          {
+            "signal": "overlong_error",
+            "value": "PAYLOAD_LIMIT"
+          },
+          {
+            "signal": "index_mutation",
+            "value": false
+          }
+        ],
+        "privacy_assertions": [
+          "Malformed and overlong input never mutates the index or executes external work."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-QUERY-RESULT-LIMIT",
+      "owner_phase": "IP-12",
+      "requirement_ids": [
+        "FR-003"
+      ],
+      "category": "query",
+      "input": {
+        "fallback_limit": 5,
+        "configured_maximum": 5,
+        "cases": [
+          "omitted",
+          "1",
+          "5",
+          "0",
+          "6"
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "omitted_limit",
+            "value": 5
+          },
+          {
+            "signal": "minimum_limit",
+            "value": 1
+          },
+          {
+            "signal": "configured_maximum",
+            "value": 5
+          },
+          {
+            "signal": "zero_limit_error",
+            "value": "PAYLOAD_LIMIT"
+          },
+          {
+            "signal": "above_maximum_error",
+            "value": "PAYLOAD_LIMIT"
+          }
+        ],
+        "privacy_assertions": [
+          "Result limits are bounded before ranking and allocation."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-QUERY-UNKNOWN-REVISION",
+      "owner_phase": "IP-12",
+      "requirement_ids": [
+        "FR-004"
+      ],
+      "category": "query",
+      "input": {
+        "requested_revision": 6,
+        "known_revision": 7
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "error_code",
+            "value": "REVISION_MISMATCH"
+          },
+          {
+            "signal": "result_count",
+            "value": 0
+          },
+          {
+            "signal": "expected_revision",
+            "value": 7
+          },
+          {
+            "signal": "older_revision_fallback",
+            "value": false
+          }
+        ],
+        "privacy_assertions": [
+          "An unknown revision never returns rows from an older published index."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-QUERY-REBUILDING-REVISION",
+      "owner_phase": "IP-12",
+      "requirement_ids": [
+        "FR-004"
+      ],
+      "category": "query",
+      "input": {
+        "projection_revision": 7,
+        "index_rebuilding": true
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "error_code",
+            "value": "INDEX_REBUILDING"
+          },
+          {
+            "signal": "result_count",
+            "value": 0
+          },
+          {
+            "signal": "retryable",
+            "value": true
+          },
+          {
+            "signal": "older_revision_fallback",
+            "value": false
+          }
+        ],
+        "privacy_assertions": [
+          "A rebuilding index returns no rows and a retryable status."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-QUERY-HOST-DOWN-RECOVERY",
+      "owner_phase": "IP-12",
+      "requirement_ids": [
+        "FR-013"
+      ],
+      "category": "recovery",
+      "input": {
+        "host_available": false,
+        "recovery_revision": 8
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "client_status",
+            "value": "unavailable"
+          },
+          {
+            "signal": "retryable",
+            "value": true
+          },
+          {
+            "signal": "rows_before_recovery",
+            "value": 0
+          },
+          {
+            "signal": "recovery_status",
+            "value": "results"
+          },
+          {
+            "signal": "recovery_projection_revision",
+            "value": 8
+          }
+        ],
+        "privacy_assertions": [
+          "Host-down state never claims results; a fresh ready revision becomes queryable after reconnect."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-QUERY-PERSISTENCE-DEGRADED",
+      "owner_phase": "IP-12",
+      "requirement_ids": [
+        "FR-013"
+      ],
+      "category": "query",
+      "input": {
+        "persistence_state": "degraded",
+        "record_count": 3
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "status",
+            "value": "results"
+          },
+          {
+            "signal": "result_count",
+            "value": 1
+          },
+          {
+            "signal": "persistence_state",
+            "value": "degraded"
+          },
+          {
+            "signal": "degraded_code",
+            "value": "PERSISTENCE_DEGRADED"
+          },
+          {
+            "signal": "accepted_limit",
+            "value": 5
+          }
+        ],
+        "privacy_assertions": [
+          "Optional SQLite failure annotates persistence health without blocking lexical results."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-QUERY-DETERMINISTIC-HANDOFF",
+      "owner_phase": "IP-12",
+      "requirement_ids": [
+        "FR-003",
+        "FR-005"
+      ],
+      "category": "query",
+      "input": {
+        "query": "example",
+        "projection_revision": 7,
+        "record_count": 3
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "deterministic_result_ids",
+            "value": true
+          },
+          {
+            "signal": "status",
+            "value": "results"
+          },
+          {
+            "signal": "ranking_model_version",
+            "value": "rank-v1"
+          },
+          {
+            "signal": "projection_revision",
+            "value": 7
+          },
+          {
+            "signal": "result_count",
+            "value": 1
+          }
+        ],
+        "privacy_assertions": [
+          "Repeated identical inputs produce byte-equivalent bounded result identities."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-QUERY-ADVERSARIAL-BOUNDS",
+      "owner_phase": "IP-12",
+      "requirement_ids": [
+        "FR-004"
+      ],
+      "category": "query",
+      "input": {
+        "control_character": true,
+        "overlong_scalars": 65,
+        "result_limit": 51
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "control_character_error",
+            "value": "INVALID_FRAME"
+          },
+          {
+            "signal": "overlong_query_error",
+            "value": "PAYLOAD_LIMIT"
+          },
+          {
+            "signal": "over_negotiated_limit_error",
+            "value": "PAYLOAD_LIMIT"
+          },
+          {
+            "signal": "index_mutation",
+            "value": false
+          }
+        ],
+        "privacy_assertions": [
+          "Adversarial input fails closed with bounded, redacted errors."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-QUERY-1000-TABS-64-CHARS",
+      "owner_phase": "IP-12",
+      "requirement_ids": [
+        "NFR-002"
+      ],
+      "category": "query",
+      "input": {
+        "record_count": 1000,
+        "query_scalars": 64,
+        "result_limit": 5,
+        "p95_budget_ms": 50
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "record_count",
+            "value": 1000
+          },
+          {
+            "signal": "query_scalars",
+            "value": 64
+          },
+          {
+            "signal": "result_limit",
+            "value": 5
+          },
+          {
+            "signal": "status",
+            "value": "results"
+          },
+          {
+            "signal": "result_count",
+            "value": 5
+          },
+          {
+            "signal": "benchmark_p95_budget_ms",
+            "value": 50
+          }
+        ],
+        "privacy_assertions": [
+          "The benchmark input contains only bounded local metadata and no page content."
+        ]
+      }
     }
   ],
   "future_check_contracts": [
