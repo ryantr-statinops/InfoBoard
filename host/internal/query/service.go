@@ -81,6 +81,7 @@ func (s *Service) Query(ctx context.Context, request protocol.QueryRequest) (pro
 	result := protocol.QueryResult{
 		Results:             make([]protocol.ResultRow, 0),
 		RankingModelVersion: s.config.RankingModelVersion,
+		ProjectionRevision:  request.Context.ProjectionRevision,
 		Status:              protocol.QueryStatusNoResults,
 		AcceptedLimit:       limit,
 		QuerySequence:       request.QuerySequence,

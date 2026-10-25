@@ -1,0 +1,121 @@
+{
+  "fixture_id": "FX-QUERY-EMPTY-NO-RESULTS",
+  "owner_phase": "IP-12",
+  "requirement_ids": [
+    "FR-003"
+  ],
+  "category": "query",
+  "input": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "projection_revision": 7,
+    "ranking_timestamp": 1000,
+    "records": [
+      {
+        "tab_id": 10,
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "revision": 7,
+        "eligible": true,
+        "pinned": true,
+        "active": true,
+        "window_id": 1,
+        "group_id": 4,
+        "title": "example docs",
+        "url": "https://example.test/docs",
+        "domain": "example.test",
+        "window_label": "work",
+        "group_label": "research",
+        "title_display": "Example Docs",
+        "url_display": "https://example.test/docs",
+        "domain_display": "example.test",
+        "window_label_display": "Work",
+        "group_label_display": "Research"
+      },
+      {
+        "tab_id": 11,
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "revision": 7,
+        "eligible": true,
+        "pinned": false,
+        "active": false,
+        "window_id": 2,
+        "group_id": 5,
+        "title": "work portal",
+        "url": "https://work.test",
+        "domain": "work.test",
+        "window_label": "work",
+        "group_label": "operations",
+        "title_display": "Work Portal",
+        "url_display": "https://work.test",
+        "domain_display": "work.test",
+        "window_label_display": "Work",
+        "group_label_display": "Operations"
+      },
+      {
+        "tab_id": 12,
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "revision": 7,
+        "eligible": true,
+        "pinned": false,
+        "active": false,
+        "window_id": 3,
+        "group_id": 4,
+        "title": "research notes",
+        "url": "https://research.test",
+        "domain": "research.test",
+        "window_label": "personal",
+        "group_label": "research",
+        "title_display": "Research Notes",
+        "url_display": "https://research.test",
+        "domain_display": "research.test",
+        "window_label_display": "Personal",
+        "group_label_display": "Research"
+      }
+    ],
+    "cases": [
+      {
+        "query": "",
+        "status": "empty_query",
+        "tab_ids": [
+          10,
+          12,
+          11
+        ]
+      },
+      {
+        "query": "missing",
+        "status": "no_results",
+        "tab_ids": []
+      }
+    ],
+    "result_limit": 5,
+    "current_window_id": 1,
+    "current_group_id": 4
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "empty_status",
+        "value": "empty_query"
+      },
+      {
+        "signal": "empty_context_count",
+        "value": 3
+      },
+      {
+        "signal": "empty_context_first_tab_id",
+        "value": 10
+      },
+      {
+        "signal": "no_result_status",
+        "value": "no_results"
+      },
+      {
+        "signal": "no_result_count",
+        "value": 0
+      }
+    ],
+    "privacy_assertions": [
+      "Empty input returns only bounded context metadata and never fabricates a match."
+    ]
+  }
+}
