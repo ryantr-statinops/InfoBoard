@@ -10,6 +10,10 @@ declare const chrome: {
   action: { openPopup(): Promise<void> };
   runtime: { sendMessage(message: unknown): Promise<unknown> };
   storage: { local: { get(key: string): Promise<Record<string, unknown>> } };
+  windows: {
+    getLastFocused(): Promise<{ id?: number }>;
+    update(windowId: number, updateInfo: { focused: boolean }): Promise<unknown>;
+  };
 };
 
 async function launch(userDataDir: string, viewport: { width: number; height: number }) {
@@ -38,7 +42,11 @@ test('extension search surface initializes and handles close signals in a 480x60
     if (!browser) throw new Error('Persistent Chromium context has no browser connection');
     const cdp = await browser.newBrowserCDPSession();
     const selectedTabUrl = source.url();
-    await worker.evaluate(async () => chrome.action.openPopup());
+    await worker.evaluate(async () => {
+      const lastFocused = await chrome.windows.getLastFocused();
+      if (lastFocused.id !== undefined) await chrome.windows.update(lastFocused.id, { focused: true });
+      await chrome.action.openPopup();
+    });
     await expect.poll(async () => {
       const { targetInfos } = await cdp.send('Target.getTargets');
       return targetInfos.some(target => target.type === 'page' && target.url === surfaceUrl);

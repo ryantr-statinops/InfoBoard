@@ -17,6 +17,10 @@ declare const chrome: {
       remove(key: string | string[]): Promise<void>;
     };
   };
+  windows: {
+    getLastFocused(): Promise<{ id?: number }>;
+    update(windowId: number, updateInfo: { focused: boolean }): Promise<unknown>;
+  };
 };
 
 const SAMPLE_COUNT = 20;
@@ -64,6 +68,8 @@ test('surface focus p95 stays under 100 ms and command-popup latency is recorded
         'infoboard_search_command_started_at',
       ]);
       await chrome.storage.session.set({ infoboard_search_command_started_at: Date.now() });
+      const lastFocused = await chrome.windows.getLastFocused();
+      if (lastFocused.id !== undefined) await chrome.windows.update(lastFocused.id, { focused: true });
       await chrome.action.openPopup();
     });
     await expect.poll(targetExists, { timeout: 3000 }).toBe(true);
@@ -116,7 +122,9 @@ test('surface focus p95 stays under 100 ms and command-popup latency is recorded
     threshold_ms: THRESHOLD_MS,
     command,
     surface,
-    pass: surface.pass,
+    command_budget_pass: command.pass,
+    surface_budget_pass: surface.pass,
+    pass: command.pass && surface.pass,
     compatibility_exception: command.pass
       ? null
       : 'Chrome action-popup creation is browser-controlled; command-to-focus includes popup creation, while the IP-13 surface module-to-focus path is measured separately and stays within budget.',
