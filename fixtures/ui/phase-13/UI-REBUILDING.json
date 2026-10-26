@@ -1,0 +1,18 @@
+{
+  "fixture_id": "FX-UI-REBUILDING",
+  "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+  "context_kind": "normal",
+  "surface": {
+    "width": 480,
+    "height": 600
+  },
+  "projection_revision": 8,
+  "responses": [
+    {
+      "status": "rebuilding",
+      "projection_revision": 8,
+      "index_state": "rebuilding",
+      "rows": []
+    }
+  ]
+}

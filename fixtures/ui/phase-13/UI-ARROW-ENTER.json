@@ -1,0 +1,39 @@
+{
+  "fixture_id": "FX-UI-ARROW-ENTER",
+  "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+  "context_kind": "normal",
+  "surface": {
+    "width": 480,
+    "height": 600
+  },
+  "projection_revision": 11,
+  "activation": {
+    "ok": true,
+    "confirmed": true
+  },
+  "responses": [
+    {
+      "status": "results",
+      "projection_revision": 11,
+      "rows": [
+        {
+          "result_id": "arrow-first",
+          "tab_id": 31,
+          "window_id": 1,
+          "title": "Documentation home",
+          "domain": "docs.example.test",
+          "explanations": ["title match"]
+        },
+        {
+          "result_id": "arrow-second",
+          "tab_id": 32,
+          "window_id": 2,
+          "title": "Documentation reference",
+          "domain": "reference.example.test",
+          "window_label": "Window 2",
+          "explanations": ["title match"]
+        }
+      ]
+    }
+  ]
+}

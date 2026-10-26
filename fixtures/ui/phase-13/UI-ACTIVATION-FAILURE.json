@@ -1,0 +1,31 @@
+{
+  "fixture_id": "FX-UI-ACTIVATION-FAILURE",
+  "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+  "context_kind": "normal",
+  "surface": {
+    "width": 480,
+    "height": 600
+  },
+  "projection_revision": 12,
+  "activation": {
+    "ok": false,
+    "confirmed": true,
+    "error_code": "tab_missing"
+  },
+  "responses": [
+    {
+      "status": "results",
+      "projection_revision": 12,
+      "rows": [
+        {
+          "result_id": "activation-failure-one",
+          "tab_id": 81,
+          "window_id": 1,
+          "title": "Activation failure result",
+          "domain": "failure.example.test",
+          "explanations": ["title match"]
+        }
+      ]
+    }
+  ]
+}

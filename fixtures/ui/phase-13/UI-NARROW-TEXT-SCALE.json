@@ -1,0 +1,57 @@
+{
+  "fixture_id": "FX-UI-NARROW-TEXT-SCALE",
+  "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+  "context_kind": "normal",
+  "surface": {
+    "width": 320,
+    "height": 480
+  },
+  "projection_revision": 13,
+  "responses": [
+    {
+      "status": "results",
+      "projection_revision": 13,
+      "rows": [
+        {
+          "result_id": "narrow-1",
+          "tab_id": 51,
+          "window_id": 1,
+          "group_id": 7,
+          "title": "A very long documentation title that must wrap without hiding the selected result",
+          "domain": "long-subdomain.example.test",
+          "window_label": "Window with a long descriptive label",
+          "group_label": "Research group with a long descriptive label",
+          "pinned": true,
+          "explanations": ["title match"]
+        },
+        {
+          "result_id": "narrow-2",
+          "tab_id": 52,
+          "window_id": 2,
+          "title": "Second narrow result",
+          "domain": "second.example.test",
+          "window_label": "Window 2",
+          "explanations": ["title match"]
+        },
+        {
+          "result_id": "narrow-3",
+          "tab_id": 53,
+          "window_id": 2,
+          "title": "Third narrow result",
+          "domain": "third.example.test",
+          "window_label": "Window 2",
+          "explanations": ["title match"]
+        },
+        {
+          "result_id": "narrow-4",
+          "tab_id": 54,
+          "window_id": 2,
+          "title": "Fourth narrow result",
+          "domain": "fourth.example.test",
+          "window_label": "Window 2",
+          "explanations": ["title match"]
+        }
+      ]
+    }
+  ]
+}
