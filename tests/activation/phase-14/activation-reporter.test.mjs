@@ -2,15 +2,19 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  ActivationRecencyHandoff,
   ActivationReporter,
+  buildActivationMetadata,
   buildActivationSubmission,
   isConfirmedActivation,
   mapActivationErrorToWire,
+  normalizeActivationDomain,
 } from '../../../extension/dist/src/runtime/activation-reporter.js';
 import {
   parseProfileID,
   parseProjectionEpoch,
   parseRevision,
+  retainActivations,
 } from '../../../extension/dist/domain/index.js';
 
 const PROFILE = parseProfileID('123e4567-e89b-42d3-a456-426614174000');
@@ -228,4 +232,165 @@ test('cancel and dispose stop pending acknowledgement without changing browser s
   const afterDispose = await reporter.report({ reference: reference(), outcome: outcome() });
   assert.equal(afterDispose.state, 'cancelled');
   assert.equal(transport.calls.length, 1);
+});
+
+const NOW = 1_700_000_000_000;
+
+function recencyInput(overrides = {}) {
+  return {
+    reference: reference(),
+    outcome: outcome(),
+    domain: 'Example.Test',
+    source: 'keyboard_enter',
+    ...overrides,
+  };
+}
+
+class FakeRecencySink {
+  calls = [];
+  impl = async record => { this.calls.push(record); };
+
+  async append(record) {
+    return this.impl(record);
+  }
+}
+
+test('builds only bounded normal-context activation metadata', () => {
+  const build = buildActivationMetadata(recencyInput(), NOW);
+
+  assert.equal(build.state, 'valid');
+  assert.deepEqual(build.record, {
+    profile_id: PROFILE,
+    context_kind: 'normal',
+    tab_identity: { profile_id: PROFILE, context_kind: 'normal', tab_id: 7 },
+    domain: 'example.test',
+    activated_at: NOW,
+    source: 'keyboard_enter',
+    storage_sequence: 0,
+  });
+  assert.equal(normalizeActivationDomain(' Example.Test. '), 'example.test');
+  assert.equal(normalizeActivationDomain('https://example.test/path?q=1'), null);
+  assert.equal(normalizeActivationDomain('example.test:443'), null);
+  assert.equal(normalizeActivationDomain('example test'), null);
+  assert.deepEqual(retainActivations([build.record], NOW), [build.record]);
+  assert.equal(JSON.stringify(build.record).includes('title'), false);
+  assert.equal(JSON.stringify(build.record).includes('url'), false);
+});
+
+test('failed, private, and malformed recency inputs never produce a record', () => {
+  assert.equal(buildActivationMetadata(recencyInput({
+    outcome: outcome({ ok: false, browserState: 'window_focused', errorCode: 'stale_selection' }),
+  }), NOW).state, 'not_confirmed');
+
+  assert.equal(buildActivationMetadata(recencyInput({
+    reference: reference({
+      context_kind: 'private',
+      tab_identity: { profile_id: PROFILE, context_kind: 'private', tab_id: 7 },
+    }),
+  }), NOW).state, 'private_context');
+
+  assert.equal(buildActivationMetadata(recencyInput({
+    reference: reference({
+      tab_identity: { profile_id: PROFILE, context_kind: 'normal', tab_id: 8 },
+    }),
+  }), NOW).state, 'invalid_identity');
+
+  assert.equal(buildActivationMetadata(recencyInput({
+    reference: reference({
+      tab_identity: { profile_id: parseProfileID('123e4567-e89b-42d3-a456-426614174001'), context_kind: 'normal', tab_id: 7 },
+    }),
+  }), NOW).state, 'profile_mismatch');
+
+  assert.equal(buildActivationMetadata(recencyInput({ domain: 'https://example.test/?q=secret' }), NOW).state, 'invalid_domain');
+  assert.equal(buildActivationMetadata(recencyInput({ activatedAt: NOW + 120_000 }), NOW).state, 'invalid_timestamp');
+  assert.equal(buildActivationMetadata(recencyInput({ activatedAt: NOW - 31 * 86_400_000 }), NOW).state, 'invalid_timestamp');
+  assert.equal(buildActivationMetadata(recencyInput({ source: 'mouse' }), NOW).state, 'invalid_source');
+  assert.equal(buildActivationMetadata(recencyInput({ storageSequence: -1 }), NOW).state, 'invalid_sequence');
+});
+
+test('recency handoff appends exactly once only after confirmed activation', async () => {
+  const sink = new FakeRecencySink();
+  const handoff = new ActivationRecencyHandoff({ sink, now: () => NOW });
+
+  const result = await handoff.append(recencyInput());
+  assert.equal(result.state, 'appended');
+  assert.deepEqual(sink.calls, [result.record]);
+  assert.deepEqual(handoff.view(), result);
+
+  const failed = await handoff.append(recencyInput({
+    outcome: outcome({ ok: false, browserState: 'unchanged', errorCode: 'tab_missing' }),
+  }));
+  assert.equal(failed.state, 'not_confirmed');
+  assert.equal(sink.calls.length, 1);
+});
+
+test('private context and an unavailable sink stay bounded and non-throwing', async () => {
+  const sink = new FakeRecencySink();
+  const handoff = new ActivationRecencyHandoff({ sink, now: () => NOW });
+  const privateResult = await handoff.append(recencyInput({
+    reference: reference({
+      context_kind: 'private',
+      tab_identity: { profile_id: PROFILE, context_kind: 'private', tab_id: 7 },
+    }),
+  }));
+  assert.equal(privateResult.state, 'private_context');
+  assert.equal(sink.calls.length, 0);
+
+  const disabled = await new ActivationRecencyHandoff({ now: () => NOW }).append(recencyInput());
+  assert.equal(disabled.state, 'disabled');
+  assert.ok(disabled.record);
+
+  const failingSink = new FakeRecencySink();
+  failingSink.impl = async () => { throw new Error('storage unavailable'); };
+  const failed = await new ActivationRecencyHandoff({ sink: failingSink, now: () => NOW }).append(recencyInput());
+  assert.equal(failed.state, 'sink_failed');
+});
+
+test('cancelled recency handoff does not report an append after teardown', async () => {
+  const sink = new FakeRecencySink();
+  const gate = deferred();
+  sink.impl = () => gate.promise;
+  const handoff = new ActivationRecencyHandoff({ sink, now: () => NOW });
+
+  const pending = handoff.append(recencyInput());
+  handoff.cancel();
+  gate.resolve();
+  const result = await pending;
+  assert.equal(result.state, 'cancelled');
+});
+
+test('reporter runs recency and status without blocking on either boundary', async () => {
+  const sink = new FakeRecencySink();
+  const recency = new ActivationRecencyHandoff({ sink, now: () => NOW });
+  const transport = new FakeTransport();
+  const reporter = new ActivationReporter({ transport, recency });
+
+  const status = await reporter.report(recencyInput());
+  assert.equal(status.state, 'acknowledged');
+  assert.equal(recency.view().state, 'appended');
+  assert.equal(sink.calls.length, 1);
+});
+
+test('reporter never appends recency for failed or private activation', async () => {
+  const sink = new FakeRecencySink();
+  const recency = new ActivationRecencyHandoff({ sink, now: () => NOW });
+  const transport = new FakeTransport();
+  const reporter = new ActivationReporter({ transport, recency });
+
+  const failedStatus = await reporter.report(recencyInput({
+    outcome: outcome({ ok: false, browserState: 'unchanged', errorCode: 'tab_missing' }),
+  }));
+  assert.equal(failedStatus.state, 'acknowledged');
+  assert.equal(recency.view().state, 'not_confirmed');
+  assert.equal(sink.calls.length, 0);
+
+  const privateStatus = await reporter.report(recencyInput({
+    reference: reference({
+      context_kind: 'private',
+      tab_identity: { profile_id: PROFILE, context_kind: 'private', tab_id: 7 },
+    }),
+  }));
+  assert.equal(privateStatus.state, 'acknowledged');
+  assert.equal(recency.view().state, 'private_context');
+  assert.equal(sink.calls.length, 0);
 });
