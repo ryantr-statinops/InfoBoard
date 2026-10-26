@@ -219,6 +219,22 @@ function cancelledOutcome(): ActivationOutcome {
   };
 }
 
+function activationRequestKey(
+  request: ActivationRequest,
+  context: BrowserProfileContext,
+): string {
+  return JSON.stringify([
+    context.profileId,
+    context.contextKind,
+    request.querySequence,
+    request.resultId,
+    request.projectionEpoch,
+    request.projectionRevision,
+    request.tabId,
+    request.windowId,
+  ]);
+}
+
 export function createActivationHandoff(options: ActivationHandoffOptions): ActivationHandoff {
   const reporter = options.reporter
     ?? (options.transport === undefined
@@ -270,68 +286,82 @@ export function createActivationHandoff(options: ActivationHandoffOptions): Acti
     return teardownPromise;
   };
 
-  return {
-    async activate(request: ActivationRequest): Promise<ActivationOutcome> {
+  const pendingActivations = new Map<string, Promise<ActivationOutcome>>();
+  const activateInternal = async (request: ActivationRequest): Promise<ActivationOutcome> => {
+    if (tornDown) return cancelledOutcome();
+
+    const current = options.querySource.view();
+    const built = buildActivationGuardInput(request, current, options.context);
+    if (!built.ok) return rejectedOutcome(built.outcome);
+
+    const ownsActiveRequest = !controller.isPending();
+    if (ownsActiveRequest) activeRequest = request;
+    let result: ActivationControllerResult;
+    try {
+      result = await controller.activate(built.input);
+    } catch {
       if (tornDown) return cancelledOutcome();
+      return {
+        ok: false,
+        confirmed: true,
+        browserState: 'unknown',
+        nextAction: 'retry',
+        errorCode: 'browser_operation_failed',
+        reportState: reporter === undefined ? 'unavailable' : 'pending',
+      };
+    } finally {
+      if (ownsActiveRequest) activeRequest = null;
+    }
 
-      const current = options.querySource.view();
-      const built = buildActivationGuardInput(request, current, options.context);
-      if (!built.ok) return rejectedOutcome(built.outcome);
+    if (tornDown) return cancelledOutcome();
 
-      const ownsActiveRequest = !controller.isPending();
-      if (ownsActiveRequest) activeRequest = request;
-      let result: ActivationControllerResult;
-      try {
-        result = await controller.activate(built.input);
-      } catch {
-        if (tornDown) return cancelledOutcome();
-        return {
-          ok: false,
-          confirmed: true,
-          browserState: 'unknown',
-          nextAction: 'retry',
-          errorCode: 'browser_operation_failed',
-          reportState: reporter === undefined ? 'unavailable' : 'pending',
-        };
-      } finally {
-        if (ownsActiveRequest) activeRequest = null;
-      }
-
-      if (tornDown) return cancelledOutcome();
-
-      const outcome = outcomeFor(result, reporter !== undefined);
-      if (result.ok && result.browserState === 'tab_active') {
-        const selected = current.rows.find(row => row.resultId === request.resultId);
-        if (reporter !== undefined) {
-          // Start serialization before closing the popup; the report is never
-          // awaited by the browser-confirmation path.
-          void reporter.report({
-            reference: built.input.reference,
-            outcome: result,
-            domain: selected?.domain,
-            source: 'keyboard_enter',
-          });
-        }
-        try {
-          options.closeSurface();
-        } catch {
-          // Browser activation is already authoritative; popup teardown is
-          // best effort and must not turn success into a raw failure.
-        }
-        return outcome;
-      }
-
-      if (reporter !== undefined
-        && result.errorCode !== 'activation_in_progress'
-        && result.errorCode !== 'activation_cancelled') {
+    const outcome = outcomeFor(result, reporter !== undefined);
+    if (result.ok && result.browserState === 'tab_active') {
+      const selected = current.rows.find(row => row.resultId === request.resultId);
+      if (reporter !== undefined) {
+        // Start serialization before closing the popup; the report is never
+        // awaited by the browser-confirmation path.
         void reporter.report({
           reference: built.input.reference,
           outcome: result,
-          domain: current.rows.find(row => row.resultId === request.resultId)?.domain,
+          domain: selected?.domain,
           source: 'keyboard_enter',
         });
       }
+      try {
+        options.closeSurface();
+      } catch {
+        // Browser activation is already authoritative; popup teardown is
+        // best effort and must not turn success into a raw failure.
+      }
       return outcome;
+    }
+
+    if (reporter !== undefined
+      && result.errorCode !== 'activation_in_progress'
+      && result.errorCode !== 'activation_cancelled') {
+      void reporter.report({
+        reference: built.input.reference,
+        outcome: result,
+        domain: current.rows.find(row => row.resultId === request.resultId)?.domain,
+        source: 'keyboard_enter',
+      });
+    }
+    return outcome;
+  };
+
+  return {
+    activate(request: ActivationRequest): Promise<ActivationOutcome> {
+      const key = activationRequestKey(request, options.context);
+      const existing = pendingActivations.get(key);
+      if (existing !== undefined) return existing;
+      const promise = activateInternal(request);
+      pendingActivations.set(key, promise);
+      const clear = (): void => {
+        if (pendingActivations.get(key) === promise) pendingActivations.delete(key);
+      };
+      promise.then(clear, clear);
+      return promise;
     },
     teardown,
   };
