@@ -42,6 +42,9 @@ export function renderSurface(doc: Document, state: SurfaceState): void {
   if (state.shortcutFocusMs === undefined) delete root.dataset.shortcutFocusMs;
   else root.dataset.shortcutFocusMs = String(state.shortcutFocusMs);
 
+  const inputDisabled = state.status === 'private_unavailable';
+  input.disabled = inputDisabled;
+  input.setAttribute('aria-disabled', String(inputDisabled));
   input.setAttribute('aria-busy', String(state.status === 'querying'));
   input.setAttribute('aria-expanded', String(state.rows.length > 0));
   const selected = state.selectedIndex >= 0 && state.selectedIndex < state.rows.length
