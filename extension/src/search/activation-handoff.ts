@@ -32,10 +32,14 @@ import {
 } from '../runtime/activation-reporter.js';
 import type { QueryRenderModel } from '../runtime/query-client.js';
 import type {
+  ActivationCleanupContext,
+  ActivationCleanupState,
   ActivationHandoff,
   ActivationNextAction,
   ActivationOutcome,
   ActivationRequest,
+  ActivationTeardownReason,
+  ActivationTeardownResult,
 } from './surface-controller.js';
 import type { SearchQuerySource } from './surface-controller.js';
 
@@ -46,6 +50,13 @@ export interface ActivationHandoffOptions {
   readonly browser?: ActivationBrowser;
   readonly transport?: ActivationReportTransport;
   readonly reporter?: ActivationReporter;
+  /**
+   * IP-15/IP-08 cleanup seam. IP-14 owns cancellation and in-memory teardown;
+   * the injected lifecycle owner removes only owned durable recency state.
+   */
+  readonly cleanupOwnedState?: (
+    context: ActivationCleanupContext,
+  ) => Promise<void> | void;
 }
 
 export type ActivationGuardBuild =
@@ -197,12 +208,25 @@ function rejectedOutcome(outcome: ActivationGuardRejection): ActivationOutcome {
   };
 }
 
+function cancelledOutcome(): ActivationOutcome {
+  return {
+    ok: false,
+    confirmed: true,
+    browserState: 'unchanged',
+    nextAction: 'none',
+    errorCode: 'activation_cancelled',
+    reportState: 'cancelled',
+  };
+}
+
 export function createActivationHandoff(options: ActivationHandoffOptions): ActivationHandoff {
   const reporter = options.reporter
     ?? (options.transport === undefined
       ? undefined
       : new ActivationReporter({ transport: options.transport }));
   let activeRequest: ActivationRequest | null = null;
+  let tornDown = false;
+  let teardownPromise: Promise<ActivationTeardownResult> | undefined;
   const controller = new ActivationController({
     browser: options.browser ?? new ChromeActivationBrowser(),
     revalidate: () => {
@@ -216,8 +240,40 @@ export function createActivationHandoff(options: ActivationHandoffOptions): Acti
     },
   });
 
+  const teardown = (reason: ActivationTeardownReason = 'browser_shutdown'): Promise<ActivationTeardownResult> => {
+    if (teardownPromise !== undefined) return teardownPromise;
+    tornDown = true;
+    activeRequest = null;
+    controller.cancelAll();
+    reporter?.dispose();
+    teardownPromise = (async () => {
+      let cleanup: ActivationCleanupState = 'not_configured';
+      if (options.cleanupOwnedState !== undefined) {
+        try {
+          await options.cleanupOwnedState({
+            reason,
+            profileId: options.context.profileId,
+            contextKind: options.context.contextKind,
+          });
+          cleanup = 'complete';
+        } catch {
+          cleanup = 'degraded';
+        }
+      }
+      return {
+        reason,
+        cancelled: true,
+        reportsDiscarded: true,
+        cleanup,
+      };
+    })();
+    return teardownPromise;
+  };
+
   return {
     async activate(request: ActivationRequest): Promise<ActivationOutcome> {
+      if (tornDown) return cancelledOutcome();
+
       const current = options.querySource.view();
       const built = buildActivationGuardInput(request, current, options.context);
       if (!built.ok) return rejectedOutcome(built.outcome);
@@ -228,6 +284,7 @@ export function createActivationHandoff(options: ActivationHandoffOptions): Acti
       try {
         result = await controller.activate(built.input);
       } catch {
+        if (tornDown) return cancelledOutcome();
         return {
           ok: false,
           confirmed: true,
@@ -239,6 +296,8 @@ export function createActivationHandoff(options: ActivationHandoffOptions): Acti
       } finally {
         if (ownsActiveRequest) activeRequest = null;
       }
+
+      if (tornDown) return cancelledOutcome();
 
       const outcome = outcomeFor(result, reporter !== undefined);
       if (result.ok && result.browserState === 'tab_active') {
@@ -274,5 +333,6 @@ export function createActivationHandoff(options: ActivationHandoffOptions): Acti
       }
       return outcome;
     },
+    teardown,
   };
 }

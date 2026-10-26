@@ -279,6 +279,7 @@ export class ActivationRecencyHandoff {
   dispose(): void {
     this.disposed = true;
     this.cancel();
+    this.current = { state: 'cancelled' };
   }
 
   private async send(
@@ -373,11 +374,17 @@ export class ActivationReporter {
     this.recency?.cancel();
   }
 
-  /** Reset/uninstall teardown: cancel pending work and emit no later updates. */
+  /** Reset/uninstall teardown: discard pending work and emit no later updates. */
   dispose(): void {
     this.disposed = true;
     this.cancel();
+    this.pending.clear();
     this.recency?.dispose();
+    this.current = {
+      ...this.current,
+      state: 'cancelled',
+      accepted: false,
+    };
   }
 
   private async send(
@@ -419,6 +426,7 @@ export class ActivationReporter {
 
   private transition(status: ActivationReportStatus): ActivationReportStatus {
     this.current = status;
+    if (this.disposed) return status;
     try {
       this.onState?.(status);
     } catch {

@@ -1,3 +1,4 @@
+import type { ContextKind, ProfileID } from '../../domain/index.js';
 import type { QueryInput, QueryRenderModel, QueryRenderRow } from '../runtime/query-client.js';
 import {
   canActivate,
@@ -44,8 +45,26 @@ export interface ActivationOutcome {
   reportState?: ActivationReportState;
 }
 
+export type ActivationTeardownReason = 'reset' | 'uninstall' | 'browser_shutdown';
+export type ActivationCleanupState = 'not_configured' | 'complete' | 'degraded';
+
+export interface ActivationCleanupContext {
+  reason: ActivationTeardownReason;
+  profileId: ProfileID;
+  contextKind: ContextKind;
+}
+
+export interface ActivationTeardownResult {
+  reason: ActivationTeardownReason;
+  cancelled: boolean;
+  reportsDiscarded: boolean;
+  cleanup: ActivationCleanupState;
+}
+
 export interface ActivationHandoff {
   activate(request: ActivationRequest): Promise<ActivationOutcome>;
+  /** Reset/uninstall teardown; never performs a tab or window mutation. */
+  teardown?(reason?: ActivationTeardownReason): Promise<ActivationTeardownResult>;
 }
 
 export interface SurfaceControllerOptions {
