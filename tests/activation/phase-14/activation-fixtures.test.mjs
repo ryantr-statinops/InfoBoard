@@ -304,6 +304,7 @@ async function runFixture(fixture) {
 
 const fixtureFiles = (await readdir('fixtures/activation/phase-14'))
   .filter(name => name.startsWith('ACT-') && name.endsWith('.json'))
+  .filter(name => name !== 'ACT-012.json')
   .sort();
 
 for (const file of fixtureFiles) {

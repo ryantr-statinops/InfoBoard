@@ -3252,6 +3252,92 @@
           "Reset teardown removes only owned pending/recency state and touches no tab or window."
         ]
       }
+    },
+    {
+      "fixture_id": "FX-ACT-012",
+      "owner_phase": "IP-14",
+      "requirement_ids": [
+        "FR-007",
+        "NFR-003"
+      ],
+      "category": "activation",
+      "input": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "normal",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174040",
+        "projection_revision": 4,
+        "query_sequence": 3,
+        "rows": [
+          {
+            "result_id": "result-7",
+            "tab_id": 7,
+            "window_id": 2,
+            "title": "Example title",
+            "domain": "example.test",
+            "eligible": true
+          }
+        ],
+        "selected": {
+          "result_id": "result-7",
+          "tab_id": 7,
+          "window_id": 2,
+          "title": "Example title",
+          "domain": "example.test",
+          "eligible": true
+        },
+        "browser": {
+          "get_tab": {
+            "id": 7,
+            "windowId": 2,
+            "active": false
+          },
+          "focus_window": {
+            "id": 2,
+            "focused": true
+          },
+          "activate_tab": {
+            "id": 7,
+            "windowId": 2,
+            "active": true
+          }
+        },
+        "browser_scheduling_delay_ms": 0,
+        "warmup": 20,
+        "iterations": 200,
+        "p95_budget_ms": 100,
+        "stale_fixtures": [
+          "ACT-002.json",
+          "ACT-003.json",
+          "ACT-004.json"
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "warmup_iterations",
+            "value": 20
+          },
+          {
+            "signal": "measured_iterations",
+            "value": 200
+          },
+          {
+            "signal": "controller_p95_ms_max",
+            "value": 100
+          },
+          {
+            "signal": "activation_call_count",
+            "value": 600
+          },
+          {
+            "signal": "stale_browser_calls",
+            "value": 0
+          }
+        ],
+        "privacy_assertions": [
+          "Benchmark fixtures use fixed opaque references and never emit titles, URLs, query text, or raw browser exceptions."
+        ]
+      }
     }
   ],
   "future_check_contracts": [
