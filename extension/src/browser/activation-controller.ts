@@ -10,6 +10,7 @@ import {
   guardActivation,
   type ActivationGuardInput,
   type ActivationGuardOutcome,
+  type ActivationGuardRejection,
   type ActivationReference,
 } from './activation-guard.js';
 
@@ -49,6 +50,12 @@ export interface ActivationControllerOptions {
   readonly browser: ActivationBrowser;
   readonly now?: () => number;
   readonly onConfirmed?: () => void;
+  /**
+   * Return the current guard input before each mutating browser step. The
+   * controller rejects a changed reference, a stale revision, or an
+   * unavailable projection instead of retargeting the activation.
+   */
+  readonly revalidate?: () => ActivationControllerRequest | null | Promise<ActivationControllerRequest | null>;
 }
 
 export interface ActivationControllerRequest extends ActivationGuardInput {}
@@ -104,6 +111,7 @@ export class ActivationController {
   private readonly browser: ActivationBrowser;
   private readonly now: () => number;
   private readonly onConfirmed?: () => void;
+  private readonly revalidate?: ActivationControllerOptions['revalidate'];
   private inFlight: InFlightActivation | null = null;
   private abortController: AbortController | null = null;
   private requestCounter = 0;
@@ -112,6 +120,7 @@ export class ActivationController {
     this.browser = options.browser;
     this.now = options.now ?? monotonicNow;
     this.onConfirmed = options.onConfirmed;
+    this.revalidate = options.revalidate;
   }
 
   isPending(): boolean {
@@ -191,6 +200,14 @@ export class ActivationController {
       return this.result(requestId, false, true, 'unchanged', 'activation_cancelled', safeDuration(startedAt, this.now));
     }
 
+    const focusRevalidation = await this.revalidateBeforeStep(request, signal);
+    if (!focusRevalidation.ok) {
+      return this.result(requestId, false, true, 'unchanged', focusRevalidation.outcome, safeDuration(startedAt, this.now));
+    }
+    if (signal.aborted) {
+      return this.result(requestId, false, true, 'unchanged', 'activation_cancelled', safeDuration(startedAt, this.now));
+    }
+
     const focusResult = await this.browser.focusWindow(reference.window_id);
     if (!focusResult.ok) {
       return this.result(
@@ -201,6 +218,14 @@ export class ActivationController {
         errorCodeForFailure(focusResult.error, 'focus_window'),
         safeDuration(startedAt, this.now),
       );
+    }
+    if (signal.aborted) {
+      return this.result(requestId, false, true, 'window_focused', 'activation_cancelled', safeDuration(startedAt, this.now));
+    }
+
+    const activateRevalidation = await this.revalidateBeforeStep(request, signal);
+    if (!activateRevalidation.ok) {
+      return this.result(requestId, false, true, 'window_focused', activateRevalidation.outcome, safeDuration(startedAt, this.now));
     }
     if (signal.aborted) {
       return this.result(requestId, false, true, 'window_focused', 'activation_cancelled', safeDuration(startedAt, this.now));
@@ -229,6 +254,28 @@ export class ActivationController {
       // Browser activation is already authoritative; surface cleanup is best effort.
     }
     return this.result(requestId, true, true, 'tab_active', undefined, safeDuration(startedAt, this.now));
+  }
+
+  private async revalidateBeforeStep(
+    request: ActivationControllerRequest,
+    signal: AbortSignal,
+  ): Promise<{ ok: true } | { ok: false; outcome: ActivationGuardRejection }> {
+    if (!this.revalidate) return { ok: true };
+
+    let current: ActivationControllerRequest | null;
+    try {
+      current = await this.revalidate();
+    } catch {
+      return { ok: false, outcome: 'projection_rebuilding' };
+    }
+    if (signal.aborted) return { ok: true };
+    if (current === null || current === undefined) return { ok: false, outcome: 'stale_selection' };
+    if (requestKey(current.reference) !== requestKey(request.reference)) {
+      return { ok: false, outcome: 'stale_selection' };
+    }
+    const guard = guardActivation(current);
+    if (guard.outcome !== 'valid') return { ok: false, outcome: guard.outcome };
+    return { ok: true };
   }
 
   private result(
