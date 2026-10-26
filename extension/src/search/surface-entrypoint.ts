@@ -1,5 +1,6 @@
 import { ChromeBrowserAdapter, type BrowserProfileContext } from '../browser/browser-adapter.js';
 import { parseProfileID } from '../../domain/index.js';
+import { createActivationHandoff } from './activation-handoff.js';
 import { createNativeSearchQuerySource } from './search-query-source.js';
 import {
   SurfaceController,
@@ -103,7 +104,14 @@ function noopQuerySource(): SearchQuerySource {
 
 function noopActivation(): ActivationHandoff {
   return {
-    activate: async () => ({ ok: false, confirmed: true, errorCode: 'activation_unavailable' }),
+    activate: async () => ({
+      ok: false,
+      confirmed: true,
+      browserState: 'unchanged',
+      nextAction: 'none',
+      errorCode: 'private_context',
+      reportState: 'not_configured',
+    }),
   };
 }
 
@@ -154,11 +162,17 @@ export async function initializeSearchSurface(doc: Document = document): Promise
   }
 
   const runtime = createNativeSearchQuerySource(context.value);
+  const closeSurface = () => doc.defaultView?.close();
   const controller = new SurfaceController({
     doc,
     querySource: runtime.source,
-    activation: noopActivation(),
-    dismiss: () => doc.defaultView?.close(),
+    activation: createActivationHandoff({
+      context: context.value,
+      querySource: runtime.source,
+      closeSurface,
+      transport: runtime.activationTransport,
+    }),
+    dismiss: closeSurface,
     commandStartedAt,
     focusTimestamp,
     onState: recordFocusMetric,

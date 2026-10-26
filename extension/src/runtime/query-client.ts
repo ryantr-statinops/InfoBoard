@@ -57,6 +57,7 @@ export interface QueryRenderModel {
   status: QueryClientStatus;
   rows: readonly QueryRenderRow[];
   projectionRevision: number | null;
+  projectionEpoch?: string | null;
   rankingModelVersion?: string;
   acceptedLimit?: number;
   indexState?: string;
@@ -169,6 +170,7 @@ export class QueryClient {
       status,
       rows,
       projectionRevision: result.value.projection_revision,
+      projectionEpoch: result.value.projection_epoch === '' ? null : result.value.projection_epoch,
       rankingModelVersion: result.value.ranking_model_version,
       acceptedLimit: result.value.accepted_limit,
       indexState: result.value.index_state,
@@ -237,6 +239,7 @@ export class QueryClient {
       status,
       rows: [],
       projectionRevision,
+      projectionEpoch: null,
     };
   }
 

@@ -140,6 +140,9 @@ test('activation is explicit, confirmed and never guessed', () => {
   expect(failed.status).toBe('activation_failure');
   expect(failed.browserStateConfirmed).toBe(true);
   expect(failed.activation.errorCode).toBe('tab_missing');
+  expect(failed.activation.browserState).toBe('unchanged');
+  expect(failed.activation.nextAction).toBe('retry');
+  expect(statusMessage(failed)).toContain('no longer available');
   expect(permittedActions(failed)).toContain('retry');
 });
 
