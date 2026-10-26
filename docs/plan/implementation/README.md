@@ -28,7 +28,7 @@ This dashboard is the **single source of truth** for implementation status. Phas
 
 ### Release integration
 
-- **dev → main release PR:** Not started · PR: — · latest commit: — · release checks/evidence: — · note: Leave the release PR open; only the user merges it. Agents never commit directly to `main` or merge this PR.
+- **dev → main release PR:** Open · PR: #25 · latest commit: fbfcb4c · release checks/evidence: IP-14 phase checks PASS, including 82/82 activation tests, 70/70 extension tests, Go tests/vet, 65-fixture corpus validation, and ACT-012 p95 proof · note: Leave the release PR open; only the user merges it. Agents never commit directly to `main` or merge this PR.
 
 ### Execution protocol
 
