@@ -22,6 +22,7 @@ export interface UiResponse {
   status: string;
   rows?: UiRow[];
   projection_revision?: number;
+  projection_epoch?: string;
   persistence_state?: string;
   index_state?: string;
   defer?: boolean;
@@ -34,11 +35,18 @@ export interface UiFixture {
   context_kind: 'normal' | 'private';
   surface: { width: number; height: number };
   projection_revision?: number;
+  projection_epoch?: string;
   command_started_at?: number;
   private_unavailable?: boolean;
   defer_responses?: boolean;
   responses?: UiResponse[];
-  activation?: { ok: boolean; confirmed: boolean; error_code?: string };
+  activation?: {
+    ok: boolean;
+    confirmed: boolean;
+    error_code?: string;
+    browser_state?: 'unchanged' | 'window_focused' | 'tab_active' | 'unknown';
+    next_action?: 'dismiss' | 'retry' | 'refresh' | 'none';
+  };
 }
 
 export interface SurfaceHarness {
@@ -98,6 +106,7 @@ export async function openSurface(harness: SurfaceHarness, fixture: UiFixture): 
       status: string;
       rows: DriverRow[];
       projectionRevision: number | null;
+      projectionEpoch?: string | null;
       persistenceState?: string;
       indexState?: string;
       error?: { source: 'host' | 'client'; code: string; retryable: boolean };
@@ -110,7 +119,14 @@ export async function openSurface(harness: SurfaceHarness, fixture: UiFixture): 
     const listeners = new Set<(model: DriverModel) => void>();
     const state = {
       queries: [] as Array<{ query: string }>,
-      activations: [] as Array<{ resultId: string; tabId: number; projectionRevision: number }>,
+      activations: [] as Array<{
+        resultId: string;
+        tabId: number;
+        windowId: number;
+        projectionRevision: number;
+        projectionEpoch: string;
+        querySequence: number;
+      }>,
       dismisses: 0,
       sequence: 0,
       pending: [] as Pending[],
@@ -121,6 +137,9 @@ export async function openSurface(harness: SurfaceHarness, fixture: UiFixture): 
       status,
       rows,
       projectionRevision: response.projection_revision ?? value.projection_revision ?? 1,
+      projectionEpoch: response.projection_epoch
+        ?? value.projection_epoch
+        ?? '123e4567-e89b-42d3-a456-426614174099',
       persistenceState: response.persistence_state,
       indexState: response.index_state,
       error: response.error,
@@ -176,15 +195,27 @@ export async function openSurface(harness: SurfaceHarness, fixture: UiFixture): 
       },
     };
     const activation = {
-      activate: async (request: { resultId: string; tabId: number; projectionRevision: number }) => {
+      activate: async (request: {
+        resultId: string;
+        tabId: number;
+        windowId: number;
+        projectionRevision: number;
+        projectionEpoch: string;
+        querySequence: number;
+      }) => {
         state.activations.push(request);
-        return value.activation === undefined
-          ? { ok: true, confirmed: true }
-          : {
-              ok: value.activation.ok,
-              confirmed: value.activation.confirmed,
-              errorCode: value.activation.error_code,
-            };
+        const configured = value.activation;
+        const ok = configured?.ok ?? true;
+        const confirmed = configured?.confirmed ?? true;
+        return {
+          ok,
+          confirmed,
+          browserState: configured?.browser_state
+            ?? (ok && confirmed ? 'tab_active' : confirmed ? 'unchanged' : 'unknown'),
+          nextAction: configured?.next_action ?? (ok ? 'dismiss' : 'retry'),
+          errorCode: configured?.error_code,
+          reportState: 'not_configured' as const,
+        };
       },
     };
     const dismiss = () => {
@@ -237,7 +268,14 @@ export async function surfaceState(page: Page): Promise<string | undefined> {
 
 export async function driverState(page: Page): Promise<{
   queries: Array<{ query: string }>;
-  activations: Array<{ resultId: string; tabId: number; projectionRevision: number }>;
+  activations: Array<{
+    resultId: string;
+    tabId: number;
+    windowId: number;
+    projectionRevision: number;
+    projectionEpoch: string;
+    querySequence: number;
+  }>;
   dismisses: number;
   pending: unknown[];
 }> {
@@ -245,7 +283,14 @@ export async function driverState(page: Page): Promise<{
     const state = (window as unknown as {
       __INFOBOARD_SURFACE_TEST_STATE__: {
         queries: Array<{ query: string }>;
-        activations: Array<{ resultId: string; tabId: number; projectionRevision: number }>;
+        activations: Array<{
+          resultId: string;
+          tabId: number;
+          windowId: number;
+          projectionRevision: number;
+          projectionEpoch: string;
+          querySequence: number;
+        }>;
         dismisses: number;
         pending: unknown[];
       };

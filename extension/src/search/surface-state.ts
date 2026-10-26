@@ -3,6 +3,11 @@
 // safe announcements deterministic and easy to test.
 
 import type { QueryClientStatus, QueryRenderModel, QueryRenderRow } from '../runtime/query-client.js';
+import type {
+  ActivationBrowserState,
+  ActivationNextAction,
+  ActivationReportState,
+} from './surface-controller.js';
 
 export type SurfaceStatus =
   | 'opening'
@@ -33,6 +38,9 @@ export interface SurfaceActivationState {
   pending: boolean;
   ok?: boolean;
   confirmed: boolean;
+  browserState: ActivationBrowserState;
+  nextAction: ActivationNextAction;
+  reportState: ActivationReportState;
   errorCode?: string;
 }
 
@@ -43,6 +51,7 @@ export interface SurfaceState {
   query: string;
   sequence: number;
   projectionRevision: number | null;
+  projectionEpoch: string | null;
   persistenceState?: string;
   indexState?: string;
   errorCode?: string;
@@ -62,11 +71,29 @@ export type SurfaceEvent =
   | { type: 'model'; model: QueryRenderModel }
   | { type: 'select'; index: number }
   | { type: 'activation_started' }
-  | { type: 'activation_result'; ok: boolean; confirmed: boolean; errorCode?: string }
+  | {
+      type: 'activation_result';
+      ok: boolean;
+      confirmed: boolean;
+      browserState?: ActivationBrowserState;
+      nextAction?: ActivationNextAction;
+      errorCode?: string;
+      reportState?: ActivationReportState;
+    }
   | { type: 'error'; code: string; retryable: boolean }
   | { type: 'dismiss' };
 
 const SAFE_ACTIVATION_ERROR = 'activation_failed';
+
+function idleActivation(): SurfaceActivationState {
+  return {
+    pending: false,
+    confirmed: true,
+    browserState: 'unchanged',
+    nextAction: 'none',
+    reportState: 'not_configured',
+  };
+}
 
 export function initialSurfaceState(): SurfaceState {
   return {
@@ -76,8 +103,9 @@ export function initialSurfaceState(): SurfaceState {
     query: '',
     sequence: 0,
     projectionRevision: null,
+    projectionEpoch: null,
     browserStateConfirmed: true,
-    activation: { pending: false, confirmed: true },
+    activation: idleActivation(),
     dismissed: false,
   };
 }
@@ -102,8 +130,9 @@ export function reduceSurfaceState(state: SurfaceState, event: SurfaceEvent): Su
         status: 'private_unavailable',
         rows: [],
         selectedIndex: -1,
+        projectionEpoch: null,
         browserStateConfirmed: true,
-        activation: { pending: false, confirmed: true },
+        activation: idleActivation(),
       };
     case 'query':
       return {
@@ -113,10 +142,11 @@ export function reduceSurfaceState(state: SurfaceState, event: SurfaceEvent): Su
         selectedIndex: -1,
         query: event.query,
         sequence: event.sequence,
+        projectionEpoch: null,
         errorCode: undefined,
         errorRetryable: undefined,
         browserStateConfirmed: true,
-        activation: { pending: false, confirmed: true },
+        activation: idleActivation(),
       };
     case 'model':
       return reduceModel(state, event.model);
@@ -130,7 +160,13 @@ export function reduceSurfaceState(state: SurfaceState, event: SurfaceEvent): Su
       return {
         ...state,
         browserStateConfirmed: false,
-        activation: { pending: true, confirmed: false },
+        activation: {
+          pending: true,
+          confirmed: false,
+          browserState: 'unchanged',
+          nextAction: 'none',
+          reportState: 'not_configured',
+        },
       };
     case 'activation_result': {
       const errorCode = event.ok ? undefined : event.errorCode ?? SAFE_ACTIVATION_ERROR;
@@ -142,6 +178,10 @@ export function reduceSurfaceState(state: SurfaceState, event: SurfaceEvent): Su
           pending: false,
           ok: event.ok,
           confirmed: event.confirmed,
+          browserState: event.browserState
+            ?? (event.ok ? 'tab_active' : event.confirmed ? 'unchanged' : 'unknown'),
+          nextAction: event.nextAction ?? (event.ok ? 'dismiss' : 'retry'),
+          reportState: event.reportState ?? 'not_configured',
           errorCode,
         },
       };
@@ -155,14 +195,14 @@ export function reduceSurfaceState(state: SurfaceState, event: SurfaceEvent): Su
         errorCode: event.code,
         errorRetryable: event.retryable,
         browserStateConfirmed: true,
-        activation: { pending: false, confirmed: true },
+        activation: idleActivation(),
       };
     case 'dismiss':
       return {
         ...state,
         dismissed: true,
         browserStateConfirmed: true,
-        activation: { pending: false, confirmed: true },
+        activation: idleActivation(),
       };
   }
 }
@@ -181,6 +221,7 @@ function reduceModel(state: SurfaceState, model: QueryRenderModel): SurfaceState
       rows: [],
       selectedIndex: -1,
       projectionRevision: model.projectionRevision,
+      projectionEpoch: model.projectionEpoch ?? null,
       browserStateConfirmed: true,
     };
   }
@@ -194,12 +235,13 @@ function reduceModel(state: SurfaceState, model: QueryRenderModel): SurfaceState
     selectedIndex: rows.length === 0 ? -1 : Math.min(Math.max(state.selectedIndex, 0), rows.length - 1),
     sequence: model.sequence,
     projectionRevision: model.projectionRevision,
+    projectionEpoch: model.projectionEpoch ?? null,
     persistenceState: model.persistenceState,
     indexState: model.indexState,
     errorCode: model.error?.code,
     errorRetryable: model.error?.retryable,
     browserStateConfirmed: true,
-    activation: { pending: false, confirmed: true },
+    activation: idleActivation(),
   };
 }
 
@@ -299,7 +341,28 @@ export function statusMessage(state: SurfaceState): string {
     case 'activation_success':
       return 'Opened selected tab';
     case 'activation_failure':
-      return 'Could not open selected tab';
+      switch (state.activation.errorCode) {
+        case 'stale_selection':
+        case 'projection_rebuilding':
+          return 'Results changed. Refresh and choose a tab again.';
+        case 'tab_missing':
+        case 'window_missing':
+        case 'tab_reused':
+        case 'ineligible':
+          return 'Selected tab is no longer available. Refresh and choose another.';
+        case 'profile_mismatch':
+        case 'context_mismatch':
+          return 'This result belongs to another profile. Refresh the search.';
+        case 'browser_permission_denied':
+        case 'browser_unsupported':
+          return 'The browser blocked opening the tab. Check permissions and retry.';
+        case 'activation_cancelled':
+          return 'Activation was cancelled. Try again.';
+        case 'activation_in_progress':
+          return 'Activation is already in progress.';
+        default:
+          return 'Could not open selected tab';
+      }
     case 'private_unavailable':
       return 'Search is unavailable in private windows.';
     case 'invalid':

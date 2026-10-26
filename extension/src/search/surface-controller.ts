@@ -1,3 +1,4 @@
+import type { ContextKind, ProfileID } from '../../domain/index.js';
 import type { QueryInput, QueryRenderModel, QueryRenderRow } from '../runtime/query-client.js';
 import {
   canActivate,
@@ -16,20 +17,54 @@ export interface SearchQuerySource {
   cancel(): QueryRenderModel;
 }
 
+export type ActivationBrowserState = 'unchanged' | 'window_focused' | 'tab_active' | 'unknown';
+export type ActivationNextAction = 'dismiss' | 'retry' | 'refresh' | 'none';
+export type ActivationReportState =
+  | 'not_configured'
+  | 'pending'
+  | 'acknowledged'
+  | 'degraded'
+  | 'unavailable'
+  | 'cancelled';
+
 export interface ActivationRequest {
   resultId: string;
   tabId: number;
+  windowId: number;
   projectionRevision: number;
+  projectionEpoch: string;
+  querySequence: number;
 }
 
 export interface ActivationOutcome {
   ok: boolean;
   confirmed: boolean;
+  browserState: ActivationBrowserState;
+  nextAction: ActivationNextAction;
   errorCode?: string;
+  reportState?: ActivationReportState;
+}
+
+export type ActivationTeardownReason = 'reset' | 'uninstall' | 'browser_shutdown';
+export type ActivationCleanupState = 'not_configured' | 'complete' | 'degraded';
+
+export interface ActivationCleanupContext {
+  reason: ActivationTeardownReason;
+  profileId: ProfileID;
+  contextKind: ContextKind;
+}
+
+export interface ActivationTeardownResult {
+  reason: ActivationTeardownReason;
+  cancelled: boolean;
+  reportsDiscarded: boolean;
+  cleanup: ActivationCleanupState;
 }
 
 export interface ActivationHandoff {
   activate(request: ActivationRequest): Promise<ActivationOutcome>;
+  /** Reset/uninstall teardown; never performs a tab or window mutation. */
+  teardown?(reason?: ActivationTeardownReason): Promise<ActivationTeardownResult>;
 }
 
 export interface SurfaceControllerOptions {
@@ -156,26 +191,36 @@ export class SurfaceController {
     if (!canActivate(this.state)) return;
     const row = selectedRow(this.state);
     const revision = this.state.projectionRevision;
-    if (row === undefined || revision === null) return;
+    const epoch = this.state.projectionEpoch;
+    if (row === undefined || revision === null || epoch === null) return;
     this.dispatch({ type: 'activation_started' });
     try {
       const outcome = await this.activation.activate({
         resultId: row.resultId,
         tabId: row.tabId,
+        windowId: row.windowId,
         projectionRevision: revision,
+        projectionEpoch: epoch,
+        querySequence: this.state.sequence,
       });
       this.dispatch({
         type: 'activation_result',
         ok: outcome.ok,
         confirmed: outcome.confirmed,
+        browserState: outcome.browserState,
+        nextAction: outcome.nextAction,
         errorCode: outcome.errorCode,
+        reportState: outcome.reportState,
       });
     } catch {
       this.dispatch({
         type: 'activation_result',
         ok: false,
         confirmed: true,
+        browserState: 'unknown',
+        nextAction: 'retry',
         errorCode: 'activation_failed',
+        reportState: 'unavailable',
       });
     }
   }

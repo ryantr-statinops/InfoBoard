@@ -1,0 +1,123 @@
+{
+  "fixture_id": "FX-ACT-006",
+  "owner_phase": "IP-14",
+  "requirement_ids": [
+    "FR-011"
+  ],
+  "category": "activation",
+  "input": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "context_kind": "normal",
+    "projection_epoch": "123e4567-e89b-42d3-a456-426614174040",
+    "projection_revision": 4,
+    "query_sequence": 3,
+    "rows": [
+      {
+        "result_id": "result-7",
+        "tab_id": 7,
+        "window_id": 2,
+        "title": "Example title",
+        "domain": "example.test",
+        "eligible": true
+      }
+    ],
+    "selected": {
+      "result_id": "result-7",
+      "tab_id": 7,
+      "window_id": 2,
+      "title": "Example title",
+      "domain": "example.test",
+      "eligible": true
+    },
+    "browser": {
+      "get_tab": {
+        "id": 7,
+        "windowId": 2,
+        "active": false
+      },
+      "focus_window": {
+        "id": 2,
+        "focused": true
+      },
+      "activate_tab": {
+        "id": 7,
+        "windowId": 2,
+        "active": true
+      },
+      "defer_get": false
+    },
+    "race": "after_get_tab_reused",
+    "transport": "accepted",
+    "storage": "ready",
+    "teardown": null,
+    "duplicate_enter": false
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "browser_calls",
+        "value": [
+          [
+            "getTab",
+            7
+          ]
+        ]
+      },
+      {
+        "signal": "activation_ok",
+        "value": false
+      },
+      {
+        "signal": "browser_state",
+        "value": "unchanged"
+      },
+      {
+        "signal": "next_action",
+        "value": "refresh"
+      },
+      {
+        "signal": "error_code",
+        "value": "stale_selection"
+      },
+      {
+        "signal": "surface_closed",
+        "value": false
+      },
+      {
+        "signal": "surface_status",
+        "value": "activation_failure"
+      },
+      {
+        "signal": "status_message",
+        "value": "Results changed. Refresh and choose a tab again."
+      },
+      {
+        "signal": "report_state",
+        "value": "acknowledged"
+      },
+      {
+        "signal": "report_outcome",
+        "value": "failed"
+      },
+      {
+        "signal": "recency_state",
+        "value": "not_confirmed"
+      },
+      {
+        "signal": "recency_count",
+        "value": 0
+      },
+      {
+        "signal": "mutation_calls",
+        "value": 0
+      },
+      {
+        "signal": "replacement_tab_activated",
+        "value": false
+      }
+    ],
+    "privacy_assertions": [
+      "A reused numeric tab ID is never activated by the old result reference."
+    ]
+  }
+}

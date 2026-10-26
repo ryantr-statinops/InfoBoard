@@ -1,0 +1,128 @@
+{
+  "fixture_id": "FX-ACT-001",
+  "owner_phase": "IP-14",
+  "requirement_ids": [
+    "FR-007",
+    "NFR-003"
+  ],
+  "category": "activation",
+  "input": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "context_kind": "normal",
+    "projection_epoch": "123e4567-e89b-42d3-a456-426614174040",
+    "projection_revision": 4,
+    "query_sequence": 3,
+    "rows": [
+      {
+        "result_id": "result-7",
+        "tab_id": 7,
+        "window_id": 2,
+        "title": "Example title",
+        "domain": "example.test",
+        "eligible": true
+      }
+    ],
+    "selected": {
+      "result_id": "result-7",
+      "tab_id": 7,
+      "window_id": 2,
+      "title": "Example title",
+      "domain": "example.test",
+      "eligible": true
+    },
+    "browser": {
+      "get_tab": {
+        "id": 7,
+        "windowId": 2,
+        "active": false
+      },
+      "focus_window": {
+        "id": 2,
+        "focused": true
+      },
+      "activate_tab": {
+        "id": 7,
+        "windowId": 2,
+        "active": true
+      },
+      "defer_get": false
+    },
+    "race": null,
+    "transport": "accepted",
+    "storage": "ready",
+    "teardown": null,
+    "duplicate_enter": false
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "browser_calls",
+        "value": [
+          [
+            "getTab",
+            7
+          ],
+          [
+            "focusWindow",
+            2
+          ],
+          [
+            "activateTab",
+            7
+          ]
+        ]
+      },
+      {
+        "signal": "activation_ok",
+        "value": true
+      },
+      {
+        "signal": "browser_state",
+        "value": "tab_active"
+      },
+      {
+        "signal": "next_action",
+        "value": "dismiss"
+      },
+      {
+        "signal": "error_code",
+        "value": null
+      },
+      {
+        "signal": "surface_closed",
+        "value": true
+      },
+      {
+        "signal": "surface_status",
+        "value": "activation_success"
+      },
+      {
+        "signal": "status_message",
+        "value": "Opened selected tab"
+      },
+      {
+        "signal": "report_state",
+        "value": "acknowledged"
+      },
+      {
+        "signal": "report_outcome",
+        "value": "activated"
+      },
+      {
+        "signal": "recency_state",
+        "value": "appended"
+      },
+      {
+        "signal": "recency_count",
+        "value": 1
+      },
+      {
+        "signal": "mutation_calls",
+        "value": 2
+      }
+    ],
+    "privacy_assertions": [
+      "Only the exact selected tab and window are touched."
+    ]
+  }
+}

@@ -163,12 +163,19 @@ export interface QuerySubmission {
   query_sequence?: number;
 }
 
-export interface ActivationSubmission {
+export interface ActivationResultReference {
+  tab_id: number;
+  projection_epoch: string;
+  projection_revision: number;
   result_id: string;
+}
+
+export interface ActivationSubmission {
+  result_reference: ActivationResultReference;
   tab_id: number;
   projection_revision: number;
-  outcome: 'observed' | 'failed';
-  error_class?: string;
+  outcome: 'activated' | 'failed';
+  error_code?: ProtocolErrorCode;
 }
 
 export type QueryStatus = 'results' | 'no_results' | 'empty_query';
@@ -856,24 +863,43 @@ export class NativeMessagingClient {
   }
 
   reportActivation(submission: ActivationSubmission): Promise<ClientRequestResult<{ accepted: boolean }>> {
-    if (!isBoundedString(submission.result_id, this.limits.resultIdBytes)) {
+    const reference = submission.result_reference;
+    if (!reference
+      || !isNonNegativeInteger(reference.tab_id)
+      || !isNonNegativeInteger(reference.projection_revision)
+      || !isBoundedString(reference.projection_epoch, this.limits.versionBytes)
+      || !isBoundedString(reference.result_id, this.limits.resultIdBytes)) {
       return Promise.resolve<ClientRequestResult<{ accepted: boolean }>>(rejectLocal<{ accepted: boolean }>('INVALID_SUBMISSION'));
     }
-    if (!isNonNegativeInteger(submission.tab_id)) return Promise.resolve<ClientRequestResult<{ accepted: boolean }>>(rejectLocal<{ accepted: boolean }>('INVALID_SUBMISSION'));
-    if (!isNonNegativeInteger(submission.projection_revision)) {
+    if (!isNonNegativeInteger(submission.tab_id)
+      || !isNonNegativeInteger(submission.projection_revision)
+      || submission.tab_id !== reference.tab_id
+      || submission.projection_revision !== reference.projection_revision) {
       return Promise.resolve<ClientRequestResult<{ accepted: boolean }>>(rejectLocal<{ accepted: boolean }>('INVALID_SUBMISSION'));
     }
-    if (submission.error_class !== undefined && !isBoundedString(submission.error_class, this.limits.versionBytes)) {
-      return Promise.resolve<ClientRequestResult<{ accepted: boolean }>>(rejectLocal<{ accepted: boolean }>('PAYLOAD_LIMIT'));
+    if (submission.outcome !== 'activated' && submission.outcome !== 'failed') {
+      return Promise.resolve<ClientRequestResult<{ accepted: boolean }>>(rejectLocal<{ accepted: boolean }>('INVALID_SUBMISSION'));
     }
-    const payload = {
-      result_id: submission.result_id,
+    if (submission.outcome === 'failed'
+      && (submission.error_code === undefined || !PROTOCOL_ERROR_CODES.includes(submission.error_code))) {
+      return Promise.resolve<ClientRequestResult<{ accepted: boolean }>>(rejectLocal<{ accepted: boolean }>('INVALID_SUBMISSION'));
+    }
+    if (submission.outcome === 'activated' && submission.error_code !== undefined) {
+      return Promise.resolve<ClientRequestResult<{ accepted: boolean }>>(rejectLocal<{ accepted: boolean }>('INVALID_SUBMISSION'));
+    }
+    const payload = compact({
+      result_reference: {
+        tab_id: reference.tab_id,
+        projection_epoch: reference.projection_epoch,
+        projection_revision: reference.projection_revision,
+        result_id: reference.result_id,
+      },
       tab_id: submission.tab_id,
       projection_revision: submission.projection_revision,
       outcome: submission.outcome,
-      error_class: submission.error_class,
-    };
-    const type: HostBoundMessageType = submission.outcome === 'observed' ? 'activation_observed' : 'activation_failed';
+      error_code: submission.error_code,
+    });
+    const type: HostBoundMessageType = submission.outcome === 'activated' ? 'activation_observed' : 'activation_failed';
     return this.dispatch<{ accepted: boolean }>('activation', payload, submission.projection_revision, type);
   }
 

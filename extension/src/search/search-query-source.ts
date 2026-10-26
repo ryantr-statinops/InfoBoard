@@ -1,9 +1,11 @@
 import type { BrowserProfileContext } from '../browser/browser-adapter.js';
 import { NativeMessagingClient } from '../runtime/native-messaging-client.js';
+import type { ActivationReportTransport } from '../runtime/activation-reporter.js';
 import { QueryClient } from '../runtime/query-client.js';
 
 export interface SearchRuntime {
   source: QueryClient;
+  activationTransport: ActivationReportTransport;
   close(): void;
 }
 
@@ -25,6 +27,7 @@ export function createNativeSearchQuerySource(context: BrowserProfileContext): S
   void client.start().catch(() => undefined);
   return {
     source,
+    activationTransport: client,
     close: () => client.close(),
   };
 }

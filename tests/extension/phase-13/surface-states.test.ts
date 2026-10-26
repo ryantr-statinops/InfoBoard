@@ -116,7 +116,7 @@ test('persistence-degraded rows stay actionable and activation failure is confir
     await expect(failure.locator('html')).toHaveAttribute('data-surface-state', 'results');
     await failure.keyboard.press('Enter');
     await expect(failure.locator('html')).toHaveAttribute('data-surface-state', 'activation_failure');
-    await expect(failure.locator('[data-surface-status]')).toHaveText('Could not open selected tab');
+    await expect(failure.locator('[data-surface-status]')).toHaveText('Selected tab is no longer available. Refresh and choose another.');
     await expect(failure.locator('html')).toHaveAttribute('data-browser-state-confirmed', 'true');
     expect(await driverState(failure)).toMatchObject({
       activations: [{ resultId: 'activation-failure-one', tabId: 81, projectionRevision: 12 }],

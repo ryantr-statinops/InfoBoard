@@ -71,7 +71,8 @@ test('manifest keeps the approved permissions and extension sources make no netw
   expect(source).not.toMatch(/chrome\.(?:scripting|cookies|history|webRequest|debugger)\b/);
 
   const entrypoint = await readFile('extension/src/search/surface-entrypoint.ts', 'utf8');
-  expect(entrypoint).toContain('activation_unavailable');
+  expect(entrypoint).toContain('createActivationHandoff');
+  expect(entrypoint).not.toContain('activation_unavailable');
   expect(entrypoint).not.toMatch(/chrome\.tabs\b/);
 });
 
