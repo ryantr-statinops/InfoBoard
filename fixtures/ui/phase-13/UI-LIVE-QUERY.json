@@ -1,0 +1,41 @@
+{
+  "fixture_id": "FX-UI-LIVE-QUERY",
+  "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+  "context_kind": "normal",
+  "surface": {
+    "width": 480,
+    "height": 600
+  },
+  "projection_revision": 4,
+  "defer_responses": true,
+  "responses": [
+    {
+      "status": "results",
+      "projection_revision": 4,
+      "rows": [
+        {
+          "result_id": "live-1",
+          "tab_id": 1,
+          "window_id": 1,
+          "title": "First accepted revision",
+          "domain": "first.example.test",
+          "explanations": ["title match"]
+        }
+      ]
+    },
+    {
+      "status": "results",
+      "projection_revision": 4,
+      "rows": [
+        {
+          "result_id": "live-2",
+          "tab_id": 2,
+          "window_id": 1,
+          "title": "Second accepted revision",
+          "domain": "second.example.test",
+          "explanations": ["title match"]
+        }
+      ]
+    }
+  ]
+}

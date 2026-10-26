@@ -1,0 +1,27 @@
+{
+  "fixture_id": "FX-UI-EMPTY",
+  "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+  "context_kind": "normal",
+  "surface": {
+    "width": 480,
+    "height": 600
+  },
+  "projection_revision": 7,
+  "responses": [
+    {
+      "status": "empty_query",
+      "projection_revision": 7,
+      "rows": [
+        {
+          "result_id": "recent-1",
+          "tab_id": 11,
+          "window_id": 1,
+          "title": "Recent reference",
+          "domain": "recent.example.test",
+          "window_label": "Window 1",
+          "explanations": ["recent context"]
+        }
+      ]
+    }
+  ]
+}
