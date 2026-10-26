@@ -1,0 +1,42 @@
+{
+  "fixture_id": "FX-UI-DUPLICATE-CONTEXT",
+  "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+  "context_kind": "normal",
+  "surface": {
+    "width": 480,
+    "height": 600
+  },
+  "projection_revision": 9,
+  "responses": [
+    {
+      "status": "results",
+      "projection_revision": 9,
+      "rows": [
+        {
+          "result_id": "duplicate-alpha",
+          "tab_id": 21,
+          "window_id": 1,
+          "group_id": 5,
+          "title": "Project dashboard",
+          "domain": "alpha.example.test",
+          "window_label": "Window 1",
+          "group_label": "Work",
+          "pinned": true,
+          "explanations": ["title match"]
+        },
+        {
+          "result_id": "duplicate-beta",
+          "tab_id": 22,
+          "window_id": 2,
+          "group_id": 6,
+          "title": "Project dashboard",
+          "domain": "secret.example.test/path?auth=abc",
+          "window_label": "Window 2",
+          "group_label": "Research",
+          "pinned": false,
+          "explanations": ["https://secret.example.test/path?token=abc"]
+        }
+      ]
+    }
+  ]
+}

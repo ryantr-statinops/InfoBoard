@@ -124,7 +124,7 @@ function contextLabel(row: QueryRenderRow): string {
 function rowLabel(row: QueryRenderRow): string {
   const title = row.title === '' ? 'Untitled tab' : row.title;
   const context = contextLabel(row);
-  const pinned = row.pinned ? 'Pinned.' : '';
+  const pinned = row.pinned ? 'Pinned' : '';
   const explanation = safeExplanation(row.explanations[0]);
   return [title, context, pinned, explanation].filter(value => value !== '').join('. ');
 }
