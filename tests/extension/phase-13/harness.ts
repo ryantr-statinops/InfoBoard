@@ -191,16 +191,16 @@ export async function openSurface(harness: SurfaceHarness, fixture: UiFixture): 
       state.dismisses += 1;
       document.documentElement.dataset.dismissed = 'true';
     };
-    const testState = {
-      ...state,
-      resolve(index: number, response: UiResponse) {
-        const pending = state.pending[index];
-        if (pending === undefined) return;
-        const result = resultModel(pending.sequence, response);
-        emit(result);
-        pending.resolve(result);
-        state.pending.splice(index, 1);
-      },
+    const testState = state as typeof state & {
+      resolve(index: number, response: UiResponse): void;
+    };
+    testState.resolve = (index: number, response: UiResponse) => {
+      const pending = state.pending[index];
+      if (pending === undefined) return;
+      const result = resultModel(pending.sequence, response);
+      emit(result);
+      pending.resolve(result);
+      state.pending.splice(index, 1);
     };
     (window as unknown as {
       __INFOBOARD_SURFACE_TEST__: {
