@@ -7,9 +7,11 @@ import {
   type SearchQuerySource,
 } from './surface-controller.js';
 import { findSurfaceElements } from './surface-renderer.js';
+import type { SurfaceState } from './surface-state.js';
 import type { QueryRenderModel } from '../runtime/query-client.js';
 
 const adapter = new ChromeBrowserAdapter();
+const SURFACE_STARTED_AT = Date.now();
 const COMMAND_STARTED_KEY = 'infoboard_search_command_started_at';
 const EMPTY_MODEL: QueryRenderModel = {
   profileId: parseProfileID('00000000-0000-4000-8000-000000000000'),
@@ -38,6 +40,7 @@ interface SurfaceSessionStorageApi {
   storage?: {
     session?: {
       get(key: string): Promise<Record<string, unknown>>;
+      set(items: Record<string, unknown>): Promise<void>;
       remove(key: string): Promise<void>;
     };
   };
@@ -62,6 +65,15 @@ async function clearCommandStartedAt(): Promise<void> {
     await sessionStorage()?.session?.remove(COMMAND_STARTED_KEY);
   } catch {
     // The timestamp is supporting evidence only.
+  }
+}
+
+function recordFocusMetric(state: SurfaceState): void {
+  if (state.status !== 'ready' || state.shortcutFocusMs === undefined) return;
+  try {
+    void sessionStorage()?.session?.set({ infoboard_search_shortcut_focus_ms: state.shortcutFocusMs });
+  } catch {
+    // Timing evidence must never block the focused input.
   }
 }
 
@@ -102,9 +114,24 @@ export async function initializeSearchSurface(doc: Document = document): Promise
     return;
   }
 
+  const elements = findSurfaceElements(doc);
+  if (!elements) { reportError(doc, 'query-input-missing'); return; }
+
+  // Focus before profile/storage handshakes. The command-to-focus budget must
+  // not include host readiness or a slow extension storage read.
+  elements.input.value = '';
+  try { elements.input.focus({ preventScroll: true }); } catch { /* controller retries focus */ }
+  const focusTimestamp = Date.now();
+  try {
+    void sessionStorage()?.session?.set({
+      infoboard_search_surface_focus_ms: Math.max(0, focusTimestamp - SURFACE_STARTED_AT),
+    });
+  } catch {
+    // Timing evidence must never block the focused input.
+  }
+
   const context = await adapter.currentProfileContext();
   if (!context.ok) { reportError(doc, 'profile-unavailable'); return; }
-  if (!findSurfaceElements(doc)) { reportError(doc, 'query-input-missing'); return; }
 
   doc.documentElement.dataset.searchSession = crypto.randomUUID();
   const commandStartedAt = await readCommandStartedAt();
@@ -118,6 +145,7 @@ export async function initializeSearchSurface(doc: Document = document): Promise
       activation: noopActivation(),
       dismiss: () => doc.defaultView?.close(),
       commandStartedAt,
+      focusTimestamp,
     });
     controller.start();
     if (!access.ok || !access.value) controller.showPrivateUnavailable();
@@ -132,6 +160,8 @@ export async function initializeSearchSurface(doc: Document = document): Promise
     activation: noopActivation(),
     dismiss: () => doc.defaultView?.close(),
     commandStartedAt,
+    focusTimestamp,
+    onState: recordFocusMetric,
   });
   controller.start();
   adapter.registerPopupCloseListener(() => controller.dismiss());

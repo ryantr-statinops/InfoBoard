@@ -39,6 +39,7 @@ export interface SurfaceControllerOptions {
   dismiss: () => void;
   now?: () => number;
   commandStartedAt?: number;
+  focusTimestamp?: number;
   onState?: (state: SurfaceState) => void;
 }
 
@@ -49,6 +50,7 @@ export class SurfaceController {
   private readonly dismissSurface: () => void;
   private readonly now: () => number;
   private readonly commandStartedAt?: number;
+  private readonly focusTimestamp?: number;
   private readonly onState?: (state: SurfaceState) => void;
   private readonly elements: SurfaceElements;
   private readonly cleanups: Array<() => void> = [];
@@ -63,6 +65,7 @@ export class SurfaceController {
     this.dismissSurface = options.dismiss;
     this.now = options.now ?? (() => Date.now());
     this.commandStartedAt = options.commandStartedAt;
+    this.focusTimestamp = options.focusTimestamp;
     this.onState = options.onState;
     const elements = findSurfaceElements(this.doc);
     if (!elements) throw new Error('search surface markup is missing required elements');
@@ -77,7 +80,7 @@ export class SurfaceController {
     this.cleanups.push(this.querySource.subscribe(model => this.applyModel(model)));
     this.doc.defaultView?.requestAnimationFrame(() => {
       this.focusInput();
-      const focusTimestamp = this.now();
+      const focusTimestamp = this.focusTimestamp ?? this.now();
       const shortcutFocusMs = this.commandStartedAt === undefined
         ? undefined
         : Math.max(0, focusTimestamp - this.commandStartedAt);
