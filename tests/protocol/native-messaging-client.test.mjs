@@ -328,3 +328,80 @@ test('hello deadline settles the pending request and exposes a retryable local f
   assert.equal(harness.port.messages.length, 1);
   assert.equal(hello.type, 'hello');
 });
+
+test('activation report uses result_reference and host outcome literals', async () => {
+  const harness = makeHarness();
+  await connect(harness);
+  await acceptSnapshot(harness, 42, 7);
+
+  const observed = harness.client.reportActivation({
+    result_reference: {
+      tab_id: 9,
+      projection_epoch: PROJECTION_EPOCH,
+      projection_revision: 42,
+      result_id: 'result-1',
+    },
+    tab_id: 9,
+    projection_revision: 42,
+    outcome: 'activated',
+  });
+  const observedFrame = harness.port.messages.at(-1);
+  assert.equal(observedFrame.type, 'activation_observed');
+  assert.equal(observedFrame.projection_revision, 42);
+  assert.deepEqual(observedFrame.payload, {
+    result_reference: {
+      tab_id: 9,
+      projection_epoch: PROJECTION_EPOCH,
+      projection_revision: 42,
+      result_id: 'result-1',
+    },
+    tab_id: 9,
+    projection_revision: 42,
+    outcome: 'activated',
+  });
+  harness.port.onMessage.emit(hostResponse(observedFrame, 'activation_ack', {
+    accepted: true,
+    projection_revision: 42,
+  }));
+  assert.deepEqual(await observed, { ok: true, value: { accepted: true } });
+
+  const failed = harness.client.reportActivation({
+    result_reference: {
+      tab_id: 9,
+      projection_epoch: PROJECTION_EPOCH,
+      projection_revision: 42,
+      result_id: 'result-1',
+    },
+    tab_id: 9,
+    projection_revision: 42,
+    outcome: 'failed',
+    error_code: 'REVISION_MISMATCH',
+  });
+  const failedFrame = harness.port.messages.at(-1);
+  assert.equal(failedFrame.type, 'activation_failed');
+  assert.equal(failedFrame.payload.outcome, 'failed');
+  assert.equal(failedFrame.payload.error_code, 'REVISION_MISMATCH');
+  harness.port.onMessage.emit(hostResponse(failedFrame, 'activation_ack', {
+    accepted: true,
+    projection_revision: 42,
+  }));
+  assert.deepEqual(await failed, { ok: true, value: { accepted: true } });
+
+  const beforeInvalid = harness.port.messages.length;
+  const invalid = await harness.client.reportActivation({
+    result_reference: {
+      tab_id: 9,
+      projection_epoch: PROJECTION_EPOCH,
+      projection_revision: 42,
+      result_id: 'result-1',
+    },
+    tab_id: 9,
+    projection_revision: 42,
+    outcome: 'activated',
+    error_code: 'INTERNAL_FAILURE',
+  });
+  assert.equal(invalid.ok, false);
+  assert.equal(invalid.source, 'client');
+  assert.equal(invalid.error.code, 'INVALID_SUBMISSION');
+  assert.equal(harness.port.messages.length, beforeInvalid);
+});
