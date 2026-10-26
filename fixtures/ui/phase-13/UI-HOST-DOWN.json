@@ -1,0 +1,22 @@
+{
+  "fixture_id": "FX-UI-HOST-DOWN",
+  "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+  "context_kind": "normal",
+  "surface": {
+    "width": 480,
+    "height": 600
+  },
+  "projection_revision": 9,
+  "responses": [
+    {
+      "status": "unavailable",
+      "projection_revision": 9,
+      "error": {
+        "source": "client",
+        "code": "HOST_UNAVAILABLE",
+        "retryable": true
+      },
+      "rows": []
+    }
+  ]
+}

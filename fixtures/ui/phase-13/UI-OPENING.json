@@ -1,0 +1,27 @@
+{
+  "fixture_id": "FX-UI-OPENING",
+  "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+  "context_kind": "normal",
+  "surface": {
+    "width": 480,
+    "height": 600
+  },
+  "projection_revision": 6,
+  "defer_responses": true,
+  "responses": [
+    {
+      "status": "results",
+      "projection_revision": 6,
+      "rows": [
+        {
+          "result_id": "opening-one",
+          "tab_id": 61,
+          "window_id": 1,
+          "title": "Opening result",
+          "domain": "opening.example.test",
+          "explanations": ["title match"]
+        }
+      ]
+    }
+  ]
+}

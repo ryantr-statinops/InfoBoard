@@ -1,0 +1,27 @@
+{
+  "fixture_id": "FX-UI-PERSISTENCE-DEGRADED",
+  "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+  "context_kind": "normal",
+  "surface": {
+    "width": 480,
+    "height": 600
+  },
+  "projection_revision": 10,
+  "responses": [
+    {
+      "status": "degraded",
+      "projection_revision": 10,
+      "persistence_state": "degraded",
+      "rows": [
+        {
+          "result_id": "degraded-one",
+          "tab_id": 71,
+          "window_id": 1,
+          "title": "Current session result",
+          "domain": "degraded.example.test",
+          "explanations": ["title match"]
+        }
+      ]
+    }
+  ]
+}

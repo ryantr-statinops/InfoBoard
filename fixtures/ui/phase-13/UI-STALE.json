@@ -1,0 +1,17 @@
+{
+  "fixture_id": "FX-UI-STALE",
+  "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+  "context_kind": "normal",
+  "surface": {
+    "width": 480,
+    "height": 600
+  },
+  "projection_revision": 11,
+  "responses": [
+    {
+      "status": "stale",
+      "projection_revision": 11,
+      "rows": []
+    }
+  ]
+}

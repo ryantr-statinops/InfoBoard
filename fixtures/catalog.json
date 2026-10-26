@@ -1379,6 +1379,490 @@
           "The benchmark input contains only bounded local metadata and no page content."
         ]
       }
+    },
+    {
+      "fixture_id": "FX-UI-SHORTCUT-FOCUS",
+      "owner_phase": "IP-13",
+      "requirement_ids": [
+        "FR-002",
+        "NFR-001"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture": "fixtures/ui/phase-13/UI-SHORTCUT-FOCUS.json",
+        "pointer_input": false
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "query_input_focused_before_text",
+            "value": true
+          },
+          {
+            "signal": "stale_result_rows_before_text",
+            "value": 0
+          },
+          {
+            "signal": "shortcut_focus_ms_under_100",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Opening the surface does not require pointer input or mutate the selected tab."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UI-LIVE-QUERY",
+      "owner_phase": "IP-13",
+      "requirement_ids": [
+        "FR-006",
+        "FR-004"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture": "fixtures/ui/phase-13/UI-LIVE-QUERY.json",
+        "accepted_query_revisions": [
+          1,
+          2
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "rendered_query_revision",
+            "value": 2
+          },
+          {
+            "signal": "stale_revision_rendered",
+            "value": false
+          },
+          {
+            "signal": "selected_result_id",
+            "value": "live-2"
+          }
+        ],
+        "privacy_assertions": [
+          "A superseded response never replaces the newest visible result."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UI-ARROW-ENTER",
+      "owner_phase": "IP-13",
+      "requirement_ids": [
+        "NFR-008",
+        "FR-007"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture": "fixtures/ui/phase-13/UI-ARROW-ENTER.json",
+        "selected_index": 1
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "selected_result_id",
+            "value": "arrow-second"
+          },
+          {
+            "signal": "activation_projection_revision",
+            "value": 11
+          },
+          {
+            "signal": "input_remains_typing_target",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Enter hands off only the explicitly selected result and projection revision."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UI-ESC-DISMISS",
+      "owner_phase": "IP-13",
+      "requirement_ids": [
+        "FR-008",
+        "NFR-003"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture": "fixtures/ui/phase-13/UI-ESC-DISMISS.json",
+        "key": "Escape"
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "dismissed_without_activation",
+            "value": true
+          },
+          {
+            "signal": "browser_tab_state_changed",
+            "value": false
+          },
+          {
+            "signal": "activation_requests",
+            "value": 0
+          }
+        ],
+        "privacy_assertions": [
+          "Escape dismisses without selecting, activating, or mutating a browser tab."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UI-DUPLICATE-CONTEXT",
+      "owner_phase": "IP-13",
+      "requirement_ids": [
+        "FR-006",
+        "FR-008"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture": "fixtures/ui/phase-13/UI-DUPLICATE-CONTEXT.json",
+        "duplicate_titles": 2
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "result_count",
+            "value": 2
+          },
+          {
+            "signal": "context_disambiguates_titles",
+            "value": true
+          },
+          {
+            "signal": "raw_url_query_visible",
+            "value": false
+          }
+        ],
+        "privacy_assertions": [
+          "Display labels show domains and window/group context without raw URL query strings."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UI-EMPTY",
+      "owner_phase": "IP-13",
+      "requirement_ids": [
+        "FR-006",
+        "FR-004"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture": "fixtures/ui/phase-13/UI-EMPTY.json",
+        "query": "   "
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "requested_query",
+            "value": ""
+          },
+          {
+            "signal": "rendered_status",
+            "value": "Recent and related tabs"
+          },
+          {
+            "signal": "result_count",
+            "value": 1
+          }
+        ],
+        "privacy_assertions": [
+          "Whitespace input requests bounded context results without echoing the raw input."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UI-NO-RESULT",
+      "owner_phase": "IP-13",
+      "requirement_ids": [
+        "FR-006",
+        "FR-004"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture": "fixtures/ui/phase-13/UI-NO-RESULT.json",
+        "query": "missing"
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "rendered_status",
+            "value": "No matching open tabs"
+          },
+          {
+            "signal": "result_count",
+            "value": 0
+          },
+          {
+            "signal": "activation_available",
+            "value": false
+          }
+        ],
+        "privacy_assertions": [
+          "No-result state never exposes a stale result for activation."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UI-OPENING",
+      "owner_phase": "IP-13",
+      "requirement_ids": [
+        "NFR-001",
+        "NFR-008"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture": "fixtures/ui/phase-13/UI-OPENING.json",
+        "query": "opening"
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "focus_before_query_ready",
+            "value": true
+          },
+          {
+            "signal": "rendered_status",
+            "value": "Searching"
+          },
+          {
+            "signal": "activation_available",
+            "value": false
+          }
+        ],
+        "privacy_assertions": [
+          "The input remains focused while query readiness is pending."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UI-REBUILDING",
+      "owner_phase": "IP-13",
+      "requirement_ids": [
+        "NFR-008",
+        "FR-012"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture": "fixtures/ui/phase-13/UI-REBUILDING.json",
+        "index_state": "rebuilding"
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "rendered_status",
+            "value": "Search index is rebuilding. Try again shortly."
+          },
+          {
+            "signal": "activation_available",
+            "value": false
+          },
+          {
+            "signal": "retry_available",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Rebuilding state is visibly marked and cannot activate a stale result."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UI-HOST-DOWN",
+      "owner_phase": "IP-13",
+      "requirement_ids": [
+        "NFR-008",
+        "FR-012"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture": "fixtures/ui/phase-13/UI-HOST-DOWN.json",
+        "host_available": false
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "rendered_status",
+            "value": "Search is unavailable. Try again."
+          },
+          {
+            "signal": "activation_available",
+            "value": false
+          },
+          {
+            "signal": "dismiss_available",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Host-down state claims no unavailable results are current."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UI-PERSISTENCE-DEGRADED",
+      "owner_phase": "IP-13",
+      "requirement_ids": [
+        "NFR-008",
+        "FR-013"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture": "fixtures/ui/phase-13/UI-PERSISTENCE-DEGRADED.json",
+        "persistence_state": "degraded"
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "rendered_status",
+            "value": "1 result. History is unavailable; results are current for this session."
+          },
+          {
+            "signal": "current_session_rows_actionable",
+            "value": true
+          },
+          {
+            "signal": "result_count",
+            "value": 1
+          }
+        ],
+        "privacy_assertions": [
+          "Degraded persistence is announced without claiming historical data is current."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UI-STALE",
+      "owner_phase": "IP-13",
+      "requirement_ids": [
+        "NFR-008",
+        "FR-012"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture": "fixtures/ui/phase-13/UI-STALE.json",
+        "status": "stale"
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "rendered_status",
+            "value": "Results are stale. Type again or retry."
+          },
+          {
+            "signal": "activation_available",
+            "value": false
+          },
+          {
+            "signal": "retry_available",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Stale results cannot silently activate a different tab."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UI-ACTIVATION-FAILURE",
+      "owner_phase": "IP-13",
+      "requirement_ids": [
+        "NFR-008",
+        "FR-007"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture": "fixtures/ui/phase-13/UI-ACTIVATION-FAILURE.json",
+        "activation": "tab_missing"
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "activation_outcome",
+            "value": "failure"
+          },
+          {
+            "signal": "activation_error_code",
+            "value": "tab_missing"
+          },
+          {
+            "signal": "browser_state_confirmed",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Activation failure is announced without claiming the browser tab changed."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UI-PRIVATE-UNAVAILABLE",
+      "owner_phase": "IP-13",
+      "requirement_ids": [
+        "NFR-008",
+        "NFR-009"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture": "fixtures/ui/phase-13/UI-PRIVATE-UNAVAILABLE.json",
+        "context_kind": "private"
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "rendered_status",
+            "value": "Search is unavailable in private windows."
+          },
+          {
+            "signal": "query_input_enabled",
+            "value": false
+          },
+          {
+            "signal": "dismiss_available",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Private-context unavailability exposes no query or activation action."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UI-NARROW-TEXT-SCALE",
+      "owner_phase": "IP-13",
+      "requirement_ids": [
+        "NFR-008",
+        "NFR-001"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture": "fixtures/ui/phase-13/UI-NARROW-TEXT-SCALE.json",
+        "width": 320,
+        "text_scale_percent": 200
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "horizontal_clipping",
+            "value": false
+          },
+          {
+            "signal": "selected_result_visible",
+            "value": true
+          },
+          {
+            "signal": "reduced_motion_transition",
+            "value": "0s"
+          }
+        ],
+        "privacy_assertions": [
+          "Responsive layout keeps query, selected result, and dismiss control operable."
+        ]
+      }
     }
   ],
   "future_check_contracts": [
@@ -1622,7 +2106,7 @@
     {
       "phase": "IP-13",
       "fixture_ids": [
-        "FX-SHORTCUT-FOCUS"
+        "FX-UI-SHORTCUT-FOCUS"
       ],
       "requirement_ids": [
         "FR-002"
@@ -1630,7 +2114,7 @@
       "ownership_relation": "primary",
       "fixture_signal": "query_input_focused_before_text",
       "acceptance_signal": "Keyboard journey begins with the query input focused before text is accepted.",
-      "handoff_note": "Shared baseline only; IP-13 owns UI keyboard, semantic, and accessibility extensions."
+      "handoff_note": "UI-owned keyboard, semantic, and accessibility extension of the IP-03 baseline."
     },
     {
       "phase": "IP-14",

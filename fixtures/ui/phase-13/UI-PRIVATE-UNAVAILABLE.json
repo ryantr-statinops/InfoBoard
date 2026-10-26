@@ -1,0 +1,12 @@
+{
+  "fixture_id": "FX-UI-PRIVATE-UNAVAILABLE",
+  "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+  "context_kind": "private",
+  "surface": {
+    "width": 480,
+    "height": 600
+  },
+  "projection_revision": 1,
+  "private_unavailable": true,
+  "responses": []
+}
