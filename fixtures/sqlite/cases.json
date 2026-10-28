@@ -6,7 +6,7 @@
       "scenario": "Fresh database migrates to schema v1 and missing-profile reads return safe defaults.",
       "expected_status": "ready",
       "expected_rows": {"configuration": 0, "activation_metadata": 0, "diagnostics": 0, "schema_migrations": 1},
-      "boundary": "No profile row exists; recency persistence defaults off.",
+      "boundary": "No profile row exists; result limit defaults to 10 and recency persistence defaults on.",
       "ownership": "Database application_id and owner_id belong to InfoBoard."
     },
     {

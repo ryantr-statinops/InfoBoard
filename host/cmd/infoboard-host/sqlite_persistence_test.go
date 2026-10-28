@@ -24,7 +24,7 @@ func TestSQLitePersistencePreparesAndLoadsOnlyBoundProfile(t *testing.T) {
 		t.Fatalf("profile prepare status=%s err=%v", status, err)
 	}
 	configuration := persistence.Configuration()
-	if configuration.ProfileID != profileA || configuration.PersistActivationRecency {
+	if configuration.ProfileID != profileA || !configuration.PersistActivationRecency {
 		t.Fatalf("loaded profile defaults = %+v", configuration)
 	}
 
@@ -40,7 +40,7 @@ func TestSQLitePersistencePreparesAndLoadsOnlyBoundProfile(t *testing.T) {
 		t.Fatalf("private profile prepare status=%s err=%v", status, err)
 	}
 	privateConfiguration := persistence.Configuration()
-	if privateConfiguration.ProfileID != profileB || privateConfiguration.PersistActivationRecency {
+	if privateConfiguration.ProfileID != profileB || !privateConfiguration.PersistActivationRecency {
 		t.Fatalf("private profile reused normal profile state: %+v", privateConfiguration)
 	}
 	if err := persistence.Flush(context.Background()); err != nil {

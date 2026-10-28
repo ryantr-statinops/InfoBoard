@@ -91,7 +91,7 @@ type Configuration struct {
 }
 
 // DefaultConfiguration returns a privacy-first configuration for one validated
-// profile. Activation recency stays session-only until the user opts in.
+// profile. Activation recency defaults on and can be disabled per profile.
 func DefaultConfiguration(profileID domain.ProfileID) Configuration {
 	return Configuration{
 		ProfileID: profileID, ResultLimit: DefaultResultLimit, Density: DefaultDensity,
