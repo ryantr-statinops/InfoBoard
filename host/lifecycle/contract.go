@@ -79,6 +79,8 @@ type EffectiveConfiguration struct {
 	Configuration ProfileConfig    `json:"configuration"`
 	Persistence   PersistenceState `json:"persistence"`
 	Durable       bool             `json:"durable"`
+	Retryable     bool             `json:"retryable"`
+	ErrorClass    string           `json:"error_class"`
 }
 
 var (

@@ -41,6 +41,8 @@ export interface EffectiveProfileConfig {
   configuration: ProfileConfig;
   persistence: PersistenceState;
   durable: boolean;
+  retryable: boolean;
+  error_class: string;
 }
 
 export const DEFAULT_CONFIG = Object.freeze({

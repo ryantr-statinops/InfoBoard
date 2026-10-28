@@ -72,6 +72,7 @@ func (coordinator *Coordinator) Load(ctx context.Context, profileID domain.Profi
 		return EffectiveConfiguration{}, err
 	}
 	persistence, durable := persistenceFromResult(result)
+	errorClass := string(result.ErrorClass)
 	effective := defaults
 	if persistence == PersistenceReady && durable {
 		candidate := profileConfigFromStorage(configuration)
@@ -79,14 +80,105 @@ func (coordinator *Coordinator) Load(ctx context.Context, profileID domain.Profi
 			effective = candidate
 		} else {
 			persistence, durable = PersistenceDegraded, false
+			errorClass = string(storage.ErrorInvalidConfiguration)
+		}
+	} else if errorClass == "" {
+		if result.Status == storage.StatusReady && result.Compatibility != storage.CompatibilityCompatible {
+			errorClass = "compatibility_mismatch"
+		} else {
+			errorClass = string(storage.ErrorStorageUnavailable)
 		}
 	}
 
-	value := EffectiveConfiguration{Configuration: effective, Persistence: persistence, Durable: durable}
+	value := EffectiveConfiguration{
+		Configuration: effective,
+		Persistence:   persistence,
+		Durable:       durable,
+		Retryable:     !durable,
+		ErrorClass:    errorClass,
+	}
+	coordinator.storeEffective(profile, value)
+	return value, nil
+}
+
+// Update validates and writes one profile's complete effective configuration.
+// The host stamps protocol/ranking versions; a caller cannot choose them. On a
+// write failure the last known effective value is retained, marked degraded and
+// retryable, and never reported as durable.
+func (coordinator *Coordinator) Update(ctx context.Context, profileID domain.ProfileID, configuration ProfileConfig) (EffectiveConfiguration, error) {
+	if coordinator == nil {
+		return EffectiveConfiguration{}, errors.New("lifecycle coordinator is required")
+	}
+	profile, err := domain.ParseProfileID(string(profileID))
+	if err != nil {
+		return EffectiveConfiguration{}, ErrInvalidConfiguration
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := ctx.Err(); err != nil {
+		return EffectiveConfiguration{}, err
+	}
+	if configuration.ProfileID != profile {
+		return EffectiveConfiguration{}, &ValidationError{Field: "profile_id", Err: ErrProfileMismatch}
+	}
+	if err := configuration.Validate(profile); err != nil {
+		return EffectiveConfiguration{}, err
+	}
+	configuration.ProfileID = profile
+	configuration.ProtocolVersion = coordinator.versions.ProtocolVersion
+	configuration.RankingModelVersion = coordinator.versions.RankingModelVersion
+	if err := configuration.Validate(profile); err != nil {
+		return EffectiveConfiguration{}, err
+	}
+
+	result := coordinator.store.SaveConfiguration(ctx, storageConfiguration(configuration), coordinator.versions)
+	if err := ctx.Err(); err != nil {
+		return EffectiveConfiguration{}, err
+	}
+	persistence, durable := persistenceFromResult(result)
+	if persistence == PersistenceReady && durable {
+		value := EffectiveConfiguration{
+			Configuration: configuration,
+			Persistence:   PersistenceReady,
+			Durable:       true,
+		}
+		coordinator.storeEffective(profile, value)
+		return value, nil
+	}
+
+	previous := coordinator.previous(profile)
+	previous.Persistence = persistence
+	previous.Durable = false
+	previous.Retryable = true
+	previous.ErrorClass = string(result.ErrorClass)
+	if previous.ErrorClass == "" {
+		previous.ErrorClass = string(storage.ErrorStorageFailure)
+	}
+	coordinator.storeEffective(profile, previous)
+	return previous, nil
+}
+
+func (coordinator *Coordinator) previous(profile domain.ProfileID) EffectiveConfiguration {
+	coordinator.mu.RLock()
+	value, ok := coordinator.effective[profile]
+	coordinator.mu.RUnlock()
+	if ok {
+		return value
+	}
+	return EffectiveConfiguration{
+		Configuration: DefaultProfileConfig(profile, coordinator.versions.ProtocolVersion, coordinator.versions.RankingModelVersion),
+		Persistence:   PersistenceDegraded,
+		Durable:       false,
+		Retryable:     true,
+		ErrorClass:    string(storage.ErrorStorageUnavailable),
+	}
+}
+
+func (coordinator *Coordinator) storeEffective(profile domain.ProfileID, value EffectiveConfiguration) {
 	coordinator.mu.Lock()
 	coordinator.effective[profile] = value
 	coordinator.mu.Unlock()
-	return value, nil
 }
 
 // Cached returns the last effective value for one profile without touching the
