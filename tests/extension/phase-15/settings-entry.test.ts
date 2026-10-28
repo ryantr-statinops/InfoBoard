@@ -34,6 +34,7 @@ test('settings options page renders defaults, saves, resets, and uninstalls thro
   const launchState = await launch();
   try {
     const page = await launchState.context.newPage();
+    const pagesBefore = launchState.context.pages().length;
     await page.addInitScript(({ profileId }: { profileId: string }) => {
       const calls: unknown[] = [];
       const defaults = {
@@ -133,6 +134,8 @@ test('settings options page renders defaults, saves, resets, and uninstalls thro
     expect(calls).toContain('uninstall');
     expect(calls).toContain('close');
     expect(calls.some(call => typeof call === 'object' && call !== null && 'update' in call)).toBe(true);
+    expect(launchState.context.pages().length).toBe(pagesBefore);
+    expect(page.url()).toContain('/dist/settings/settings-shell.html');
   } finally {
     await close(launchState);
   }

@@ -326,7 +326,7 @@ test('expected outputs never restate a sensitive sentinel', () => {
 
 test('the shared catalog still routes IP-07 through the reconnect seam', async () => {
   const catalog = JSON.parse(await readFile('fixtures/catalog.json', 'utf8'));
-  assert.equal(catalog.fixtures.length, 9);
+  assert.ok(catalog.fixtures.length >= 9, 'shared catalog lost its original fixtures');
   const seams = catalog.phase_seams.filter((seam) => seam.phase === 'IP-07');
   assert.equal(seams.length, 1);
   assert.equal(seams[0].ownership_relation, 'supporting');

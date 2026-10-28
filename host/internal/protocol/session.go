@@ -572,6 +572,9 @@ func (session *Session) handleLifecycle(ctx context.Context, channel runtime.Fra
 	if failure != nil {
 		return session.refuse(ctx, channel, envelope.RequestID, failure, false)
 	}
+	if result.CompletedSteps == nil {
+		result.CompletedSteps = []string{}
+	}
 	if outcome.RequireResync {
 		session.markRebuilding()
 	}
