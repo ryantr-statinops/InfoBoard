@@ -1,0 +1,36 @@
+{
+  "fixture_id": "FX-CFG-RECENCY-OPTION-001",
+  "owner_phase": "IP-15",
+  "requirement_ids": [
+    "FR-015"
+  ],
+  "category": "lifecycle",
+  "input": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "recency_enabled": false,
+    "tab_id": 7
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "recency_enabled",
+        "value": false
+      },
+      {
+        "signal": "tab_identity_changed",
+        "value": false
+      },
+      {
+        "signal": "activation_rows_written",
+        "value": 0
+      },
+      {
+        "signal": "query_still_available",
+        "value": true
+      }
+    ],
+    "privacy_assertions": [
+      "Disabling the recency option changes no tab identity and writes no activation metadata."
+    ]
+  }
+}

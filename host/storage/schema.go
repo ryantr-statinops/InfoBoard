@@ -23,11 +23,11 @@ const (
 	MaxDiagnosticRowBytes           = protocol.MaxPayloadBytes
 	MaxStoredVersionBytes           = protocol.MaxOpaqueValueBytes
 	MaxStoredProfileIDBytes         = 36
-	DefaultResultLimit              = 5
+	DefaultResultLimit              = 10
 	DefaultDensity                  = "comfortable"
 	DefaultTheme                    = "system"
 	DefaultShowContextLabels        = 1
-	DefaultPersistActivationRecency = 0
+	DefaultPersistActivationRecency = 1
 	DefaultRankingModelVersion      = ""
 )
 

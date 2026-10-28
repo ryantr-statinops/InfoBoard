@@ -1,0 +1,40 @@
+{
+  "fixture_id": "FX-CFG-PROFILE-ISOLATION-001",
+  "owner_phase": "IP-15",
+  "requirement_ids": [
+    "FR-015"
+  ],
+  "category": "lifecycle",
+  "input": {
+    "profile_a": "123e4567-e89b-42d3-a456-426614174000",
+    "profile_b": "123e4567-e89b-42d3-a456-426614174099",
+    "profile_a_config": {
+      "result_limit": 12,
+      "theme": "dark"
+    },
+    "profile_b_config": null
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "profile_a_result_limit",
+        "value": 12
+      },
+      {
+        "signal": "profile_b_result_limit",
+        "value": 10
+      },
+      {
+        "signal": "cross_profile_values",
+        "value": 0
+      },
+      {
+        "signal": "global_fallback_rows",
+        "value": 0
+      }
+    ],
+    "privacy_assertions": [
+      "A read for one profile never exposes another profile's settings or activation metadata."
+    ]
+  }
+}

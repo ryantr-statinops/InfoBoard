@@ -58,7 +58,7 @@ func TestInitialSchemaCreatesOnlyOwnedTablesAndSafeDefaults(t *testing.T) {
 	if err := db.QueryRow(`SELECT result_limit, density, theme, show_context_labels, persist_activation_recency, protocol_version, ranking_model_version FROM configuration WHERE profile_id = ?`, profileA).Scan(&resultLimit, &density, &theme, &showLabels, &persistRecency, &protocolVersion, &rankingVersion); err != nil {
 		t.Fatal(err)
 	}
-	if resultLimit != DefaultResultLimit || density != DefaultDensity || theme != DefaultTheme || showLabels != 1 || persistRecency != 0 || protocolVersion != protocol.CurrentVersion || rankingVersion != "" {
+	if resultLimit != DefaultResultLimit || density != DefaultDensity || theme != DefaultTheme || showLabels != 1 || persistRecency != 1 || protocolVersion != protocol.CurrentVersion || rankingVersion != "" {
 		t.Fatalf("configuration defaults = limit:%d density:%q theme:%q labels:%d recency:%d protocol:%d ranking:%q", resultLimit, density, theme, showLabels, persistRecency, protocolVersion, rankingVersion)
 	}
 }

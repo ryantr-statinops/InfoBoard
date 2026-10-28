@@ -1,0 +1,42 @@
+{
+  "fixture_id": "FX-UNINSTALL-OWNED-001",
+  "owner_phase": "IP-15",
+  "requirement_ids": [
+    "FR-015",
+    "NFR-009"
+  ],
+  "category": "lifecycle",
+  "input": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "manifest_entries": [
+      "database",
+      "native-manifest",
+      "host-binary",
+      "extension-artifact"
+    ],
+    "unrelated_sentinel": true
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "owned_artifacts_remaining",
+        "value": 0
+      },
+      {
+        "signal": "unrelated_sentinel_preserved",
+        "value": true
+      },
+      {
+        "signal": "status",
+        "value": "complete"
+      },
+      {
+        "signal": "owned_state_verified",
+        "value": true
+      }
+    ],
+    "privacy_assertions": [
+      "Uninstall removes only reviewed manifest entries and preserves unrelated files and other profiles."
+    ]
+  }
+}

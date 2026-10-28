@@ -7,6 +7,7 @@ export interface SurfaceElements {
   list: HTMLElement;
   empty: HTMLElement;
   close: HTMLButtonElement | null;
+  settings: HTMLButtonElement | null;
 }
 
 export function findSurfaceElements(doc: Document): SurfaceElements | undefined {
@@ -21,6 +22,7 @@ export function findSurfaceElements(doc: Document): SurfaceElements | undefined 
     list,
     empty,
     close: doc.querySelector<HTMLButtonElement>('[data-close-search]'),
+    settings: doc.querySelector<HTMLButtonElement>('[data-open-settings]'),
   };
 }
 

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "description": "Reviewed InfoBoard-owned cleanup entries. The installer supplies the absolute root; request input never supplies a path.",
+  "entries": [
+    { "id": "database", "relative_path": "infoboard.sqlite", "kind": "file" },
+    { "id": "database-journal", "relative_path": "infoboard.sqlite-journal", "kind": "file" },
+    { "id": "database-wal", "relative_path": "infoboard.sqlite-wal", "kind": "file" },
+    { "id": "database-shm", "relative_path": "infoboard.sqlite-shm", "kind": "file" }
+  ],
+  "deferred_entries": [
+    "platform native-messaging manifest",
+    "host binary",
+    "extension package artifacts"
+  ]
+}

@@ -107,6 +107,7 @@ type Budgets struct {
 	QueryRequestBudget time.Duration
 	Health             time.Duration
 	ActivationStatus   time.Duration
+	Lifecycle          time.Duration
 	ShutdownDrain      time.Duration
 }
 
@@ -120,6 +121,7 @@ func DefaultBudgets() Budgets {
 		QueryRequestBudget: 100 * time.Millisecond,
 		Health:             100 * time.Millisecond,
 		ActivationStatus:   500 * time.Millisecond,
+		Lifecycle:          500 * time.Millisecond,
 		ShutdownDrain:      time.Second,
 	}
 }
@@ -129,7 +131,8 @@ func (budgets Budgets) Validate() error {
 	for _, budget := range []time.Duration{
 		budgets.FrameRead, budgets.Handshake, budgets.SyncApply,
 		budgets.QueryHostBudget, budgets.QueryRequestBudget,
-		budgets.Health, budgets.ActivationStatus, budgets.ShutdownDrain,
+		budgets.Health, budgets.ActivationStatus, budgets.Lifecycle,
+		budgets.ShutdownDrain,
 	} {
 		if budget <= 0 || budget > time.Minute {
 			return ErrInvalidBudgets
@@ -241,6 +244,8 @@ const (
 	TypeActivationAck      MessageType = "activation_ack"
 	TypeHealth             MessageType = "health"
 	TypeHealthResult       MessageType = "health_result"
+	TypeLifecycle          MessageType = "lifecycle"
+	TypeLifecycleResult    MessageType = "lifecycle_result"
 	TypeError              MessageType = "error"
 )
 
@@ -266,6 +271,8 @@ var messageTypes = map[MessageType]Direction{
 	TypeActivationAck:      DirectionToExtension,
 	TypeHealth:             DirectionToHost,
 	TypeHealthResult:       DirectionToExtension,
+	TypeLifecycle:          DirectionToHost,
+	TypeLifecycleResult:    DirectionToExtension,
 	TypeError:              DirectionToExtension,
 }
 

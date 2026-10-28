@@ -27,6 +27,7 @@ export interface SurfaceTestDriver {
   querySource: SearchQuerySource;
   activation: ActivationHandoff;
   dismiss?: () => void;
+  openSettings?: () => void;
   privateUnavailable?: boolean;
   commandStartedAt?: number;
 }
@@ -102,6 +103,18 @@ function noopQuerySource(): SearchQuerySource {
   };
 }
 
+function openSettingsPage(): void {
+  try {
+    const chromeApi = (globalThis as {
+      chrome?: { runtime?: { openOptionsPage?: () => void | Promise<void> } };
+    }).chrome;
+    const opened = chromeApi?.runtime?.openOptionsPage?.();
+    if (opened && typeof opened.catch === 'function') void opened.catch(() => undefined);
+  } catch {
+    // The search surface stays usable if the options page cannot open.
+  }
+}
+
 function noopActivation(): ActivationHandoff {
   return {
     activate: async () => ({
@@ -152,6 +165,7 @@ export async function initializeSearchSurface(doc: Document = document): Promise
       querySource: noopQuerySource(),
       activation: noopActivation(),
       dismiss: () => doc.defaultView?.close(),
+      openSettings: openSettingsPage,
       commandStartedAt,
       focusTimestamp,
     });
@@ -173,6 +187,7 @@ export async function initializeSearchSurface(doc: Document = document): Promise
       transport: runtime.activationTransport,
     }),
     dismiss: closeSurface,
+    openSettings: openSettingsPage,
     commandStartedAt,
     focusTimestamp,
     onState: recordFocusMetric,
@@ -190,6 +205,7 @@ async function initializeWithDriver(doc: Document, driver: SurfaceTestDriver): P
     querySource: driver.querySource,
     activation: driver.activation,
     dismiss: driver.dismiss ?? (() => doc.defaultView?.close()),
+    openSettings: driver.openSettings ?? openSettingsPage,
     commandStartedAt: driver.commandStartedAt,
   });
   controller.start();

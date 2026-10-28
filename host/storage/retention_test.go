@@ -13,7 +13,7 @@ import (
 const retentionProfileA = "123e4567-e89b-42d3-a456-426614174000"
 const retentionProfileB = "123e4567-e89b-42d3-a456-426614174099"
 
-func TestRecordActivationHonorsOptInAndKeepsNewestPerProfile(t *testing.T) {
+func TestRecordActivationHonorsPreferenceAndKeepsNewestPerProfile(t *testing.T) {
 	db, repository := newSchemaRepository(t)
 	ctx := context.Background()
 	versions := CompatibilityVersions{ProtocolVersion: protocol.CurrentVersion, RankingModelVersion: "rank-current"}
@@ -43,13 +43,14 @@ func TestRecordActivationHonorsOptInAndKeepsNewestPerProfile(t *testing.T) {
 	}
 
 	configurationB := DefaultConfiguration(domain.ProfileID(retentionProfileB))
+	configurationB.PersistActivationRecency = false
 	configurationB.RankingModelVersion = versions.RankingModelVersion
 	if result := repository.SaveConfiguration(ctx, configurationB, versions); result.Status != StatusReady {
 		t.Fatalf("save profile B default configuration: %+v", result)
 	}
 	recordB := ActivationRecord{ProfileID: retentionProfileB, TabID: 999, Domain: "example.test", ActivatedAt: now, Source: domain.ActivationSurfaceSelect}
 	if result := repository.RecordActivation(ctx, recordB); result.Status != StatusReady {
-		t.Fatalf("activation without opt-in result = %+v", result)
+		t.Fatalf("activation with recency disabled result = %+v", result)
 	}
 	var profileBCount int
 	if err := db.QueryRow(`SELECT count(*) FROM activation_metadata WHERE profile_id = ?`, retentionProfileB).Scan(&profileBCount); err != nil {

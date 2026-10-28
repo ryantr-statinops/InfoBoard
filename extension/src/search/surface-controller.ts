@@ -72,6 +72,7 @@ export interface SurfaceControllerOptions {
   querySource: SearchQuerySource;
   activation: ActivationHandoff;
   dismiss: () => void;
+  openSettings?: () => void;
   now?: () => number;
   commandStartedAt?: number;
   focusTimestamp?: number;
@@ -83,6 +84,7 @@ export class SurfaceController {
   private readonly querySource: SearchQuerySource;
   private readonly activation: ActivationHandoff;
   private readonly dismissSurface: () => void;
+  private readonly openSettings: (() => void) | undefined;
   private readonly now: () => number;
   private readonly commandStartedAt?: number;
   private readonly focusTimestamp?: number;
@@ -98,6 +100,7 @@ export class SurfaceController {
     this.querySource = options.querySource;
     this.activation = options.activation;
     this.dismissSurface = options.dismiss;
+    this.openSettings = options.openSettings;
     this.now = options.now ?? (() => Date.now());
     this.commandStartedAt = options.commandStartedAt;
     this.focusTimestamp = options.focusTimestamp;
@@ -236,6 +239,11 @@ export class SurfaceController {
       const onClose = () => this.dismiss();
       this.elements.close.addEventListener('click', onClose);
       this.cleanups.push(() => this.elements.close?.removeEventListener('click', onClose));
+    }
+    if (this.elements.settings && this.openSettings) {
+      const onSettings = () => this.openSettings?.();
+      this.elements.settings.addEventListener('click', onSettings);
+      this.cleanups.push(() => this.elements.settings?.removeEventListener('click', onSettings));
     }
   }
 

@@ -9,6 +9,7 @@
 // change increments PROTOCOL_MAJOR and needs a compatibility check on both sides.
 
 import {
+  parseProfileID,
   validateTab,
   type ContextKind,
   type EligibleTabRecord,
@@ -50,6 +51,7 @@ export const PROTOCOL_DEADLINES = {
   queryRequestMs: 100,
   healthMs: 100,
   activationStatusMs: 500,
+  lifecycleMs: 500,
   shutdownDrainMs: 1000,
 } as const;
 
@@ -61,6 +63,7 @@ export const HOST_BOUND_MESSAGE_TYPES = [
   'health',
   'activation_observed',
   'activation_failed',
+  'lifecycle',
 ] as const;
 
 export const EXTENSION_BOUND_MESSAGE_TYPES = [
@@ -70,6 +73,7 @@ export const EXTENSION_BOUND_MESSAGE_TYPES = [
   'query_result',
   'health_result',
   'activation_ack',
+  'lifecycle_result',
   'error',
 ] as const;
 
@@ -104,6 +108,71 @@ const RESYNC_ERROR_CODES: ReadonlySet<ProtocolErrorCode> = new Set<ProtocolError
 
 const HOST_AVAILABILITY_VALUES: ReadonlySet<string> = new Set(['healthy', 'unavailable', 'recovering']);
 const PERSISTENCE_VALUES: ReadonlySet<string> = new Set(['unknown', 'ready', 'degraded', 'disabled']);
+
+export const LIFECYCLE_OPERATIONS = ['load', 'update', 'reset', 'uninstall'] as const;
+export const LIFECYCLE_STATUSES = ['complete', 'degraded', 'retryable', 'incomplete'] as const;
+export const LIFECYCLE_STEPS = [
+  'storage_reset',
+  'index_cleared',
+  'snapshot_requested',
+  'session_closed',
+  'storage_uninstall',
+  'paths_removed',
+] as const;
+export const LIFECYCLE_ERROR_CLASSES = [
+  '',
+  'invalid_configuration',
+  'profile_mismatch',
+  'storage_unavailable',
+  'storage_timeout',
+  'storage_failure',
+  'schema_upgrade_required',
+  'database_quarantined',
+  'database_corrupt',
+  'schema_integrity_failed',
+  'quarantine_failed',
+  'recovery_failed',
+  'unsafe_database_path',
+  'compatibility_mismatch',
+  'reset_runtime_unavailable',
+  'projection_reset_failed',
+  'projection_reset_incomplete',
+  'cancelled',
+  'uninstall_not_configured',
+  'session_close_failed',
+  'cleanup_manifest_invalid',
+  'cleanup_cancelled',
+  'cleanup_failed',
+  'path_safety',
+  'unknown',
+] as const;
+
+const LIFECYCLE_PERSISTENCE_VALUES: ReadonlySet<string> = new Set(['ready', 'degraded', 'unavailable', 'unknown']);
+const LIFECYCLE_RANKING_MODEL_VERSION_BYTES = 128;
+const LIFECYCLE_CONFIGURATION_FIELDS = [
+  'profile_id',
+  'result_limit',
+  'density',
+  'theme',
+  'context_labels',
+  'recency_enabled',
+  'protocol_version',
+  'ranking_model_version',
+] as const;
+const LIFECYCLE_RESULT_FIELDS = [
+  'operation',
+  'profile_id',
+  'status',
+  'retryable',
+  'persistence',
+  'durable',
+  'error_class',
+  'completed_steps',
+  'owned_state_verified',
+  'projection_revision',
+  'configuration',
+  'resync_required',
+] as const;
 
 export type NativeMessagingClientState =
   | 'Disconnected'
@@ -221,6 +290,38 @@ export interface HealthResponse {
   counters?: Record<string, number>;
 }
 
+export type LifecycleOperation = (typeof LIFECYCLE_OPERATIONS)[number];
+export type LifecycleStatus = (typeof LIFECYCLE_STATUSES)[number];
+export type LifecycleStep = (typeof LIFECYCLE_STEPS)[number];
+export type LifecycleErrorClass = (typeof LIFECYCLE_ERROR_CLASSES)[number];
+export type LifecyclePersistence = 'ready' | 'degraded' | 'unavailable' | 'unknown';
+
+export interface LifecycleConfiguration {
+  profile_id: ProfileID;
+  result_limit: number;
+  density: 'compact' | 'comfortable';
+  theme: 'system' | 'light' | 'dark';
+  context_labels: boolean;
+  recency_enabled: boolean;
+  protocol_version: number;
+  ranking_model_version: string;
+}
+
+export interface LifecycleResponse {
+  operation: LifecycleOperation;
+  profile_id: ProfileID;
+  status: LifecycleStatus;
+  retryable: boolean;
+  persistence: LifecyclePersistence;
+  durable: boolean;
+  error_class: LifecycleErrorClass;
+  completed_steps: readonly LifecycleStep[];
+  owned_state_verified: boolean;
+  projection_revision: number;
+  configuration: LifecycleConfiguration;
+  resync_required: boolean;
+}
+
 export interface HostProtocolError {
   code: ProtocolErrorCode;
   retryable: boolean;
@@ -333,11 +434,12 @@ export interface NativeMessagingClientOptions {
   clearTimer?: (handle: number) => void;
 }
 
-type RequestKind = 'hello' | 'snapshot' | 'delta' | 'query' | 'health' | 'activation';
+type RequestKind = 'hello' | 'snapshot' | 'delta' | 'query' | 'health' | 'activation' | 'lifecycle';
 
 interface PendingRequest {
   requestId: string;
   kind: RequestKind;
+  lifecycleOperation?: LifecycleOperation;
   timer: number;
   settle(result: ClientRequestResult<unknown>): void;
 }
@@ -683,6 +785,132 @@ function parseHealthResult(payload: Record<string, unknown>, limits: typeof PROT
   }) as HealthResponse;
 }
 
+function parseLifecycleConfiguration(
+  value: unknown,
+  expectedProfile: ProfileID,
+): LifecycleConfiguration | undefined {
+  if (!isRecord(value)) return undefined;
+  if (Object.keys(value).length !== LIFECYCLE_CONFIGURATION_FIELDS.length) return undefined;
+  for (const field of LIFECYCLE_CONFIGURATION_FIELDS) {
+    if (!Object.hasOwn(value, field)) return undefined;
+  }
+  let profileId: ProfileID;
+  try {
+    profileId = parseProfileID(value.profile_id);
+  } catch {
+    return undefined;
+  }
+  if (profileId !== expectedProfile) return undefined;
+  if (
+    typeof value.result_limit !== 'number' ||
+    !Number.isSafeInteger(value.result_limit) ||
+    value.result_limit < 1 ||
+    value.result_limit > 50
+  ) {
+    return undefined;
+  }
+  if (value.density !== 'compact' && value.density !== 'comfortable') return undefined;
+  if (value.theme !== 'system' && value.theme !== 'light' && value.theme !== 'dark') return undefined;
+  if (typeof value.context_labels !== 'boolean' || typeof value.recency_enabled !== 'boolean') return undefined;
+  if (
+    typeof value.protocol_version !== 'number' ||
+    !Number.isSafeInteger(value.protocol_version) ||
+    value.protocol_version <= 0
+  ) {
+    return undefined;
+  }
+  if (
+    typeof value.ranking_model_version !== 'string' ||
+    byteLength(value.ranking_model_version) > LIFECYCLE_RANKING_MODEL_VERSION_BYTES
+  ) {
+    return undefined;
+  }
+  return {
+    profile_id: profileId,
+    result_limit: value.result_limit,
+    density: value.density,
+    theme: value.theme,
+    context_labels: value.context_labels,
+    recency_enabled: value.recency_enabled,
+    protocol_version: value.protocol_version,
+    ranking_model_version: value.ranking_model_version,
+  };
+}
+
+function parseLifecycleResult(
+  payload: Record<string, unknown>,
+  expectedProfile: ProfileID,
+  expectedOperation: LifecycleOperation,
+): LifecycleResponse | undefined {
+  if (Object.keys(payload).length !== LIFECYCLE_RESULT_FIELDS.length) return undefined;
+  for (const field of LIFECYCLE_RESULT_FIELDS) {
+    if (!Object.hasOwn(payload, field)) return undefined;
+  }
+  if (
+    typeof payload.operation !== 'string' ||
+    !(LIFECYCLE_OPERATIONS as readonly string[]).includes(payload.operation) ||
+    payload.operation !== expectedOperation
+  ) {
+    return undefined;
+  }
+  let profileId: ProfileID;
+  try {
+    profileId = parseProfileID(payload.profile_id);
+  } catch {
+    return undefined;
+  }
+  if (profileId !== expectedProfile) return undefined;
+  if (
+    typeof payload.status !== 'string' ||
+    !(LIFECYCLE_STATUSES as readonly string[]).includes(payload.status)
+  ) {
+    return undefined;
+  }
+  if (typeof payload.retryable !== 'boolean' || typeof payload.durable !== 'boolean') return undefined;
+  if (
+    typeof payload.persistence !== 'string' ||
+    !LIFECYCLE_PERSISTENCE_VALUES.has(payload.persistence)
+  ) {
+    return undefined;
+  }
+  if (
+    typeof payload.error_class !== 'string' ||
+    !(LIFECYCLE_ERROR_CLASSES as readonly string[]).includes(payload.error_class)
+  ) {
+    return undefined;
+  }
+  if (
+    !Array.isArray(payload.completed_steps) ||
+    payload.completed_steps.length > LIFECYCLE_STEPS.length
+  ) {
+    return undefined;
+  }
+  const completedSteps: LifecycleStep[] = [];
+  for (const step of payload.completed_steps) {
+    if (typeof step !== 'string' || !(LIFECYCLE_STEPS as readonly string[]).includes(step)) return undefined;
+    completedSteps.push(step as LifecycleStep);
+  }
+  if (typeof payload.owned_state_verified !== 'boolean') return undefined;
+  if (!isNonNegativeInteger(payload.projection_revision)) return undefined;
+  const configuration = parseLifecycleConfiguration(payload.configuration, expectedProfile);
+  if (configuration === undefined) return undefined;
+  if (typeof payload.resync_required !== 'boolean') return undefined;
+  return {
+    operation: payload.operation as LifecycleOperation,
+    profile_id: profileId,
+    status: payload.status as LifecycleStatus,
+    retryable: payload.retryable,
+    persistence: payload.persistence as LifecyclePersistence,
+    durable: payload.durable,
+    error_class: payload.error_class as LifecycleErrorClass,
+    completed_steps: completedSteps,
+    owned_state_verified: payload.owned_state_verified,
+    projection_revision: payload.projection_revision,
+    configuration,
+    resync_required: payload.resync_required,
+  };
+}
+
 export class NativeMessagingClient {
   private readonly limits: typeof PROTOCOL_LIMITS;
   private readonly deadlines: typeof PROTOCOL_DEADLINES;
@@ -862,6 +1090,38 @@ export class NativeMessagingClient {
     return this.dispatch<HealthResponse>('health', {}, this.acknowledgedRevision ?? 0);
   }
 
+  lifecycle(
+    operation: LifecycleOperation,
+    configuration?: LifecycleConfiguration,
+  ): Promise<ClientRequestResult<LifecycleResponse>> {
+    if (!(LIFECYCLE_OPERATIONS as readonly string[]).includes(operation)) {
+      return Promise.resolve<ClientRequestResult<LifecycleResponse>>(rejectLocal<LifecycleResponse>('INVALID_SUBMISSION'));
+    }
+    if (operation === 'update') {
+      const parsed = parseLifecycleConfiguration(configuration, this.options.profileId);
+      if (parsed === undefined) {
+        return Promise.resolve<ClientRequestResult<LifecycleResponse>>(rejectLocal<LifecycleResponse>('INVALID_SUBMISSION'));
+      }
+      return this.dispatch<LifecycleResponse>(
+        'lifecycle',
+        { operation, configuration: parsed },
+        this.acknowledgedRevision ?? 0,
+        'lifecycle',
+        operation,
+      );
+    }
+    if (configuration !== undefined) {
+      return Promise.resolve<ClientRequestResult<LifecycleResponse>>(rejectLocal<LifecycleResponse>('INVALID_SUBMISSION'));
+    }
+    return this.dispatch<LifecycleResponse>(
+      'lifecycle',
+      { operation },
+      this.acknowledgedRevision ?? 0,
+      'lifecycle',
+      operation,
+    );
+  }
+
   reportActivation(submission: ActivationSubmission): Promise<ClientRequestResult<{ accepted: boolean }>> {
     const reference = submission.result_reference;
     if (!reference
@@ -958,6 +1218,8 @@ export class NativeMessagingClient {
         return this.deadlines.healthMs;
       case 'activation':
         return this.deadlines.activationStatusMs;
+      case 'lifecycle':
+        return this.deadlines.lifecycleMs;
     }
   }
 
@@ -966,6 +1228,7 @@ export class NativeMessagingClient {
     payload: Record<string, unknown>,
     projectionRevision: number,
     type: HostBoundMessageType = kind as HostBoundMessageType,
+    lifecycleOperation?: LifecycleOperation,
   ): Promise<ClientRequestResult<T>> {
     if (this.terminal || this.state === 'Incompatible' || this.state === 'Shutdown') {
       return Promise.resolve<ClientRequestResult<T>>(rejectLocal<T>('HOST_UNAVAILABLE'));
@@ -994,7 +1257,13 @@ export class NativeMessagingClient {
         this.settleActive(failure);
         this.applyFailure(failure);
       }, this.deadlineFor(kind));
-      this.activeRequest = { requestId, kind, timer, settle: result => resolve(result as ClientRequestResult<T>) };
+      this.activeRequest = {
+        requestId,
+        kind,
+        lifecycleOperation,
+        timer,
+        settle: result => resolve(result as ClientRequestResult<T>),
+      };
       this.diagnostics.requests_sent += 1;
       try {
         this.port?.postMessage(envelope);
@@ -1120,6 +1389,10 @@ export class NativeMessagingClient {
       this.settleActive(this.handleHealthResult(envelope.payload));
       return;
     }
+    if (envelope.type === 'lifecycle_result') {
+      this.settleActive(this.handleLifecycleResult(pending, envelope.payload));
+      return;
+    }
     this.settleActive({ ok: true, value: { accepted: envelope.payload.accepted === true } });
   }
 
@@ -1214,6 +1487,27 @@ export class NativeMessagingClient {
       this.transition('Degraded');
     } else if (parsed.index_state === 'rebuilding' || parsed.storage_state === 'degraded') {
       this.transition('Degraded');
+    }
+    return { ok: true, value: parsed };
+  }
+
+  private handleLifecycleResult(
+    pending: PendingRequest,
+    payload: Record<string, unknown>,
+  ): ClientRequestResult<LifecycleResponse> {
+    if (pending.lifecycleOperation === undefined) return this.failRequest('INVALID_FRAME', false);
+    const parsed = parseLifecycleResult(payload, this.options.profileId, pending.lifecycleOperation);
+    if (parsed === undefined) return this.failRequest('INVALID_FRAME', false);
+    this.storageState = parsed.persistence;
+    if (parsed.status === 'degraded' || parsed.persistence === 'degraded') {
+      this.transition('Degraded');
+    }
+    if (parsed.resync_required) {
+      this.snapshotRequired = true;
+      this.acknowledgedRevision = null;
+      this.acknowledgedSequence = null;
+      this.transition('Degraded');
+      this.emitResync('projection_uncertain');
     }
     return { ok: true, value: parsed };
   }
@@ -1395,6 +1689,8 @@ function responseMatchesKind(kind: RequestKind, type: string): boolean {
       return type === 'health_result' || type === 'error';
     case 'activation':
       return type === 'activation_ack' || type === 'error';
+    case 'lifecycle':
+      return type === 'lifecycle_result' || type === 'error';
   }
 }
 

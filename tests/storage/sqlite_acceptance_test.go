@@ -96,7 +96,7 @@ func TestSQL001FreshDefaultsAndSchema(t *testing.T) {
 	path, repository := newDatabase(t)
 	configuration, result := repository.LoadConfiguration(context.Background(), profileA, versions())
 	expectStatus(t, fixture, result)
-	if configuration.ProfileID != domain.ProfileID(profileA) || configuration.PersistActivationRecency || configuration.ResultLimit != storage.DefaultResultLimit {
+	if configuration.ProfileID != domain.ProfileID(profileA) || !configuration.PersistActivationRecency || configuration.ResultLimit != storage.DefaultResultLimit {
 		t.Fatalf("fresh profile defaults = %+v", configuration)
 	}
 	if err := repository.Close(); err != nil {
@@ -131,7 +131,7 @@ func TestSQL002ProfileIsolation(t *testing.T) {
 	expectStatus(t, fixture, result)
 	loadedB, result := repository.LoadConfiguration(context.Background(), profileB, storage.CompatibilityVersions{ProtocolVersion: protocol.CurrentVersion, RankingModelVersion: "rank-b"})
 	expectStatus(t, fixture, result)
-	if loadedA.ResultLimit != 12 || loadedA.PersistActivationRecency != true || loadedB.ResultLimit != storage.DefaultResultLimit || loadedB.PersistActivationRecency {
+	if loadedA.ResultLimit != 12 || loadedA.PersistActivationRecency != true || loadedB.ResultLimit != storage.DefaultResultLimit || !loadedB.PersistActivationRecency {
 		t.Fatalf("profile A/B configurations leaked: A=%+v B=%+v", loadedA, loadedB)
 	}
 	_ = repository.Close()
@@ -322,7 +322,7 @@ func TestSQL009UnavailableRepositoryReturnsDegradedDefaults(t *testing.T) {
 	repository := storage.NewRepository(nil)
 	configuration, result := repository.LoadConfiguration(context.Background(), profileA, versions())
 	expectStatus(t, fixture, result)
-	if configuration.ProfileID != domain.ProfileID(profileA) || configuration.PersistActivationRecency {
+	if configuration.ProfileID != domain.ProfileID(profileA) || !configuration.PersistActivationRecency {
 		t.Fatalf("degraded defaults = %+v", configuration)
 	}
 	if result.ErrorClass != storage.ErrorStorageUnavailable {

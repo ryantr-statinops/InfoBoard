@@ -1,0 +1,51 @@
+{
+  "fixture_id": "FX-CFG-DEFAULTS-001",
+  "owner_phase": "IP-15",
+  "requirement_ids": [
+    "FR-015"
+  ],
+  "category": "lifecycle",
+  "input": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "persistence_state": "ready"
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "result_limit",
+        "value": 10
+      },
+      {
+        "signal": "density",
+        "value": "comfortable"
+      },
+      {
+        "signal": "theme",
+        "value": "system"
+      },
+      {
+        "signal": "context_labels",
+        "value": true
+      },
+      {
+        "signal": "recency_enabled",
+        "value": true
+      },
+      {
+        "signal": "persistence",
+        "value": "ready"
+      },
+      {
+        "signal": "durable",
+        "value": true
+      },
+      {
+        "signal": "defaults_match_contract",
+        "value": true
+      }
+    ],
+    "privacy_assertions": [
+      "Defaults contain no titles, URLs, query text, raw browser data, or caller-supplied text."
+    ]
+  }
+}

@@ -129,6 +129,7 @@ type sessionHooks struct {
 	sync       SyncOwner
 	query      QueryOwner
 	activation ActivationHook
+	lifecycle  runtime.LifecycleHook
 }
 
 // Session is the IP-07 protocol handler for one Native Messaging connection.
@@ -157,16 +158,21 @@ type Session struct {
 }
 
 // NewSession builds a protocol session. Nil hooks are allowed and fail closed:
-// without a sync owner the connection never reaches ready, and without a query
-// owner every query is refused rather than answered from a partial index.
-func NewSession(config Config, syncOwner SyncOwner, queryOwner QueryOwner, activationHook ActivationHook) (*Session, error) {
+// without a sync owner the connection never reaches ready, without a query
+// owner every query is refused rather than answered from a partial index, and
+// without a lifecycle owner every lifecycle request is refused.
+func NewSession(config Config, syncOwner SyncOwner, queryOwner QueryOwner, activationHook ActivationHook, lifecycleHooks ...runtime.LifecycleHook) (*Session, error) {
 	if err := config.Validate(); err != nil {
 		return nil, err
+	}
+	var lifecycleHook runtime.LifecycleHook
+	if len(lifecycleHooks) > 0 {
+		lifecycleHook = lifecycleHooks[0]
 	}
 	return &Session{
 		config:    config,
 		sessionID: newSessionIdentity(),
-		hooks:     sessionHooks{sync: syncOwner, query: queryOwner, activation: activationHook},
+		hooks:     sessionHooks{sync: syncOwner, query: queryOwner, activation: activationHook, lifecycle: lifecycleHook},
 		state:     StateUnbound,
 		ledger:    make(map[string]ledgerEntry, 16),
 		requests:  make(map[string]struct{}, 16),
@@ -322,6 +328,8 @@ func (session *Session) dispatch(ctx context.Context, channel runtime.FrameChann
 		return session.handleHealth(ctx, channel, envelope, digest)
 	case TypeActivationObserved, TypeActivationFailed:
 		return session.handleActivation(ctx, channel, envelope, digest)
+	case TypeLifecycle:
+		return session.handleLifecycle(ctx, channel, envelope, digest)
 	case TypeHello:
 		return session.refuse(ctx, channel, envelope.RequestID, NewError(CodeProtocolMismatch), false)
 	default:
@@ -539,6 +547,57 @@ func (session *Session) handleActivation(ctx context.Context, channel runtime.Fr
 		}
 	}
 	return session.respond(ctx, channel, envelope, TypeActivationAck, acknowledgement, digest)
+}
+
+func (session *Session) handleLifecycle(ctx context.Context, channel runtime.FrameChannel, envelope Envelope, digest [sha256.Size]byte) error {
+	if session.hooks.lifecycle == nil {
+		return session.refuse(ctx, channel, envelope.RequestID, NewError(CodeInternalFailure), false)
+	}
+	profile := session.requestContext(envelope).ProfileID
+	request, failure := DecodeLifecycle(envelope.Payload, profile)
+	if failure != nil {
+		return session.refuse(ctx, channel, envelope.RequestID, failure, false)
+	}
+	budgeted, cancel := context.WithTimeout(ctx, session.config.Budgets.Lifecycle)
+	defer cancel()
+	outcome, err := session.hooks.lifecycle.ExecuteLifecycle(budgeted, runtime.LifecycleRequest{
+		ProfileID:     profile,
+		Operation:     runtime.LifecycleOperation(request.Operation),
+		Configuration: request.Configuration,
+	})
+	if err != nil {
+		return session.refuse(ctx, channel, envelope.RequestID, lifecycleError(err, budgeted), true)
+	}
+	result, failure := decodeLifecycleResult(outcome.Payload, profile, request.Operation)
+	if failure != nil {
+		return session.refuse(ctx, channel, envelope.RequestID, failure, false)
+	}
+	if result.CompletedSteps == nil {
+		result.CompletedSteps = []string{}
+	}
+	if outcome.RequireResync {
+		session.markRebuilding()
+	}
+	result.ResyncRequired = outcome.RequireResync
+	if err := session.respond(ctx, channel, envelope, TypeLifecycleResult, result, digest); err != nil {
+		return err
+	}
+	if outcome.Shutdown {
+		session.closeLocked(StateShutdown)
+	}
+	return nil
+}
+
+func lifecycleError(err error, budgeted context.Context) *Error {
+	if errors.Is(budgeted.Err(), context.DeadlineExceeded) ||
+		errors.Is(context.Cause(budgeted), context.DeadlineExceeded) ||
+		errors.Is(err, context.DeadlineExceeded) {
+		return NewError(CodeQueryTimeout)
+	}
+	if errors.Is(err, context.Canceled) {
+		return NewError(CodeHostShutdown)
+	}
+	return NewError(CodeInternalFailure)
 }
 
 // Notify maps a runtime lifecycle notification onto the wire contract. It is

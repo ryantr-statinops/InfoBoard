@@ -1,0 +1,35 @@
+{
+  "fixture_id": "FX-UNINSTALL-IDEMPOTENT-001",
+  "owner_phase": "IP-15",
+  "requirement_ids": [
+    "FR-015"
+  ],
+  "category": "lifecycle",
+  "input": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "uninstall_count": 2
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "first_status",
+        "value": "complete"
+      },
+      {
+        "signal": "second_status",
+        "value": "complete"
+      },
+      {
+        "signal": "owned_artifacts_remaining",
+        "value": 0
+      },
+      {
+        "signal": "missing_artifacts_are_success",
+        "value": true
+      }
+    ],
+    "privacy_assertions": [
+      "Repeated uninstall treats absent owned artifacts as success without touching unrelated data."
+    ]
+  }
+}

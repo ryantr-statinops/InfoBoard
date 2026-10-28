@@ -12,6 +12,10 @@
     "default_title": "Open InfoBoard search",
     "default_popup": "dist/search/surface-shell.html"
   },
+  "options_ui": {
+    "page": "dist/settings/settings-shell.html",
+    "open_in_tab": true
+  },
   "commands": {
     "open-search": {
       "suggested_key": { "default": "Ctrl+Shift+Y", "mac": "Command+Shift+Y" },

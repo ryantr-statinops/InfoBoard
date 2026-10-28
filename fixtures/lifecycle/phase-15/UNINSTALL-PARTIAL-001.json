@@ -1,0 +1,43 @@
+{
+  "fixture_id": "FX-UNINSTALL-PARTIAL-001",
+  "owner_phase": "IP-15",
+  "requirement_ids": [
+    "FR-015"
+  ],
+  "category": "lifecycle",
+  "input": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "locked_artifact": "extension-artifact"
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "status",
+        "value": "incomplete"
+      },
+      {
+        "signal": "retryable",
+        "value": true
+      },
+      {
+        "signal": "error_class",
+        "value": "cleanup_failed"
+      },
+      {
+        "signal": "completed_steps",
+        "value": [
+          "session_closed",
+          "storage_uninstall"
+        ]
+      },
+      {
+        "signal": "owned_state_verified",
+        "value": false
+      }
+    ],
+    "failure_class": "cleanup_failed",
+    "privacy_assertions": [
+      "A locked artifact yields a precise retryable status without raw paths or OS error text."
+    ]
+  }
+}
