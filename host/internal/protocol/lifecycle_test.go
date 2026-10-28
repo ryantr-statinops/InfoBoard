@@ -198,6 +198,24 @@ func TestLifecycle_HookFailureAndBudgetAreTyped(t *testing.T) {
 	}
 }
 
+type lateFailureHook struct {
+	delay time.Duration
+}
+
+func (hook *lateFailureHook) ExecuteLifecycle(context.Context, runtime.LifecycleRequest) (runtime.LifecycleOutcome, error) {
+	time.Sleep(hook.delay)
+	return runtime.LifecycleOutcome{}, errors.New("late storage error")
+}
+
+func TestLifecycle_ExpiredBudgetWinsOverHookError(t *testing.T) {
+	session, out := newLifecycleSession(t, &lateFailureHook{delay: 20 * time.Millisecond})
+	session.config.Budgets.Lifecycle = time.Millisecond
+	_ = session.Accept(context.Background(), out, frame(t, TypeLifecycle, "lc-late-failure", 0, `{"operation":"load"}`))
+	if code := lastErrorCode(t, out); code != CodeQueryTimeout {
+		t.Fatalf("expired budget code = %s, want %s", code, CodeQueryTimeout)
+	}
+}
+
 func TestLifecycle_UnboundAndMissingHookFailClosed(t *testing.T) {
 	session, err := NewSession(testConfig(), &fakeSync{}, &fakeQuery{}, nil)
 	if err != nil {

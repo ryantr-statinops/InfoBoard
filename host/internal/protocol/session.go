@@ -589,7 +589,8 @@ func (session *Session) handleLifecycle(ctx context.Context, channel runtime.Fra
 }
 
 func lifecycleError(err error, budgeted context.Context) *Error {
-	if errors.Is(context.Cause(budgeted), context.DeadlineExceeded) ||
+	if errors.Is(budgeted.Err(), context.DeadlineExceeded) ||
+		errors.Is(context.Cause(budgeted), context.DeadlineExceeded) ||
 		errors.Is(err, context.DeadlineExceeded) {
 		return NewError(CodeQueryTimeout)
 	}
