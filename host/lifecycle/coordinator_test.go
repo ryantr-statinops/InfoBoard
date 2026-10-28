@@ -3,6 +3,8 @@ package lifecycle
 import (
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/ryantr-statinops/InfoBoard/host/internal/domain"
@@ -11,13 +13,16 @@ import (
 )
 
 type fakeStore struct {
-	configs     map[string]storage.Configuration
-	result      storage.Result
-	saveResult  storage.Result
-	resetResult storage.Result
-	saved       map[string]storage.Configuration
-	saveCalls   int
-	resetCalls  int
+	configs         map[string]storage.Configuration
+	result          storage.Result
+	saveResult      storage.Result
+	resetResult     storage.Result
+	uninstallResult storage.Result
+	saved           map[string]storage.Configuration
+	saveCalls       int
+	resetCalls      int
+	uninstallCalls  int
+	databasePath    string
 }
 
 func readyResult() storage.Result {
@@ -57,6 +62,16 @@ func (store *fakeStore) ResetProfile(_ context.Context, profileID string) storag
 	}
 	delete(store.configs, profileID)
 	return readyResult()
+}
+
+func (store *fakeStore) Uninstall(_ context.Context, databasePath string) storage.Result {
+	store.uninstallCalls++
+	store.databasePath = databasePath
+	if store.uninstallResult.Status != "" {
+		return store.uninstallResult
+	}
+	store.configs = make(map[string]storage.Configuration)
+	return storage.Result{Status: storage.StatusDisabled}
 }
 
 func testVersions() storage.CompatibilityVersions {
@@ -488,5 +503,248 @@ func TestResetIsIdempotent(t *testing.T) {
 	}
 	if store.resetCalls != 2 || resetRuntime.calls != 2 {
 		t.Fatalf("idempotent reset calls storage=%d runtime=%d", store.resetCalls, resetRuntime.calls)
+	}
+}
+
+type fakeCloser struct {
+	err     error
+	profile domain.ProfileID
+	calls   int
+}
+
+func (closer *fakeCloser) CloseSession(ctx context.Context, profileID domain.ProfileID) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	closer.calls++
+	closer.profile = profileID
+	return closer.err
+}
+
+func testUninstallPlan(t *testing.T, root string, entries []Entry, databasePath string) UninstallPlan {
+	t.Helper()
+	manifest, err := NewManifest(root, entries)
+	if err != nil {
+		t.Fatalf("manifest: %v", err)
+	}
+	plan, err := NewUninstallPlan(manifest, databasePath)
+	if err != nil {
+		t.Fatalf("uninstall plan: %v", err)
+	}
+	return plan
+}
+
+func TestUninstallRemovesManifestAndClearsState(t *testing.T) {
+	root := t.TempDir()
+	owned := filepath.Join(root, "owned.bin")
+	unrelated := filepath.Join(root, "unrelated.txt")
+	databasePath := filepath.Join(root, "infoboard.sqlite")
+	for path, contents := range map[string]string{owned: "owned", unrelated: "keep", databasePath: "db"} {
+		if err := os.WriteFile(path, []byte(contents), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	plan := testUninstallPlan(t, root, []Entry{{ID: "owned", RelativePath: "owned.bin", Kind: KindFile}}, databasePath)
+	store := &fakeStore{configs: map[string]storage.Configuration{
+		string(profileA): storage.DefaultConfiguration(profileA),
+		string(profileB): storage.DefaultConfiguration(profileB),
+	}}
+	coordinator := newTestCoordinator(t, store)
+	coordinator.SetUninstallPlan(plan)
+	closer := &fakeCloser{}
+	coordinator.SetSessionCloser(closer)
+	if _, err := coordinator.Load(context.Background(), profileA); err != nil {
+		t.Fatalf("seed load: %v", err)
+	}
+	result, err := coordinator.Uninstall(context.Background(), profileA)
+	if err != nil {
+		t.Fatalf("uninstall: %v", err)
+	}
+	if result.Status != StatusComplete || result.Retryable || !result.OwnedStateVerified || result.Persistence != PersistenceUnavailable || result.Durable {
+		t.Fatalf("uninstall result = %+v", result)
+	}
+	if len(result.CompletedSteps) != 3 || result.CompletedSteps[0] != StepSessionClosed || result.CompletedSteps[1] != StepStorageUninstall || result.CompletedSteps[2] != StepPathsRemoved {
+		t.Fatalf("uninstall steps = %v", result.CompletedSteps)
+	}
+	if closer.profile != profileA || closer.calls != 1 || store.uninstallCalls != 1 || store.databasePath != databasePath {
+		t.Fatalf("uninstall calls closer=%+v storage=%d path=%s", closer, store.uninstallCalls, store.databasePath)
+	}
+	if _, err := os.Lstat(owned); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("owned artifact remains: %v", err)
+	}
+	if contents, err := os.ReadFile(unrelated); err != nil || string(contents) != "keep" {
+		t.Fatalf("unrelated artifact changed: %q err=%v", contents, err)
+	}
+	if _, ok := coordinator.Cached(profileA); ok {
+		t.Fatal("effective cache survived uninstall")
+	}
+}
+
+func TestUninstallMissingArtifactsIsComplete(t *testing.T) {
+	root := t.TempDir()
+	databasePath := filepath.Join(root, "infoboard.sqlite")
+	plan := testUninstallPlan(t, root, []Entry{{ID: "missing", RelativePath: "missing.bin", Kind: KindFile}}, databasePath)
+	store := &fakeStore{configs: map[string]storage.Configuration{}}
+	coordinator := newTestCoordinator(t, store)
+	coordinator.SetUninstallPlan(plan)
+	coordinator.SetSessionCloser(&fakeCloser{})
+	result, err := coordinator.Uninstall(context.Background(), profileA)
+	if err != nil {
+		t.Fatalf("uninstall: %v", err)
+	}
+	if result.Status != StatusComplete || !result.OwnedStateVerified || result.Retryable {
+		t.Fatalf("missing artifacts result = %+v", result)
+	}
+}
+
+func TestUninstallRequiresConfiguration(t *testing.T) {
+	store := &fakeStore{configs: map[string]storage.Configuration{}}
+	coordinator := newTestCoordinator(t, store)
+	result, err := coordinator.Uninstall(context.Background(), profileA)
+	if err != nil {
+		t.Fatalf("missing configuration must be renderable: %v", err)
+	}
+	if result.Status != StatusRetryable || result.ErrorClass != "uninstall_not_configured" {
+		t.Fatalf("missing configuration result = %+v", result)
+	}
+	if store.uninstallCalls != 0 {
+		t.Fatalf("storage uninstall ran without configuration %d times", store.uninstallCalls)
+	}
+}
+
+func TestUninstallSessionCloseFailureStopsCleanup(t *testing.T) {
+	root := t.TempDir()
+	owned := filepath.Join(root, "owned.bin")
+	if err := os.WriteFile(owned, []byte("owned"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	databasePath := filepath.Join(root, "infoboard.sqlite")
+	plan := testUninstallPlan(t, root, []Entry{{ID: "owned", RelativePath: "owned.bin", Kind: KindFile}}, databasePath)
+	store := &fakeStore{configs: map[string]storage.Configuration{}}
+	coordinator := newTestCoordinator(t, store)
+	coordinator.SetUninstallPlan(plan)
+	coordinator.SetSessionCloser(&fakeCloser{err: errors.New("close failed")})
+	result, err := coordinator.Uninstall(context.Background(), profileA)
+	if err != nil {
+		t.Fatalf("close failure must be renderable: %v", err)
+	}
+	if result.Status != StatusRetryable || result.ErrorClass != "session_close_failed" || store.uninstallCalls != 0 {
+		t.Fatalf("close failure result = %+v storage=%d", result, store.uninstallCalls)
+	}
+	if _, err := os.Lstat(owned); err != nil {
+		t.Fatalf("owned artifact was removed before session close: %v", err)
+	}
+}
+
+func TestUninstallStorageFailureIsRetryable(t *testing.T) {
+	root := t.TempDir()
+	owned := filepath.Join(root, "owned.bin")
+	if err := os.WriteFile(owned, []byte("owned"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	databasePath := filepath.Join(root, "infoboard.sqlite")
+	plan := testUninstallPlan(t, root, []Entry{{ID: "owned", RelativePath: "owned.bin", Kind: KindFile}}, databasePath)
+	store := &fakeStore{
+		configs:         map[string]storage.Configuration{},
+		uninstallResult: storage.Result{Status: storage.StatusDegraded, ErrorClass: storage.ErrorStorageFailure, Retryable: true},
+	}
+	coordinator := newTestCoordinator(t, store)
+	coordinator.SetUninstallPlan(plan)
+	coordinator.SetSessionCloser(&fakeCloser{})
+	result, err := coordinator.Uninstall(context.Background(), profileA)
+	if err != nil {
+		t.Fatalf("storage failure must be renderable: %v", err)
+	}
+	if result.Status != StatusRetryable || !result.Retryable || result.ErrorClass != string(storage.ErrorStorageFailure) {
+		t.Fatalf("storage failure result = %+v", result)
+	}
+	if len(result.CompletedSteps) != 1 || result.CompletedSteps[0] != StepSessionClosed {
+		t.Fatalf("storage failure steps = %v", result.CompletedSteps)
+	}
+	if _, err := os.Lstat(owned); err != nil {
+		t.Fatalf("owned artifact was removed after storage failure: %v", err)
+	}
+}
+
+func TestUninstallCleanupFailureIsIncomplete(t *testing.T) {
+	root := t.TempDir()
+	outside := filepath.Join(t.TempDir(), "outside.txt")
+	if err := os.WriteFile(outside, []byte("outside"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(root, "owned-link")
+	if err := os.Symlink(outside, link); err != nil {
+		t.Skipf("symlink unavailable: %v", err)
+	}
+	databasePath := filepath.Join(root, "infoboard.sqlite")
+	plan := testUninstallPlan(t, root, []Entry{{ID: "link", RelativePath: "owned-link", Kind: KindFile}}, databasePath)
+	store := &fakeStore{configs: map[string]storage.Configuration{}}
+	coordinator := newTestCoordinator(t, store)
+	coordinator.SetUninstallPlan(plan)
+	coordinator.SetSessionCloser(&fakeCloser{})
+	result, err := coordinator.Uninstall(context.Background(), profileA)
+	if err != nil {
+		t.Fatalf("cleanup failure must be renderable: %v", err)
+	}
+	if result.Status != StatusIncomplete || !result.Retryable || result.OwnedStateVerified || result.ErrorClass != ErrorPathSafety {
+		t.Fatalf("cleanup failure result = %+v", result)
+	}
+	if len(result.CompletedSteps) != 2 || result.CompletedSteps[0] != StepSessionClosed || result.CompletedSteps[1] != StepStorageUninstall {
+		t.Fatalf("cleanup failure steps = %v", result.CompletedSteps)
+	}
+	if contents, err := os.ReadFile(outside); err != nil || string(contents) != "outside" {
+		t.Fatalf("outside target changed: %q err=%v", contents, err)
+	}
+}
+
+func TestUninstallHonorsCancellation(t *testing.T) {
+	store := &fakeStore{configs: map[string]storage.Configuration{}}
+	coordinator := newTestCoordinator(t, store)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err := coordinator.Uninstall(ctx, profileA); !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected cancellation, got %v", err)
+	}
+	if store.uninstallCalls != 0 {
+		t.Fatalf("cancelled uninstall reached storage %d times", store.uninstallCalls)
+	}
+}
+
+func TestUninstallIsIdempotent(t *testing.T) {
+	root := t.TempDir()
+	databasePath := filepath.Join(root, "infoboard.sqlite")
+	plan := testUninstallPlan(t, root, []Entry{{ID: "missing", RelativePath: "missing.bin", Kind: KindFile}}, databasePath)
+	store := &fakeStore{configs: map[string]storage.Configuration{}}
+	coordinator := newTestCoordinator(t, store)
+	coordinator.SetUninstallPlan(plan)
+	closer := &fakeCloser{}
+	coordinator.SetSessionCloser(closer)
+	for attempt := 0; attempt < 2; attempt++ {
+		result, err := coordinator.Uninstall(context.Background(), profileA)
+		if err != nil {
+			t.Fatalf("uninstall attempt %d: %v", attempt, err)
+		}
+		if result.Status != StatusComplete || !result.OwnedStateVerified {
+			t.Fatalf("uninstall attempt %d result = %+v", attempt, result)
+		}
+	}
+	if store.uninstallCalls != 2 || closer.calls != 2 {
+		t.Fatalf("idempotent uninstall calls storage=%d closer=%d", store.uninstallCalls, closer.calls)
+	}
+}
+
+func TestNewUninstallPlanRejectsUnsafeInputs(t *testing.T) {
+	root := t.TempDir()
+	manifest, err := NewManifest(root, DefaultEntries())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, databasePath := range []string{"", "infoboard.sqlite", filepath.Join(root, "other.sqlite")} {
+		if _, err := NewUninstallPlan(manifest, databasePath); !errors.Is(err, ErrInvalidConfiguration) {
+			t.Fatalf("database path %q must fail: %v", databasePath, err)
+		}
+	}
+	if _, err := NewUninstallPlan(Manifest{}, filepath.Join(root, "infoboard.sqlite")); !errors.Is(err, ErrInvalidConfiguration) {
+		t.Fatalf("zero manifest must fail: %v", err)
 	}
 }

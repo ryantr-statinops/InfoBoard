@@ -27,6 +27,7 @@ const (
 	StepStorageReset      = "storage_reset"
 	StepIndexCleared      = "index_cleared"
 	StepSnapshotRequested = "snapshot_requested"
+	StepSessionClosed     = "session_closed"
 	StepStorageUninstall  = "storage_uninstall"
 	StepPathsRemoved      = "paths_removed"
 )

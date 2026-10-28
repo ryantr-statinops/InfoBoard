@@ -15,18 +15,23 @@ type Store interface {
 	LoadConfiguration(ctx context.Context, profileID string, versions storage.CompatibilityVersions) (storage.Configuration, storage.Result)
 	SaveConfiguration(ctx context.Context, configuration storage.Configuration, versions storage.CompatibilityVersions) storage.Result
 	ResetProfile(ctx context.Context, profileID string) storage.Result
+	Uninstall(ctx context.Context, databasePath string) storage.Result
 }
+
+var _ Store = (*storage.Repository)(nil)
 
 // Coordinator owns profile-scoped effective settings and the lifecycle
 // operations around them. A degraded store never removes the in-memory
 // defaults needed by the lexical search path.
 type Coordinator struct {
-	mu           sync.RWMutex
-	writeMu      sync.Mutex
-	store        Store
-	versions     storage.CompatibilityVersions
-	resetRuntime ResetRuntime
-	effective    map[domain.ProfileID]EffectiveConfiguration
+	mu            sync.RWMutex
+	writeMu       sync.Mutex
+	store         Store
+	versions      storage.CompatibilityVersions
+	resetRuntime  ResetRuntime
+	uninstallPlan *UninstallPlan
+	sessionCloser SessionCloser
+	effective     map[domain.ProfileID]EffectiveConfiguration
 }
 
 // NewCoordinator validates the bounded repository/version inputs and starts
