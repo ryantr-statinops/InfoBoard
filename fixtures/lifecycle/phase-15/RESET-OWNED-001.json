@@ -1,0 +1,50 @@
+{
+  "fixture_id": "FX-RESET-OWNED-001",
+  "owner_phase": "IP-15",
+  "requirement_ids": [
+    "FR-015",
+    "FR-014"
+  ],
+  "category": "lifecycle",
+  "input": {
+    "profile_a": "123e4567-e89b-42d3-a456-426614174000",
+    "profile_b": "123e4567-e89b-42d3-a456-426614174099",
+    "profile_a_config": {
+      "result_limit": 25
+    },
+    "profile_b_config": {
+      "result_limit": 30
+    }
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "profile_a_rows_after_reset",
+        "value": 0
+      },
+      {
+        "signal": "profile_b_rows_after_reset",
+        "value": 1
+      },
+      {
+        "signal": "external_sentinel_preserved",
+        "value": true
+      },
+      {
+        "signal": "defaults_published",
+        "value": true
+      },
+      {
+        "signal": "snapshot_requested",
+        "value": true
+      },
+      {
+        "signal": "status",
+        "value": "complete"
+      }
+    ],
+    "privacy_assertions": [
+      "Reset removes only active-profile-owned records and preserves unrelated browser data and external sentinels."
+    ]
+  }
+}

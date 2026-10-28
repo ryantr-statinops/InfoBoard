@@ -3338,6 +3338,497 @@
           "Benchmark fixtures use fixed opaque references and never emit titles, URLs, query text, or raw browser exceptions."
         ]
       }
+    },
+    {
+      "fixture_id": "FX-CFG-DEFAULTS-001",
+      "owner_phase": "IP-15",
+      "requirement_ids": [
+        "FR-015"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "persistence_state": "ready"
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "result_limit",
+            "value": 10
+          },
+          {
+            "signal": "density",
+            "value": "comfortable"
+          },
+          {
+            "signal": "theme",
+            "value": "system"
+          },
+          {
+            "signal": "context_labels",
+            "value": true
+          },
+          {
+            "signal": "recency_enabled",
+            "value": true
+          },
+          {
+            "signal": "persistence",
+            "value": "ready"
+          },
+          {
+            "signal": "durable",
+            "value": true
+          },
+          {
+            "signal": "defaults_match_contract",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Defaults contain no titles, URLs, query text, raw browser data, or caller-supplied text."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-CFG-PROFILE-ISOLATION-001",
+      "owner_phase": "IP-15",
+      "requirement_ids": [
+        "FR-015"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "profile_a": "123e4567-e89b-42d3-a456-426614174000",
+        "profile_b": "123e4567-e89b-42d3-a456-426614174099",
+        "profile_a_config": {
+          "result_limit": 12,
+          "theme": "dark"
+        },
+        "profile_b_config": null
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "profile_a_result_limit",
+            "value": 12
+          },
+          {
+            "signal": "profile_b_result_limit",
+            "value": 10
+          },
+          {
+            "signal": "cross_profile_values",
+            "value": 0
+          },
+          {
+            "signal": "global_fallback_rows",
+            "value": 0
+          }
+        ],
+        "privacy_assertions": [
+          "A read for one profile never exposes another profile's settings or activation metadata."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-CFG-INVALID-001",
+      "owner_phase": "IP-15",
+      "requirement_ids": [
+        "FR-015"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "config": {
+          "result_limit": 0,
+          "density": "wide",
+          "theme": "neon",
+          "recency_enabled": "yes"
+        }
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "accepted",
+            "value": false
+          },
+          {
+            "signal": "error_class",
+            "value": "invalid_configuration"
+          },
+          {
+            "signal": "stored_rows",
+            "value": 0
+          },
+          {
+            "signal": "effective_defaults_preserved",
+            "value": true
+          }
+        ],
+        "failure_class": "invalid_configuration",
+        "privacy_assertions": [
+          "Invalid input is rejected without echoing caller values, titles, URLs, or query text."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-CFG-RECENCY-OPTION-001",
+      "owner_phase": "IP-15",
+      "requirement_ids": [
+        "FR-015"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "recency_enabled": false,
+        "tab_id": 7
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "recency_enabled",
+            "value": false
+          },
+          {
+            "signal": "tab_identity_changed",
+            "value": false
+          },
+          {
+            "signal": "activation_rows_written",
+            "value": 0
+          },
+          {
+            "signal": "query_still_available",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Disabling the recency option changes no tab identity and writes no activation metadata."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-CFG-PERSIST-DEGRADED-001",
+      "owner_phase": "IP-15",
+      "requirement_ids": [
+        "FR-015"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "persistence_state": "degraded",
+        "record_count": 3
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "status",
+            "value": "results"
+          },
+          {
+            "signal": "result_count",
+            "value": 1
+          },
+          {
+            "signal": "persistence_state",
+            "value": "degraded"
+          },
+          {
+            "signal": "retryable",
+            "value": true
+          },
+          {
+            "signal": "effective_defaults",
+            "value": true
+          }
+        ],
+        "failure_class": "storage_unavailable",
+        "privacy_assertions": [
+          "Degraded persistence exposes only a closed error class and never raw database text or paths."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-RESET-OWNED-001",
+      "owner_phase": "IP-15",
+      "requirement_ids": [
+        "FR-015",
+        "FR-014"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "profile_a": "123e4567-e89b-42d3-a456-426614174000",
+        "profile_b": "123e4567-e89b-42d3-a456-426614174099",
+        "profile_a_config": {
+          "result_limit": 25
+        },
+        "profile_b_config": {
+          "result_limit": 30
+        }
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "profile_a_rows_after_reset",
+            "value": 0
+          },
+          {
+            "signal": "profile_b_rows_after_reset",
+            "value": 1
+          },
+          {
+            "signal": "external_sentinel_preserved",
+            "value": true
+          },
+          {
+            "signal": "defaults_published",
+            "value": true
+          },
+          {
+            "signal": "snapshot_requested",
+            "value": true
+          },
+          {
+            "signal": "status",
+            "value": "complete"
+          }
+        ],
+        "privacy_assertions": [
+          "Reset removes only active-profile-owned records and preserves unrelated browser data and external sentinels."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-RESET-NON-MUTATION-001",
+      "owner_phase": "IP-15",
+      "requirement_ids": [
+        "FR-015",
+        "NFR-009"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "browser_sentinel": {
+          "tabs": 2,
+          "history_rows": 5
+        }
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "browser_mutation_calls",
+            "value": 0
+          },
+          {
+            "signal": "tab_count_delta",
+            "value": 0
+          },
+          {
+            "signal": "history_rows_delta",
+            "value": 0
+          },
+          {
+            "signal": "external_sentinel_preserved",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Reset issues no tab-close, tab-update, navigation, or history API calls."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-RESET-IDEMPOTENT-001",
+      "owner_phase": "IP-15",
+      "requirement_ids": [
+        "FR-015"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "reset_count": 2
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "first_status",
+            "value": "complete"
+          },
+          {
+            "signal": "second_status",
+            "value": "complete"
+          },
+          {
+            "signal": "owned_rows_after_second",
+            "value": 0
+          },
+          {
+            "signal": "error_class",
+            "value": null
+          }
+        ],
+        "privacy_assertions": [
+          "Repeated reset converges on the same defaults and never exposes caller text."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UNINSTALL-OWNED-001",
+      "owner_phase": "IP-15",
+      "requirement_ids": [
+        "FR-015",
+        "NFR-009"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "manifest_entries": [
+          "database",
+          "native-manifest",
+          "host-binary",
+          "extension-artifact"
+        ],
+        "unrelated_sentinel": true
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "owned_artifacts_remaining",
+            "value": 0
+          },
+          {
+            "signal": "unrelated_sentinel_preserved",
+            "value": true
+          },
+          {
+            "signal": "status",
+            "value": "complete"
+          },
+          {
+            "signal": "owned_state_verified",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Uninstall removes only reviewed manifest entries and preserves unrelated files and other profiles."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UNINSTALL-IDEMPOTENT-001",
+      "owner_phase": "IP-15",
+      "requirement_ids": [
+        "FR-015"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "uninstall_count": 2
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "first_status",
+            "value": "complete"
+          },
+          {
+            "signal": "second_status",
+            "value": "complete"
+          },
+          {
+            "signal": "owned_artifacts_remaining",
+            "value": 0
+          },
+          {
+            "signal": "missing_artifacts_are_success",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Repeated uninstall treats absent owned artifacts as success without touching unrelated data."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UNINSTALL-PARTIAL-001",
+      "owner_phase": "IP-15",
+      "requirement_ids": [
+        "FR-015"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "locked_artifact": "extension-artifact"
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "status",
+            "value": "incomplete"
+          },
+          {
+            "signal": "retryable",
+            "value": true
+          },
+          {
+            "signal": "error_class",
+            "value": "cleanup_failed"
+          },
+          {
+            "signal": "completed_steps",
+            "value": [
+              "session_closed",
+              "storage_uninstall"
+            ]
+          },
+          {
+            "signal": "owned_state_verified",
+            "value": false
+          }
+        ],
+        "failure_class": "cleanup_failed",
+        "privacy_assertions": [
+          "A locked artifact yields a precise retryable status without raw paths or OS error text."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-UNINSTALL-PATH-SAFETY-001",
+      "owner_phase": "IP-15",
+      "requirement_ids": [
+        "FR-015",
+        "NFR-009"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "request_path": "..\\outside",
+        "manifest_symlink": true
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "status",
+            "value": "incomplete"
+          },
+          {
+            "signal": "error_class",
+            "value": "path_safety"
+          },
+          {
+            "signal": "outside_files_removed",
+            "value": 0
+          },
+          {
+            "signal": "request_path_used",
+            "value": false
+          }
+        ],
+        "failure_class": "path_safety",
+        "privacy_assertions": [
+          "Untrusted path input cannot escape the reviewed manifest or follow a symlink outside it."
+        ]
+      }
     }
   ],
   "future_check_contracts": [
@@ -3607,7 +4098,7 @@
     {
       "phase": "IP-15",
       "fixture_ids": [
-        "FX-RESET-OWNED-DATA"
+        "FX-RESET-OWNED-001"
       ],
       "requirement_ids": [
         "FR-015"

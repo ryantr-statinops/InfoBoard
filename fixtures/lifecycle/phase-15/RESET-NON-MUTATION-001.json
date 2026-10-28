@@ -1,0 +1,39 @@
+{
+  "fixture_id": "FX-RESET-NON-MUTATION-001",
+  "owner_phase": "IP-15",
+  "requirement_ids": [
+    "FR-015",
+    "NFR-009"
+  ],
+  "category": "lifecycle",
+  "input": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "browser_sentinel": {
+      "tabs": 2,
+      "history_rows": 5
+    }
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "browser_mutation_calls",
+        "value": 0
+      },
+      {
+        "signal": "tab_count_delta",
+        "value": 0
+      },
+      {
+        "signal": "history_rows_delta",
+        "value": 0
+      },
+      {
+        "signal": "external_sentinel_preserved",
+        "value": true
+      }
+    ],
+    "privacy_assertions": [
+      "Reset issues no tab-close, tab-update, navigation, or history API calls."
+    ]
+  }
+}

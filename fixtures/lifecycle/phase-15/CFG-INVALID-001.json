@@ -1,0 +1,41 @@
+{
+  "fixture_id": "FX-CFG-INVALID-001",
+  "owner_phase": "IP-15",
+  "requirement_ids": [
+    "FR-015"
+  ],
+  "category": "lifecycle",
+  "input": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "config": {
+      "result_limit": 0,
+      "density": "wide",
+      "theme": "neon",
+      "recency_enabled": "yes"
+    }
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "accepted",
+        "value": false
+      },
+      {
+        "signal": "error_class",
+        "value": "invalid_configuration"
+      },
+      {
+        "signal": "stored_rows",
+        "value": 0
+      },
+      {
+        "signal": "effective_defaults_preserved",
+        "value": true
+      }
+    ],
+    "failure_class": "invalid_configuration",
+    "privacy_assertions": [
+      "Invalid input is rejected without echoing caller values, titles, URLs, or query text."
+    ]
+  }
+}

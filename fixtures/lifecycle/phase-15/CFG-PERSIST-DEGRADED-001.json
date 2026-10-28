@@ -1,0 +1,41 @@
+{
+  "fixture_id": "FX-CFG-PERSIST-DEGRADED-001",
+  "owner_phase": "IP-15",
+  "requirement_ids": [
+    "FR-015"
+  ],
+  "category": "lifecycle",
+  "input": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "persistence_state": "degraded",
+    "record_count": 3
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "status",
+        "value": "results"
+      },
+      {
+        "signal": "result_count",
+        "value": 1
+      },
+      {
+        "signal": "persistence_state",
+        "value": "degraded"
+      },
+      {
+        "signal": "retryable",
+        "value": true
+      },
+      {
+        "signal": "effective_defaults",
+        "value": true
+      }
+    ],
+    "failure_class": "storage_unavailable",
+    "privacy_assertions": [
+      "Degraded persistence exposes only a closed error class and never raw database text or paths."
+    ]
+  }
+}

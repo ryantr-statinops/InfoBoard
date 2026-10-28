@@ -1,0 +1,35 @@
+{
+  "fixture_id": "FX-RESET-IDEMPOTENT-001",
+  "owner_phase": "IP-15",
+  "requirement_ids": [
+    "FR-015"
+  ],
+  "category": "lifecycle",
+  "input": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "reset_count": 2
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "first_status",
+        "value": "complete"
+      },
+      {
+        "signal": "second_status",
+        "value": "complete"
+      },
+      {
+        "signal": "owned_rows_after_second",
+        "value": 0
+      },
+      {
+        "signal": "error_class",
+        "value": null
+      }
+    ],
+    "privacy_assertions": [
+      "Repeated reset converges on the same defaults and never exposes caller text."
+    ]
+  }
+}
