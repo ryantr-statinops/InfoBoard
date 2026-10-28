@@ -162,7 +162,7 @@ func (coordinator *Coordinator) Update(ctx context.Context, profileID domain.Pro
 	if err := ctx.Err(); err != nil {
 		return EffectiveConfiguration{}, err
 	}
-	persistence, durable := persistenceFromResult(result)
+	persistence, durable := persistenceFromWriteResult(result)
 	if persistence == PersistenceReady && durable {
 		value := EffectiveConfiguration{
 			Configuration: configuration,
@@ -223,7 +223,7 @@ func (coordinator *Coordinator) Reset(ctx context.Context, profileID domain.Prof
 	}
 
 	result := coordinator.store.ResetProfile(ctx, string(profile))
-	persistence, durable := persistenceFromResult(result)
+	persistence, durable := persistenceFromWriteResult(result)
 	if !durable {
 		errorClass := errorClassFromStorage(result.ErrorClass)
 		if errorClass == ErrorNone {
@@ -355,6 +355,19 @@ func persistenceFromResult(result storage.Result) (PersistenceState, bool) {
 		return PersistenceUnavailable, false
 	default:
 		return PersistenceUnknown, false
+	}
+}
+
+// Write operations do not carry compatibility metadata. A ready write is
+// durable; a disabled store is an intentional uninstalled state.
+func persistenceFromWriteResult(result storage.Result) (PersistenceState, bool) {
+	switch result.Status {
+	case storage.StatusReady:
+		return PersistenceReady, true
+	case storage.StatusDisabled:
+		return PersistenceUnavailable, false
+	default:
+		return persistenceFromResult(result)
 	}
 }
 
