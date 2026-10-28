@@ -290,7 +290,7 @@ func TestUpdateRetainsLastEffectiveValueOnWriteFailure(t *testing.T) {
 	if err != nil {
 		t.Fatalf("degraded update must be renderable: %v", err)
 	}
-	if effective.Durable || effective.Persistence != PersistenceDegraded || !effective.Retryable || effective.ErrorClass != string(storage.ErrorStorageFailure) {
+	if effective.Durable || effective.Persistence != PersistenceDegraded || !effective.Retryable || effective.ErrorClass != ErrorStorageFailure {
 		t.Fatalf("degraded update status = %+v", effective)
 	}
 	if effective.Configuration.ResultLimit != 25 || effective.Configuration.Density != DensityCompact {
@@ -417,7 +417,7 @@ func TestResetFailureRetainsPreviousValues(t *testing.T) {
 	if err != nil {
 		t.Fatalf("reset failure must be renderable: %v", err)
 	}
-	if result.Status != StatusRetryable || !result.Retryable || result.Durable || result.ErrorClass != string(storage.ErrorStorageFailure) {
+	if result.Status != StatusRetryable || !result.Retryable || result.Durable || result.ErrorClass != ErrorStorageFailure {
 		t.Fatalf("reset failure status = %+v", result)
 	}
 	if result.Configuration.ResultLimit != 25 {
@@ -443,7 +443,7 @@ func TestResetRuntimeFailureIsIncomplete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("runtime failure must be renderable: %v", err)
 	}
-	if result.Status != StatusIncomplete || !result.Retryable || !result.Durable || result.OwnedStateVerified || result.ErrorClass != "projection_reset_failed" {
+	if result.Status != StatusIncomplete || !result.Retryable || !result.Durable || result.OwnedStateVerified || result.ErrorClass != ErrorProjectionResetFailed {
 		t.Fatalf("runtime failure result = %+v", result)
 	}
 	if len(result.CompletedSteps) != 1 || result.CompletedSteps[0] != StepStorageReset {
@@ -465,7 +465,7 @@ func TestResetRequiresRuntimeBeforeDeleting(t *testing.T) {
 	if err != nil {
 		t.Fatalf("missing runtime must be renderable: %v", err)
 	}
-	if result.Status != StatusRetryable || result.ErrorClass != "reset_runtime_unavailable" {
+	if result.Status != StatusRetryable || result.ErrorClass != ErrorResetRuntimeUnavailable {
 		t.Fatalf("missing runtime result = %+v", result)
 	}
 	if store.resetCalls != 0 {
@@ -604,7 +604,7 @@ func TestUninstallRequiresConfiguration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("missing configuration must be renderable: %v", err)
 	}
-	if result.Status != StatusRetryable || result.ErrorClass != "uninstall_not_configured" {
+	if result.Status != StatusRetryable || result.ErrorClass != ErrorUninstallNotConfigured {
 		t.Fatalf("missing configuration result = %+v", result)
 	}
 	if store.uninstallCalls != 0 {
@@ -628,7 +628,7 @@ func TestUninstallSessionCloseFailureStopsCleanup(t *testing.T) {
 	if err != nil {
 		t.Fatalf("close failure must be renderable: %v", err)
 	}
-	if result.Status != StatusRetryable || result.ErrorClass != "session_close_failed" || store.uninstallCalls != 0 {
+	if result.Status != StatusRetryable || result.ErrorClass != ErrorSessionCloseFailed || store.uninstallCalls != 0 {
 		t.Fatalf("close failure result = %+v storage=%d", result, store.uninstallCalls)
 	}
 	if _, err := os.Lstat(owned); err != nil {
@@ -655,7 +655,7 @@ func TestUninstallStorageFailureIsRetryable(t *testing.T) {
 	if err != nil {
 		t.Fatalf("storage failure must be renderable: %v", err)
 	}
-	if result.Status != StatusRetryable || !result.Retryable || result.ErrorClass != string(storage.ErrorStorageFailure) {
+	if result.Status != StatusRetryable || !result.Retryable || result.ErrorClass != ErrorStorageFailure {
 		t.Fatalf("storage failure result = %+v", result)
 	}
 	if len(result.CompletedSteps) != 1 || result.CompletedSteps[0] != StepSessionClosed {

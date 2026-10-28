@@ -7,11 +7,6 @@ import (
 	"path/filepath"
 )
 
-const (
-	ErrorCleanupFailed = "cleanup_failed"
-	ErrorPathSafety    = "path_safety"
-)
-
 // CleanupResult reports reviewed entry IDs, never absolute paths. Missing
 // entries are already-complete outcomes; failed entries are retryable.
 type CleanupResult struct {
@@ -20,7 +15,7 @@ type CleanupResult struct {
 	Failed     []string
 	Verified   bool
 	Retryable  bool
-	ErrorClass string
+	ErrorClass ErrorClass
 }
 
 // Cleaner removes exactly one validated manifest. It refuses symlinks and
@@ -101,7 +96,7 @@ func (cleaner *Cleaner) Remove(ctx context.Context) (CleanupResult, error) {
 	return result, nil
 }
 
-func markFailure(result *CleanupResult, id, class string) {
+func markFailure(result *CleanupResult, id string, class ErrorClass) {
 	result.Failed = append(result.Failed, id)
 	if result.ErrorClass != ErrorPathSafety {
 		result.ErrorClass = class

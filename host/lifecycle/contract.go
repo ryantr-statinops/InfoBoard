@@ -80,7 +80,7 @@ type EffectiveConfiguration struct {
 	Persistence   PersistenceState `json:"persistence"`
 	Durable       bool             `json:"durable"`
 	Retryable     bool             `json:"retryable"`
-	ErrorClass    string           `json:"error_class"`
+	ErrorClass    ErrorClass       `json:"error_class"`
 }
 
 var (

@@ -96,7 +96,7 @@ func (coordinator *Coordinator) Load(ctx context.Context, profileID domain.Profi
 		return EffectiveConfiguration{}, err
 	}
 	persistence, durable := persistenceFromResult(result)
-	errorClass := string(result.ErrorClass)
+	errorClass := errorClassFromStorage(result.ErrorClass)
 	effective := defaults
 	if persistence == PersistenceReady && durable {
 		candidate := profileConfigFromStorage(configuration)
@@ -104,13 +104,13 @@ func (coordinator *Coordinator) Load(ctx context.Context, profileID domain.Profi
 			effective = candidate
 		} else {
 			persistence, durable = PersistenceDegraded, false
-			errorClass = string(storage.ErrorInvalidConfiguration)
+			errorClass = ErrorInvalidConfiguration
 		}
-	} else if errorClass == "" {
+	} else if errorClass == ErrorNone {
 		if result.Status == storage.StatusReady && result.Compatibility != storage.CompatibilityCompatible {
-			errorClass = "compatibility_mismatch"
+			errorClass = ErrorCompatibilityMismatch
 		} else {
-			errorClass = string(storage.ErrorStorageUnavailable)
+			errorClass = ErrorStorageUnavailable
 		}
 	}
 
@@ -177,9 +177,9 @@ func (coordinator *Coordinator) Update(ctx context.Context, profileID domain.Pro
 	previous.Persistence = persistence
 	previous.Durable = false
 	previous.Retryable = true
-	previous.ErrorClass = string(result.ErrorClass)
-	if previous.ErrorClass == "" {
-		previous.ErrorClass = string(storage.ErrorStorageFailure)
+	previous.ErrorClass = errorClassFromStorage(result.ErrorClass)
+	if previous.ErrorClass == ErrorNone {
+		previous.ErrorClass = ErrorStorageFailure
 	}
 	coordinator.storeEffective(profile, previous)
 	return previous, nil
@@ -217,7 +217,7 @@ func (coordinator *Coordinator) Reset(ctx context.Context, profileID domain.Prof
 			Retryable:     true,
 			Persistence:   previous.Persistence,
 			Durable:       false,
-			ErrorClass:    "reset_runtime_unavailable",
+			ErrorClass:    ErrorResetRuntimeUnavailable,
 			Configuration: previous.Configuration,
 		}, nil
 	}
@@ -225,9 +225,9 @@ func (coordinator *Coordinator) Reset(ctx context.Context, profileID domain.Prof
 	result := coordinator.store.ResetProfile(ctx, string(profile))
 	persistence, durable := persistenceFromResult(result)
 	if !durable {
-		errorClass := string(result.ErrorClass)
-		if errorClass == "" {
-			errorClass = string(storage.ErrorStorageFailure)
+		errorClass := errorClassFromStorage(result.ErrorClass)
+		if errorClass == ErrorNone {
+			errorClass = ErrorStorageFailure
 		}
 		return LifecycleResult{
 			Operation:     OperationReset,
@@ -248,7 +248,7 @@ func (coordinator *Coordinator) Reset(ctx context.Context, profileID domain.Prof
 			Persistence:   PersistenceReady,
 			Durable:       true,
 			Retryable:     true,
-			ErrorClass:    "cancelled",
+			ErrorClass:    ErrorCancelled,
 		}
 		coordinator.storeEffective(profile, value)
 		return LifecycleResult{
@@ -258,7 +258,7 @@ func (coordinator *Coordinator) Reset(ctx context.Context, profileID domain.Prof
 			Retryable:      true,
 			Persistence:    PersistenceReady,
 			Durable:        true,
-			ErrorClass:     "cancelled",
+			ErrorClass:     ErrorCancelled,
 			CompletedSteps: []string{StepStorageReset},
 			Configuration:  defaults,
 		}, err
@@ -280,14 +280,14 @@ func (coordinator *Coordinator) Reset(ctx context.Context, profileID domain.Prof
 	}
 	status := StatusComplete
 	retryable := false
-	errorClass := ""
+	errorClass := ErrorNone
 	if !complete {
 		status = StatusIncomplete
 		retryable = true
 		if runtimeErr != nil {
-			errorClass = "projection_reset_failed"
+			errorClass = ErrorProjectionResetFailed
 		} else {
-			errorClass = "projection_reset_incomplete"
+			errorClass = ErrorProjectionIncomplete
 		}
 		value.Retryable = true
 		value.ErrorClass = errorClass
@@ -320,7 +320,7 @@ func (coordinator *Coordinator) previous(profile domain.ProfileID) EffectiveConf
 		Persistence:   PersistenceDegraded,
 		Durable:       false,
 		Retryable:     true,
-		ErrorClass:    string(storage.ErrorStorageUnavailable),
+		ErrorClass:    ErrorStorageUnavailable,
 	}
 }
 

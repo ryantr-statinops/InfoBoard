@@ -95,7 +95,7 @@ func (coordinator *Coordinator) Uninstall(ctx context.Context, profileID domain.
 			Retryable:     true,
 			Persistence:   PersistenceUnknown,
 			Durable:       false,
-			ErrorClass:    "uninstall_not_configured",
+			ErrorClass:    ErrorUninstallNotConfigured,
 			Configuration: defaults,
 		}, nil
 	}
@@ -108,7 +108,7 @@ func (coordinator *Coordinator) Uninstall(ctx context.Context, profileID domain.
 			Retryable:     true,
 			Persistence:   PersistenceUnknown,
 			Durable:       false,
-			ErrorClass:    "session_close_failed",
+			ErrorClass:    ErrorSessionCloseFailed,
 			Configuration: defaults,
 		}, nil
 	}
@@ -117,9 +117,9 @@ func (coordinator *Coordinator) Uninstall(ctx context.Context, profileID domain.
 	result := coordinator.store.Uninstall(ctx, plan.DatabasePath)
 	if result.Status != storage.StatusDisabled {
 		persistence, _ := persistenceFromResult(result)
-		errorClass := string(result.ErrorClass)
-		if errorClass == "" {
-			errorClass = string(storage.ErrorStorageFailure)
+		errorClass := errorClassFromStorage(result.ErrorClass)
+		if errorClass == ErrorNone {
+			errorClass = ErrorStorageFailure
 		}
 		return LifecycleResult{
 			Operation:      OperationUninstall,
@@ -144,7 +144,7 @@ func (coordinator *Coordinator) Uninstall(ctx context.Context, profileID domain.
 			Retryable:      true,
 			Persistence:    PersistenceUnavailable,
 			Durable:        false,
-			ErrorClass:     "cleanup_manifest_invalid",
+			ErrorClass:     ErrorCleanupManifestInvalid,
 			CompletedSteps: steps,
 			Configuration:  defaults,
 		}, nil
@@ -159,7 +159,7 @@ func (coordinator *Coordinator) Uninstall(ctx context.Context, profileID domain.
 			Retryable:      true,
 			Persistence:    PersistenceUnavailable,
 			Durable:        false,
-			ErrorClass:     "cleanup_cancelled",
+			ErrorClass:     ErrorCleanupCancelled,
 			CompletedSteps: steps,
 			Configuration:  defaults,
 		}, cleanupErr
@@ -169,12 +169,12 @@ func (coordinator *Coordinator) Uninstall(ctx context.Context, profileID domain.
 	}
 	status := StatusComplete
 	retryable := false
-	errorClass := ""
+	errorClass := ErrorNone
 	if !cleanup.Verified {
 		status = StatusIncomplete
 		retryable = true
 		errorClass = cleanup.ErrorClass
-		if errorClass == "" {
+		if errorClass == ErrorNone {
 			errorClass = ErrorCleanupFailed
 		}
 	}
