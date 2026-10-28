@@ -703,7 +703,7 @@ func TestProtocol_LimitsAndErrorEnumAreClosed(t *testing.T) {
 	}
 	for _, messageType := range []MessageType{TypeHello, TypeHelloAck, TypeSnapshot, TypeDelta, TypeSyncAck,
 		TypeResyncRequired, TypeQuery, TypeQueryResult, TypeActivationObserved, TypeActivationFailed,
-		TypeActivationAck, TypeHealth, TypeHealthResult, TypeError} {
+		TypeActivationAck, TypeHealth, TypeHealthResult, TypeLifecycle, TypeLifecycleResult, TypeError} {
 		if !messageType.KnownType() || messageType.Direction() == "" {
 			t.Fatalf("%s is not in the message enum", messageType)
 		}

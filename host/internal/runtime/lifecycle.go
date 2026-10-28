@@ -3,6 +3,8 @@ package runtime
 import (
 	"context"
 	"time"
+
+	"github.com/ryantr-statinops/InfoBoard/host/internal/domain"
 )
 
 // LifecycleState is the observable session substate of the host. The public
@@ -288,4 +290,51 @@ func (s *Session) reachedReady() bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.readyReached
+}
+
+// LifecycleOperation is the bounded lifecycle action exposed by the runtime
+// seam. The protocol layer maps its wire operation onto this enum before the
+// hook runs.
+type LifecycleOperation string
+
+const (
+	LifecycleLoad      LifecycleOperation = "load"
+	LifecycleUpdate    LifecycleOperation = "update"
+	LifecycleReset     LifecycleOperation = "reset"
+	LifecycleUninstall LifecycleOperation = "uninstall"
+)
+
+// KnownLifecycleOperation reports whether an operation belongs to the closed
+// lifecycle enum.
+func (operation LifecycleOperation) KnownLifecycleOperation() bool {
+	switch operation {
+	case LifecycleLoad, LifecycleUpdate, LifecycleReset, LifecycleUninstall:
+		return true
+	default:
+		return false
+	}
+}
+
+// LifecycleRequest is the bounded handoff from the protocol owner to the
+// lifecycle owner. Configuration is already validated wire bytes and is empty
+// for non-update operations.
+type LifecycleRequest struct {
+	ProfileID     domain.ProfileID
+	Operation     LifecycleOperation
+	Configuration []byte
+}
+
+// LifecycleOutcome is the lifecycle owner's redacted result plus the two
+// runtime actions the protocol owner must honor: request a fresh snapshot and
+// close the session after a completed uninstall.
+type LifecycleOutcome struct {
+	Payload       []byte
+	RequireResync bool
+	Shutdown      bool
+}
+
+// LifecycleHook is the runtime seam consumed by the protocol lifecycle
+// dispatcher. It never receives a browser handle or a caller-supplied path.
+type LifecycleHook interface {
+	ExecuteLifecycle(ctx context.Context, request LifecycleRequest) (LifecycleOutcome, error)
 }
