@@ -26,6 +26,7 @@
     .result-context, .result-explanation { color: #4a4a4a; font-size: 0.875rem; }
     .result-pin { justify-self: start; padding: 0 6px; border: 1px solid #555; border-radius: 999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
     .footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .footer-actions { display: flex; gap: 8px; }
     .hint { color: #4a4a4a; font-size: 0.8125rem; }
     button { min-height: 44px; padding: 8px 12px; border: 1px solid #555; border-radius: 6px; background: #f7f7f7; color: inherit; font: inherit; }
     @media (max-width: 360px) {
@@ -49,7 +50,10 @@
     <ul id="surface-results" data-result-list class="results" role="listbox" aria-label="Open tab results" hidden></ul>
     <div class="footer">
       <span class="hint">Esc closes without changing tabs</span>
-      <button type="button" data-close-search>Close search</button>
+      <div class="footer-actions">
+        <button type="button" data-open-settings>Settings</button>
+        <button type="button" data-close-search>Close search</button>
+      </div>
     </div>
   </main>
   <script type="module" src="../src/search/surface-entrypoint.js"></script>

@@ -10,5 +10,6 @@ test('built manifest has only approved browser and native-messaging permissions 
   expect(manifest.commands['open-search'].suggested_key).toEqual({ default: 'Ctrl+Shift+Y', mac: 'Command+Shift+Y' });
   expect(manifest.commands['close-search'].suggested_key).toEqual({ default: 'Ctrl+Shift+X', mac: 'Command+Shift+X' });
   expect(manifest.action.default_popup).toBe('dist/search/surface-shell.html');
+  expect(manifest.options_ui).toEqual({ page: 'dist/settings/settings-shell.html', open_in_tab: true });
   expect(manifest.background.service_worker).toBe('dist/src/background/service-worker.js');
 });
