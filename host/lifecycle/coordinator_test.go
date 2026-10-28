@@ -11,12 +11,13 @@ import (
 )
 
 type fakeStore struct {
-	configs    map[string]storage.Configuration
-	result     storage.Result
-	saveResult storage.Result
-	saved      map[string]storage.Configuration
-	saveCalls  int
-	resetCalls int
+	configs     map[string]storage.Configuration
+	result      storage.Result
+	saveResult  storage.Result
+	resetResult storage.Result
+	saved       map[string]storage.Configuration
+	saveCalls   int
+	resetCalls  int
 }
 
 func readyResult() storage.Result {
@@ -49,8 +50,12 @@ func (store *fakeStore) SaveConfiguration(_ context.Context, configuration stora
 	return store.saveResult
 }
 
-func (store *fakeStore) ResetProfile(context.Context, string) storage.Result {
+func (store *fakeStore) ResetProfile(_ context.Context, profileID string) storage.Result {
 	store.resetCalls++
+	if store.resetResult.Status != "" {
+		return store.resetResult
+	}
+	delete(store.configs, profileID)
 	return readyResult()
 }
 
@@ -315,5 +320,173 @@ func TestUpdateRejectsInvalidInputsBeforeWriting(t *testing.T) {
 	}
 	if store.saveCalls != 0 {
 		t.Fatalf("invalid updates reached the store %d times", store.saveCalls)
+	}
+}
+
+type fakeResetRuntime struct {
+	outcome ProjectionReset
+	err     error
+	profile domain.ProfileID
+	calls   int
+}
+
+func (runtime *fakeResetRuntime) ResetProjection(ctx context.Context, profileID domain.ProfileID) (ProjectionReset, error) {
+	if err := ctx.Err(); err != nil {
+		return ProjectionReset{}, err
+	}
+	runtime.calls++
+	runtime.profile = profileID
+	return runtime.outcome, runtime.err
+}
+
+func TestResetClearsOnlyActiveProfileAndPublishesDefaults(t *testing.T) {
+	configA := storage.DefaultConfiguration(profileA)
+	configA.ResultLimit = 25
+	configA.RankingModelVersion = "rank-1"
+	configB := storage.DefaultConfiguration(profileB)
+	configB.ResultLimit = 30
+	configB.RankingModelVersion = "rank-1"
+	store := &fakeStore{configs: map[string]storage.Configuration{
+		string(profileA): configA,
+		string(profileB): configB,
+	}}
+	coordinator := newTestCoordinator(t, store)
+	if _, err := coordinator.Load(context.Background(), profileA); err != nil {
+		t.Fatalf("seed load: %v", err)
+	}
+	resetRuntime := &fakeResetRuntime{outcome: ProjectionReset{Revision: 42, IndexCleared: true, SnapshotRequested: true}}
+	coordinator.SetResetRuntime(resetRuntime)
+	result, err := coordinator.Reset(context.Background(), profileA)
+	if err != nil {
+		t.Fatalf("reset: %v", err)
+	}
+	if result.Status != StatusComplete || result.Retryable || !result.OwnedStateVerified || result.ProjectionRevision != 42 {
+		t.Fatalf("reset result = %+v", result)
+	}
+	if len(result.CompletedSteps) != 3 || result.CompletedSteps[0] != StepStorageReset || result.CompletedSteps[1] != StepIndexCleared || result.CompletedSteps[2] != StepSnapshotRequested {
+		t.Fatalf("completed steps = %v", result.CompletedSteps)
+	}
+	if result.Configuration.ResultLimit != 10 || result.Configuration.Density != DensityComfortable {
+		t.Fatalf("reset did not publish defaults: %+v", result.Configuration)
+	}
+	if _, ok := store.configs[string(profileA)]; ok {
+		t.Fatal("profile A rows remain after reset")
+	}
+	if _, ok := store.configs[string(profileB)]; !ok {
+		t.Fatal("profile B rows were deleted")
+	}
+	if resetRuntime.profile != profileA || resetRuntime.calls != 1 {
+		t.Fatalf("runtime handoff = profile:%s calls:%d", resetRuntime.profile, resetRuntime.calls)
+	}
+	cached, ok := coordinator.Cached(profileA)
+	if !ok || !cached.Durable || cached.Configuration.ResultLimit != 10 {
+		t.Fatalf("cached reset defaults = %+v ok=%v", cached, ok)
+	}
+}
+
+func TestResetFailureRetainsPreviousValues(t *testing.T) {
+	configA := storage.DefaultConfiguration(profileA)
+	configA.ResultLimit = 25
+	configA.RankingModelVersion = "rank-1"
+	store := &fakeStore{
+		configs:     map[string]storage.Configuration{string(profileA): configA},
+		resetResult: storage.Result{Status: storage.StatusDegraded, ErrorClass: storage.ErrorStorageFailure, Retryable: true},
+	}
+	coordinator := newTestCoordinator(t, store)
+	if _, err := coordinator.Load(context.Background(), profileA); err != nil {
+		t.Fatalf("seed load: %v", err)
+	}
+	resetRuntime := &fakeResetRuntime{outcome: ProjectionReset{Revision: 7, IndexCleared: true, SnapshotRequested: true}}
+	coordinator.SetResetRuntime(resetRuntime)
+	result, err := coordinator.Reset(context.Background(), profileA)
+	if err != nil {
+		t.Fatalf("reset failure must be renderable: %v", err)
+	}
+	if result.Status != StatusRetryable || !result.Retryable || result.Durable || result.ErrorClass != string(storage.ErrorStorageFailure) {
+		t.Fatalf("reset failure status = %+v", result)
+	}
+	if result.Configuration.ResultLimit != 25 {
+		t.Fatalf("reset failure lost previous values: %+v", result.Configuration)
+	}
+	if resetRuntime.calls != 0 {
+		t.Fatalf("runtime ran after storage failure %d times", resetRuntime.calls)
+	}
+}
+
+func TestResetRuntimeFailureIsIncomplete(t *testing.T) {
+	configA := storage.DefaultConfiguration(profileA)
+	configA.ResultLimit = 25
+	configA.RankingModelVersion = "rank-1"
+	store := &fakeStore{configs: map[string]storage.Configuration{string(profileA): configA}}
+	coordinator := newTestCoordinator(t, store)
+	if _, err := coordinator.Load(context.Background(), profileA); err != nil {
+		t.Fatalf("seed load: %v", err)
+	}
+	resetRuntime := &fakeResetRuntime{err: errors.New("index reset failed")}
+	coordinator.SetResetRuntime(resetRuntime)
+	result, err := coordinator.Reset(context.Background(), profileA)
+	if err != nil {
+		t.Fatalf("runtime failure must be renderable: %v", err)
+	}
+	if result.Status != StatusIncomplete || !result.Retryable || !result.Durable || result.OwnedStateVerified || result.ErrorClass != "projection_reset_failed" {
+		t.Fatalf("runtime failure result = %+v", result)
+	}
+	if len(result.CompletedSteps) != 1 || result.CompletedSteps[0] != StepStorageReset {
+		t.Fatalf("runtime failure steps = %v", result.CompletedSteps)
+	}
+	if result.Configuration.ResultLimit != 10 {
+		t.Fatalf("runtime failure did not publish defaults: %+v", result.Configuration)
+	}
+	cached, ok := coordinator.Cached(profileA)
+	if !ok || !cached.Retryable || cached.Configuration.ResultLimit != 10 {
+		t.Fatalf("cached incomplete reset = %+v ok=%v", cached, ok)
+	}
+}
+
+func TestResetRequiresRuntimeBeforeDeleting(t *testing.T) {
+	store := &fakeStore{configs: map[string]storage.Configuration{}}
+	coordinator := newTestCoordinator(t, store)
+	result, err := coordinator.Reset(context.Background(), profileA)
+	if err != nil {
+		t.Fatalf("missing runtime must be renderable: %v", err)
+	}
+	if result.Status != StatusRetryable || result.ErrorClass != "reset_runtime_unavailable" {
+		t.Fatalf("missing runtime result = %+v", result)
+	}
+	if store.resetCalls != 0 {
+		t.Fatalf("storage reset ran without runtime %d times", store.resetCalls)
+	}
+}
+
+func TestResetHonorsCancellation(t *testing.T) {
+	store := &fakeStore{configs: map[string]storage.Configuration{}}
+	coordinator := newTestCoordinator(t, store)
+	coordinator.SetResetRuntime(&fakeResetRuntime{outcome: ProjectionReset{Revision: 1, IndexCleared: true, SnapshotRequested: true}})
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err := coordinator.Reset(ctx, profileA); !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected cancellation, got %v", err)
+	}
+	if store.resetCalls != 0 {
+		t.Fatalf("cancelled reset reached storage %d times", store.resetCalls)
+	}
+}
+
+func TestResetIsIdempotent(t *testing.T) {
+	store := &fakeStore{configs: map[string]storage.Configuration{}}
+	coordinator := newTestCoordinator(t, store)
+	resetRuntime := &fakeResetRuntime{outcome: ProjectionReset{Revision: 3, IndexCleared: true, SnapshotRequested: true}}
+	coordinator.SetResetRuntime(resetRuntime)
+	for attempt := 0; attempt < 2; attempt++ {
+		result, err := coordinator.Reset(context.Background(), profileA)
+		if err != nil {
+			t.Fatalf("reset attempt %d: %v", attempt, err)
+		}
+		if result.Status != StatusComplete || !result.OwnedStateVerified {
+			t.Fatalf("reset attempt %d result = %+v", attempt, result)
+		}
+	}
+	if store.resetCalls != 2 || resetRuntime.calls != 2 {
+		t.Fatalf("idempotent reset calls storage=%d runtime=%d", store.resetCalls, resetRuntime.calls)
 	}
 }

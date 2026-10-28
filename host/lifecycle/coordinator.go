@@ -21,10 +21,12 @@ type Store interface {
 // operations around them. A degraded store never removes the in-memory
 // defaults needed by the lexical search path.
 type Coordinator struct {
-	mu        sync.RWMutex
-	store     Store
-	versions  storage.CompatibilityVersions
-	effective map[domain.ProfileID]EffectiveConfiguration
+	mu           sync.RWMutex
+	writeMu      sync.Mutex
+	store        Store
+	versions     storage.CompatibilityVersions
+	resetRuntime ResetRuntime
+	effective    map[domain.ProfileID]EffectiveConfiguration
 }
 
 // NewCoordinator validates the bounded repository/version inputs and starts
@@ -44,6 +46,23 @@ func NewCoordinator(store Store, versions storage.CompatibilityVersions) (*Coord
 		versions:  versions,
 		effective: make(map[domain.ProfileID]EffectiveConfiguration),
 	}, nil
+}
+
+// SetResetRuntime injects the projection/index reset handoff. It is optional
+// for load/update-only callers but required before Reset can complete.
+func (coordinator *Coordinator) SetResetRuntime(resetRuntime ResetRuntime) {
+	if coordinator == nil {
+		return
+	}
+	coordinator.mu.Lock()
+	coordinator.resetRuntime = resetRuntime
+	coordinator.mu.Unlock()
+}
+
+func (coordinator *Coordinator) runtime() ResetRuntime {
+	coordinator.mu.RLock()
+	defer coordinator.mu.RUnlock()
+	return coordinator.resetRuntime
 }
 
 // Load returns persisted values only for profileID. Missing rows, invalid
@@ -109,6 +128,8 @@ func (coordinator *Coordinator) Update(ctx context.Context, profileID domain.Pro
 	if coordinator == nil {
 		return EffectiveConfiguration{}, errors.New("lifecycle coordinator is required")
 	}
+	coordinator.writeMu.Lock()
+	defer coordinator.writeMu.Unlock()
 	profile, err := domain.ParseProfileID(string(profileID))
 	if err != nil {
 		return EffectiveConfiguration{}, ErrInvalidConfiguration
@@ -157,6 +178,129 @@ func (coordinator *Coordinator) Update(ctx context.Context, profileID domain.Pro
 	}
 	coordinator.storeEffective(profile, previous)
 	return previous, nil
+}
+
+// Reset deletes only the active profile's durable rows, clears the in-memory
+// settings, and hands off index clearing plus a full-snapshot request. It never
+// reports complete unless the storage transaction and both runtime steps
+// succeed. A failed reset remains retryable and keeps other profiles untouched.
+func (coordinator *Coordinator) Reset(ctx context.Context, profileID domain.ProfileID) (LifecycleResult, error) {
+	if coordinator == nil {
+		return LifecycleResult{}, errors.New("lifecycle coordinator is required")
+	}
+	profile, err := domain.ParseProfileID(string(profileID))
+	if err != nil {
+		return LifecycleResult{}, ErrInvalidConfiguration
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := ctx.Err(); err != nil {
+		return LifecycleResult{}, err
+	}
+
+	coordinator.writeMu.Lock()
+	defer coordinator.writeMu.Unlock()
+
+	previous := coordinator.previous(profile)
+	resetRuntime := coordinator.runtime()
+	if resetRuntime == nil {
+		return LifecycleResult{
+			Operation:     OperationReset,
+			ProfileID:     profile,
+			Status:        StatusRetryable,
+			Retryable:     true,
+			Persistence:   previous.Persistence,
+			Durable:       false,
+			ErrorClass:    "reset_runtime_unavailable",
+			Configuration: previous.Configuration,
+		}, nil
+	}
+
+	result := coordinator.store.ResetProfile(ctx, string(profile))
+	persistence, durable := persistenceFromResult(result)
+	if !durable {
+		errorClass := string(result.ErrorClass)
+		if errorClass == "" {
+			errorClass = string(storage.ErrorStorageFailure)
+		}
+		return LifecycleResult{
+			Operation:     OperationReset,
+			ProfileID:     profile,
+			Status:        StatusRetryable,
+			Retryable:     true,
+			Persistence:   persistence,
+			Durable:       false,
+			ErrorClass:    errorClass,
+			Configuration: previous.Configuration,
+		}, nil
+	}
+
+	defaults := DefaultProfileConfig(profile, coordinator.versions.ProtocolVersion, coordinator.versions.RankingModelVersion)
+	if err := ctx.Err(); err != nil {
+		value := EffectiveConfiguration{
+			Configuration: defaults,
+			Persistence:   PersistenceReady,
+			Durable:       true,
+			Retryable:     true,
+			ErrorClass:    "cancelled",
+		}
+		coordinator.storeEffective(profile, value)
+		return LifecycleResult{
+			Operation:      OperationReset,
+			ProfileID:      profile,
+			Status:         StatusIncomplete,
+			Retryable:      true,
+			Persistence:    PersistenceReady,
+			Durable:        true,
+			ErrorClass:     "cancelled",
+			CompletedSteps: []string{StepStorageReset},
+			Configuration:  defaults,
+		}, err
+	}
+
+	projection, runtimeErr := resetRuntime.ResetProjection(ctx, profile)
+	steps := []string{StepStorageReset}
+	if projection.IndexCleared {
+		steps = append(steps, StepIndexCleared)
+	}
+	if projection.SnapshotRequested {
+		steps = append(steps, StepSnapshotRequested)
+	}
+	complete := runtimeErr == nil && projection.IndexCleared && projection.SnapshotRequested
+	value := EffectiveConfiguration{
+		Configuration: defaults,
+		Persistence:   PersistenceReady,
+		Durable:       true,
+	}
+	status := StatusComplete
+	retryable := false
+	errorClass := ""
+	if !complete {
+		status = StatusIncomplete
+		retryable = true
+		if runtimeErr != nil {
+			errorClass = "projection_reset_failed"
+		} else {
+			errorClass = "projection_reset_incomplete"
+		}
+		value.Retryable = true
+		value.ErrorClass = errorClass
+	}
+	coordinator.storeEffective(profile, value)
+	return LifecycleResult{
+		Operation:          OperationReset,
+		ProfileID:          profile,
+		Status:             status,
+		Retryable:          retryable,
+		Persistence:        PersistenceReady,
+		Durable:            true,
+		ErrorClass:         errorClass,
+		CompletedSteps:     steps,
+		OwnedStateVerified: complete,
+		ProjectionRevision: projection.Revision,
+		Configuration:      defaults,
+	}, nil
 }
 
 func (coordinator *Coordinator) previous(profile domain.ProfileID) EffectiveConfiguration {
