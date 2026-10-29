@@ -106,6 +106,10 @@ func repairFixture(t *testing.T, snapshot Snapshot, backend RepairBackend) (*Hea
 }
 
 func TestRepairBounds(t *testing.T) {
+	fixture := loadRepairFixture(t)
+	if len(fixture) == 0 || fixture[0].Operation != RepairRetryConnection || fixture[0].ExpectedAttempts != 3 {
+		t.Fatalf("repair fixture bounds = %+v", fixture)
+	}
 	backend := &fakeRepairBackend{connectionFailures: 2}
 	_, recorder, controller := repairFixture(t, baseSnapshot(), backend)
 	result := controller.Run(context.Background(), RepairRetryConnection, 0)

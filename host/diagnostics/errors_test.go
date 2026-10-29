@@ -7,6 +7,17 @@ import (
 )
 
 func TestErrorStatusMatrix(t *testing.T) {
+	for _, fixture := range loadErrorFixture(t) {
+		mapping, ok := Lookup(fixture.ErrorClass)
+		if !ok {
+			t.Fatalf("fixture class %s missing", fixture.ErrorClass)
+		}
+		if mapping.Status != fixture.Status || mapping.Retryable != fixture.Retryable ||
+			mapping.Action != fixture.Action || mapping.Policy.MaxAttempts != fixture.MaxAttempts ||
+			mapping.Policy.TotalBudgetMillis != fixture.TotalBudgetMS {
+			t.Fatalf("fixture class %s mapping = %+v", fixture.ErrorClass, mapping)
+		}
+	}
 	tests := []struct {
 		class      ErrorClass
 		status     Status

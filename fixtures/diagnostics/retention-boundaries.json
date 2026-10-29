@@ -1,0 +1,46 @@
+{
+  "fixture_id": "FX-RETENTION-BOUNDARIES",
+  "owner_phase": "IP-16",
+  "requirement_ids": [
+    "NFR-006",
+    "FR-012"
+  ],
+  "retention": {
+    "max_age_seconds": 604800,
+    "max_bytes": 10000000,
+    "max_record_bytes": 65536
+  },
+  "cases": [
+    {
+      "name": "exactly_seven_days_old",
+      "age_seconds": 604800,
+      "expected_retained": true
+    },
+    {
+      "name": "one_second_inside_window",
+      "age_seconds": 604799,
+      "expected_retained": true
+    },
+    {
+      "name": "one_second_outside_window",
+      "age_seconds": 604801,
+      "expected_retained": false
+    },
+    {
+      "name": "byte_budget_minus_one",
+      "bytes": 9999999,
+      "expected_total_lte": 10000000
+    },
+    {
+      "name": "byte_budget_exact",
+      "bytes": 10000000,
+      "expected_total_lte": 10000000
+    },
+    {
+      "name": "byte_budget_plus_one",
+      "bytes": 10000001,
+      "expected_total_lte": 10000000,
+      "expected_oldest_evicted": true
+    }
+  ]
+}
