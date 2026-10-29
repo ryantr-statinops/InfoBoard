@@ -182,17 +182,17 @@ func TestHealthTransitionTable(t *testing.T) {
 			case StateDisconnected:
 				want = to == StateConnecting || to == StateIncompatible || to == StateStopping
 			case StateConnecting:
-				want = to == StateHandshaking || to == StateRecovering || to == StateDisconnected || to == StateIncompatible || to == StateStopping
+				want = to == StateHandshaking || to == StateRecovering || to == StateDisconnected || to == StateDegraded || to == StateIncompatible || to == StateStopping
 			case StateHandshaking:
-				want = to == StateSynchronizing || to == StateRecovering || to == StateDisconnected || to == StateIncompatible || to == StateStopping
+				want = to == StateSynchronizing || to == StateRecovering || to == StateDisconnected || to == StateDegraded || to == StateIncompatible || to == StateStopping
 			case StateSynchronizing:
-				want = to == StateReady || to == StateRecovering || to == StateDisconnected || to == StateIncompatible || to == StateStopping
+				want = to == StateReady || to == StateRecovering || to == StateDisconnected || to == StateDegraded || to == StateIncompatible || to == StateStopping
 			case StateReady:
 				want = to == StateDegraded || to == StateRecovering || to == StateDisconnected || to == StateIncompatible || to == StateStopping
 			case StateDegraded:
 				want = to == StateReady || to == StateRecovering || to == StateDisconnected || to == StateIncompatible || to == StateStopping
 			case StateRecovering:
-				want = to == StateConnecting || to == StateHandshaking || to == StateSynchronizing || to == StateDisconnected || to == StateIncompatible || to == StateStopping
+				want = to == StateConnecting || to == StateHandshaking || to == StateSynchronizing || to == StateDisconnected || to == StateDegraded || to == StateIncompatible || to == StateStopping
 			case StateIncompatible:
 				want = to == StateStopping
 			case StateStopping:

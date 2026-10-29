@@ -349,15 +349,15 @@ var legalTransitions = map[State]map[State]struct{}{
 	},
 	StateConnecting: {
 		StateHandshaking: {}, StateRecovering: {}, StateDisconnected: {},
-		StateIncompatible: {}, StateStopping: {},
+		StateDegraded: {}, StateIncompatible: {}, StateStopping: {},
 	},
 	StateHandshaking: {
 		StateSynchronizing: {}, StateRecovering: {}, StateDisconnected: {},
-		StateIncompatible: {}, StateStopping: {},
+		StateDegraded: {}, StateIncompatible: {}, StateStopping: {},
 	},
 	StateSynchronizing: {
 		StateReady: {}, StateRecovering: {}, StateDisconnected: {},
-		StateIncompatible: {}, StateStopping: {},
+		StateDegraded: {}, StateIncompatible: {}, StateStopping: {},
 	},
 	StateReady: {
 		StateDegraded: {}, StateRecovering: {}, StateDisconnected: {},
@@ -369,7 +369,8 @@ var legalTransitions = map[State]map[State]struct{}{
 	},
 	StateRecovering: {
 		StateConnecting: {}, StateHandshaking: {}, StateSynchronizing: {},
-		StateDisconnected: {}, StateIncompatible: {}, StateStopping: {},
+		StateDisconnected: {}, StateDegraded: {}, StateIncompatible: {},
+		StateStopping: {},
 	},
 	StateIncompatible: {
 		StateStopping: {},
