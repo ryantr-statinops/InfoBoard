@@ -1,0 +1,62 @@
+{
+  "fixture_id": "FX-REPAIR-BOUNDS",
+  "owner_phase": "IP-16",
+  "requirement_ids": [
+    "FR-012",
+    "NFR-006"
+  ],
+  "cases": [
+    {
+      "name": "connection_failures_then_success",
+      "operation": "retry_connection",
+      "connection_failures": 2,
+      "expected_status": "succeeded",
+      "expected_attempts": 3,
+      "expected_backoff_ms": [
+        1,
+        2
+      ]
+    },
+    {
+      "name": "connection_exhaustion",
+      "operation": "retry_connection",
+      "connection_failures": 99,
+      "expected_status": "exhausted",
+      "expected_attempts": 3,
+      "expected_action": "open_diagnostics",
+      "expected_second_status": "cooldown"
+    },
+    {
+      "name": "dropped_event_resync",
+      "operation": "resync_projection",
+      "revisions": [
+        1,
+        2
+      ],
+      "expected_status": "succeeded",
+      "newer_revision_cancels_older": true
+    },
+    {
+      "name": "rebuild_cancellation",
+      "operation": "rebuild_index",
+      "cancel": true,
+      "expected_status": "cancelled",
+      "expected_index": "failed"
+    },
+    {
+      "name": "persistence_reopen_timeout",
+      "operation": "repair_persistence",
+      "block": true,
+      "deadline_ms": 50,
+      "expected_status": "cancelled",
+      "expected_attempts": 1
+    },
+    {
+      "name": "repeated_user_repair",
+      "operation": "retry_connection",
+      "connection_failures": 99,
+      "repeat": true,
+      "expected_second_status": "cooldown"
+    }
+  ]
+}

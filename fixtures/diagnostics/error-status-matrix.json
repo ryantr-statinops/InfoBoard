@@ -1,0 +1,130 @@
+{
+  "fixture_id": "FX-ERROR-STATUS-MATRIX",
+  "owner_phase": "IP-16",
+  "requirement_ids": [
+    "FR-012",
+    "NFR-006"
+  ],
+  "cases": [
+    {
+      "error_class": "INVALID_FRAME",
+      "status": "runtime_protocol_error",
+      "retryable": false,
+      "action": "reconnect",
+      "max_attempts": 0,
+      "total_budget_ms": 0
+    },
+    {
+      "error_class": "PROTOCOL_MISMATCH",
+      "status": "runtime_incompatible",
+      "retryable": false,
+      "action": "update_host",
+      "max_attempts": 0,
+      "total_budget_ms": 0
+    },
+    {
+      "error_class": "PROFILE_MISMATCH",
+      "status": "profile_refresh_required",
+      "retryable": true,
+      "action": "refresh_profile",
+      "max_attempts": 1,
+      "total_budget_ms": 2000
+    },
+    {
+      "error_class": "PAYLOAD_LIMIT",
+      "status": "input_too_large",
+      "retryable": false,
+      "action": "shorten_query",
+      "max_attempts": 0,
+      "total_budget_ms": 0
+    },
+    {
+      "error_class": "SNAPSHOT_REQUIRED",
+      "status": "projection_refresh_required",
+      "retryable": true,
+      "action": "refresh_projection",
+      "max_attempts": 1,
+      "total_budget_ms": 2000
+    },
+    {
+      "error_class": "REVISION_MISMATCH",
+      "status": "results_refresh_required",
+      "retryable": true,
+      "action": "refresh_projection",
+      "max_attempts": 1,
+      "total_budget_ms": 2000
+    },
+    {
+      "error_class": "INDEX_REBUILDING",
+      "status": "index_rebuilding",
+      "retryable": true,
+      "action": "wait",
+      "max_attempts": 1,
+      "total_budget_ms": 2000
+    },
+    {
+      "error_class": "QUERY_TIMEOUT",
+      "status": "query_timed_out",
+      "retryable": true,
+      "action": "retry",
+      "max_attempts": 1,
+      "total_budget_ms": 1000
+    },
+    {
+      "error_class": "PERSISTENCE_DEGRADED",
+      "status": "persistence_degraded",
+      "retryable": true,
+      "action": "repair_persistence",
+      "max_attempts": 3,
+      "total_budget_ms": 5000
+    },
+    {
+      "error_class": "HOST_SHUTDOWN",
+      "status": "runtime_restarting",
+      "retryable": true,
+      "action": "reconnect",
+      "max_attempts": 3,
+      "total_budget_ms": 5000
+    },
+    {
+      "error_class": "INTERNAL_FAILURE",
+      "status": "runtime_recoverable_error",
+      "retryable": true,
+      "action": "retry",
+      "max_attempts": 1,
+      "total_budget_ms": 1000
+    },
+    {
+      "error_class": "HOST_MISSING",
+      "status": "runtime_unavailable",
+      "retryable": true,
+      "action": "reconnect",
+      "max_attempts": 3,
+      "total_budget_ms": 5000
+    },
+    {
+      "error_class": "PERMISSION_LIMITED",
+      "status": "permission_limited",
+      "retryable": true,
+      "action": "retry",
+      "max_attempts": 1,
+      "total_budget_ms": 1000
+    },
+    {
+      "error_class": "STORAGE_QUARANTINED",
+      "status": "persistence_quarantined",
+      "retryable": true,
+      "action": "repair_persistence",
+      "max_attempts": 1,
+      "total_budget_ms": 10000
+    },
+    {
+      "error_class": "SCHEMA_UPGRADE_REQUIRED",
+      "status": "persistence_upgrade_required",
+      "retryable": false,
+      "action": "update_host",
+      "max_attempts": 0,
+      "total_budget_ms": 0
+    }
+  ]
+}

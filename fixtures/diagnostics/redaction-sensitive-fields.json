@@ -1,0 +1,55 @@
+{
+  "fixture_id": "FX-REDACTION-SENSITIVE-FIELDS",
+  "owner_phase": "IP-16",
+  "requirement_ids": [
+    "NFR-009",
+    "FR-012"
+  ],
+  "sensitive_values": [
+    "https://example.test/path?token=secret#fragment",
+    "Private payroll tab title",
+    "secret search query",
+    "Bearer abc.def.ghi",
+    "page body content",
+    "browser-42",
+    "tab-99",
+    "private context payload"
+  ],
+  "context": {
+    "event_id": "https://example.test/path?token=secret#fragment",
+    "session_id": "Bearer abc.def.ghi",
+    "component": "Private payroll tab title",
+    "from_state": "secret search query",
+    "to_state": "page body content",
+    "reason_code": "https://example.test/path?token=secret#fragment",
+    "error_class": "Private payroll tab title",
+    "status": "https://example.test/path?token=secret#fragment",
+    "recommended_action": "secret search query",
+    "ranking_model_version": "https://example.test/path?token=secret#fragment",
+    "host_version": "page body content",
+    "profile_scope": "Bearer abc.def.ghi",
+    "context_kind": "Private payroll tab title",
+    "counts": {
+      "records": "Private payroll tab title",
+      "unknown_count": 7
+    },
+    "title": "Private payroll tab title",
+    "url": "https://example.test/path?token=secret#fragment",
+    "query": "secret search query",
+    "token": "Bearer abc.def.ghi",
+    "content": "page body content",
+    "browser_id": "browser-42",
+    "tab_id": "tab-99",
+    "private_context_data": "private context payload"
+  },
+  "expected_absent": [
+    "https://example.test/path?token=secret#fragment",
+    "Private payroll tab title",
+    "secret search query",
+    "Bearer abc.def.ghi",
+    "page body content",
+    "browser-42",
+    "tab-99",
+    "private context payload"
+  ]
+}

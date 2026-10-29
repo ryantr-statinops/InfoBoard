@@ -3829,6 +3829,179 @@
           "Untrusted path input cannot escape the reviewed manifest or follow a symlink outside it."
         ]
       }
+    },
+    {
+      "fixture_id": "FX-HEALTH-TRANSITIONS",
+      "owner_phase": "IP-16",
+      "requirement_ids": [
+        "FR-012",
+        "NFR-006"
+      ],
+      "category": "host",
+      "input": {
+        "fixture_file": "fixtures/diagnostics/health-transitions.jsonl",
+        "transition_count": 8
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "final_health",
+            "value": "stopping"
+          },
+          {
+            "signal": "event_count",
+            "value": 8
+          },
+          {
+            "signal": "index_freshness",
+            "value": "current"
+          },
+          {
+            "signal": "lexical_available",
+            "value": false
+          }
+        ],
+        "privacy_assertions": [
+          "Transition records contain bounded states, versions, revisions, counts, and opaque correlation identifiers only."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-ERROR-STATUS-MATRIX",
+      "owner_phase": "IP-16",
+      "requirement_ids": [
+        "FR-012",
+        "NFR-006"
+      ],
+      "category": "host",
+      "input": {
+        "fixture_file": "fixtures/diagnostics/error-status-matrix.json",
+        "case_count": 15
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "mapped_classes",
+            "value": 15
+          },
+          {
+            "signal": "retryability_explicit",
+            "value": true
+          },
+          {
+            "signal": "status_vocabulary_stable",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Every mapped status and action is a bounded enum; raw error text and request fields are never echoed."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-REDACTION-SENSITIVE-FIELDS",
+      "owner_phase": "IP-16",
+      "requirement_ids": [
+        "FR-012",
+        "NFR-009"
+      ],
+      "category": "privacy",
+      "input": {
+        "fixture_file": "fixtures/diagnostics/redaction-sensitive-fields.json",
+        "sensitive_slot_count": 20
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "sensitive_values_absent",
+            "value": true
+          },
+          {
+            "signal": "unknown_fields_dropped",
+            "value": true
+          },
+          {
+            "signal": "private_context_isolated",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Titles, URLs, query text, tokens, page content, browser IDs, tab IDs, and private-context payloads never reach persisted or exported diagnostics."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-REPAIR-BOUNDS",
+      "owner_phase": "IP-16",
+      "requirement_ids": [
+        "FR-012",
+        "NFR-006"
+      ],
+      "category": "host",
+      "input": {
+        "fixture_file": "fixtures/diagnostics/repair-bounds.json",
+        "case_count": 6
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "attempt_bound",
+            "value": 3
+          },
+          {
+            "signal": "deadline_bound",
+            "value": true
+          },
+          {
+            "signal": "cooldown_bound",
+            "value": true
+          },
+          {
+            "signal": "newer_revision_cancels_older",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Repair outcomes expose operation, attempts, elapsed duration, final health, retryability, and action only."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-RETENTION-BOUNDARIES",
+      "owner_phase": "IP-16",
+      "requirement_ids": [
+        "FR-012",
+        "NFR-006"
+      ],
+      "category": "host",
+      "input": {
+        "fixture_file": "fixtures/diagnostics/retention-boundaries.json",
+        "max_age_seconds": 604800,
+        "max_bytes": 10000000
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "age_boundary",
+            "value": "strictly_older_than_seven_days"
+          },
+          {
+            "signal": "byte_boundary",
+            "value": "oldest_first_until_at_most_10000000"
+          },
+          {
+            "signal": "oldest_first",
+            "value": true
+          },
+          {
+            "signal": "final_total_lte",
+            "value": 10000000
+          }
+        ],
+        "privacy_assertions": [
+          "Retention counters and eviction outcomes contain counts and enum states only; evicted payload content is not re-emitted."
+        ]
+      }
     }
   ],
   "future_check_contracts": [
@@ -4111,15 +4284,19 @@
     {
       "phase": "IP-16",
       "fixture_ids": [
-        "FX-HOST-DOWN"
+        "FX-HEALTH-TRANSITIONS",
+        "FX-ERROR-STATUS-MATRIX",
+        "FX-REDACTION-SENSITIVE-FIELDS",
+        "FX-REPAIR-BOUNDS",
+        "FX-RETENTION-BOUNDARIES"
       ],
       "requirement_ids": [
         "FR-012"
       ],
       "ownership_relation": "primary",
-      "fixture_signal": "retryable",
-      "acceptance_signal": "Host failure is surfaced as bounded, actionable, retryable status.",
-      "handoff_note": "IP-16 owns health and diagnostics; its full transition suite extends this baseline."
+      "fixture_signal": "final_health",
+      "acceptance_signal": "Health transitions, error status, redaction, repair bounds, and retention boundaries are explicit and observable.",
+      "handoff_note": "IP-16 owns health and diagnostics; the full transition suite extends the IP-06 host-down baseline."
     },
     {
       "phase": "IP-17",
