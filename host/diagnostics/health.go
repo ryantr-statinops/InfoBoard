@@ -242,11 +242,12 @@ func (observe ObserverFunc) Observe(snapshot Snapshot) { observe(snapshot) }
 // its monotonic event sequence atomically so readers cannot observe a new state
 // with old freshness metadata.
 type Health struct {
-	mu          sync.Mutex
-	now         func() time.Time
-	snapshot    Snapshot
-	observers   []Observer
-	transitions uint64
+	mu             sync.Mutex
+	now            func() time.Time
+	snapshot       Snapshot
+	observers      []Observer
+	transitionHook func(Snapshot)
+	transitions    uint64
 }
 
 // NewHealth builds a health model from an initial snapshot. A nil clock uses
@@ -273,6 +274,19 @@ func (health *Health) Snapshot() Snapshot {
 	health.mu.Lock()
 	defer health.mu.Unlock()
 	return health.snapshot
+}
+
+// SetTransitionHook installs the single pre-publication transition hook. The
+// hook runs while the health lock is held and before the new snapshot becomes
+// visible, so a transition event and its state are ordered atomically. The hook
+// must be bounded and must not call back into Health.
+func (health *Health) SetTransitionHook(hook func(Snapshot)) {
+	if health == nil {
+		return
+	}
+	health.mu.Lock()
+	health.transitionHook = hook
+	health.mu.Unlock()
 }
 
 // Subscribe registers an observer. Observers are invoked after the lock is
@@ -306,6 +320,9 @@ func (health *Health) Transition(next Snapshot) error {
 	health.transitions++
 	next.EventSequence = current.EventSequence + 1
 	next.UpdatedAt = health.now()
+	if health.transitionHook != nil {
+		health.transitionHook(next)
+	}
 	health.snapshot = next
 	published := next
 	observers := append([]Observer(nil), health.observers...)
