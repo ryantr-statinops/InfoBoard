@@ -195,6 +195,11 @@ func (controller *RepairController) Run(ctx context.Context, operation RepairOpe
 		err := controller.invoke(operationContext, operation, attempt, revision)
 		if err == nil {
 			if operation == RepairRebuildIndex {
+				if controller.health != nil && controller.health.Snapshot().ProjectionRevision != revision {
+					controller.finishIndexRebuild(revision, false)
+					controller.record(ReasonIndexBuildFailure, ErrorRevisionMismatch, ActionRefreshProjection, true)
+					return controller.result(operation, RepairFailed, attempts, controller.elapsed(start), true, ActionRefreshProjection, ErrorRevisionMismatch, controller.finalHealth())
+				}
 				controller.finishIndexRebuild(revision, true)
 			}
 			if operation == RepairRepairPersistence {

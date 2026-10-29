@@ -213,6 +213,19 @@ func TestRepairIndexSuccessAndCancellation(t *testing.T) {
 	}
 }
 
+func TestRepairIndexRejectsMismatchedRevision(t *testing.T) {
+	backend := &fakeRepairBackend{}
+	health, _, controller := repairFixture(t, readySnapshot(), backend)
+	result := controller.Run(context.Background(), RepairRebuildIndex, 8)
+	if result.Status != RepairFailed || result.ErrorClass != ErrorRevisionMismatch {
+		t.Fatalf("mismatched revision result = %+v", result)
+	}
+	snapshot := health.Snapshot()
+	if snapshot.ProjectionRevision != 7 || snapshot.IndexedRevision != 7 || snapshot.Index != IndexFailed {
+		t.Fatalf("mismatched revision snapshot = %+v", snapshot)
+	}
+}
+
 func TestRepairPersistenceSchemaUpgradeStops(t *testing.T) {
 	backend := &fakeRepairBackend{persistenceErr: NewSafeError(ErrorSchemaUpgradeRequired, errors.New("future schema"))}
 	_, _, controller := repairFixture(t, readySnapshot(), backend)
