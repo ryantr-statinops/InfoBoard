@@ -73,6 +73,9 @@ type ValidatedFrame struct {
 // allowed to decode or apply a request. IP-07 owns envelope and payload limits;
 // this function consumes its decoders rather than duplicating them.
 func ValidateFrame(frame []byte, bound Scope, limits protocol.Limits) (ValidatedFrame, *protocol.Error) {
+	if failure := ValidateFrameBytes(len(frame)); failure != nil {
+		return ValidatedFrame{}, failure
+	}
 	envelope, failure := protocol.DecodeEnvelope(frame, limits)
 	if failure != nil {
 		return ValidatedFrame{}, failure
@@ -94,9 +97,15 @@ func ValidateFrame(frame []byte, bound Scope, limits protocol.Limits) (Validated
 		if failure != nil {
 			return ValidatedFrame{}, failure
 		}
+		if failure := ValidateOperatingTabCount(len(snapshot.Tabs)); failure != nil {
+			return ValidatedFrame{}, failure
+		}
 		for _, record := range snapshot.Tabs {
 			if !bound.matchesRecord(record) {
 				return ValidatedFrame{}, protocol.NewError(protocol.CodeProfileMismatch)
+			}
+			if failure := ValidateRecord(record, limits); failure != nil {
+				return ValidatedFrame{}, failure
 			}
 		}
 	case protocol.TypeDelta:
@@ -104,13 +113,25 @@ func ValidateFrame(frame []byte, bound Scope, limits protocol.Limits) (Validated
 		if failure != nil {
 			return ValidatedFrame{}, failure
 		}
+		if failure := ValidateDeltaOperationCount(len(delta.Operations), limits); failure != nil {
+			return ValidatedFrame{}, failure
+		}
 		for _, operation := range delta.Operations {
-			if operation.Record != nil && !bound.matchesRecord(*operation.Record) {
-				return ValidatedFrame{}, protocol.NewError(protocol.CodeProfileMismatch)
+			if operation.Record != nil {
+				if !bound.matchesRecord(*operation.Record) {
+					return ValidatedFrame{}, protocol.NewError(protocol.CodeProfileMismatch)
+				}
+				if failure := ValidateRecord(*operation.Record, limits); failure != nil {
+					return ValidatedFrame{}, failure
+				}
 			}
 		}
 	case protocol.TypeQuery:
-		if _, failure := protocol.DecodeQuery(envelope.Payload, limits); failure != nil {
+		query, failure := protocol.DecodeQuery(envelope.Payload, limits)
+		if failure != nil {
+			return ValidatedFrame{}, failure
+		}
+		if failure := ValidateQuery(query, limits); failure != nil {
 			return ValidatedFrame{}, failure
 		}
 	case protocol.TypeActivationObserved, protocol.TypeActivationFailed:

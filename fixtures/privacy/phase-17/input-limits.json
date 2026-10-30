@@ -1,0 +1,90 @@
+{
+  "fixture_id": "FX-PRIVACY-INPUT-LIMITS",
+  "owner_phase": "IP-17",
+  "requirement_ids": ["NFR-007", "FR-015"],
+  "operating_tab_limit": 1000,
+  "cases": [
+    {
+      "case_id": "frame_too_large",
+      "kind": "frame_bytes",
+      "observed": 1048577,
+      "expected": "PAYLOAD_LIMIT",
+      "bound": "frame_bytes<=1048576"
+    },
+    {
+      "case_id": "payload_too_large",
+      "kind": "payload_bytes",
+      "observed": 262145,
+      "expected": "PAYLOAD_LIMIT",
+      "bound": "payload_bytes<=262144"
+    },
+    {
+      "case_id": "query_too_long",
+      "kind": "query_scalars",
+      "observed": 513,
+      "expected": "PAYLOAD_LIMIT",
+      "bound": "query_scalars<=512"
+    },
+    {
+      "case_id": "result_limit_zero",
+      "kind": "result_limit",
+      "observed": 0,
+      "expected": "PAYLOAD_LIMIT",
+      "bound": "result_limit<=50"
+    },
+    {
+      "case_id": "result_limit_high",
+      "kind": "result_limit",
+      "observed": 51,
+      "expected": "PAYLOAD_LIMIT",
+      "bound": "result_limit<=50"
+    },
+    {
+      "case_id": "snapshot_operating_tabs",
+      "kind": "snapshot_tabs",
+      "observed": 1001,
+      "expected": "PAYLOAD_LIMIT",
+      "bound": "operating_tabs<=1000"
+    },
+    {
+      "case_id": "delta_operations",
+      "kind": "delta_operations",
+      "observed": 1001,
+      "expected": "PAYLOAD_LIMIT",
+      "bound": "delta_operations<=1000"
+    },
+    {
+      "case_id": "negative_window",
+      "kind": "negative_window",
+      "observed": -1,
+      "expected": "INVALID_FRAME"
+    },
+    {
+      "case_id": "malformed_url",
+      "kind": "malformed_url",
+      "observed": "not a url",
+      "expected": "INVALID_FRAME"
+    },
+    {
+      "case_id": "valid_query_at_bound",
+      "kind": "valid_query",
+      "observed": 512,
+      "expected": "ok"
+    }
+  ],
+  "expected": {
+    "observations": [
+      {
+        "signal": "bounded_inputs_rejected_before_work",
+        "value": true
+      },
+      {
+        "signal": "operating_tab_limit",
+        "value": 1000
+      }
+    ],
+    "privacy_assertions": [
+      "Oversized frames, payloads, queries, result limits, snapshots, deltas, malformed URLs, and invalid context values are rejected before projection, index, or storage work."
+    ]
+  }
+}
