@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -114,6 +115,39 @@ def audit_matrix(fixtures: Path) -> list[str]:
     return findings
 
 
+def fixture_hashes(fixtures: Path) -> dict[str, str]:
+    hashes: dict[str, str] = {}
+    for path in sorted(fixtures.rglob("*")):
+        if not path.is_file() or path.suffix == ".sqlite":
+            continue
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        hashes[path.relative_to(fixtures).as_posix()] = digest
+    return hashes
+
+
+def storage_classes(fixtures: Path) -> dict[str, int]:
+    field_fixture = read_json(fixtures / "field-classes.json")
+    classes = field_fixture.get("classes", [])
+    fields = field_fixture.get("fields", [])
+    counts = {str(name): 0 for name in classes}
+    field_rows = fields if isinstance(fields, list) else []
+    for field in field_rows:
+        if isinstance(field, dict) and field.get("field_class") in counts:
+            counts[field["field_class"]] += 1
+    return counts
+
+
+def api_call_set(source_root: Path) -> list[str]:
+    calls: set[str] = set()
+    pattern = re.compile(r"\bchrome\??\.([A-Za-z0-9_]+)")
+    for path in sorted(source_root.rglob("*")):
+        if path.suffix not in {".ts", ".html"} or not path.is_file():
+            continue
+        for match in pattern.finditer(path.read_text(encoding="utf-8")):
+            calls.add(match.group(1))
+    return sorted(calls)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, required=True)
@@ -138,6 +172,10 @@ def main() -> int:
         "permissions": sorted(manifest.get("permissions", [])),
         "commands": sorted(manifest.get("commands", {})),
         "source_root": args.source.as_posix(),
+        "api_call_set": api_call_set(args.source),
+        "storage_classes": storage_classes(args.fixtures),
+        "retention_limits": read_json(args.fixtures / "retention-audit.json").get("limits", {}),
+        "fixture_hashes": fixture_hashes(args.fixtures),
     }
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))

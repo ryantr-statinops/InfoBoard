@@ -1,0 +1,129 @@
+{
+  "browsers": [
+    "chrome",
+    "edge"
+  ],
+  "contexts": [
+    "normal",
+    "private"
+  ],
+  "entries": [
+    {
+      "browser": "chrome",
+      "browser_path_found": true,
+      "browser_version": null,
+      "context": "normal",
+      "pass": false,
+      "reason": "branded_extension_sideload_requires_managed_profile_or_manual_ui",
+      "status": "blocked"
+    },
+    {
+      "browser": "chrome",
+      "browser_path_found": true,
+      "browser_version": null,
+      "context": "private",
+      "pass": false,
+      "reason": "branded_extension_sideload_requires_managed_profile_or_manual_ui",
+      "status": "blocked"
+    },
+    {
+      "browser": "edge",
+      "browser_path_found": true,
+      "browser_version": null,
+      "context": "normal",
+      "pass": false,
+      "reason": "branded_extension_sideload_requires_managed_profile_or_manual_ui",
+      "status": "blocked"
+    },
+    {
+      "browser": "edge",
+      "browser_path_found": true,
+      "browser_version": null,
+      "context": "private",
+      "pass": false,
+      "reason": "branded_extension_sideload_requires_managed_profile_or_manual_ui",
+      "status": "blocked"
+    }
+  ],
+  "excluded_surface": {
+    "expected_observations": [
+      {
+        "signal": "excluded_api_calls",
+        "value": 0
+      },
+      {
+        "signal": "network_requests",
+        "value": 0
+      },
+      {
+        "signal": "page_reads",
+        "value": 0
+      },
+      {
+        "signal": "external_transmissions",
+        "value": 0
+      }
+    ],
+    "journeys": [
+      "command_open",
+      "sync_snapshot",
+      "sync_delta",
+      "query",
+      "activation",
+      "reset",
+      "uninstall"
+    ],
+    "surfaces": [
+      {
+        "api_family": "history",
+        "expected": "absent",
+        "surface": "history"
+      },
+      {
+        "api_family": "bookmarks",
+        "expected": "absent",
+        "surface": "saved_items"
+      },
+      {
+        "api_family": "downloads",
+        "expected": "absent",
+        "surface": "downloads"
+      },
+      {
+        "api_family": "cookies",
+        "expected": "absent",
+        "surface": "cookies"
+      },
+      {
+        "api_family": "scripting_or_dom",
+        "expected": "absent",
+        "surface": "page_content"
+      },
+      {
+        "api_family": "web_request",
+        "expected": "absent",
+        "surface": "network_interception"
+      },
+      {
+        "api_family": "host_permissions",
+        "expected": "absent",
+        "surface": "broad_host_access"
+      },
+      {
+        "api_family": "network_fetch_or_beacon",
+        "expected": "absent",
+        "surface": "external_transmission"
+      }
+    ]
+  },
+  "fixture_id": "FX-PRIVACY-EXCLUDED-SURFACE",
+  "note": "Blocked entries are environment limitations, not passes. A real branded matrix remains release-gate work.",
+  "platform": "Windows-10-10.0.26300-SP0",
+  "summary": {
+    "all_pass": false,
+    "blocked": 4,
+    "fail": 0,
+    "pass": 0,
+    "total": 4
+  }
+}
