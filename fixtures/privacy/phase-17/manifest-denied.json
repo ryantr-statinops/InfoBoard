@@ -1,0 +1,22 @@
+{
+  "fixture_id": "FX-PRIVACY-PERMISSION-MATRIX-NEGATIVE",
+  "manifest_version": 3,
+  "name": "InfoBoard denied-capability probe",
+  "version": "0.0.0",
+  "permissions": ["storage", "tabs", "tabGroups", "nativeMessaging", "history", "cookies", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "optional_permissions": ["downloads"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "commands": {
+    "open-search": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y"
+      }
+    }
+  }
+}

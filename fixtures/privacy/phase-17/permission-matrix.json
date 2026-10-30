@@ -1,0 +1,150 @@
+{
+  "fixture_id": "FX-PRIVACY-PERMISSION-MATRIX",
+  "owner_phase": "IP-17",
+  "requirement_ids": [
+    "NFR-009",
+    "NFR-007"
+  ],
+  "capabilities": [
+    "command_registration",
+    "tab_metadata_and_activation",
+    "window_metadata_and_focus",
+    "tab_group_metadata",
+    "private_context",
+    "native_messaging",
+    "extension_local_storage",
+    "excluded_browser_surfaces"
+  ],
+  "matrix": [
+    {
+      "capability": "command_registration",
+      "product_use": "Open the focused search surface.",
+      "owner": "extension",
+      "requirement_ids": [
+        "FR-001",
+        "FR-002"
+      ],
+      "manifest_permission": null,
+      "denial_behavior": "Command remains visible or reports an install/configuration error; no runtime capability escalation.",
+      "evidence": "Manifest command inspection and FX-SHORTCUT-FOCUS."
+    },
+    {
+      "capability": "tab_metadata_and_activation",
+      "product_use": "Read eligible open-tab metadata and activate the validated current-scope tab.",
+      "owner": "extension",
+      "requirement_ids": [
+        "FR-003",
+        "FR-007"
+      ],
+      "manifest_permission": "tabs",
+      "denial_behavior": "Missing fields stay absent; search degrades to available fields and activation fails closed.",
+      "evidence": "Manifest audit, API spy, and tab event fixtures."
+    },
+    {
+      "capability": "window_metadata_and_focus",
+      "product_use": "Read window identity/label and focus the selected current-scope window.",
+      "owner": "extension",
+      "requirement_ids": [
+        "FR-003",
+        "FR-007"
+      ],
+      "manifest_permission": null,
+      "denial_behavior": "Missing labels degrade to no-label context; focus reports a bounded failure and never chooses another profile.",
+      "evidence": "Browser adapter capability test and activation fixture."
+    },
+    {
+      "capability": "tab_group_metadata",
+      "product_use": "Use optional group identity/label as display context.",
+      "owner": "extension",
+      "requirement_ids": [
+        "FR-003"
+      ],
+      "manifest_permission": "tabGroups",
+      "denial_behavior": "Group fields are omitted; ranking and display continue without group context.",
+      "evidence": "Permission matrix and denied-group fixture."
+    },
+    {
+      "capability": "private_context",
+      "product_use": "Separate eligible private records only when the browser grants access.",
+      "owner": "extension",
+      "requirement_ids": [
+        "FR-014",
+        "NFR-009"
+      ],
+      "manifest_permission": null,
+      "denial_behavior": "Report unavailable private context, collect nothing, and keep normal scope unchanged.",
+      "evidence": "Private grant/deny/teardown fixtures."
+    },
+    {
+      "capability": "native_messaging",
+      "product_use": "Send bounded local protocol messages to the registered Go host.",
+      "owner": "extension+host",
+      "requirement_ids": [
+        "FR-004",
+        "NFR-007"
+      ],
+      "manifest_permission": "nativeMessaging",
+      "denial_behavior": "Missing registration or origin mismatch yields unavailable/repairable state and sends no tab data.",
+      "evidence": "Manifest/host-registration inspection and handshake fixture."
+    },
+    {
+      "capability": "extension_local_storage",
+      "product_use": "Store only the opaque profile identity key in extension-local storage.",
+      "owner": "extension",
+      "requirement_ids": [
+        "NFR-009"
+      ],
+      "manifest_permission": "storage",
+      "denial_behavior": "Read/write failure fails closed before host/tab work; an invalid stored ID is not replaced.",
+      "evidence": "Exact-key storage spy and malformed-value fixture."
+    },
+    {
+      "capability": "excluded_browser_surfaces",
+      "product_use": "Not used. History, saved items, downloads, cookies, page content, network interception, and broad host access are outside the product boundary.",
+      "owner": "none",
+      "requirement_ids": [
+        "NFR-007",
+        "NFR-009"
+      ],
+      "manifest_permission": null,
+      "denial_behavior": "No data is collected and no permission prompt is shown. A future request requires a new decision record.",
+      "evidence": "Manifest denylist, source/API scan, and runtime spies."
+    }
+  ],
+  "approved_permissions": [
+    "nativeMessaging",
+    "storage",
+    "tabGroups",
+    "tabs"
+  ],
+  "approved_commands": [
+    "close-search",
+    "open-search"
+  ],
+  "denied_permissions": [
+    "bookmarks",
+    "browsingData",
+    "contentSettings",
+    "cookies",
+    "debugger",
+    "declarativeNetRequest",
+    "downloads",
+    "history",
+    "management",
+    "privacy",
+    "proxy",
+    "scripting",
+    "sessions",
+    "topSites",
+    "webNavigation",
+    "webRequest"
+  ],
+  "expected": {
+    "observations": [
+      {
+        "signal": "approved_capabilities_only",
+        "value": true
+      }
+    ]
+  }
+}
