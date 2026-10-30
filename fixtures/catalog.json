@@ -4002,6 +4002,358 @@
           "Retention counters and eviction outcomes contain counts and enum states only; evicted payload content is not re-emitted."
         ]
       }
+    },
+    {
+      "fixture_id": "FX-PRIVACY-PERMISSION-MATRIX",
+      "owner_phase": "IP-17",
+      "requirement_ids": [
+        "NFR-009",
+        "NFR-007"
+      ],
+      "category": "privacy",
+      "input": {
+        "fixture_file": "fixtures/privacy/phase-17/permission-matrix.json",
+        "capabilities": 8,
+        "approved_permissions": [
+          "nativeMessaging",
+          "storage",
+          "tabGroups",
+          "tabs"
+        ],
+        "approved_commands": [
+          "close-search",
+          "open-search"
+        ]
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "approved_capabilities_only",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Manifest permissions, commands, API calls, and capability mappings match the approved IP-17 matrix; denied capabilities are absent."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PRIVACY-PROFILE-CROSS-READ",
+      "owner_phase": "IP-17",
+      "requirement_ids": [
+        "FR-014",
+        "NFR-009"
+      ],
+      "category": "privacy",
+      "input": {
+        "fixture_file": "fixtures/privacy/phase-17/profile-cross-read.json",
+        "profiles": 2,
+        "attempts": 5
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "cross_profile_reads_rejected",
+            "value": true
+          },
+          {
+            "signal": "no_foreign_settings_or_diagnostics_read",
+            "value": true
+          }
+        ],
+        "failure_class": "PROFILE_MISMATCH",
+        "privacy_assertions": [
+          "A profile-B response, record, setting, diagnostic, or result reference is rejected before projection, index, or SQLite access."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PRIVACY-PROFILE-CROSS-ACTIVATE",
+      "owner_phase": "IP-17",
+      "requirement_ids": [
+        "FR-014",
+        "NFR-009"
+      ],
+      "category": "privacy",
+      "input": {
+        "fixture_file": "fixtures/privacy/phase-17/profile-cross-activate.json",
+        "cases": 2,
+        "expected_activation_calls": 0
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "foreign_activation_rejected",
+            "value": true
+          },
+          {
+            "signal": "activation_calls",
+            "value": 0
+          }
+        ],
+        "failure_class": "PROFILE_MISMATCH",
+        "privacy_assertions": [
+          "A result from another profile or context is rejected before any browser activation call and is never used as a fallback target."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PRIVACY-PRIVATE-SEPARATION",
+      "owner_phase": "IP-17",
+      "requirement_ids": [
+        "FR-014",
+        "NFR-009"
+      ],
+      "category": "privacy",
+      "input": {
+        "fixture_file": "fixtures/privacy/phase-17/private-separation.json",
+        "normal_count": 1,
+        "private_count": 1
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "private_records_isolated",
+            "value": true
+          },
+          {
+            "signal": "normal_projection_unchanged",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "A private record is never queryable from the normal scope, and a normal record is never queryable from the private scope."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PRIVACY-PRIVATE-TEARDOWN",
+      "owner_phase": "IP-17",
+      "requirement_ids": [
+        "FR-014",
+        "NFR-009"
+      ],
+      "category": "privacy",
+      "input": {
+        "fixture_file": "fixtures/privacy/phase-17/private-teardown.json",
+        "private_count_after_teardown": 0,
+        "normal_count_after_teardown": 1
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "private_memory_cleared",
+            "value": true
+          },
+          {
+            "signal": "late_response_ignored",
+            "value": true
+          }
+        ],
+        "failure_class": "PRIVATE_CONTEXT_ENDED",
+        "privacy_assertions": [
+          "Ending a private context removes its records and rejects a delayed response without falling back to normal state."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PRIVACY-PERMISSION-DENIED",
+      "owner_phase": "IP-17",
+      "requirement_ids": [
+        "FR-014",
+        "NFR-009"
+      ],
+      "category": "privacy",
+      "input": {
+        "fixture_file": "fixtures/privacy/phase-17/permission-denied.json",
+        "cases": 3
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "private_unavailable_without_escalation",
+            "value": true
+          },
+          {
+            "signal": "normal_scope_unchanged",
+            "value": true
+          }
+        ],
+        "failure_class": "PERMISSION_DENIED",
+        "privacy_assertions": [
+          "A denied or unavailable private capability collects nothing and never broadens permissions or inspects private tabs through another surface."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PRIVACY-REDACTION",
+      "owner_phase": "IP-17",
+      "requirement_ids": [
+        "NFR-009",
+        "NFR-007"
+      ],
+      "category": "privacy",
+      "input": {
+        "fixture_file": "fixtures/privacy/phase-17/redaction-sentinels.json",
+        "sentinel_count": 9,
+        "output_files": 3
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "sentinels_absent_from_outputs",
+            "value": true
+          },
+          {
+            "signal": "unknown_fields_dropped",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Title, URL credentials/query/fragment, query text, labels, cookie-like values, token-like values, tab IDs, private IDs, and arbitrary error text are absent from every persisted or exported output."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PRIVACY-SECRET-REJECTION",
+      "owner_phase": "IP-17",
+      "requirement_ids": [
+        "NFR-009",
+        "NFR-007"
+      ],
+      "category": "privacy",
+      "input": {
+        "fixture_file": "fixtures/privacy/phase-17/secret-rejection.json",
+        "cases": 6
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "secret_shapes_rejected",
+            "value": true
+          },
+          {
+            "signal": "raw_secret_echoed",
+            "value": false
+          }
+        ],
+        "failure_class": "FORBIDDEN_FIELD",
+        "privacy_assertions": [
+          "A secret-shaped field or value is rejected before diagnostics, storage, or export and the raw value is never echoed."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PRIVACY-INPUT-LIMITS",
+      "owner_phase": "IP-17",
+      "requirement_ids": [
+        "NFR-007",
+        "FR-015"
+      ],
+      "category": "privacy",
+      "input": {
+        "fixture_file": "fixtures/privacy/phase-17/input-limits.json",
+        "operating_tab_limit": 1000,
+        "cases": 10
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "bounded_inputs_rejected_before_work",
+            "value": true
+          },
+          {
+            "signal": "operating_tab_limit",
+            "value": 1000
+          }
+        ],
+        "failure_class": "PAYLOAD_LIMIT",
+        "privacy_assertions": [
+          "Oversized frames, payloads, queries, result limits, snapshots, deltas, malformed URLs, and invalid context values are rejected before projection, index, or storage work."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PRIVACY-RETENTION-AUDIT",
+      "owner_phase": "IP-17",
+      "requirement_ids": [
+        "NFR-009",
+        "FR-015"
+      ],
+      "category": "privacy",
+      "input": {
+        "fixture_file": "fixtures/privacy/phase-17/retention-audit.json",
+        "seed": "fixtures/privacy/phase-17/retention-seed.sql",
+        "activation_rows_per_profile": 500,
+        "activation_age_days": 30,
+        "diagnostics_age_days": 7,
+        "diagnostics_bytes": 10000000
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "activation_profile_count_bounded",
+            "value": true
+          },
+          {
+            "signal": "diagnostics_global_byte_budget_bounded",
+            "value": true
+          },
+          {
+            "signal": "private_rows_absent",
+            "value": true
+          },
+          {
+            "signal": "reset_profile_scoped",
+            "value": true
+          },
+          {
+            "signal": "uninstall_owned_tables_only",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Activation retention is profile-scoped at 500 rows and 30 days; diagnostics apply the IP-08 seven-day age rule and global 10,000,000-byte budget; no private row is present; reset removes only the requested profile's owned rows; uninstall removes only owned tables."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PRIVACY-EXCLUDED-SURFACE",
+      "owner_phase": "IP-17",
+      "requirement_ids": [
+        "NFR-007",
+        "NFR-009",
+        "FR-003"
+      ],
+      "category": "privacy",
+      "input": {
+        "fixture_file": "fixtures/privacy/phase-17/excluded-surface.json",
+        "journeys": 7,
+        "excluded_surfaces": 8
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "excluded_api_calls",
+            "value": 0
+          },
+          {
+            "signal": "network_requests",
+            "value": 0
+          },
+          {
+            "signal": "page_reads",
+            "value": 0
+          },
+          {
+            "signal": "external_transmissions",
+            "value": 0
+          }
+        ],
+        "privacy_assertions": [
+          "Command, sync, query, activation, reset, and uninstall journeys make no excluded browser API call, page read, network request, or external transmission."
+        ]
+      }
     }
   ],
   "future_check_contracts": [
@@ -4301,15 +4653,30 @@
     {
       "phase": "IP-17",
       "fixture_ids": [
+        "FX-PRIVACY-PERMISSION-MATRIX",
+        "FX-PRIVACY-PROFILE-CROSS-READ",
+        "FX-PRIVACY-PROFILE-CROSS-ACTIVATE",
+        "FX-PRIVACY-PRIVATE-SEPARATION",
+        "FX-PRIVACY-PRIVATE-TEARDOWN",
+        "FX-PRIVACY-PERMISSION-DENIED",
+        "FX-PRIVACY-REDACTION",
+        "FX-PRIVACY-SECRET-REJECTION",
+        "FX-PRIVACY-INPUT-LIMITS",
+        "FX-PRIVACY-RETENTION-AUDIT",
+        "FX-PRIVACY-EXCLUDED-SURFACE",
         "FX-PERMISSION-DENIED"
       ],
       "requirement_ids": [
-        "NFR-009"
+        "NFR-009",
+        "NFR-007",
+        "FR-014",
+        "FR-003",
+        "FR-015"
       ],
       "ownership_relation": "primary",
-      "fixture_signal": "tab_data_accepted",
-      "acceptance_signal": "Denied capability fails closed; excluded browser data is not accepted or emitted.",
-      "handoff_note": "IP-17 owns privacy/permission policy; its abuse matrix extends this baseline."
+      "fixture_signal": "approved_capabilities_only",
+      "acceptance_signal": "Permission, profile-isolation, private-lifetime, redaction, secret, limit, retention, and excluded-surface fixtures all pass without cross-profile data or permission escalation.",
+      "handoff_note": "IP-17 owns the privacy and permission policy; the branded browser matrix records blocked environments explicitly and the real matrix remains release-gate work."
     },
     {
       "phase": "IP-18",

@@ -17,7 +17,9 @@ func TestRetentionPolicyMatchesIP08AndProfileOwnership(t *testing.T) {
 	if storage.DiagnosticsRetentionMillis != 7*24*60*60*1000 {
 		t.Fatalf("diagnostics age = %d", storage.DiagnosticsRetentionMillis)
 	}
-	if storage.MaxDiagnosticsPayloadBytes != 10_000_000 {
+	// IP-08 owns the storage cap and defines it as 10 MiB. The IP-17 retention
+	// audit deliberately applies the stricter 10,000,000-byte contract cap.
+	if storage.MaxDiagnosticsPayloadBytes != 10*1024*1024 {
 		t.Fatalf("diagnostics bytes = %d", storage.MaxDiagnosticsPayloadBytes)
 	}
 	if ShouldPersistActivation(domain.ContextPrivate) {

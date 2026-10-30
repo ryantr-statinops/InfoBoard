@@ -10,7 +10,7 @@ async function json(path) {
 
 test('phase-16 diagnostics fixtures are registered without adding seams', async () => {
   const catalog = await json('fixtures/catalog.json');
-  assert.equal(catalog.fixtures.length, 82);
+  assert.equal(catalog.fixtures.length, 93);
   assert.equal(catalog.phase_seams.length, 19);
   const ids = new Set(catalog.fixtures.map(fixture => fixture.fixture_id));
   for (const fixture of [
