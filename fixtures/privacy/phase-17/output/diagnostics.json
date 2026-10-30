@@ -1,0 +1,25 @@
+[
+  {
+    "schema_version": 1,
+    "event_id": "event-0001",
+    "session_id": "session-0001",
+    "profile_scope": "local-sha256:0123456789abcdef",
+    "component": "diagnostics",
+    "from_state": "disconnected",
+    "to_state": "connecting",
+    "reason_code": "host_start",
+    "error_class": "none",
+    "retryable": true,
+    "duration_ms": 0,
+    "projection_revision": 0,
+    "protocol_version": 1,
+    "ranking_model_version": "rank-1",
+    "host_version": "0.1.0",
+    "counts": {
+      "records": 0,
+      "dropped": 0,
+      "retries": 0,
+      "failures": 0
+    }
+  }
+]
