@@ -1,0 +1,74 @@
+{
+  "fixture_id": "FX-PRIVACY-PROFILE-CROSS-ACTIVATE",
+  "owner_phase": "IP-17",
+  "requirement_ids": ["FR-014", "NFR-009", "FR-007"],
+  "scope_a": {
+    "browser_family": "chrome",
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "context_kind": "normal"
+  },
+  "scope_b": {
+    "browser_family": "chrome",
+    "profile_id": "123e4567-e89b-42d3-a456-426614174001",
+    "context_kind": "normal"
+  },
+  "epoch_a": "123e4567-e89b-42d3-a456-426614174010",
+  "revision": 7,
+  "cases": [
+    {
+      "case_id": "foreign_profile",
+      "reference": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174001",
+        "context_kind": "normal",
+        "query_sequence": 4,
+        "result_id": "result-7",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174010",
+        "projection_revision": 7,
+        "tab_id": 7,
+        "window_id": 2,
+        "tab_identity": {
+          "profile_id": "123e4567-e89b-42d3-a456-426614174001",
+          "context_kind": "normal",
+          "tab_id": 7
+        }
+      },
+      "expected": "profile_mismatch",
+      "expected_activation_calls": 0
+    },
+    {
+      "case_id": "foreign_context",
+      "reference": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+        "context_kind": "private",
+        "query_sequence": 4,
+        "result_id": "result-7",
+        "projection_epoch": "123e4567-e89b-42d3-a456-426614174010",
+        "projection_revision": 7,
+        "tab_id": 7,
+        "window_id": 2,
+        "tab_identity": {
+          "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+          "context_kind": "private",
+          "tab_id": 7
+        }
+      },
+      "expected": "context_mismatch",
+      "expected_activation_calls": 0
+    }
+  ],
+  "expected": {
+    "observations": [
+      {
+        "signal": "foreign_activation_rejected",
+        "value": true
+      },
+      {
+        "signal": "activation_calls",
+        "value": 0
+      }
+    ],
+    "privacy_assertions": [
+      "A result from another profile or context is rejected before any browser activation call and is never used as a fallback target."
+    ]
+  }
+}
