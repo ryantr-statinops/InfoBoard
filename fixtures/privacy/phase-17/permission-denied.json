@@ -1,0 +1,58 @@
+{
+  "fixture_id": "FX-PRIVACY-PERMISSION-DENIED",
+  "owner_phase": "IP-17",
+  "requirement_ids": ["FR-014", "NFR-009", "FR-003"],
+  "cases": [
+    {
+      "case_id": "private_permission_denied",
+      "browser_result": {
+        "ok": false,
+        "error": {
+          "kind": "permission_denied",
+          "retryable": false
+        }
+      },
+      "expected_state": "denied",
+      "expected_collect_private": false,
+      "expected_escalation": false
+    },
+    {
+      "case_id": "private_unsupported",
+      "browser_result": {
+        "ok": false,
+        "error": {
+          "kind": "unsupported",
+          "retryable": false
+        }
+      },
+      "expected_state": "unsupported",
+      "expected_collect_private": false,
+      "expected_escalation": false
+    },
+    {
+      "case_id": "private_disabled",
+      "browser_result": {
+        "ok": true,
+        "value": false
+      },
+      "expected_state": "unavailable",
+      "expected_collect_private": false,
+      "expected_escalation": false
+    }
+  ],
+  "expected": {
+    "observations": [
+      {
+        "signal": "private_unavailable_without_escalation",
+        "value": true
+      },
+      {
+        "signal": "normal_scope_unchanged",
+        "value": true
+      }
+    ],
+    "privacy_assertions": [
+      "A denied or unavailable private capability collects nothing and never broadens permissions or inspects private tabs through another surface."
+    ]
+  }
+}
