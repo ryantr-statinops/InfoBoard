@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "description": "IP-20 literal extension ID mappings, expected origins, and fail-closed validation rules.",
+  "origins": {
+    "chrome": {
+      "extension_id": "abcdefghijklmnopabcdefghijklmnop",
+      "expected_origin": "chrome-extension://abcdefghijklmnopabcdefghijklmnop/*",
+      "host_manifest_name": "com.infoboard.host.json",
+      "wildcard_allowed": false
+    },
+    "edge": {
+      "extension_id": "ponmlkjihgfedcbaponmlkjihgfedcba",
+      "expected_origin": "chrome-extension://ponmlkjihgfedcbaponmlkjihgfedcba/*",
+      "host_manifest_name": "com.infoboard.host.json",
+      "wildcard_allowed": false
+    }
+  },
+  "fail_closed_rules": {
+    "unknown_origin": "reject_connection_immediately",
+    "unresolved_placeholder": "refuse_registration",
+    "broad_origin_wildcard": "refuse_registration",
+    "protocol_major_mismatch": "fail_closed_protocol_mismatch",
+    "ranking_model_mismatch": "fail_closed_ranking_mismatch",
+    "storage_schema_mismatch": "fail_closed_schema_mismatch",
+    "profile_identity_mismatch": "fail_closed_profile_isolation"
+  }
+}
