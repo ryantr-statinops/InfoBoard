@@ -1,8 +1,9 @@
 # IP-17 evidence - Privacy, permissions, and profile isolation
 
-Status: implementation and executable phase checks passed on `dev` at `cbcb4eb`.
-The branded Chrome/Edge matrix is recorded as **blocked** with an exact reason and
-is not counted as a pass; the real matrix remains IP-19 release-gate work.
+Status: released via PR #28 (merge commit `6499686`); implementation and
+executable phase checks passed. The branded Chrome/Edge matrix is recorded as
+**blocked** with an exact reason and is not counted as a pass; the real matrix
+remains IP-19 release-gate work.
 
 ## Delivered contract
 
@@ -154,4 +155,4 @@ cbcb4eb feat(privacy): implement ip-17-t08
   branded verification remains IP-19 work.
 - IP-17 delivers policy modules and evidence without wiring them into the existing
   runtime composition. Full `host/cmd` composition remains IP-18/IP-20 work.
-- No release PR was opened. `dev` remains the integration branch at `cbcb4eb`.
+- Released via PR #28; `main` contains merge commit `6499686`.
