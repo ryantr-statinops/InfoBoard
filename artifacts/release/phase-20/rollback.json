@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "candidate_id": "RC-0.1.0-20261031",
+  "previous_id": "REL-0.0.9",
+  "run_timestamp": "2026-10-31T13:52:46.652075+00:00",
+  "platform": "windows",
+  "browser": "chrome",
+  "rehearsal_result": "PASS",
+  "drill_steps": [
+    {
+      "step": "install_candidate",
+      "status": "complete",
+      "version": "0.1.0"
+    },
+    {
+      "step": "upgrade_transaction",
+      "status": "no_op"
+    },
+    {
+      "step": "execute_rollback",
+      "status": "retryable",
+      "restored_version": "0.1.0"
+    },
+    {
+      "step": "post_rollback_health",
+      "health_ok": false,
+      "host_version": "0.0.9"
+    }
+  ],
+  "incompatible_downgrade_rejected_fail_closed": true,
+  "unrelated_browser_tabs_preserved": true,
+  "profile_isolation_intact": true
+}

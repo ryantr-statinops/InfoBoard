@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "description": "IP-20 Mapping from each IP-19 matrix cell to exact candidate artifacts and checksums.",
+  "cells": {
+    "C01": {
+      "cell_id": "C01",
+      "browser": "chrome",
+      "os": "linux",
+      "extension_package": "infoboard-extension-chrome-v0.1.0.zip",
+      "extension_sha256": "be3b0d79aae31349c0067d0a5140a97e89b05113f9a26ee5c2c44d63e56e0df8",
+      "host_binary": "host/linux/amd64/infoboard-host",
+      "host_installer": "infoboard-host-installer-linux-v0.1.0.zip",
+      "host_manifest": "host-manifests/linux/amd64/chrome/com.infoboard.host.json"
+    },
+    "C02": {
+      "cell_id": "C02",
+      "browser": "edge",
+      "os": "linux",
+      "extension_package": "infoboard-extension-edge-v0.1.0.zip",
+      "extension_sha256": "be3b0d79aae31349c0067d0a5140a97e89b05113f9a26ee5c2c44d63e56e0df8",
+      "host_binary": "host/linux/amd64/infoboard-host",
+      "host_installer": "infoboard-host-installer-linux-v0.1.0.zip",
+      "host_manifest": "host-manifests/linux/amd64/edge/com.infoboard.host.json"
+    },
+    "C03": {
+      "cell_id": "C03",
+      "browser": "chrome",
+      "os": "macos",
+      "extension_package": "infoboard-extension-chrome-v0.1.0.zip",
+      "extension_sha256": "be3b0d79aae31349c0067d0a5140a97e89b05113f9a26ee5c2c44d63e56e0df8",
+      "host_binary": "host/macos/amd64/infoboard-host",
+      "host_installer": "infoboard-host-installer-macos-v0.1.0.zip",
+      "host_manifest": "host-manifests/macos/amd64/chrome/com.infoboard.host.json"
+    },
+    "C04": {
+      "cell_id": "C04",
+      "browser": "edge",
+      "os": "macos",
+      "extension_package": "infoboard-extension-edge-v0.1.0.zip",
+      "extension_sha256": "be3b0d79aae31349c0067d0a5140a97e89b05113f9a26ee5c2c44d63e56e0df8",
+      "host_binary": "host/macos/amd64/infoboard-host",
+      "host_installer": "infoboard-host-installer-macos-v0.1.0.zip",
+      "host_manifest": "host-manifests/macos/amd64/edge/com.infoboard.host.json"
+    },
+    "C05": {
+      "cell_id": "C05",
+      "browser": "chrome",
+      "os": "windows",
+      "extension_package": "infoboard-extension-chrome-v0.1.0.zip",
+      "extension_sha256": "be3b0d79aae31349c0067d0a5140a97e89b05113f9a26ee5c2c44d63e56e0df8",
+      "host_binary": "host/windows/amd64/infoboard-host.exe",
+      "host_installer": "infoboard-host-installer-windows-v0.1.0.zip",
+      "host_manifest": "host-manifests/windows/amd64/chrome/com.infoboard.host.json"
+    },
+    "C06": {
+      "cell_id": "C06",
+      "browser": "edge",
+      "os": "windows",
+      "extension_package": "infoboard-extension-edge-v0.1.0.zip",
+      "extension_sha256": "be3b0d79aae31349c0067d0a5140a97e89b05113f9a26ee5c2c44d63e56e0df8",
+      "host_binary": "host/windows/amd64/infoboard-host.exe",
+      "host_installer": "infoboard-host-installer-windows-v0.1.0.zip",
+      "host_manifest": "host-manifests/windows/amd64/edge/com.infoboard.host.json"
+    }
+  }
+}

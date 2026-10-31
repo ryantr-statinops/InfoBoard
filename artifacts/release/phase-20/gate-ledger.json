@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "description": "IP-20 Final Release Gate Ledger.",
+  "generated_at": "2026-10-31T14:35:00Z",
+  "gates": {
+    "source_reproducibility": {
+      "status": "PASS",
+      "evidence": "SOURCE_DATE_EPOCH=0 builds yield byte-identical archives and SHA256SUMS"
+    },
+    "artifact_integrity": {
+      "status": "PASS",
+      "evidence": "21 release artifacts match exact SHA-256 in artifact-manifest.json and SHA256SUMS"
+    },
+    "version_compatibility": {
+      "status": "PASS",
+      "evidence": "Product v0.1.0, extension v0.1.0, host v0.1.0, protocol 1.0, schema 1, ranking rank-1 match policy"
+    },
+    "requirement_traceability": {
+      "status": "PASS",
+      "evidence": "traceability.json maps FR-001 through FR-015, NFR-001 through NFR-010, and OP-001 through OP-006"
+    },
+    "browser_matrix_compatibility": {
+      "status": "PASS",
+      "evidence": "matrix-report.json records C05 and C06 PASS on physical R-WINDOWS workstation; C01-C04 compliant BLOCKED"
+    },
+    "performance_hot_path": {
+      "status": "PASS",
+      "evidence": "NFR-001 p95=5.8ms (<=100ms), NFR-002 p95=1.1ms (<=50ms), NFR-003 p95=0.2ms (<=100ms)"
+    },
+    "accessibility_standards": {
+      "status": "PASS",
+      "evidence": "Pointer-free keyboard journeys, visible focus, contrast >= 4.5:1, 200% scale, 320x480 viewport"
+    },
+    "privacy_and_security": {
+      "status": "PASS",
+      "evidence": "Zero network requests, local-only execution, 4 approved permissions, profile isolation, redaction"
+    },
+    "failure_recovery": {
+      "status": "PASS",
+      "evidence": "Host down/crash, oversized frame, storage degraded, and missed event resync recover safely"
+    },
+    "lifecycle_idempotency": {
+      "status": "PASS",
+      "evidence": "Install, upgrade, repair, rollback, and uninstall converge cleanly across repeated runs"
+    },
+    "documentation_consistency": {
+      "status": "PASS",
+      "evidence": "Candidate versions, refactor contracts, and implementation evidence agree without drift"
+    },
+    "rollback_rehearsal": {
+      "status": "PASS",
+      "evidence": "Rollback drill rehearsed on disposable test profile; health restored cleanly"
+    },
+    "handoff_completeness": {
+      "status": "PASS",
+      "evidence": "Clean-checkout replay guide, diagnostic runbook, limitation ledger, and sign-offs present"
+    }
+  },
+  "overall_decision": "APPROVE_FOR_RELEASE"
+}

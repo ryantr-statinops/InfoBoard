@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "description": "Authoritative FR and NFR requirement mapping to implementation phases and acceptance signals.",
+  "requirements": [
+    {"req_id": "FR-001", "primary_owner": "IP-03", "supporting_phases": ["IP-13", "IP-18", "IP-19"], "acceptance_signal": "Configurable browser command opens focused surface"},
+    {"req_id": "FR-002", "primary_owner": "IP-13", "supporting_phases": ["IP-14", "IP-19"], "acceptance_signal": "Search input owns focus before text input without pointer use"},
+    {"req_id": "FR-003", "primary_owner": "IP-12", "supporting_phases": ["IP-04", "IP-10", "IP-17"], "acceptance_signal": "Eligible tab projection fields match query correctly"},
+    {"req_id": "FR-004", "primary_owner": "IP-12", "supporting_phases": ["IP-07", "IP-10", "IP-11"], "acceptance_signal": "Live query revision renders matching result revision"},
+    {"req_id": "FR-005", "primary_owner": "IP-11", "supporting_phases": ["IP-10", "IP-12"], "acceptance_signal": "Deterministic ranking order and provenance score"},
+    {"req_id": "FR-006", "primary_owner": "IP-13", "supporting_phases": ["IP-02", "IP-04"], "acceptance_signal": "Contextual result display distinguishes duplicate titles"},
+    {"req_id": "FR-007", "primary_owner": "IP-14", "supporting_phases": ["IP-03", "IP-04", "IP-19"], "acceptance_signal": "Keyboard Enter activates intended tab and window"},
+    {"req_id": "FR-008", "primary_owner": "IP-13", "supporting_phases": ["IP-03", "IP-19"], "acceptance_signal": "Escape dismisses search without mutating tab selection"},
+    {"req_id": "FR-009", "primary_owner": "IP-04", "supporting_phases": ["IP-05", "IP-09"], "acceptance_signal": "Browser tab events reconcile without duplicate IDs"},
+    {"req_id": "FR-010", "primary_owner": "IP-09", "supporting_phases": ["IP-05", "IP-06", "IP-16"], "acceptance_signal": "Full snapshot recovery restores projection consistency"},
+    {"req_id": "FR-011", "primary_owner": "IP-14", "supporting_phases": ["IP-04", "IP-12"], "acceptance_signal": "Stale activation result prevented from activating wrong tab"},
+    {"req_id": "FR-012", "primary_owner": "IP-16", "supporting_phases": ["IP-06", "IP-07"], "acceptance_signal": "Health freshness and lifecycle status observable"},
+    {"req_id": "FR-013", "primary_owner": "IP-12", "supporting_phases": ["IP-08", "IP-16"], "acceptance_signal": "Persistence failure degrades storage while lexical query succeeds"},
+    {"req_id": "FR-014", "primary_owner": "IP-17", "supporting_phases": ["IP-02", "IP-05", "IP-15"], "acceptance_signal": "Profile isolation and private-context ephemeral handling"},
+    {"req_id": "FR-015", "primary_owner": "IP-15", "supporting_phases": ["IP-08", "IP-18"], "acceptance_signal": "Reset and uninstall remove only InfoBoard-owned paths"},
+    {"req_id": "NFR-001", "primary_owner": "IP-13", "supporting_phases": ["IP-03", "IP-19"], "acceptance_signal": "Command dispatch to focus p95 <= 100 ms"},
+    {"req_id": "NFR-002", "primary_owner": "IP-12", "supporting_phases": ["IP-10", "IP-11", "IP-19"], "acceptance_signal": "Query to render 1,000 tabs p95 <= 50 ms"},
+    {"req_id": "NFR-003", "primary_owner": "IP-14", "supporting_phases": ["IP-04", "IP-19"], "acceptance_signal": "Selection to activation p95 <= 100 ms"},
+    {"req_id": "NFR-004", "primary_owner": "IP-11", "supporting_phases": ["IP-10", "IP-12"], "acceptance_signal": "Deterministic ranking checksum reproducibility"},
+    {"req_id": "NFR-005", "primary_owner": "IP-09", "supporting_phases": ["IP-04", "IP-05"], "acceptance_signal": "Snapshot convergence guarantees zero drift"},
+    {"req_id": "NFR-006", "primary_owner": "IP-16", "supporting_phases": ["IP-06", "IP-09", "IP-19"], "acceptance_signal": "Host recovery and rebuild without reinstall"},
+    {"req_id": "NFR-007", "primary_owner": "IP-17", "supporting_phases": ["IP-03", "IP-18", "IP-19"], "acceptance_signal": "Zero network requests and local hot path only"},
+    {"req_id": "NFR-008", "primary_owner": "IP-13", "supporting_phases": ["IP-19"], "acceptance_signal": "Pointer-free accessibility, visible focus, contrast"},
+    {"req_id": "NFR-009", "primary_owner": "IP-17", "supporting_phases": ["IP-18", "IP-19"], "acceptance_signal": "Privacy deny-by-default and redaction enforcement"},
+    {"req_id": "NFR-010", "primary_owner": "IP-19", "supporting_phases": ["IP-18"], "acceptance_signal": "Six-row cross-platform matrix evidence"}
+  ]
+}

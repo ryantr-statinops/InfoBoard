@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "validated_at": "2026-10-31T13:54:59.369165+00:00",
+  "candidate_id": "RC-0.1.0-20261031",
+  "release_version": "0.1.0",
+  "release_commit": "32e91cffec3638ccde919d61661f1802d79b0be2",
+  "checks": {
+    "candidate_identity": "PASS",
+    "requirements_coverage": "PASS",
+    "compatibility_policy": "PASS",
+    "artifact_manifest": "PASS",
+    "gate_ledger": "PASS",
+    "reviewer_signoff": "PASS"
+  },
+  "overall_result": "VALIDATED_AND_APPROVED_FOR_RELEASE"
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "description": "IP-20 synthetic profile and candidate state fixture for rollback drills.",
+  "profile_id": "profile-rollback-drill-01",
+  "browser_family": "chrome",
+  "open_tabs": [
+    {"tab_id": 1, "title": "InfoBoard Docs", "url": "https://example.com/docs"},
+    {"tab_id": 2, "title": "Search Surface", "url": "https://example.com/search"}
+  ],
+  "candidate_settings": {
+    "ranking_decay": 0.5,
+    "max_results": 20
+  },
+  "candidate_version": "0.1.0",
+  "previous_version": "0.0.9"
+}
