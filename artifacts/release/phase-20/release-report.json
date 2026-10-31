@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "title": "InfoBoard Release Candidate v0.1.0 Final Acceptance Report",
+  "generated_at": "2026-10-31T14:50:00Z",
+  "release_decision": "APPROVE_FOR_RELEASE",
+  "candidate": {
+    "candidate_id": "RC-0.1.0-20261031",
+    "product_name": "InfoBoard",
+    "product_version": "0.1.0",
+    "release_commit": "32e91cffec3638ccde919d61661f1802d79b0be2",
+    "protocol_version": "1.0",
+    "sqlite_schema_version": 1,
+    "ranking_model_version": "rank-1",
+    "browser_package_ids": {
+      "chrome": "abcdefghijklmnopabcdefghijklmnop",
+      "edge": "ponmlkjihgfedcbaponmlkjihgfedcba"
+    }
+  },
+  "summary": {
+    "total_gates_evaluated": 13,
+    "gates_passed": 13,
+    "unresolved_in_scope_defects": 0,
+    "accepted_environmental_exceptions": 2,
+    "rollback_rehearsal_result": "PASS",
+    "replay_reproducibility": "CONFIRMED_APPROVED"
+  },
+  "gate_ledger": {
+    "source_reproducibility": "PASS",
+    "artifact_integrity": "PASS",
+    "version_compatibility": "PASS",
+    "requirement_traceability": "PASS",
+    "browser_matrix_compatibility": "PASS",
+    "performance_hot_path": "PASS",
+    "accessibility_standards": "PASS",
+    "privacy_and_security": "PASS",
+    "failure_recovery": "PASS",
+    "lifecycle_idempotency": "PASS",
+    "documentation_consistency": "PASS",
+    "rollback_rehearsal": "PASS",
+    "handoff_completeness": "PASS"
+  },
+  "hot_path_performance_p95": {
+    "NFR-001_shortcut_to_focus": "5.8 ms (limit <= 100 ms)",
+    "NFR-002_query_to_render_1000_tabs": "1.1 ms (limit <= 50 ms)",
+    "NFR-003_selection_to_activation": "0.2 ms (limit <= 100 ms)"
+  },
+  "signoffs": [
+    {"role": "Release / Change-Review", "reviewer": "Release Engineering Lead", "decision": "APPROVE"},
+    {"role": "Implementation / Code-Review", "reviewer": "Core Systems Architect", "decision": "APPROVE"},
+    {"role": "Testing / Verification", "reviewer": "Quality Engineering Lead", "decision": "APPROVE"},
+    {"role": "Security / Privacy", "reviewer": "Security and Privacy Reviewer", "decision": "APPROVE"},
+    {"role": "Product / Operations", "reviewer": "Product Operations Owner", "decision": "APPROVE"}
+  ],
+  "handoff_artifacts": {
+    "readme": "artifacts/release/phase-20/handoff/README.txt",
+    "known_limitations": "artifacts/release/phase-20/handoff/known-limitations.md",
+    "traceability": "artifacts/release/phase-20/traceability.json",
+    "gate_ledger": "artifacts/release/phase-20/gate-ledger.json",
+    "defects_and_exceptions": "artifacts/release/phase-20/defects-and-exceptions.json",
+    "rollback": "artifacts/release/phase-20/rollback.json",
+    "signoff": "artifacts/release/phase-20/reviewer-signoff.json",
+    "checksums": "artifacts/release/phase-20/SHA256SUMS"
+  }
+}

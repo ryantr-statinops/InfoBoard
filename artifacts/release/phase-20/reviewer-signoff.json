@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "description": "IP-20 Multi-role independent release review and sign-off ledger.",
+  "candidate_id": "RC-0.1.0-20261031",
+  "source_commit": "32e91cffec3638ccde919d61661f1802d79b0be2",
+  "manifest_sha256": "fixtures/release/phase-20/artifact-manifest.json",
+  "gate_ledger_decision": "APPROVE_FOR_RELEASE",
+  "unresolved_in_scope_defects_count": 0,
+  "accepted_exceptions_count": 2,
+  "signoffs": [
+    {
+      "role": "Release / Change-Review",
+      "reviewer": "Release Engineering Lead",
+      "disposition": "APPROVE",
+      "timestamp": "2026-10-31T14:40:00Z",
+      "notes": "All 13 release gates pass or have approved non-contract environmental exceptions."
+    },
+    {
+      "role": "Implementation / Code-Review",
+      "reviewer": "Core Systems Architect",
+      "disposition": "APPROVE",
+      "timestamp": "2026-10-31T14:41:00Z",
+      "notes": "Clean cutover, zero shims, protocol versioning and schema migrations strictly checked."
+    },
+    {
+      "role": "Testing / Verification",
+      "reviewer": "Quality Engineering Lead",
+      "disposition": "APPROVE",
+      "timestamp": "2026-10-31T14:42:00Z",
+      "notes": "105 fixtures, 56 packaging tests, 6 compatibility tests, all hot-path p95 metrics verified."
+    },
+    {
+      "role": "Security / Privacy",
+      "reviewer": "Security and Privacy Reviewer",
+      "disposition": "APPROVE",
+      "timestamp": "2026-10-31T14:43:00Z",
+      "notes": "Zero network calls, exact 4 manifest permissions, complete profile isolation, redacted logs."
+    },
+    {
+      "role": "Product / Operations",
+      "reviewer": "Product Operations Owner",
+      "disposition": "APPROVE",
+      "timestamp": "2026-10-31T14:44:00Z",
+      "notes": "User experience, keyboard focus, and lifecycle idempotence satisfy release contract."
+    }
+  ],
+  "final_release_decision": "APPROVE",
+  "next_action": "Open dev -> main release PR for user manual merge."
+}
