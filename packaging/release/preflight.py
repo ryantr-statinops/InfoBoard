@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .archive import verify_sha256sums
+from .compatibility import release_tuple_errors
 from .config import ReleaseConfigError
 from .extension_package import inspect_extension_package
 from .host_manifest import validate_host_manifest
@@ -47,6 +48,12 @@ def preflight(
     require_publication: bool = False,
 ) -> PreflightResult:
     result = PreflightResult(ok=True)
+    compatibility_errors = release_tuple_errors(release)
+    result.add(
+        "release_compatibility",
+        not compatibility_errors,
+        "; ".join(compatibility_errors) or None,
+    )
     selected = tuple(browsers)
     if not selected or any(browser not in {"chrome", "edge"} for browser in selected):
         result.add("browsers", selected, "browsers must be chrome and/or edge")
