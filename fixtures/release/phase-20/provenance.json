@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "signer_identifier": "POLICY-UNSIGNED-CANDIDATE",
+    "signature_policy": "declared_unsigned_local_fixture_policy",
+    "signing_material_present_in_repo": false,
+    "build_environment": {
+      "builder": "packaging.release.build",
+      "toolchain": {
+        "go": "1.26+",
+        "node": "v20+",
+        "python": "3.11+"
+      },
+      "reproducibility": {
+        "SOURCE_DATE_EPOCH": 0,
+        "trimpath": true,
+        "buildvcs": false,
+        "byte_identical_verified": true
+      }
+    },
+    "verification_result": "PROVENANCE_AND_DETERMINISM_VERIFIED"
+  }
+}
