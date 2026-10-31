@@ -7,9 +7,13 @@
     { "id": "database-wal", "relative_path": "infoboard.sqlite-wal", "kind": "file" },
     { "id": "database-shm", "relative_path": "infoboard.sqlite-shm", "kind": "file" }
   ],
+  "packaging_entries": [
+    { "id": "host-binary", "relative_path": "host/infoboard-host", "kind": "file" },
+    { "id": "host-binary-windows", "relative_path": "host/infoboard-host.exe", "kind": "file" },
+    { "id": "host-manifest-chrome", "relative_path": "native-messaging/chrome/com.infoboard.host.json", "kind": "file" },
+    { "id": "host-manifest-edge", "relative_path": "native-messaging/edge/com.infoboard.host.json", "kind": "file" }
+  ],
   "deferred_entries": [
-    "platform native-messaging manifest",
-    "host binary",
     "extension package artifacts"
   ]
 }

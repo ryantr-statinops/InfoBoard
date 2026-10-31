@@ -116,10 +116,12 @@ def sha256_file(path: Path) -> str:
 def write_sha256sums(root: Path, output_name: str = "SHA256SUMS") -> Path:
     output = root / output_name
     lines: list[str] = []
-    for path in sorted(root.rglob("*")):
+    records: list[tuple[str, Path]] = []
+    for path in root.rglob("*"):
         if not path.is_file() or path == output:
             continue
-        relative = path.relative_to(root).as_posix()
+        records.append((path.relative_to(root).as_posix(), path))
+    for relative, path in sorted(records, key=lambda item: item[0]):
         lines.append(f"{sha256_file(path)}  {relative}")
     output.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     return output
