@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "release_version": "0.1.0",
+  "artifacts": [
+    {
+      "artifact_id": "ART-build-input-json",
+      "relative_path": "build-input.json",
+      "byte_count": 3648,
+      "sha256": "07642e8117a7bbec98accb7ac78b54222771fca953dcc8a2af090645e0a6a0e9",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-extension-ids-json",
+      "relative_path": "extension-ids.json",
+      "byte_count": 324,
+      "sha256": "866fafc79f2ed3332f4f9ec58ff3d495b6f9e95864cc0ffc46d3e7173724530d",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-host-linux-amd64-infoboard-host",
+      "relative_path": "host/linux/amd64/infoboard-host",
+      "byte_count": 11757898,
+      "sha256": "a67bf49e51d5e578afc718a44c44d877dc6ef8dffaaa70eeb4ec75b5cc53b257",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-host-macos-amd64-infoboard-host",
+      "relative_path": "host/macos/amd64/infoboard-host",
+      "byte_count": 11689648,
+      "sha256": "446419031ca4c8022854a783657b0fd427acb78d1db261146c98f2f7e7779e72",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-host-windows-amd64-infoboard-host-exe",
+      "relative_path": "host/windows/amd64/infoboard-host.exe",
+      "byte_count": 11765760,
+      "sha256": "bb42c1711ce8f299a7f2b2b7017157075abcc0ce39f970b71106d06ac4c3d676",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-host-manifests-linux-amd64-chrome-com-infoboard-host-json",
+      "relative_path": "host-manifests/linux/amd64/chrome/com.infoboard.host.json",
+      "byte_count": 270,
+      "sha256": "2d593e35c938e1a86ffc1c2eb42c07ebb413b0dd143d1e21236fcba331d4be1f",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-host-manifests-linux-amd64-edge-com-infoboard-host-json",
+      "relative_path": "host-manifests/linux/amd64/edge/com.infoboard.host.json",
+      "byte_count": 270,
+      "sha256": "9d9074c9a063b5942845d6f33c8a91c6aacd4414e32af27e0ede06f0613c97aa",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-host-manifests-macos-amd64-chrome-com-infoboard-host-json",
+      "relative_path": "host-manifests/macos/amd64/chrome/com.infoboard.host.json",
+      "byte_count": 286,
+      "sha256": "332c8aba375bfc856689a5d4a1b271d98f229e3d54d54b912c6ea5589595fb9f",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-host-manifests-macos-amd64-edge-com-infoboard-host-json",
+      "relative_path": "host-manifests/macos/amd64/edge/com.infoboard.host.json",
+      "byte_count": 286,
+      "sha256": "d8b4f59602c12ca8c968e698ab44d0a8e1a00bcc47dad654bbfaab48d22e00dd",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-host-manifests-windows-amd64-chrome-com-infoboard-host-json",
+      "relative_path": "host-manifests/windows/amd64/chrome/com.infoboard.host.json",
+      "byte_count": 285,
+      "sha256": "cfe5071a39df84c50b4db8e4dd8f801830c35aaf72e15cbde24339de874bf5c8",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-host-manifests-windows-amd64-edge-com-infoboard-host-json",
+      "relative_path": "host-manifests/windows/amd64/edge/com.infoboard.host.json",
+      "byte_count": 285,
+      "sha256": "ba06a8b117750bbc47a84d4a28742de657335fbe32486f87a57cb598e274ea8c",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-infoboard-extension-chrome-v0-1-0-zip",
+      "relative_path": "infoboard-extension-chrome-v0.1.0.zip",
+      "byte_count": 76731,
+      "sha256": "be3b0d79aae31349c0067d0a5140a97e89b05113f9a26ee5c2c44d63e56e0df8",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-infoboard-extension-edge-v0-1-0-zip",
+      "relative_path": "infoboard-extension-edge-v0.1.0.zip",
+      "byte_count": 76731,
+      "sha256": "be3b0d79aae31349c0067d0a5140a97e89b05113f9a26ee5c2c44d63e56e0df8",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-infoboard-host-installer-linux-v0-1-0-zip",
+      "relative_path": "infoboard-host-installer-linux-v0.1.0.zip",
+      "byte_count": 6883315,
+      "sha256": "74323398632372704f9d95fadf6c17b8b72f23504e8deeca11a518d3d0a95070",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-infoboard-host-installer-macos-v0-1-0-zip",
+      "relative_path": "infoboard-host-installer-macos-v0.1.0.zip",
+      "byte_count": 6845414,
+      "sha256": "145eef51d183d9d942f25f0b0bae230f1ecd558b5c3906f74f04ee42b5d31db2",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-infoboard-host-installer-windows-v0-1-0-zip",
+      "relative_path": "infoboard-host-installer-windows-v0.1.0.zip",
+      "byte_count": 6951819,
+      "sha256": "38f2178d957b034295973fe294f36e9386e8634b4a2ca519859eed72b61e4f88",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-packaging-lifecycle-owned-paths-json",
+      "relative_path": "packaging/lifecycle/owned-paths.json",
+      "byte_count": 1060,
+      "sha256": "4c844272f472c0ede79de680568892486d3cdb750e2fac3c40559066ac80a259",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-release-manifest-json",
+      "relative_path": "release-manifest.json",
+      "byte_count": 1983,
+      "sha256": "d4e91da83c3cb275ff70498652f366f7b0833174e087dc1c0972553431d2b2b3",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-SHA256SUMS",
+      "relative_path": "SHA256SUMS",
+      "byte_count": 2155,
+      "sha256": "51a0782304c9e92f090d3cdf7a54a894f671e361b56d0c4be7a78270c6aa6f6b",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-templates-chrome-com-infoboard-host-json-tmpl",
+      "relative_path": "templates/chrome/com.infoboard.host.json.tmpl",
+      "byte_count": 216,
+      "sha256": "d4bc0261669534706a988372f0812241e4104b8aa6411344a7484bfbc3b9194e",
+      "version": "0.1.0"
+    },
+    {
+      "artifact_id": "ART-templates-edge-com-infoboard-host-json-tmpl",
+      "relative_path": "templates/edge/com.infoboard.host.json.tmpl",
+      "byte_count": 216,
+      "sha256": "d4bc0261669534706a988372f0812241e4104b8aa6411344a7484bfbc3b9194e",
+      "version": "0.1.0"
+    }
+  ]
+}
