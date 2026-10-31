@@ -352,13 +352,18 @@ class Installer:
         return True
 
     # ----------------------------------------------------------------- health
-    def _health(self) -> HealthResult:
+    def _health(self, version_override: str | None = None) -> HealthResult:
         binary = self.health_binary or self.paths.host_binary
         browser = self.browsers[0] if self.browsers else "chrome"
         origin = f"chrome-extension://{self.release['extension_ids'][browser]}"
         health_platform = "windows" if binary.suffix.lower() == ".exe" else self.paths.platform
+        health_release = self.release
+        if version_override:
+            health_release = json.loads(json.dumps(self.release))
+            health_release["versions"]["product"] = version_override
+            health_release["versions"]["host"] = version_override
         with tempfile.TemporaryDirectory(prefix="infoboard-health-") as directory:
-            return check_host(binary, origin, self.release, health_platform, Path(directory), browser=browser)
+            return check_host(binary, origin, health_release, health_platform, Path(directory), browser=browser)
 
     def _verify_installed(self) -> list[str]:
         state = self._load_state()
@@ -584,7 +589,7 @@ class Installer:
                 publication_status=self.release["publication_status"],
                 blocked_reason="previous release could not be restored",
             )
-        health = self._health()
+        health = self._health(version_override=previous)
         if not health.ok:
             return LifecycleStatus(
                 operation="rollback",
