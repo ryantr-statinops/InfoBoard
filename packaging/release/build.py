@@ -14,9 +14,15 @@ from typing import Any
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from packaging.release.archive import canonical_json_bytes, sha256_bytes, sha256_file, write_sha256sums
+from packaging.release.archive import canonical_json_bytes, sha256_file, write_sha256sums
 from packaging.release.config import load_release_manifest
 from packaging.release.extension_package import build_extension_package, inspect_extension_package
+from packaging.release.host_payload import (
+    build_host_binary,
+    build_host_manifests,
+    inspect_host_manifests,
+    target_platforms,
+)
 from packaging.release.tooling import repo_head, repo_status, run, tool_versions
 
 
@@ -52,6 +58,7 @@ def build(
     config_path: Path,
     output: Path,
     skip_extension_build: bool = False,
+    skip_host_build: bool = False,
 ) -> dict[str, Any]:
     release = load_release_manifest(root)
     if config_path.resolve() != (root / "packaging/config/release-manifest.json").resolve():
@@ -88,6 +95,19 @@ def build(
     inspect_extension_package(chrome_zip, release, "chrome")
     inspect_extension_package(edge_zip, release, "edge")
 
+    host_artifacts: list[str] = []
+    if not skip_host_build:
+        for operating_system, arch in target_platforms(release):
+            destination = build_host_binary(root, output, release, operating_system, arch)
+            host_artifacts.append(destination.relative_to(output).as_posix())
+        build_host_manifests(root, output, release)
+    manifest_records = []
+    if not skip_host_build:
+        manifest_records = [
+            {**record, "path": Path(record["path"]).relative_to(output).as_posix()}
+            for record in inspect_host_manifests(output, release)
+        ]
+
     build_input = {
         "schema_version": 1,
         "source_digest": _source_digest(root),
@@ -97,6 +117,8 @@ def build(
         "targets": release["targets"],
         "publication_status": release["publication_status"],
         "release_channel": release["release_channel"],
+        "host_artifacts": host_artifacts,
+        "host_manifests": manifest_records,
         "tool_versions": tool_versions(root),
         "git_head": repo_head(root),
         "git_status": repo_status(root),
@@ -110,6 +132,7 @@ def build(
             release["artifacts"]["edge_extension"],
             release["artifacts"]["build_input"],
             release["artifacts"]["checksums"],
+            *host_artifacts,
         ],
         "publication_status": release["publication_status"],
         "source_digest": build_input["source_digest"],
@@ -123,9 +146,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", type=Path, default=Path("packaging/config/release-manifest.json"))
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--skip-extension-build", action="store_true")
+    parser.add_argument("--skip-host-build", action="store_true")
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
     args = parser.parse_args(argv)
-    summary = build(args.root, args.config, args.output, args.skip_extension_build)
+    summary = build(args.root, args.config, args.output, args.skip_extension_build, args.skip_host_build)
     print(json.dumps(summary, indent=2))
     return 0
 
