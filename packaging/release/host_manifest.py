@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 
@@ -22,7 +23,12 @@ def is_absolute_platform_path(value: str, operating_system: str) -> bool:
         path = PureWindowsPath(value)
         return path.is_absolute() and len(path.drive) == 2 and path.drive[1] == ":"
     path = PurePosixPath(value)
-    return path.is_absolute() and not value.startswith("//")
+    if path.is_absolute() and not value.startswith("//"):
+        return True
+    if sys.platform == "win32":
+        path_win = PureWindowsPath(value)
+        return path_win.is_absolute() and len(path_win.drive) == 2 and path_win.drive[1] == ":"
+    return False
 
 
 def render_host_manifest(template_path: Path, binary_path: Path | str, extension_id: str) -> dict[str, Any]:

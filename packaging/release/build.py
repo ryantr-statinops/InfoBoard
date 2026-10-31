@@ -77,6 +77,7 @@ def build(
 
         release = load_release_file(config_path)
 
+    output = Path(output).resolve()
     output.mkdir(parents=True, exist_ok=True)
     _copy_inputs(root, output)
 

@@ -37,7 +37,7 @@ def build_host_binary(
     arch: str,
 ) -> Path:
     binary_name = BINARY_NAME_WINDOWS if operating_system == "windows" else BINARY_NAME
-    destination = output / "host" / operating_system / arch / binary_name
+    destination = Path(output).resolve() / "host" / operating_system / arch / binary_name
     destination.parent.mkdir(parents=True, exist_ok=True)
     env = {
         "GOOS": operating_system if operating_system != "macos" else "darwin",
