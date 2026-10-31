@@ -40,7 +40,11 @@ func run(args []string, input *os.File, output *os.File, errOutput *os.File) int
 	if err != nil {
 		return runtime.ExitStartupFailure
 	}
-	session, err := runtime.Bootstrap(config, invocation, input, output, runtime.Dependencies{Persistence: newDefaultSQLitePersistence()})
+	deps, err := newRuntimeDependencies(newDefaultSQLitePersistence(), config.HostVersion)
+	if err != nil {
+		return runtime.ExitStartupFailure
+	}
+	session, err := runtime.Bootstrap(config, invocation, input, output, deps)
 	if err != nil {
 		return runtime.ExitStartupFailure
 	}
