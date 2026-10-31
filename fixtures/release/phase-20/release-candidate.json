@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "candidate_id": "RC-0.1.0-20261031",
+  "product": {
+    "name": "InfoBoard",
+    "id": "com.infoboard"
+  },
+  "release_version": "0.1.0",
+  "release_commit": "32e91cffec3638ccde919d61661f1802d79b0be2",
+  "source_tree_hash": "32e91cffec3638ccde919d61661f1802d79b0be2",
+  "extension_version": "0.1.0",
+  "host_version": "0.1.0",
+  "protocol": {
+    "major": 1,
+    "minor": 0
+  },
+  "schema_version_sqlite": 1,
+  "ranking_model_version": "rank-1",
+  "fixture_seed": "p19",
+  "host_name": "com.infoboard.host",
+  "browser_package_ids": {
+    "chrome": "abcdefghijklmnopabcdefghijklmnop",
+    "edge": "ponmlkjihgfedcbaponmlkjihgfedcba"
+  },
+  "supported_matrix": [
+    {"cell_id": "C01", "browser": "chrome", "os": "linux", "reference": "R-LINUX"},
+    {"cell_id": "C02", "browser": "edge", "os": "linux", "reference": "R-LINUX"},
+    {"cell_id": "C03", "browser": "chrome", "os": "macos", "reference": "R-MACOS"},
+    {"cell_id": "C04", "browser": "edge", "os": "macos", "reference": "R-MACOS"},
+    {"cell_id": "C05", "browser": "chrome", "os": "windows", "reference": "R-WINDOWS"},
+    {"cell_id": "C06", "browser": "edge", "os": "windows", "reference": "R-WINDOWS"}
+  ],
+  "release_owner": "InfoBoard Release Engineering",
+  "generated_at": "2026-10-31T14:00:00Z"
+}
