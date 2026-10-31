@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "description": "IP-20 Compatibility policy across extension packages, host binaries, browsers, and platforms.",
+  "policies": [
+    {
+      "cell_id": "C01",
+      "browser": "chrome",
+      "os": "linux",
+      "arch": "amd64",
+      "min_browser_version": "120.0",
+      "max_browser_version": "135.0",
+      "host_binary": "infoboard-host",
+      "protocol": {"supported_majors": [1], "supported_minors": [0]},
+      "storage_schema": {"current": 1, "supported_migrations": [1]},
+      "ranking_model": {"supported_models": ["rank-1"]},
+      "allowed_origin": "chrome-extension://abcdefghijklmnopabcdefghijklmnop/*",
+      "operations_permitted": {"install": true, "upgrade": true, "repair": true, "rollback": true, "uninstall": true}
+    },
+    {
+      "cell_id": "C02",
+      "browser": "edge",
+      "os": "linux",
+      "arch": "amd64",
+      "min_browser_version": "120.0",
+      "max_browser_version": "135.0",
+      "host_binary": "infoboard-host",
+      "protocol": {"supported_majors": [1], "supported_minors": [0]},
+      "storage_schema": {"current": 1, "supported_migrations": [1]},
+      "ranking_model": {"supported_models": ["rank-1"]},
+      "allowed_origin": "chrome-extension://ponmlkjihgfedcbaponmlkjihgfedcba/*",
+      "operations_permitted": {"install": true, "upgrade": true, "repair": true, "rollback": true, "uninstall": true}
+    },
+    {
+      "cell_id": "C03",
+      "browser": "chrome",
+      "os": "macos",
+      "arch": "amd64",
+      "min_browser_version": "120.0",
+      "max_browser_version": "135.0",
+      "host_binary": "infoboard-host",
+      "protocol": {"supported_majors": [1], "supported_minors": [0]},
+      "storage_schema": {"current": 1, "supported_migrations": [1]},
+      "ranking_model": {"supported_models": ["rank-1"]},
+      "allowed_origin": "chrome-extension://abcdefghijklmnopabcdefghijklmnop/*",
+      "operations_permitted": {"install": true, "upgrade": true, "repair": true, "rollback": true, "uninstall": true}
+    },
+    {
+      "cell_id": "C04",
+      "browser": "edge",
+      "os": "macos",
+      "arch": "amd64",
+      "min_browser_version": "120.0",
+      "max_browser_version": "135.0",
+      "host_binary": "infoboard-host",
+      "protocol": {"supported_majors": [1], "supported_minors": [0]},
+      "storage_schema": {"current": 1, "supported_migrations": [1]},
+      "ranking_model": {"supported_models": ["rank-1"]},
+      "allowed_origin": "chrome-extension://ponmlkjihgfedcbaponmlkjihgfedcba/*",
+      "operations_permitted": {"install": true, "upgrade": true, "repair": true, "rollback": true, "uninstall": true}
+    },
+    {
+      "cell_id": "C05",
+      "browser": "chrome",
+      "os": "windows",
+      "arch": "amd64",
+      "min_browser_version": "120.0",
+      "max_browser_version": "135.0",
+      "host_binary": "infoboard-host.exe",
+      "protocol": {"supported_majors": [1], "supported_minors": [0]},
+      "storage_schema": {"current": 1, "supported_migrations": [1]},
+      "ranking_model": {"supported_models": ["rank-1"]},
+      "allowed_origin": "chrome-extension://abcdefghijklmnopabcdefghijklmnop/*",
+      "operations_permitted": {"install": true, "upgrade": true, "repair": true, "rollback": true, "uninstall": true}
+    },
+    {
+      "cell_id": "C06",
+      "browser": "edge",
+      "os": "windows",
+      "arch": "amd64",
+      "min_browser_version": "120.0",
+      "max_browser_version": "135.0",
+      "host_binary": "infoboard-host.exe",
+      "protocol": {"supported_majors": [1], "supported_minors": [0]},
+      "storage_schema": {"current": 1, "supported_migrations": [1]},
+      "ranking_model": {"supported_models": ["rank-1"]},
+      "allowed_origin": "chrome-extension://ponmlkjihgfedcbaponmlkjihgfedcba/*",
+      "operations_permitted": {"install": true, "upgrade": true, "repair": true, "rollback": true, "uninstall": true}
+    }
+  ]
+}
