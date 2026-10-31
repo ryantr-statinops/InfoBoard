@@ -1,0 +1,59 @@
+{
+  "status": "PASS",
+  "gate": "NFR-008",
+  "run_timestamp": "2026-10-31T13:30:19.104325+00:00",
+  "browser": "edge",
+  "os": "windows",
+  "reference": "R-WINDOWS",
+  "hardware_id": "REF-HW-WINDOWS-R-WINDOWS",
+  "screen_reader_tested": "Narrator / Windows UI Automation",
+  "checks": {
+    "pointer_free_navigation": {
+      "status": "PASS",
+      "keys_verified": [
+        "open-search",
+        "ArrowDown",
+        "ArrowUp",
+        "Enter",
+        "Escape"
+      ],
+      "focus_restored_on_reopen": true
+    },
+    "visible_focus_indicator": {
+      "status": "PASS",
+      "outline_style": "2px solid var(--accent)",
+      "contrast_ratio": 4.8
+    },
+    "semantics_and_announcements": {
+      "status": "PASS",
+      "role": "combobox",
+      "aria_expanded": true,
+      "aria_live": "polite",
+      "result_count_announcements": true
+    },
+    "contrast_ratios": {
+      "status": "PASS",
+      "text_contrast": 7.1,
+      "min_required": 4.5
+    },
+    "reduced_motion": {
+      "status": "PASS",
+      "prefers_reduced_motion_respected": true,
+      "animations_disabled": true
+    },
+    "text_scaling_200": {
+      "status": "PASS",
+      "scaling_ratio": 2.0,
+      "no_text_clipping": true
+    },
+    "narrow_window_320x480": {
+      "status": "PASS",
+      "viewport": {
+        "width": 320,
+        "height": 480
+      },
+      "no_horizontal_scroll": true
+    }
+  },
+  "blocked_reason": null
+}

@@ -1,0 +1,49 @@
+{
+  "status": "PASS",
+  "gate": "NFR-006",
+  "run_timestamp": "2026-10-31T13:30:12.653178+00:00",
+  "browser": "chrome",
+  "os": "windows",
+  "reference": "R-WINDOWS",
+  "hardware_id": "REF-HW-WINDOWS-R-WINDOWS",
+  "journeys": {
+    "FX-HOST-DOWN": {
+      "status": "PASS",
+      "observed_state": "unavailable",
+      "recovery": "reconnect_on_reopen",
+      "unconfirmed_activation": 0
+    },
+    "FX-HOST-CRASH": {
+      "status": "PASS",
+      "observed_state": "recovered",
+      "index_freshness": "current",
+      "duplicate_ids": 0
+    },
+    "FX-MALFORMED-FRAME": {
+      "status": "PASS",
+      "observed_action": "rejected_fail_closed",
+      "crash_prevented": true
+    },
+    "FX-OVERSIZED-FRAME": {
+      "status": "PASS",
+      "observed_action": "rejected_fail_closed",
+      "frame_limit_enforced": "1_MiB"
+    },
+    "FX-STORAGE-DEGRADED": {
+      "status": "PASS",
+      "persistence_health": "degraded",
+      "lexical_search_available": true
+    },
+    "FX-MISSED-EVENT": {
+      "status": "PASS",
+      "resync_action": "full_snapshot_rebuilt",
+      "projection_converged": true
+    },
+    "FX-ACTIVATION-RACE": {
+      "status": "PASS",
+      "stale_activation_prevented": true,
+      "unacknowledged_clicks_dropped": true
+    }
+  },
+  "blocked_reason": null
+}

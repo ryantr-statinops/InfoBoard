@@ -1,0 +1,10 @@
+{
+  "status": "BLOCKED",
+  "run_timestamp": "2026-10-31T13:30:05.969883+00:00",
+  "browser": "edge",
+  "os": "linux",
+  "reference": "R-LINUX",
+  "gate": "NFR-006",
+  "journeys": {},
+  "blocked_reason": "physical_reference_hardware_R-LINUX_unavailable_on_local_windows"
+}
