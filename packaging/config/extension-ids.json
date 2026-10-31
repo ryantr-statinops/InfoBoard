@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "chrome": {
+    "listing_id": "chrome-web-store-fixture",
+    "extension_id": "abcdefghijklmnopabcdefghijklmnop",
+    "channel": "fixture"
+  },
+  "edge": {
+    "listing_id": "edge-addons-fixture",
+    "extension_id": "ponmlkjihgfedcbaponmlkjihgfedcba",
+    "channel": "fixture"
+  }
+}

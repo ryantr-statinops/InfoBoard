@@ -10,7 +10,7 @@ async function json(path) {
 
 test('phase-16 diagnostics fixtures are registered without adding seams', async () => {
   const catalog = await json('fixtures/catalog.json');
-  assert.equal(catalog.fixtures.length, 93);
+  assert.equal(catalog.fixtures.length, 105);
   assert.equal(catalog.phase_seams.length, 19);
   const ids = new Set(catalog.fixtures.map(fixture => fixture.fixture_id));
   for (const fixture of [
@@ -31,6 +31,11 @@ test('phase-16 diagnostics fixtures are registered without adding seams', async 
     'FX-RETENTION-BOUNDARIES',
   ]);
   assert.equal(seam.fixture_signal, 'final_health');
+
+  const packagingSeam = catalog.phase_seams.find(item => item.phase === 'IP-18');
+  assert.equal(packagingSeam.fixture_ids[0], 'FX-PKG-RELEASE-MANIFEST');
+  assert.equal(packagingSeam.fixture_signal, 'release_manifest_valid');
+  assert.equal(packagingSeam.ownership_relation, 'supporting');
 });
 
 test('health transition fixture is bounded and ends stopped', async () => {

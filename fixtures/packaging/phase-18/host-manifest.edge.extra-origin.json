@@ -1,0 +1,10 @@
+{
+  "name": "com.infoboard.host",
+  "description": "InfoBoard Native Messaging host",
+  "path": "/home/user/.local/share/InfoBoard/host/infoboard-host",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://ponmlkjihgfedcbaponmlkjihgfedcba/*",
+    "chrome-extension://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/*"
+  ]
+}

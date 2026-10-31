@@ -4354,6 +4354,304 @@
           "Command, sync, query, activation, reset, and uninstall journeys make no excluded browser API call, page read, network request, or external transmission."
         ]
       }
+    },
+    {
+      "fixture_id": "FX-PKG-RELEASE-MANIFEST",
+      "owner_phase": "IP-18",
+      "requirement_ids": [
+        "NFR-010",
+        "FR-001"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture_file": "fixtures/packaging/phase-18/packaging-cases.json",
+        "case_id": "release_manifest_valid",
+        "description": "The release manifest has literal IDs, one exact permission set, supported targets, and an allowlisted compatibility tuple."
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "release_manifest_valid",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Packaging reads no browser tab, window, profile, or page data."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PKG-EXTENSION-CHROME",
+      "owner_phase": "IP-18",
+      "requirement_ids": [
+        "NFR-010",
+        "FR-001"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture_file": "fixtures/packaging/phase-18/packaging-cases.json",
+        "case_id": "chrome_package_exact",
+        "description": "The Chrome package contains the IP-03 manifest and dist payload with no host permissions or extra permissions."
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "chrome_package_exact",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "No tab, window, profile, page, or network data is read while assembling the package."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PKG-EXTENSION-EDGE",
+      "owner_phase": "IP-18",
+      "requirement_ids": [
+        "NFR-010",
+        "FR-001"
+      ],
+      "category": "extension",
+      "input": {
+        "fixture_file": "fixtures/packaging/phase-18/packaging-cases.json",
+        "case_id": "edge_package_exact",
+        "description": "The Edge package contains the IP-03 manifest and dist payload with no host permissions or extra permissions."
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "edge_package_exact",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "No tab, window, profile, page, or network data is read while assembling the package."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PKG-HOST-MANIFEST",
+      "owner_phase": "IP-18",
+      "requirement_ids": [
+        "NFR-010",
+        "NFR-009"
+      ],
+      "category": "host",
+      "input": {
+        "fixture_file": "fixtures/packaging/phase-18/packaging-cases.json",
+        "case_id": "host_manifest_exact_origin",
+        "description": "Each host manifest contains one exact browser-specific origin and an absolute executable path."
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "host_manifest_exact_origin",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Host manifests contain no broad origin, secret, or browser data field."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PKG-ARCHIVE-TRAVERSAL",
+      "owner_phase": "IP-18",
+      "requirement_ids": [
+        "NFR-010",
+        "NFR-009"
+      ],
+      "category": "recovery",
+      "input": {
+        "fixture_file": "fixtures/packaging/phase-18/packaging-cases.json",
+        "case_id": "archive_traversal_rejected",
+        "description": "An archive entry containing traversal, an absolute path, a symlink, or a duplicate name is rejected before extraction."
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "archive_traversal_rejected",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Rejected archives are never extracted over user paths."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PKG-CHECKSUM-DRIFT",
+      "owner_phase": "IP-18",
+      "requirement_ids": [
+        "NFR-010",
+        "NFR-009"
+      ],
+      "category": "recovery",
+      "input": {
+        "fixture_file": "fixtures/packaging/phase-18/packaging-cases.json",
+        "case_id": "checksum_drift_rejected",
+        "description": "A modified artifact byte is rejected by the sorted checksum manifest."
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "checksum_drift_rejected",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Checksum verification reads only artifact bytes and emits no browser data."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PKG-PERMISSION-DRIFT",
+      "owner_phase": "IP-18",
+      "requirement_ids": [
+        "NFR-007",
+        "NFR-009"
+      ],
+      "category": "privacy",
+      "input": {
+        "fixture_file": "fixtures/packaging/phase-18/packaging-cases.json",
+        "case_id": "permission_drift_rejected",
+        "description": "An extra or missing extension permission is rejected before packaging."
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "permission_drift_rejected",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Permission drift is rejected before any browser context can be read."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PKG-INSTALL-REPEAT",
+      "owner_phase": "IP-18",
+      "requirement_ids": [
+        "NFR-010"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "fixture_file": "fixtures/packaging/phase-18/packaging-cases.json",
+        "case_id": "install_repeat_no_op",
+        "description": "A second install of the same verified release is a no-op and leaves exact owned state."
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "install_repeat_no_op",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Install and repeat install do not touch browser tabs, windows, or profile data."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PKG-UPGRADE-ROLLBACK",
+      "owner_phase": "IP-18",
+      "requirement_ids": [
+        "NFR-010"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "fixture_file": "fixtures/packaging/phase-18/packaging-cases.json",
+        "case_id": "upgrade_rollback",
+        "description": "A verified upgrade retains the previous release, and rollback restores it on request."
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "upgrade_rollback",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Upgrade and rollback preserve browser tab, window, and profile state."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PKG-REPAIR-UNINSTALL",
+      "owner_phase": "IP-18",
+      "requirement_ids": [
+        "NFR-010",
+        "FR-015"
+      ],
+      "category": "lifecycle",
+      "input": {
+        "fixture_file": "fixtures/packaging/phase-18/packaging-cases.json",
+        "case_id": "repair_uninstall",
+        "description": "Repair restores absent owned artifacts, and repeated uninstall removes only owned paths and verifies absence."
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "repair_uninstall",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Uninstall removes only InfoBoard-owned registration and data paths; browser state remains unchanged."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PKG-COMPAT-MISMATCH",
+      "owner_phase": "IP-18",
+      "requirement_ids": [
+        "NFR-010"
+      ],
+      "category": "recovery",
+      "input": {
+        "fixture_file": "fixtures/packaging/phase-18/packaging-cases.json",
+        "case_id": "compatibility_mismatch_rejected",
+        "description": "A wrong protocol, ranking, schema, product, or host version tuple fails closed with a repairable status."
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "compatibility_mismatch_rejected",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Mismatch rejection occurs before any tab snapshot, query, or activation is accepted."
+        ]
+      }
+    },
+    {
+      "fixture_id": "FX-PKG-PRIVACY-BOUNDARY",
+      "owner_phase": "IP-18",
+      "requirement_ids": [
+        "NFR-007",
+        "NFR-009",
+        "FR-003"
+      ],
+      "category": "privacy",
+      "input": {
+        "fixture_file": "fixtures/packaging/phase-18/packaging-cases.json",
+        "case_id": "privacy_boundary",
+        "description": "Packaging code adds no host permissions, broad origins, network calls, or tab mutation APIs."
+      },
+      "expected": {
+        "observations": [
+          {
+            "signal": "privacy_boundary",
+            "value": true
+          }
+        ],
+        "privacy_assertions": [
+          "Packaging adds no network request, page read, tab mutation, or external transmission surface."
+        ]
+      }
     }
   ],
   "future_check_contracts": [
@@ -4681,15 +4979,26 @@
     {
       "phase": "IP-18",
       "fixture_ids": [
-        "FX-QUERY-LIVE"
+        "FX-PKG-RELEASE-MANIFEST",
+        "FX-PKG-EXTENSION-CHROME",
+        "FX-PKG-EXTENSION-EDGE",
+        "FX-PKG-HOST-MANIFEST",
+        "FX-PKG-ARCHIVE-TRAVERSAL",
+        "FX-PKG-CHECKSUM-DRIFT",
+        "FX-PKG-PERMISSION-DRIFT",
+        "FX-PKG-INSTALL-REPEAT",
+        "FX-PKG-UPGRADE-ROLLBACK",
+        "FX-PKG-REPAIR-UNINSTALL",
+        "FX-PKG-COMPAT-MISMATCH",
+        "FX-PKG-PRIVACY-BOUNDARY"
       ],
       "requirement_ids": [
         "NFR-010"
       ],
       "ownership_relation": "supporting",
-      "fixture_signal": "rendered_revision_matches_latest_accepted",
-      "acceptance_signal": "The packaged compatible pair preserves the shared live-query result contract.",
-      "handoff_note": "Baseline only; IP-18's artifact and installer lifecycle fixtures are required for packaging acceptance."
+      "fixture_signal": "release_manifest_valid",
+      "acceptance_signal": "The packaged release input, exact-origin host manifests, deterministic artifacts, and repeat-safe lifecycle evidence pass local verification.",
+      "handoff_note": "IP-18 owns packaging acceptance; NFR-010's branded browser matrix remains primarily verified by IP-19."
     },
     {
       "phase": "IP-19",

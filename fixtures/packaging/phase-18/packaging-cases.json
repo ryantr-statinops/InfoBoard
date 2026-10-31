@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "description": "IP-18 packaging contract cases. Each case records the observable signal used by the release review.",
+  "cases": [
+    {
+      "case_id": "release_manifest_valid",
+      "description": "The release manifest has literal IDs, one exact permission set, supported targets, and an allowlisted compatibility tuple.",
+      "input": {
+        "manifest": "packaging/config/release-manifest.json",
+        "extension_ids": "packaging/config/extension-ids.json"
+      },
+      "expected": {
+        "status": "pass",
+        "signal": "release_manifest_valid",
+        "value": true
+      }
+    },
+    {
+      "case_id": "chrome_package_exact",
+      "description": "The Chrome package contains the IP-03 manifest and dist payload with no host permissions or extra permissions.",
+      "input": {
+        "browser": "chrome",
+        "artifact": "infoboard-extension-chrome-v0.1.0.zip"
+      },
+      "expected": {
+        "status": "pass",
+        "signal": "chrome_package_exact",
+        "value": true
+      }
+    },
+    {
+      "case_id": "edge_package_exact",
+      "description": "The Edge package contains the IP-03 manifest and dist payload with no host permissions or extra permissions.",
+      "input": {
+        "browser": "edge",
+        "artifact": "infoboard-extension-edge-v0.1.0.zip"
+      },
+      "expected": {
+        "status": "pass",
+        "signal": "edge_package_exact",
+        "value": true
+      }
+    },
+    {
+      "case_id": "host_manifest_exact_origin",
+      "description": "Each host manifest contains one exact browser-specific origin and an absolute executable path.",
+      "input": {
+        "browsers": ["chrome", "edge"],
+        "platforms": ["linux", "macos", "windows"]
+      },
+      "expected": {
+        "status": "pass",
+        "signal": "host_manifest_exact_origin",
+        "value": true
+      }
+    },
+    {
+      "case_id": "archive_traversal_rejected",
+      "description": "An archive entry containing traversal, an absolute path, a symlink, or a duplicate name is rejected before extraction.",
+      "input": {
+        "archive": "malformed fixture generated in the test process"
+      },
+      "expected": {
+        "status": "pass",
+        "signal": "archive_traversal_rejected",
+        "value": true,
+        "failure_class": "unsafe_archive_entry"
+      }
+    },
+    {
+      "case_id": "checksum_drift_rejected",
+      "description": "A modified artifact byte is rejected by the sorted checksum manifest.",
+      "input": {
+        "artifact": "infoboard-extension-chrome-v0.1.0.zip",
+        "mutation": "append one byte"
+      },
+      "expected": {
+        "status": "pass",
+        "signal": "checksum_drift_rejected",
+        "value": true,
+        "failure_class": "checksum_mismatch"
+      }
+    },
+    {
+      "case_id": "permission_drift_rejected",
+      "description": "An extra or missing extension permission is rejected before packaging.",
+      "input": {
+        "permissions": ["storage", "tabs", "tabGroups", "nativeMessaging"],
+        "mutation": "add host_permissions"
+      },
+      "expected": {
+        "status": "pass",
+        "signal": "permission_drift_rejected",
+        "value": true,
+        "failure_class": "permission_drift"
+      }
+    },
+    {
+      "case_id": "install_repeat_no_op",
+      "description": "A second install of the same verified release is a no-op and leaves exact owned state.",
+      "input": {
+        "operation": "install",
+        "repeat": 2
+      },
+      "expected": {
+        "status": "pass",
+        "signal": "install_repeat_no_op",
+        "value": true
+      }
+    },
+    {
+      "case_id": "upgrade_rollback",
+      "description": "A verified upgrade retains the previous release, and rollback restores it on request.",
+      "input": {
+        "operations": ["install", "upgrade", "rollback"]
+      },
+      "expected": {
+        "status": "pass",
+        "signal": "upgrade_rollback",
+        "value": true
+      }
+    },
+    {
+      "case_id": "repair_uninstall",
+      "description": "Repair restores absent owned artifacts, and repeated uninstall removes only owned paths and verifies absence.",
+      "input": {
+        "operations": ["repair", "uninstall", "uninstall"]
+      },
+      "expected": {
+        "status": "pass",
+        "signal": "repair_uninstall",
+        "value": true
+      }
+    },
+    {
+      "case_id": "compatibility_mismatch_rejected",
+      "description": "A wrong protocol, ranking, schema, product, or host version tuple fails closed with a repairable status.",
+      "input": {
+        "mutation": "protocol_major=2"
+      },
+      "expected": {
+        "status": "pass",
+        "signal": "compatibility_mismatch_rejected",
+        "value": true,
+        "failure_class": "compatibility_mismatch"
+      }
+    },
+    {
+      "case_id": "privacy_boundary",
+      "description": "Packaging code adds no host permissions, broad origins, network calls, or tab mutation APIs.",
+      "input": {
+        "surfaces": ["extension_manifest", "host_manifest", "installer_source"]
+      },
+      "expected": {
+        "status": "pass",
+        "signal": "privacy_boundary",
+        "value": true
+      }
+    }
+  ]
+}
