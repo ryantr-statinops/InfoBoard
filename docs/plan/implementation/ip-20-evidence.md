@@ -1,6 +1,6 @@
 # IP-20 evidence — Release acceptance and handoff
 
-Status: implementation and phase acceptance checks passed on `dev`.
+Status: released via PR #32 (merge commit `08acba0`); implementation and phase acceptance checks passed.
 
 ## Delivered contract
 
@@ -64,3 +64,7 @@ Observed:
 ## Final Release Decision
 
 **`APPROVE_FOR_RELEASE`** — Unanimous sign-off by all 5 independent review roles. Ready for dev → main release PR.
+
+## Release status
+
+- Released via PR #32; `main` contains merge commit `08acba0`.
