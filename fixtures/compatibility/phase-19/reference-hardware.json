@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "description": "IP-19 reference hardware inventory and replacement rules for cross-platform browser verification.",
+  "replacement_policy": {
+    "immutable_machine_id": true,
+    "physical_hardware_only": true,
+    "ac_power_required": true,
+    "no_virtualization_or_rdp_for_timing": true,
+    "display_scale_declared": true,
+    "background_load_policy": "quiet, no background compilers or indexing services",
+    "replacement_rule": "A reference machine may only be replaced by registering a new immutable device ID, recording exact hardware and OS specs, and re-running all cell journeys and performance measurements from scratch."
+  },
+  "reference_classes": {
+    "R-LINUX": {
+      "class_id": "R-LINUX",
+      "architecture": "x86-64",
+      "min_physical_cores": 4,
+      "min_ram_gib": 16,
+      "storage_type": "NVMe/SSD",
+      "target_os": "Linux",
+      "reference_device": {
+        "device_id": "REF-HW-LINUX-X86_64-01",
+        "cpu_model": "AMD Ryzen 7 5800X (8 physical cores, 16 threads)",
+        "ram_gib": 32,
+        "storage": "1TB Samsung 980 PRO NVMe SSD",
+        "os_build": "Ubuntu 24.04 LTS (Kernel 6.8.0-40-generic)",
+        "power_mode": "AC / High Performance",
+        "display_scale": "100%",
+        "supported_browsers": [
+          "Google Chrome Stable",
+          "Microsoft Edge Stable"
+        ]
+      }
+    },
+    "R-MACOS": {
+      "class_id": "R-MACOS",
+      "architecture": "arm64",
+      "min_physical_cores": 8,
+      "min_ram_gib": 16,
+      "storage_type": "internal SSD",
+      "target_os": "macOS",
+      "reference_device": {
+        "device_id": "REF-HW-MACOS-ARM64-01",
+        "cpu_model": "Apple M2 Pro (10 physical cores: 6 performance, 4 efficiency)",
+        "ram_gib": 16,
+        "storage": "512GB Apple Internal NVMe SSD",
+        "os_build": "macOS Sonoma 14.6.1 (Build 23G93)",
+        "power_mode": "AC / Standard",
+        "display_scale": "200% (Retina default)",
+        "supported_browsers": [
+          "Google Chrome Stable",
+          "Microsoft Edge Stable"
+        ]
+      }
+    },
+    "R-WINDOWS": {
+      "class_id": "R-WINDOWS",
+      "architecture": "x86-64",
+      "min_physical_cores": 4,
+      "min_ram_gib": 16,
+      "storage_type": "NVMe/SSD",
+      "target_os": "Windows",
+      "reference_device": {
+        "device_id": "REF-HW-WINDOWS-X86_64-01",
+        "cpu_model": "11th Gen Intel(R) Core(TM) i7-11800H @ 2.30GHz (8 physical cores, 16 threads)",
+        "ram_gib": 16,
+        "storage": "1TB Samsung PM9A1 NVMe SSD",
+        "os_build": "Windows 11 Pro 64-bit (Build 26100.2161)",
+        "power_mode": "AC / Best Performance",
+        "display_scale": "125%",
+        "supported_browsers": [
+          "Google Chrome Stable",
+          "Microsoft Edge Stable"
+        ]
+      }
+    }
+  }
+}
