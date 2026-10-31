@@ -23,6 +23,7 @@ from packaging.release.host_payload import (
     inspect_host_manifests,
     target_platforms,
 )
+from packaging.release.installer_package import build_installer_archive, inspect_installer_archive
 from packaging.release.tooling import repo_head, repo_status, run, tool_versions
 
 
@@ -30,6 +31,15 @@ def _copy_inputs(root: Path, output: Path) -> None:
     config = root / "packaging" / "config"
     for name in ("release-manifest.json", "extension-ids.json"):
         shutil.copyfile(config / name, output / name)
+    for browser in ("chrome", "edge"):
+        source = root / "packaging" / "host" / browser / "com.infoboard.host.json.tmpl"
+        destination = output / "templates" / browser / "com.infoboard.host.json.tmpl"
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, destination)
+    lifecycle = root / "packaging" / "lifecycle" / "owned-paths.json"
+    lifecycle_destination = output / "packaging" / "lifecycle" / "owned-paths.json"
+    lifecycle_destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(lifecycle, lifecycle_destination)
 
 
 def _source_digest(root: Path) -> str:
@@ -102,11 +112,18 @@ def build(
             host_artifacts.append(destination.relative_to(output).as_posix())
         build_host_manifests(root, output, release)
     manifest_records = []
+    installer_artifacts: list[str] = []
     if not skip_host_build:
         manifest_records = [
             {**record, "path": Path(record["path"]).relative_to(output).as_posix()}
             for record in inspect_host_manifests(output, release)
         ]
+        for operating_system, arch in target_platforms(release):
+            installer_name = f"{release['artifacts']['host_installer_prefix']}-{operating_system}-v{release['versions']['product']}.zip"
+            installer_path = output / installer_name
+            build_installer_archive(installer_path, root, output, release, operating_system, arch)
+            inspect_installer_archive(installer_path, operating_system, arch)
+            installer_artifacts.append(installer_name)
 
     build_input = {
         "schema_version": 1,
@@ -119,6 +136,7 @@ def build(
         "release_channel": release["release_channel"],
         "host_artifacts": host_artifacts,
         "host_manifests": manifest_records,
+        "installer_artifacts": installer_artifacts,
         "tool_versions": tool_versions(root),
         "git_head": repo_head(root),
         "git_status": repo_status(root),
@@ -133,6 +151,7 @@ def build(
             release["artifacts"]["build_input"],
             release["artifacts"]["checksums"],
             *host_artifacts,
+            *installer_artifacts,
         ],
         "publication_status": release["publication_status"],
         "source_digest": build_input["source_digest"],

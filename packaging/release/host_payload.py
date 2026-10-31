@@ -17,8 +17,11 @@ BINARY_NAME_WINDOWS = "infoboard-host.exe"
 
 
 def registered_origins(release: dict[str, Any]) -> str:
+    # The host compares the browser-provided origin exactly. The Native
+    # Messaging manifest uses the same IDs with a trailing /* wildcard, but the
+    # compiled host allowlist must contain the exact origins.
     return ",".join(
-        f"chrome-extension://{release['extension_ids'][browser]}/*" for browser in ("chrome", "edge")
+        f"chrome-extension://{release['extension_ids'][browser]}" for browser in ("chrome", "edge")
     )
 
 

@@ -130,6 +130,12 @@ def _remove_tree(path: Path) -> None:
     path.rmdir()
 
 
+def safe_remove_tree(path: Path) -> None:
+    """Remove a trusted staging/backup tree without following symlinks."""
+    if path.exists() or path.is_symlink():
+        _remove_tree(path)
+
+
 def remove_entries(root: Path, entries: Iterable[OwnedEntry]) -> CleanupResult:
     result = CleanupResult(removed=[], missing=[], failed=[], preserved_unknown=[])
     for entry in entries:
