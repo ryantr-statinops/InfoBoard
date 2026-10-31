@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "description": "IP-18 lifecycle status matrix for the fixture release pair.",
+  "platforms": {
+    "windows": {
+      "registration": "HKCU",
+      "browser_roots": {
+        "chrome": "data/native-messaging/chrome",
+        "edge": "data/native-messaging/edge"
+      }
+    },
+    "linux": {
+      "registration": "manifest-file",
+      "browser_roots": {
+        "chrome": "~/.config/google-chrome/NativeMessagingHosts",
+        "edge": "~/.config/microsoft-edge/NativeMessagingHosts"
+      }
+    },
+    "macos": {
+      "registration": "manifest-file",
+      "browser_roots": {
+        "chrome": "~/Library/Application Support/Google/Chrome/NativeMessagingHosts",
+        "edge": "~/Library/Application Support/Microsoft Edge/NativeMessagingHosts"
+      }
+    }
+  },
+  "operations": [
+    {
+      "step": 1,
+      "operation": "install",
+      "release": "0.1.0",
+      "expected_status": "complete"
+    },
+    {
+      "step": 2,
+      "operation": "install",
+      "release": "0.1.0",
+      "expected_status": "no_op"
+    },
+    {
+      "step": 3,
+      "operation": "upgrade",
+      "release": "0.1.1",
+      "expected_status": "complete"
+    },
+    {
+      "step": 4,
+      "operation": "rollback",
+      "release": "0.1.1",
+      "health_release": "0.1.0",
+      "expected_status": "complete"
+    },
+    {
+      "step": 5,
+      "operation": "repair",
+      "release": "0.1.0",
+      "expected_status": "complete"
+    },
+    {
+      "step": 6,
+      "operation": "uninstall",
+      "release": "0.1.0",
+      "expected_status": "complete"
+    },
+    {
+      "step": 7,
+      "operation": "uninstall",
+      "release": "0.1.0",
+      "expected_status": "complete"
+    }
+  ]
+}
