@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "product": {
+    "name": "InfoBoard",
+    "id": "com.infoboard"
+  },
+  "release_channel": "fixture",
+  "publication_status": "blocked_pending_store_ids",
+  "versions": {
+    "product": "0.1.0",
+    "chrome": "0.1.0",
+    "edge": "0.1.0",
+    "host": "0.1.0"
+  },
+  "protocol": {
+    "major": 1,
+    "minor": 0
+  },
+  "ranking_model_version": "rank-1",
+  "storage_schema_version": 1,
+  "host_name": "com.infoboard.host",
+  "extension_ids": {
+    "chrome": "REPLACE_WITH_CHROME_WEB_STORE_ID",
+    "edge": "ponmlkjihgfedcbaponmlkjihgfedcba"
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "tabGroups",
+    "nativeMessaging"
+  ],
+  "targets": [
+    {
+      "browser": "chrome",
+      "os": "linux",
+      "arch": "amd64"
+    },
+    {
+      "browser": "chrome",
+      "os": "macos",
+      "arch": "amd64"
+    },
+    {
+      "browser": "chrome",
+      "os": "windows",
+      "arch": "amd64"
+    },
+    {
+      "browser": "edge",
+      "os": "linux",
+      "arch": "amd64"
+    },
+    {
+      "browser": "edge",
+      "os": "macos",
+      "arch": "amd64"
+    },
+    {
+      "browser": "edge",
+      "os": "windows",
+      "arch": "amd64"
+    }
+  ],
+  "compatibility": {
+    "protocol_major": [
+      1
+    ],
+    "ranking_model_versions": [
+      "rank-1"
+    ],
+    "storage_schema_versions": [
+      1
+    ],
+    "product_versions": [
+      "0.1.0"
+    ],
+    "host_versions": [
+      "0.1.0"
+    ]
+  },
+  "artifacts": {
+    "chrome_extension": "infoboard-extension-chrome-v0.1.0.zip",
+    "edge_extension": "infoboard-extension-edge-v0.1.0.zip",
+    "checksums": "SHA256SUMS",
+    "build_input": "build-input.json",
+    "host_installer_prefix": "infoboard-host-installer"
+  },
+  "reproducibility": {
+    "source_date_epoch": 0,
+    "archive_format": "zip",
+    "normalize_modes": true,
+    "normalize_timestamps": true,
+    "record_tool_versions": true
+  }
+}
