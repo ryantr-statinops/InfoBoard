@@ -1,0 +1,38 @@
+{
+  "fixture_id": "FX-PRIVACY-PRIVATE-SEPARATION",
+  "owner_phase": "IP-17",
+  "requirement_ids": ["FR-014", "NFR-009"],
+  "normal_scope": {
+    "browser_family": "chrome",
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "context_kind": "normal"
+  },
+  "private_scope": {
+    "browser_family": "chrome",
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "context_kind": "private",
+    "private_nonce": "private-nonce-1"
+  },
+  "epoch": "123e4567-e89b-42d3-a456-426614174010",
+  "revision": 7,
+  "normal_tab_id": 7,
+  "private_tab_id": 8,
+  "expected": {
+    "normal_count": 1,
+    "private_count": 1,
+    "cross_visible": false,
+    "observations": [
+      {
+        "signal": "private_records_isolated",
+        "value": true
+      },
+      {
+        "signal": "normal_projection_unchanged",
+        "value": true
+      }
+    ],
+    "privacy_assertions": [
+      "A private record is never queryable from the normal scope, and a normal record is never queryable from the private scope."
+    ]
+  }
+}

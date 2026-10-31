@@ -1,0 +1,79 @@
+{
+  "fixture_id": "FX-PRIVACY-EXCLUDED-SURFACE",
+  "owner_phase": "IP-17",
+  "requirement_ids": ["NFR-007", "NFR-009", "FR-003"],
+  "journeys": [
+    "command_open",
+    "sync_snapshot",
+    "sync_delta",
+    "query",
+    "activation",
+    "reset",
+    "uninstall"
+  ],
+  "excluded_surfaces": [
+    {
+      "surface": "history",
+      "api_family": "history",
+      "expected": "absent"
+    },
+    {
+      "surface": "saved_items",
+      "api_family": "bookmarks",
+      "expected": "absent"
+    },
+    {
+      "surface": "downloads",
+      "api_family": "downloads",
+      "expected": "absent"
+    },
+    {
+      "surface": "cookies",
+      "api_family": "cookies",
+      "expected": "absent"
+    },
+    {
+      "surface": "page_content",
+      "api_family": "scripting_or_dom",
+      "expected": "absent"
+    },
+    {
+      "surface": "network_interception",
+      "api_family": "web_request",
+      "expected": "absent"
+    },
+    {
+      "surface": "broad_host_access",
+      "api_family": "host_permissions",
+      "expected": "absent"
+    },
+    {
+      "surface": "external_transmission",
+      "api_family": "network_fetch_or_beacon",
+      "expected": "absent"
+    }
+  ],
+  "expected": {
+    "observations": [
+      {
+        "signal": "excluded_api_calls",
+        "value": 0
+      },
+      {
+        "signal": "network_requests",
+        "value": 0
+      },
+      {
+        "signal": "page_reads",
+        "value": 0
+      },
+      {
+        "signal": "external_transmissions",
+        "value": 0
+      }
+    ],
+    "privacy_assertions": [
+      "Command, sync, query, activation, reset, and uninstall journeys make no excluded browser API call, page read, network request, or external transmission."
+    ]
+  }
+}

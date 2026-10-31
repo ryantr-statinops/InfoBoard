@@ -1,0 +1,66 @@
+{
+  "fixture_id": "FX-PRIVACY-PROFILE-CROSS-READ",
+  "owner_phase": "IP-17",
+  "requirement_ids": ["FR-014", "NFR-009"],
+  "scope_a": {
+    "browser_family": "chrome",
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "context_kind": "normal"
+  },
+  "scope_b": {
+    "browser_family": "chrome",
+    "profile_id": "123e4567-e89b-42d3-a456-426614174001",
+    "context_kind": "normal"
+  },
+  "epoch_a": "123e4567-e89b-42d3-a456-426614174010",
+  "revision": 7,
+  "attempts": [
+    {
+      "kind": "host_response",
+      "response": {
+        "profile_id": "123e4567-e89b-42d3-a456-426614174001",
+        "context_kind": "normal",
+        "projection_revision": 7
+      },
+      "expected": "PROFILE_MISMATCH"
+    },
+    {
+      "kind": "record",
+      "record_profile_id": "123e4567-e89b-42d3-a456-426614174001",
+      "record_context_kind": "normal",
+      "expected": "PROFILE_MISMATCH"
+    },
+    {
+      "kind": "settings",
+      "profile_id": "123e4567-e89b-42d3-a456-426614174001",
+      "expected": "PROFILE_MISMATCH"
+    },
+    {
+      "kind": "diagnostic",
+      "profile_id": "123e4567-e89b-42d3-a456-426614174001",
+      "expected": "PROFILE_MISMATCH"
+    },
+    {
+      "kind": "result_reference",
+      "profile_id": "123e4567-e89b-42d3-a456-426614174001",
+      "context_kind": "normal",
+      "tab_id": 99,
+      "expected": "PROFILE_MISMATCH"
+    }
+  ],
+  "expected": {
+    "observations": [
+      {
+        "signal": "cross_profile_reads_rejected",
+        "value": true
+      },
+      {
+        "signal": "no_foreign_settings_or_diagnostics_read",
+        "value": true
+      }
+    ],
+    "privacy_assertions": [
+      "A profile-B response, record, setting, diagnostic, or result reference is rejected before projection, index, or SQLite access."
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "fixture_id": "FX-PRIVACY-REDACTION",
+  "owner_phase": "IP-17",
+  "requirement_ids": ["NFR-009", "NFR-007"],
+  "sensitive_values": [
+    "SENTINEL-TITLE-9f4b",
+    "https://user:SENTINEL-PASSWORD@example.test/path?token=SENTINEL-TOKEN#SENTINEL-FRAGMENT",
+    "SENTINEL-QUERY-7c2a",
+    "SENTINEL-LABEL-1d3e",
+    "SENTINEL-COOKIE-4a5b",
+    "Bearer SENTINEL-BEARER-8e9f",
+    "SENTINEL-TAB-ID-99",
+    "SENTINEL-PRIVATE-ID-42",
+    "SENTINEL-ERROR-TEXT"
+  ],
+  "context": {
+    "title_display": "SENTINEL-TITLE-9f4b",
+    "url_display": "https://user:SENTINEL-PASSWORD@example.test/path?token=SENTINEL-TOKEN#SENTINEL-FRAGMENT",
+    "query": "SENTINEL-QUERY-7c2a",
+    "window_label_display": "SENTINEL-LABEL-1d3e",
+    "cookie_like": "SENTINEL-COOKIE-4a5b",
+    "auth_header": "Bearer SENTINEL-BEARER-8e9f",
+    "tab_id": "SENTINEL-TAB-ID-99",
+    "private_id": "SENTINEL-PRIVATE-ID-42",
+    "error_text": "SENTINEL-ERROR-TEXT",
+    "nested": {
+      "unknown": "SENTINEL-TITLE-9f4b"
+    }
+  },
+  "expected": {
+    "observations": [
+      {
+        "signal": "sentinels_absent_from_outputs",
+        "value": true
+      },
+      {
+        "signal": "unknown_fields_dropped",
+        "value": true
+      }
+    ],
+    "privacy_assertions": [
+      "Title, URL credentials/query/fragment, query text, labels, cookie-like values, token-like values, tab IDs, private IDs, and arbitrary error text are absent from every persisted or exported output."
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "records": [
+    {
+      "event_id": "event-0002",
+      "session_id": "session-0001",
+      "profile_scope": "local-sha256:fedcba9876543210",
+      "component": "storage",
+      "state": "healthy",
+      "error_class": "none",
+      "retryable": false,
+      "duration_ms": 12,
+      "retention_count": 1,
+      "retention_bytes": 64
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "fixture_id": "FX-PRIVACY-PRIVATE-TEARDOWN",
+  "owner_phase": "IP-17",
+  "requirement_ids": ["FR-014", "NFR-009"],
+  "normal_scope": {
+    "browser_family": "chrome",
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "context_kind": "normal"
+  },
+  "private_scope": {
+    "browser_family": "chrome",
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "context_kind": "private",
+    "private_nonce": "private-nonce-1"
+  },
+  "epoch": "123e4567-e89b-42d3-a456-426614174010",
+  "revision": 7,
+  "late_response": {
+    "profile_id": "123e4567-e89b-42d3-a456-426614174000",
+    "context_kind": "private",
+    "projection_revision": 7
+  },
+  "expected": {
+    "private_count_after_teardown": 0,
+    "normal_count_after_teardown": 1,
+    "late_response": "PRIVATE_CONTEXT_ENDED",
+    "activation_fallback": false,
+    "observations": [
+      {
+        "signal": "private_memory_cleared",
+        "value": true
+      },
+      {
+        "signal": "late_response_ignored",
+        "value": true
+      }
+    ],
+    "privacy_assertions": [
+      "Ending a private context removes its records and rejects a delayed response without falling back to normal state."
+    ]
+  }
+}

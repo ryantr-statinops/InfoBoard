@@ -1,0 +1,65 @@
+{
+  "fixture_id": "FX-PRIVACY-RETENTION-AUDIT",
+  "owner_phase": "IP-17",
+  "requirement_ids": ["FR-015", "NFR-009"],
+  "seed": "retention-seed.sql",
+  "database": "retention.sqlite",
+  "profiles": {
+    "profile_a": "123e4567-e89b-42d3-a456-426614174000",
+    "profile_b": "123e4567-e89b-42d3-a456-426614174001"
+  },
+  "limits": {
+    "activation_rows_per_profile": 500,
+    "activation_age_days": 30,
+    "diagnostics_age_days": 7,
+    "diagnostics_bytes": 10000000,
+    "diagnostics_scope": "global"
+  },
+  "expected": {
+    "activation_counts_after": {
+      "profile_a": 500,
+      "profile_b": 10
+    },
+    "activation_private_rows": 0,
+    "diagnostics_bytes_at_most": 10000000,
+    "diagnostics_scope": "global",
+    "old_activation_removed": true,
+    "old_diagnostics_removed": true,
+    "reset_keeps_other_profile": true,
+    "uninstall_keeps_unrelated_table": true,
+    "owned_tables": [
+      "activation_metadata",
+      "configuration",
+      "diagnostics",
+      "installation_state",
+      "schema_meta",
+      "schema_migrations"
+    ],
+    "unrelated_tables": ["browser_state"],
+    "observations": [
+      {
+        "signal": "activation_profile_count_bounded",
+        "value": true
+      },
+      {
+        "signal": "diagnostics_global_byte_budget_bounded",
+        "value": true
+      },
+      {
+        "signal": "private_rows_absent",
+        "value": true
+      },
+      {
+        "signal": "reset_profile_scoped",
+        "value": true
+      },
+      {
+        "signal": "uninstall_owned_tables_only",
+        "value": true
+      }
+    ],
+    "privacy_assertions": [
+      "Activation retention is profile-scoped at 500 rows and 30 days; diagnostics apply the IP-08 seven-day age rule and global 10,000,000-byte budget; no private row is present; reset removes only the requested profile's owned rows; uninstall removes only owned tables."
+    ]
+  }
+}
