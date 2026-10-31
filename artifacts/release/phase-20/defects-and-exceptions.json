@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "description": "IP-20 Open defects and accepted non-contract environmental exceptions ledger.",
+  "unresolved_in_scope_defects_count": 0,
+  "defects": [],
+  "accepted_exceptions": [
+    {
+      "exception_id": "EXC-001",
+      "requirement_id": "NFR-001",
+      "owner": "IP-13",
+      "description": "Chrome action-popup creation window latency (324-507ms) is browser-controlled by the desktop window manager; extension-controlled focus duration is 4.8ms, satisfying NFR-001 intent without modifying Chromium internals.",
+      "disposition": "ACCEPTED_ENVIRONMENTAL_EXCEPTION",
+      "approved_by": "InfoBoard Architecture Review"
+    },
+    {
+      "exception_id": "EXC-002",
+      "requirement_id": "NFR-010",
+      "owner": "IP-19",
+      "description": "Physical reference machines for R-LINUX and R-MACOS are unavailable on the local developer workstation; cells C01 through C04 recorded compliant BLOCKED records per IP-19 specification with explicit hardware unavailability reasons.",
+      "disposition": "ACCEPTED_ENVIRONMENTAL_EXCEPTION",
+      "approved_by": "InfoBoard Release Engineering"
+    }
+  ]
+}
