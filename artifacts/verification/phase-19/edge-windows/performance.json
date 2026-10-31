@@ -1,0 +1,69 @@
+{
+  "status": "PASS",
+  "run_timestamp": "2026-10-31T13:30:18.426865+00:00",
+  "browser": "edge",
+  "os": "windows",
+  "reference": "R-WINDOWS",
+  "hardware_id": "REF-HW-WINDOWS-R-WINDOWS",
+  "tab_count": 1000,
+  "tabs_seed_sha256": "4c25a400e2467165ee5996cb7f56180a0700d81fbca5c12e31fe2799ac03261f",
+  "query": "p19-cross-platform-tab-activation-latency-benchmark-query-000000",
+  "query_length": 64,
+  "samples_count": 101,
+  "warmup_count": 10,
+  "seed": "p19",
+  "clock": "monotonic_perf_counter_ns",
+  "power_mode": "AC / Best Performance",
+  "metrics": {
+    "NFR-001_shortcut_to_focus": {
+      "unit": "ms",
+      "gate_limit": 100.0,
+      "percentiles": {
+        "p50": 5.506,
+        "p95": 6.2285,
+        "p99": 6.3191,
+        "min": 4.7776,
+        "max": 6.5265
+      },
+      "raw_samples_count": 101
+    },
+    "NFR-002_query_to_render": {
+      "unit": "ms",
+      "gate_limit": 50.0,
+      "percentiles": {
+        "p50": 0.2112,
+        "p95": 0.4848,
+        "p99": 1.1099,
+        "min": 0.1675,
+        "max": 1.4029
+      },
+      "raw_samples_count": 101
+    },
+    "NFR-003_selection_to_activation": {
+      "unit": "ms",
+      "gate_limit": 100.0,
+      "percentiles": {
+        "p50": 0.6213,
+        "p95": 0.9035,
+        "p99": 1.4552,
+        "min": 0.2374,
+        "max": 1.4829
+      },
+      "raw_samples_count": 101,
+      "scheduling_delay_avg_ms": 0.001
+    }
+  },
+  "memory_observations": {
+    "unit": "bytes",
+    "setup": 27914240,
+    "after_warmup": 27987968,
+    "after_measured": 27987968,
+    "after_10_repeats": 27987968
+  },
+  "gate_results": {
+    "NFR-001": "PASS",
+    "NFR-002": "PASS",
+    "NFR-003": "PASS"
+  },
+  "blocked_reason": null
+}

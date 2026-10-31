@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "description": "IP-19 six-row browser/OS/reference compatibility matrix specification.",
+  "cells": [
+    {
+      "cell_id": "C01",
+      "browser": "chrome",
+      "browser_channel": "Google Chrome Stable",
+      "os": "linux",
+      "reference_class": "R-LINUX",
+      "evidence_dir": "artifacts/verification/phase-19/chrome-linux",
+      "command_arguments": [
+        "--browser", "chrome",
+        "--os", "linux",
+        "--reference", "R-LINUX"
+      ]
+    },
+    {
+      "cell_id": "C02",
+      "browser": "edge",
+      "browser_channel": "Microsoft Edge Stable",
+      "os": "linux",
+      "reference_class": "R-LINUX",
+      "evidence_dir": "artifacts/verification/phase-19/edge-linux",
+      "command_arguments": [
+        "--browser", "edge",
+        "--os", "linux",
+        "--reference", "R-LINUX"
+      ]
+    },
+    {
+      "cell_id": "C03",
+      "browser": "chrome",
+      "browser_channel": "Google Chrome Stable",
+      "os": "macos",
+      "reference_class": "R-MACOS",
+      "evidence_dir": "artifacts/verification/phase-19/chrome-macos",
+      "command_arguments": [
+        "--browser", "chrome",
+        "--os", "macos",
+        "--reference", "R-MACOS"
+      ]
+    },
+    {
+      "cell_id": "C04",
+      "browser": "edge",
+      "browser_channel": "Microsoft Edge Stable",
+      "os": "macos",
+      "reference_class": "R-MACOS",
+      "evidence_dir": "artifacts/verification/phase-19/edge-macos",
+      "command_arguments": [
+        "--browser", "edge",
+        "--os", "macos",
+        "--reference", "R-MACOS"
+      ]
+    },
+    {
+      "cell_id": "C05",
+      "browser": "chrome",
+      "browser_channel": "Google Chrome Stable",
+      "os": "windows",
+      "reference_class": "R-WINDOWS",
+      "evidence_dir": "artifacts/verification/phase-19/chrome-windows",
+      "command_arguments": [
+        "--browser", "chrome",
+        "--os", "windows",
+        "--reference", "R-WINDOWS"
+      ]
+    },
+    {
+      "cell_id": "C06",
+      "browser": "edge",
+      "browser_channel": "Microsoft Edge Stable",
+      "os": "windows",
+      "reference_class": "R-WINDOWS",
+      "evidence_dir": "artifacts/verification/phase-19/edge-windows",
+      "command_arguments": [
+        "--browser", "edge",
+        "--os", "windows",
+        "--reference", "R-WINDOWS"
+      ]
+    }
+  ]
+}

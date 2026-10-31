@@ -1,0 +1,359 @@
+{
+  "schema_version": 1,
+  "description": "Canonical test fixtures for IP-19 cross-platform browser verification.",
+  "fixtures": [
+    {
+      "fixture_id": "FX-SHORTCUT-FOCUS",
+      "requirement_ids": [
+        "NFR-001",
+        "FR-001"
+      ],
+      "description": "Configurable browser command opens focused surface with query input active.",
+      "setup": {
+        "profile_kind": "disposable",
+        "installed_package": "valid_release",
+        "host_state": "healthy"
+      },
+      "input": {
+        "command": "open-search",
+        "shortcut": "Ctrl+Shift+Y"
+      },
+      "expected": {
+        "surface_visible": true,
+        "active_element": "input#query",
+        "p95_limit_ms": 100
+      },
+      "cleanup": {
+        "command": "close-search"
+      }
+    },
+    {
+      "fixture_id": "FX-QUERY-1000-64",
+      "requirement_ids": [
+        "NFR-002",
+        "FR-002",
+        "FR-003"
+      ],
+      "description": "Query accepted to rendered result revision for 1,000 tabs with a 64-char query.",
+      "setup": {
+        "tab_count": 1000,
+        "tab_seed_prefix": "synthetic-tab-p19",
+        "indexed": true
+      },
+      "input": {
+        "query": "p19-cross-platform-tab-activation-latency-benchmark-query-000000"
+      },
+      "expected": {
+        "matching_result_count": 1,
+        "p95_limit_ms": 50,
+        "top_result_id": "tab-p19-target-000000"
+      },
+      "cleanup": {
+        "clear_query": true
+      }
+    },
+    {
+      "fixture_id": "FX-ACTIVATION-RACE",
+      "requirement_ids": [
+        "NFR-003",
+        "FR-004",
+        "FR-014"
+      ],
+      "description": "Enter keydown to activation acknowledgement excluding browser scheduling delay.",
+      "setup": {
+        "focused_tab_id": "tab-p19-target-000000",
+        "surface_open": true
+      },
+      "input": {
+        "key": "Enter"
+      },
+      "expected": {
+        "acknowledged": true,
+        "stale_activation_prevented": true,
+        "p95_limit_ms": 100
+      },
+      "cleanup": {
+        "surface_closed": true
+      }
+    },
+    {
+      "fixture_id": "FX-EVENT-RECONCILE",
+      "requirement_ids": [
+        "FR-003",
+        "FR-005"
+      ],
+      "description": "Projection reconciles tab additions, closures, and updates in order.",
+      "setup": {
+        "initial_tabs": 10
+      },
+      "input": {
+        "mutations": [
+          {
+            "op": "create",
+            "tab_id": 101,
+            "title": "New Tab",
+            "url": "https://example.com/new"
+          },
+          {
+            "op": "remove",
+            "tab_id": 5
+          }
+        ]
+      },
+      "expected": {
+        "reconciled": true,
+        "final_tab_count": 10,
+        "contains_new_tab": true
+      },
+      "cleanup": {}
+    },
+    {
+      "fixture_id": "FX-MISSED-EVENT",
+      "requirement_ids": [
+        "FR-003",
+        "NFR-006"
+      ],
+      "description": "Missed tab events trigger full projection snapshot recovery.",
+      "setup": {
+        "injected_event_gap": true
+      },
+      "input": {
+        "action": "trigger_snapshot_recovery"
+      },
+      "expected": {
+        "rebuild_complete": true,
+        "duplicate_ids": 0,
+        "index_ready": true
+      },
+      "cleanup": {}
+    },
+    {
+      "fixture_id": "FX-HOST-DOWN",
+      "requirement_ids": [
+        "NFR-006",
+        "FR-012"
+      ],
+      "description": "Native messaging host process is absent or stopped gracefully.",
+      "setup": {
+        "host_running": false
+      },
+      "input": {
+        "open_surface": true
+      },
+      "expected": {
+        "status": "unavailable",
+        "recovery_action": "reconnect",
+        "error_class": "host_unavailable"
+      },
+      "cleanup": {
+        "restart_host": true
+      }
+    },
+    {
+      "fixture_id": "FX-HOST-CRASH",
+      "requirement_ids": [
+        "NFR-006",
+        "FR-012"
+      ],
+      "description": "Host process terminates unexpectedly and recovers on restart.",
+      "setup": {
+        "kill_host": true
+      },
+      "input": {
+        "reconnect": true
+      },
+      "expected": {
+        "health_transition": [
+          "recovering",
+          "healthy"
+        ],
+        "index_freshness": "current"
+      },
+      "cleanup": {}
+    },
+    {
+      "fixture_id": "FX-MALFORMED-FRAME",
+      "requirement_ids": [
+        "NFR-009",
+        "FR-007"
+      ],
+      "description": "Malformed Native Messaging frame is rejected fail-closed.",
+      "setup": {},
+      "input": {
+        "raw_bytes": "invalid-non-json-binary-payload"
+      },
+      "expected": {
+        "rejected": true,
+        "crash_prevented": true,
+        "error_class": "malformed_frame"
+      },
+      "cleanup": {}
+    },
+    {
+      "fixture_id": "FX-OVERSIZED-FRAME",
+      "requirement_ids": [
+        "NFR-009",
+        "FR-007"
+      ],
+      "description": "Frame exceeding 1 MiB wire limit is rejected before allocation.",
+      "setup": {},
+      "input": {
+        "frame_size_bytes": 1048577
+      },
+      "expected": {
+        "rejected": true,
+        "error_class": "frame_too_large"
+      },
+      "cleanup": {}
+    },
+    {
+      "fixture_id": "FX-STORAGE-DEGRADED",
+      "requirement_ids": [
+        "FR-012",
+        "FR-008"
+      ],
+      "description": "Storage write failure degrades persistence while lexical search remains available.",
+      "setup": {
+        "read_only_storage": true
+      },
+      "input": {
+        "query": "test"
+      },
+      "expected": {
+        "health_status": "degraded",
+        "lexical_available": true,
+        "query_succeeds": true
+      },
+      "cleanup": {
+        "restore_storage": true
+      }
+    },
+    {
+      "fixture_id": "FX-PERMISSION-DENIED",
+      "requirement_ids": [
+        "NFR-007",
+        "NFR-009"
+      ],
+      "description": "Unapproved browser API or host origin is blocked fail-closed.",
+      "setup": {},
+      "input": {
+        "attempt_api": "chrome.history"
+      },
+      "expected": {
+        "denied": true,
+        "zero_network_calls": true
+      },
+      "cleanup": {}
+    },
+    {
+      "fixture_id": "FX-PROFILE-ISOLATION",
+      "requirement_ids": [
+        "FR-014",
+        "NFR-009"
+      ],
+      "description": "Profile A cannot read, query, or activate tabs belonging to Profile B.",
+      "setup": {
+        "profiles": [
+          "profile-a",
+          "profile-b"
+        ]
+      },
+      "input": {
+        "caller_profile": "profile-a",
+        "target_profile": "profile-b"
+      },
+      "expected": {
+        "cross_profile_read_blocked": true,
+        "cross_profile_activation_blocked": true
+      },
+      "cleanup": {}
+    },
+    {
+      "fixture_id": "FX-PRIVATE-CONTEXT",
+      "requirement_ids": [
+        "FR-014",
+        "NFR-009"
+      ],
+      "description": "Incognito / InPrivate tabs are strictly ephemeral and never persisted.",
+      "setup": {
+        "private_window_open": true
+      },
+      "input": {
+        "query_in_private": true
+      },
+      "expected": {
+        "persisted_rows_count": 0,
+        "private_separation_verified": true
+      },
+      "cleanup": {
+        "close_private_window": true
+      }
+    },
+    {
+      "fixture_id": "FX-RESET-OWNERSHIP",
+      "requirement_ids": [
+        "FR-015"
+      ],
+      "description": "Configuration reset removes only InfoBoard-owned records.",
+      "setup": {
+        "custom_settings": {
+          "theme": "custom",
+          "decay": 0.5
+        }
+      },
+      "input": {
+        "action": "reset_settings"
+      },
+      "expected": {
+        "defaults_restored": true,
+        "browser_tabs_intact": true,
+        "history_untouched": true
+      },
+      "cleanup": {}
+    },
+    {
+      "fixture_id": "FX-UNINSTALL-OWNERSHIP",
+      "requirement_ids": [
+        "FR-015"
+      ],
+      "description": "Uninstall removes only owned registry keys and paths without touching browser state.",
+      "setup": {},
+      "input": {
+        "action": "uninstall"
+      },
+      "expected": {
+        "owned_paths_absent": true,
+        "unrelated_files_preserved": true
+      },
+      "cleanup": {}
+    },
+    {
+      "fixture_id": "FX-ACCESSIBILITY",
+      "requirement_ids": [
+        "NFR-008",
+        "FR-013"
+      ],
+      "description": "Keyboard-only navigation, visible focus ring, contrast, and scaling.",
+      "setup": {
+        "text_scale": 2.0,
+        "viewport": {
+          "width": 320,
+          "height": 480
+        }
+      },
+      "input": {
+        "keys": [
+          "Ctrl+Shift+Y",
+          "ArrowDown",
+          "Enter"
+        ]
+      },
+      "expected": {
+        "pointer_free_complete": true,
+        "contrast_compliant": true,
+        "no_content_clipping": true
+      },
+      "cleanup": {}
+    }
+  ]
+}

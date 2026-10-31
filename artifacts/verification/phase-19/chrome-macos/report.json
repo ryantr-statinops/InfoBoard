@@ -1,0 +1,39 @@
+{
+  "cell_id": "C03",
+  "status": "BLOCKED",
+  "run_timestamp": "2026-10-31T13:30:06.002055+00:00",
+  "git_commit": "4d8fcfd77d1b637c8cdd463f04fdf5bfc2a54feb",
+  "extension_package_sha256": "c8a851399b325694368956ab25bfc8fd76efad165e17adc63f225c2bc5ffde78",
+  "host_binary_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "host_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "versions": {
+    "protocol": 1,
+    "schema": 1,
+    "ranking": "rank-1"
+  },
+  "fixture_sha256": "d690bd61c39d9decc6a9b1797d258be3d70245f42cd851a08e71a53860dc5eae",
+  "hardware_id": "REF-HW-MACOS-R-MACOS",
+  "os_build": "Declared macos reference class",
+  "browser_build": "Chrome Stable",
+  "locale": "en_US",
+  "power_mode": "AC / Standard",
+  "command_line": [
+    "run-cell",
+    "--browser",
+    "chrome",
+    "--os",
+    "macos",
+    "--reference",
+    "R-MACOS"
+  ],
+  "raw_artifact_paths": {},
+  "gate_statuses": {
+    "clean-install": "BLOCKED",
+    "startup": "BLOCKED",
+    "upgrade": "BLOCKED",
+    "reconnect": "BLOCKED",
+    "reset": "BLOCKED",
+    "uninstall": "BLOCKED"
+  },
+  "blocked_reason": "physical_reference_hardware_R-MACOS_unavailable_on_local_windows"
+}

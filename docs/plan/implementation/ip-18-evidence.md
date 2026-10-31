@@ -1,6 +1,6 @@
 # IP-18 evidence — Packaging and host registration
 
-Status: implementation and phase acceptance checks passed on `dev`.
+Status: released via PR #30 (merge commit `18b7be3`); implementation and phase acceptance checks passed.
 
 ## Delivered contract
 
@@ -65,3 +65,7 @@ Observed:
 - [x] Repair & Uninstall: restores missing owned files, clean uninstallation limited to owned paths.
 - [x] Compatibility fail-closed: version mismatch halts execution before data transfer.
 - [x] Fixture catalog seam: 12 new packaging fixtures registered in `catalog.json`, 105 total fixtures, 19 seams intact.
+
+## Release status
+
+- Released via PR #30; `main` contains merge commit `18b7be3`.
