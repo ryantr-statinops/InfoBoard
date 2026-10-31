@@ -1,6 +1,6 @@
 # IP-19 evidence — Cross-platform browser verification
 
-Status: implementation and phase acceptance checks passed on `dev`.
+Status: released via PR #31 (merge commit `dbc1569`); implementation and phase acceptance checks passed.
 
 ## Delivered contract
 
@@ -56,3 +56,7 @@ Observed:
 | **NFR-003** | Enter keydown → tab activation acknowledgement | p95 <= 100 ms | 0.1 ms | 0.2 ms | 0.2 ms | **PASS** |
 
 *Process memory footprint: 22.4 MB at setup, 23.9 MB after warmup, 23.9 MB after 101 measured samples, and 23.9 MB after 10 repeat cycles (strictly bounded).*
+
+## Release status
+
+- Released via PR #31; `main` contains merge commit `dbc1569`.
