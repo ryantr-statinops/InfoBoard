@@ -8,11 +8,12 @@ export let selectedIndex = 0;
 
 export async function loadTabsAndReconcileMRU(): Promise<SearchTabItem[]> {
   const [sessionData, rawTabs] = await Promise.all([
-    chrome.storage.session.get(MRU_STORAGE_KEY).catch(() => ({})),
+    chrome.storage.session.get(MRU_STORAGE_KEY).catch(() => ({} as Record<string, any>)),
     chrome.tabs.query({}).catch(() => [] as chrome.tabs.Tab[])
   ]);
 
-  const mruIds: number[] = Array.isArray(sessionData[MRU_STORAGE_KEY]) ? sessionData[MRU_STORAGE_KEY] : [];
+  const rawMru = (sessionData as Record<string, any>)[MRU_STORAGE_KEY];
+  const mruIds: number[] = Array.isArray(rawMru) ? rawMru : [];
   const mruMap = new Map<number, number>();
   mruIds.forEach((id, idx) => mruMap.set(id, idx));
 
