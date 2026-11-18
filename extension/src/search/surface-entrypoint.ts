@@ -1,4 +1,5 @@
 import { normalizeTab, type SearchTabItem } from './types.js';
+import { searchTabs } from './scorer.js';
 import { MRU_STORAGE_KEY } from '../background/mru-manager.js';
 
 export let allTabs: SearchTabItem[] = [];
@@ -128,6 +129,18 @@ export async function initializeSearchSurface(doc: Document = document): Promise
   // Pre-select previous tab (index 1) for instant Alt+Tab toggle
   selectedIndex = currentResults.length > 1 ? 1 : 0;
   renderTabList(doc);
+
+  input.addEventListener('input', () => {
+    const query = input.value.trim();
+    if (query.length === 0) {
+      currentResults = [...allTabs];
+      selectedIndex = currentResults.length > 1 ? 1 : 0;
+    } else {
+      currentResults = searchTabs(allTabs, query);
+      selectedIndex = 0;
+    }
+    renderTabList(doc);
+  });
 
   input.focus();
 }
