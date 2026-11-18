@@ -124,6 +124,9 @@ export async function initializeSearchSurface(doc: Document = document): Promise
 
   allTabs = await loadTabsAndReconcileMRU();
   currentResults = [...allTabs];
+
+  // Pre-select previous tab (index 1) for instant Alt+Tab toggle
+  selectedIndex = currentResults.length > 1 ? 1 : 0;
   renderTabList(doc);
 
   input.focus();
