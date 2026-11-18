@@ -192,6 +192,9 @@ export async function initializeSearchSurface(doc: Document = document): Promise
     } else if (e.key === 'End') {
       e.preventDefault();
       updateSelection(currentResults.length - 1, doc);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      window.close();
     }
   });
 
