@@ -1,7 +1,7 @@
 import { ChromeBrowserAdapter, type BrowserAdapter } from '../browser/browser-adapter.js';
 import { TabObserver } from '../browser/tab-observer.js';
 import { createCommandHandler } from './open-search-command.js';
-import { touchTab } from './mru-manager.js';
+import { touchTab, removeTab } from './mru-manager.js';
 
 const adapter: BrowserAdapter = new ChromeBrowserAdapter();
 const handleCommand = createCommandHandler(adapter);
@@ -15,6 +15,12 @@ void tabObserver.start();
 chrome.tabs.onActivated.addListener(activeInfo => {
   if (typeof activeInfo.tabId === 'number') {
     void touchTab(activeInfo.tabId);
+  }
+});
+
+chrome.tabs.onRemoved.addListener(tabId => {
+  if (typeof tabId === 'number') {
+    void removeTab(tabId);
   }
 });
 
