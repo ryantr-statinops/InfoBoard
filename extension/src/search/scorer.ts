@@ -29,5 +29,26 @@ export function scoreTab(item: SearchTabItem, rawQuery: string): number {
     return 800;
   }
 
+  // 3. Acronym Match (e.g., "yt" -> "YouTube", "gh" -> "GitHub")
+  const titleWords = title.split(/[\s._/\-:]+/).filter(w => w.length > 0);
+  const acronym = titleWords.map(w => w[0]).join('').toLowerCase();
+  if (acronym.length >= q.length && acronym.startsWith(q)) {
+    return 650;
+  }
+
+  // 4. Subsequence / FZF-style ordered character match
+  let qIdx = 0;
+  let gaps = 0;
+  for (let i = 0; i < title.length && qIdx < q.length; i++) {
+    if (title[i] === q[qIdx]) {
+      qIdx++;
+    } else if (qIdx > 0) {
+      gaps++;
+    }
+  }
+  if (qIdx === q.length) {
+    return Math.max(100, 450 - gaps * 10);
+  }
+
   return -1;
 }
