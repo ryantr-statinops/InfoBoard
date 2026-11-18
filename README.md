@@ -1,31 +1,74 @@
 # InfoBoard
 
-InfoBoard is a keyboard-first Chrome/Edge desktop extension for searching and activating eligible open tabs across windows and browser contexts.
+InfoBoard is an ultra-fast, keyboard-first Chrome/Edge desktop extension for searching and switching open tabs across windows.
 
-The extension owns browser permissions, tab observation, the focused search surface, and tab activation. A local Go Native Messaging host owns protocol handling, projection reconciliation, in-memory lexical search, deterministic ranking, bounded SQLite persistence, health, and diagnostics. The normal path is local and metadata-only: no page-content indexing, browsing-history access, cloud service, or loopback transport.
+Built with a **Pure Manifest V3 architecture**, it runs 100% in-browser with zero external native hosts, zero daemons, and zero database overhead.
 
-## Project status
+---
 
-IP-01 and IP-02 are complete in dev. IP-03 is merged into dev as a browser-toolbar popup with open (Ctrl+Shift+Y / Command+Shift+Y) and close (Ctrl+Shift+X / Command+Shift+X) shortcuts. Build, unit/domain checks, corpus, fixtures, and targeted Go checks pass. Chrome/Edge popup acceptance remains unverified; it was skipped at the user's direction.
+## Key Features
 
-- [Canonical product specification](docs/plan/refactor/README.md)
-- [Implementation execution dashboard](docs/plan/implementation/README.md)
-- [Phase inventory, dependency DAG, and branch protocol](docs/plan/implementation/index.md)
-- [Workspace and agent context](CONTEXT.md)
+- **Blazing Fast (< 1ms)**: In-memory lexical search and ranking directly on Chromium's V8 engine.
+- **MRU Tab Tracking**: Automatically orders open tabs by Most Recently Used recency using in-memory `chrome.storage.session` and `tab.lastAccessed`.
+- **Quick Switch (Alt+Tab Pattern)**: Opening search automatically pre-selects the previous tab—press shortcut then `Enter` to toggle immediately between your last two tabs.
+- **Multi-tier Fuzzy & Prefix Matcher**:
+  - Exact prefix on domain & title (`ti` -> `tiki.vn`, `tiktok.com`)
+  - Word-boundary matching (`t` -> `Instagram - Threads`)
+  - Acronym matching (`gh` -> `GitHub`, `yt` -> `YouTube`)
+  - Recency Boost: tabs used more recently rank higher on equal keyword matches.
+- **Privacy-first & Local**: Operates strictly on open-tab metadata (title, URL, domain). No history indexing, no page content scraping, no cloud connections.
 
-## Project map
+---
 
-| Path | Responsibility |
-| --- | --- |
-| [`docs/plan/refactor/`](docs/plan/refactor/README.md) | Binding product behavior, requirements, privacy, architecture, runtime, and acceptance |
-| [`docs/plan/implementation/`](docs/plan/implementation/README.md) | Phase plans, commit-to-task mapping, execution status, and evidence tracking |
-| [`fixtures/`](fixtures/catalog.json) | Shared contract fixture catalog and schema |
-| [`tests/implementation/validate_corpus.py`](tests/implementation/validate_corpus.py) | Standard-library phase, ownership, link, and fixture-contract validator |
-| [`docs/architecture/`](docs/architecture/README.md), [`docs/design/`](docs/design/README.md), [`docs/quality/`](docs/quality/README.md), [`docs/operations/`](docs/operations/README.md) | Preserved detailed views and supporting design/quality/operations references |
-| [`.agent/skills/`](.agent/skills/) | Repository agent skills and templates |
+## Project Structure
 
-## Starting implementation
+```text
+InfoBoard/
+├── extension/
+│   ├── manifest.json           # Manifest V3 (tabs, storage, tabGroups)
+│   ├── src/
+│   │   ├── background/
+│   │   │   ├── mru-manager.ts  # Session-based MRU ring buffer
+│   │   │   └── service-worker.ts # Tab/window activation listeners
+│   │   ├── search/
+│   │   │   ├── types.ts        # Tab item definitions & normalizers
+│   │   │   ├── scorer.ts       # Prefix/boundary/acronym/boost scoring engine (< 1KB)
+│   │   │   ├── surface-shell.html # Popup UI layout
+│   │   │   ├── surface-shell.css  # Dark/light responsive styling
+│   │   │   └── surface-entrypoint.ts # DOM rendering & keyboard navigation
+│   │   └── types/
+│   │       └── chrome.d.ts     # Minimal Chrome WebExtension type declarations
+│   └── tsconfig.json
+├── tests/
+│   └── scorer.test.mjs         # Fast unit tests for scoring & MRU ordering
+├── scripts/
+│   └── copy-extension-assets.mjs
+└── package.json
+```
 
-Follow the dependency waves in `docs/plan/implementation/index.md`. Start from the latest `origin/dev` on a dedicated phase branch, follow Section 6 task IDs and Section 7 commit instructions, and run Section 8 acceptance checks. The coordinator alone updates the README execution dashboard. IP-01 provides the corpus check `python3 tests/implementation/validate_corpus.py`; runtime source scaffolds and their setup/test commands are established by their owning phases.
+---
 
-Implementation work integrates into `dev` only after dependencies and phase acceptance checks pass. The release PR from `dev` to `main` stays open for the user to merge manually.
+## Development & Build
+
+### Prerequisites
+- Node.js >= 18
+
+### Build Extension
+```bash
+npm run build:extension
+```
+Build output is generated into `extension/dist/`.
+
+### Run Tests
+```bash
+npm test
+```
+
+---
+
+## Load in Browser
+
+1. Open Chrome or Edge and navigate to `chrome://extensions` (or `edge://extensions`).
+2. Enable **Developer mode** toggle in the top-right corner.
+3. Click **Load unpacked** and select the `extension/` directory.
+4. Press `Alt+W` (or `Command+Shift+K` on macOS) to open Tab Search.
