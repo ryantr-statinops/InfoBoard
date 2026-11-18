@@ -6,10 +6,10 @@
     "extension"
   ],
   "scripts": {
-    "build:extension": "tsc -p extension/tsconfig.json && node scripts/copy-extension-assets.mjs"
+    "build:extension": "tsc -p extension/tsconfig.json && node scripts/copy-extension-assets.mjs",
+    "test": "npm run build:extension && node --test tests/*.test.mjs"
   },
   "devDependencies": {
-    "@playwright/test": "^1.63.0",
     "typescript": "^5.9.2"
   }
 }
