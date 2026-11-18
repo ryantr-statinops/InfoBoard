@@ -33,6 +33,17 @@ export async function loadTabsAndReconcileMRU(): Promise<SearchTabItem[]> {
   return items;
 }
 
+export async function activateTab(tab: SearchTabItem): Promise<void> {
+  try {
+    await chrome.tabs.update(tab.id, { active: true });
+    await chrome.windows.update(tab.windowId, { focused: true });
+  } catch (err) {
+    console.error('Failed to activate tab:', err);
+  } finally {
+    window.close();
+  }
+}
+
 export function updateSelection(newIndex: number, doc: Document = document): void {
   if (currentResults.length === 0) return;
   const listEl = doc.getElementById('tab-results');
@@ -69,6 +80,7 @@ export function renderTabList(doc: Document = document): void {
     li.setAttribute('role', 'option');
     li.id = `tab-opt-${tab.id}`;
     li.setAttribute('aria-selected', idx === selectedIndex ? 'true' : 'false');
+    li.addEventListener('click', () => { void activateTab(tab); });
 
     // Favicon
     if (tab.favIconUrl && !tab.favIconUrl.startsWith('chrome://')) {
@@ -162,7 +174,13 @@ export async function initializeSearchSurface(doc: Document = document): Promise
   input.addEventListener('keydown', (e: KeyboardEvent) => {
     if (currentResults.length === 0) return;
 
-    if (e.key === 'ArrowDown' || (e.ctrlKey && e.key === 'n')) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const selected = currentResults[selectedIndex];
+      if (selected) {
+        void activateTab(selected);
+      }
+    } else if (e.key === 'ArrowDown' || (e.ctrlKey && e.key === 'n')) {
       e.preventDefault();
       updateSelection(selectedIndex + 1, doc);
     } else if (e.key === 'ArrowUp' || (e.ctrlKey && e.key === 'p')) {
