@@ -97,7 +97,29 @@ html, body {
   cursor: pointer;
   user-select: none;
   gap: 10px;
-  transition: background-color 0.1s ease;
+  border-left: 3px solid transparent;
+  transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+
+.tab-item:hover {
+  background-color: var(--bg-secondary);
+}
+
+.tab-item[aria-selected="true"] {
+  background-color: var(--bg-active);
+  border-left-color: var(--accent-color);
+}
+
+mark {
+  background-color: var(--highlight-bg);
+  color: var(--highlight-text);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.tab-badge-active {
+  background-color: var(--accent-color);
+  color: #ffffff;
 }
 
 .tab-favicon {
