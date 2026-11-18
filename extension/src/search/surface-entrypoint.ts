@@ -33,6 +33,23 @@ export async function loadTabsAndReconcileMRU(): Promise<SearchTabItem[]> {
   return items;
 }
 
+export function updateSelection(newIndex: number, doc: Document = document): void {
+  if (currentResults.length === 0) return;
+  const listEl = doc.getElementById('tab-results');
+  if (!listEl) return;
+
+  const prevEl = listEl.children[selectedIndex] as HTMLElement | undefined;
+  if (prevEl) prevEl.setAttribute('aria-selected', 'false');
+
+  selectedIndex = (newIndex + currentResults.length) % currentResults.length;
+
+  const nextEl = listEl.children[selectedIndex] as HTMLElement | undefined;
+  if (nextEl) {
+    nextEl.setAttribute('aria-selected', 'true');
+    nextEl.scrollIntoView({ block: 'nearest' });
+  }
+}
+
 export function renderTabList(doc: Document = document): void {
   const listEl = doc.getElementById('tab-results');
   const emptyEl = doc.getElementById('empty-state');
@@ -140,6 +157,24 @@ export async function initializeSearchSurface(doc: Document = document): Promise
       selectedIndex = 0;
     }
     renderTabList(doc);
+  });
+
+  input.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (currentResults.length === 0) return;
+
+    if (e.key === 'ArrowDown' || (e.ctrlKey && e.key === 'n')) {
+      e.preventDefault();
+      updateSelection(selectedIndex + 1, doc);
+    } else if (e.key === 'ArrowUp' || (e.ctrlKey && e.key === 'p')) {
+      e.preventDefault();
+      updateSelection(selectedIndex - 1, doc);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      updateSelection(0, doc);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      updateSelection(currentResults.length - 1, doc);
+    }
   });
 
   input.focus();
