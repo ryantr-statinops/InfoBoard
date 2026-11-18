@@ -1,39 +1,136 @@
-import { ChromeBrowserAdapter } from '../browser/browser-adapter.js';
-import { registerSurfaceDismissal } from './surface-dismissal.js';
+import { normalizeTab, type SearchTabItem } from './types.js';
+import { MRU_STORAGE_KEY } from '../background/mru-manager.js';
 
-const adapter = new ChromeBrowserAdapter();
+export let allTabs: SearchTabItem[] = [];
+export let currentResults: SearchTabItem[] = [];
+export let selectedIndex = 0;
 
-function reportError(doc: Document, code: 'profile-unavailable' | 'query-input-missing' | 'focus-unavailable'): void {
-  doc.documentElement.dataset.searchError = code;
-  const status = doc.querySelector<HTMLElement>('[data-surface-status]');
-  if (status) {
-    const messages = {
-      'profile-unavailable': 'This browser profile is unavailable. Close and retry the search window.',
-      'query-input-missing': 'Search is unavailable. Close and reopen the search popup.',
-      'focus-unavailable': 'Search could not receive keyboard focus. Close and reopen the search popup.',
-    };
-    status.textContent = messages[code];
+export async function loadTabsAndReconcileMRU(): Promise<SearchTabItem[]> {
+  const [sessionData, rawTabs] = await Promise.all([
+    chrome.storage.session.get(MRU_STORAGE_KEY).catch(() => ({})),
+    chrome.tabs.query({}).catch(() => [] as chrome.tabs.Tab[])
+  ]);
+
+  const mruIds: number[] = Array.isArray(sessionData[MRU_STORAGE_KEY]) ? sessionData[MRU_STORAGE_KEY] : [];
+  const mruMap = new Map<number, number>();
+  mruIds.forEach((id, idx) => mruMap.set(id, idx));
+
+  if (mruMap.size === 0) {
+    const sorted = [...rawTabs].sort((a, b) => (b.lastAccessed ?? 0) - (a.lastAccessed ?? 0));
+    sorted.forEach((tab, idx) => {
+      if (typeof tab.id === 'number') mruMap.set(tab.id, idx);
+    });
+  }
+
+  const items: SearchTabItem[] = [];
+  for (const tab of rawTabs) {
+    const item = normalizeTab(tab, mruMap);
+    if (item) items.push(item);
+  }
+
+  items.sort((a, b) => a.mruRank - b.mruRank);
+  return items;
+}
+
+export function renderTabList(doc: Document = document): void {
+  const listEl = doc.getElementById('tab-results');
+  const emptyEl = doc.getElementById('empty-state');
+  if (!listEl) return;
+
+  listEl.innerHTML = '';
+
+  if (currentResults.length === 0) {
+    if (emptyEl) emptyEl.hidden = false;
+    return;
+  }
+  if (emptyEl) emptyEl.hidden = true;
+
+  currentResults.forEach((tab, idx) => {
+    const li = doc.createElement('li');
+    li.className = 'tab-item';
+    li.setAttribute('role', 'option');
+    li.id = `tab-opt-${tab.id}`;
+    li.setAttribute('aria-selected', idx === selectedIndex ? 'true' : 'false');
+
+    // Favicon
+    if (tab.favIconUrl && !tab.favIconUrl.startsWith('chrome://')) {
+      const img = doc.createElement('img');
+      img.className = 'tab-favicon';
+      img.src = tab.favIconUrl;
+      img.alt = '';
+      img.onerror = () => {
+        img.replaceWith(createFaviconPlaceholder(doc, tab.title || tab.domain));
+      };
+      li.appendChild(img);
+    } else {
+      li.appendChild(createFaviconPlaceholder(doc, tab.title || tab.domain));
+    }
+
+    // Tab Info
+    const info = doc.createElement('div');
+    info.className = 'tab-info';
+
+    const titleEl = doc.createElement('span');
+    titleEl.className = 'tab-title';
+    titleEl.textContent = tab.title;
+    info.appendChild(titleEl);
+
+    const meta = doc.createElement('div');
+    meta.className = 'tab-meta';
+
+    if (tab.domain) {
+      const domainEl = doc.createElement('span');
+      domainEl.className = 'tab-domain';
+      domainEl.textContent = tab.domain;
+      meta.appendChild(domainEl);
+    }
+
+    if (tab.active) {
+      const activeBadge = doc.createElement('span');
+      activeBadge.className = 'tab-badge tab-badge-active';
+      activeBadge.textContent = 'Current';
+      meta.appendChild(activeBadge);
+    }
+
+    if (tab.pinned) {
+      const pinBadge = doc.createElement('span');
+      pinBadge.className = 'tab-badge';
+      pinBadge.textContent = 'Pinned';
+      meta.appendChild(pinBadge);
+    }
+
+    info.appendChild(meta);
+    li.appendChild(info);
+    listEl.appendChild(li);
+  });
+
+  // Ensure selected item is visible
+  const selectedEl = listEl.children[selectedIndex] as HTMLElement | undefined;
+  if (selectedEl) {
+    selectedEl.scrollIntoView({ block: 'nearest' });
   }
 }
 
-export async function initializeSearchSurface(doc: Document = document): Promise<void> {
-  registerSurfaceDismissal(doc);
-  const context = await adapter.currentProfileContext();
-  if (!context.ok) { reportError(doc, 'profile-unavailable'); return; }
-  const input = doc.querySelector<HTMLInputElement>('[data-search-input]');
-  if (!input) { reportError(doc, 'query-input-missing'); return; }
-  input.value = '';
-  doc.documentElement.dataset.searchSession = crypto.randomUUID();
-  const announceReady = () => {
-    if (doc.activeElement !== input) { reportError(doc, 'focus-unavailable'); return; }
-    delete doc.documentElement.dataset.searchError;
-    doc.documentElement.dataset.searchReady = 'true';
-  };
-  requestAnimationFrame(() => {
-    try { input.focus({ preventScroll: true }); announceReady(); }
-    catch { reportError(doc, 'focus-unavailable'); }
-  });
+function createFaviconPlaceholder(doc: Document, text: string): HTMLElement {
+  const placeholder = doc.createElement('span');
+  placeholder.className = 'tab-favicon-placeholder';
+  placeholder.textContent = (text.trim()[0] || '?').toUpperCase();
+  return placeholder;
 }
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { void initializeSearchSurface(); }, { once: true });
-else void initializeSearchSurface();
+export async function initializeSearchSurface(doc: Document = document): Promise<void> {
+  const input = doc.querySelector<HTMLInputElement>('[data-search-input]');
+  if (!input) return;
+
+  allTabs = await loadTabsAndReconcileMRU();
+  currentResults = [...allTabs];
+  renderTabList(doc);
+
+  input.focus();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { void initializeSearchSurface(); }, { once: true });
+} else {
+  void initializeSearchSurface();
+}
