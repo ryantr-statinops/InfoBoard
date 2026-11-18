@@ -17,5 +17,17 @@ export function scoreTab(item: SearchTabItem, rawQuery: string): number {
     return 950;
   }
 
+  // 2. Word-boundary Prefix Match (Title or Domain)
+  // Escapes special regex characters in query
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const boundaryRegex = new RegExp(`(^|[\\s._/\\-:])${escaped}`, 'i');
+
+  if (boundaryRegex.test(domain)) {
+    return 850;
+  }
+  if (boundaryRegex.test(title)) {
+    return 800;
+  }
+
   return -1;
 }
