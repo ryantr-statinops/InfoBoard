@@ -1,34 +1,57 @@
-# Product surface
+# Product Surface and User Ergonomics
 
-## Invocation
+The InfoBoard search surface is designed as a distraction-free, zero-latency popup focused solely on finding and switching tabs.
 
-The user invokes one configurable browser command. InfoBoard opens or focuses a small extension-owned search surface for the active browser profile. The surface does not navigate the current tab, inject UI into arbitrary pages, or send a query to a network service.
+---
 
-The query input receives focus before text is accepted. A reopened surface does not silently reuse a previous query unless the user explicitly reopens the same search session.
+## 1. Invocation & Focus
 
-## Layout responsibilities
+- **Default Shortcut**:
+  - Linux / Windows: `Alt+W`
+  - macOS: `Command+Shift+K`
+- **Focus**: The popup window automatically focuses the `<input>` element immediately upon launch.
+- **Debounce**: 0 ms. Queries are evaluated synchronously on the main thread in Chromium's V8 engine without network or IPC latency.
 
-| Area | Responsibility |
-| --- | --- |
-| Query field | Accept input, expose validation, preserve visible focus, and announce changes. |
-| Result list | Show bounded ordered results and one visible selection. |
-| Result row | Show title, domain or compact URL, disambiguating window/group context, and relevant pin state. |
-| Status area | Show freshness, runtime availability, rebuilding, and activation outcomes. |
-| Privacy affordance | Explain local-only search and the product's excluded data sources. |
-| Settings surface | Explain command configuration, result count, density, theme, context labels, reset, and uninstall. |
+---
 
-## Result row rules
+## 2. Quick-Toggle Tab Switching (`Alt+Tab` Style)
 
-The title is the primary label. Domain or compact URL is secondary. Window/group context appears when it distinguishes otherwise similar tabs. Full URL query strings are redacted by default when they may contain secrets. Selection, pinning, freshness, and failure cannot be communicated by color alone.
+A primary use case is toggling back and forth between two active tabs (e.g., code editor tab and documentation tab).
 
-## Keyboard journey
+1. User presses `Alt+W`.
+2. The popup opens with an empty query.
+3. InfoBoard automatically places selection on **Index 1** (the tab activated just prior to the current tab).
+4. User presses `Enter`.
+5. The browser instantly switches to the previous tab and closes the popup.
 
-- Arrow keys move the highlighted result.
-- `Enter` activates the highlighted result.
-- `Esc` dismisses without changing the selected tab.
-- Pointer selection remains available but is not required.
-- The first result is highlighted only when results exist.
+This enables instantaneous two-keystroke tab switching without taking hands off the keyboard.
 
-Activation closes the surface only after the browser confirms the target tab/window outcome. A failed activation leaves the surface available for retry or another selection.
+---
 
-See the [canonical UX contract](../plan/refactor/user-experience.md) for the complete interaction boundary.
+## 3. Keyboard Navigation
+
+The popup provides exhaustive keyboard controls:
+
+| Key Binding | Action |
+| :--- | :--- |
+| **`ArrowDown`** / **`Ctrl+N`** | Move selection down to the next result (clamped at bottom). |
+| **`ArrowUp`** / **`Ctrl+P`** | Move selection up to the previous result (clamped at index 0). |
+| **`Enter`** | Activate the currently selected tab and window; dismiss popup. |
+| **`Escape`** | Close the popup immediately without changing active tabs. |
+| **Click / Mouse Hover** | Selects or activates the hovered tab item. |
+
+---
+
+## 4. Visual Layout & Accessibility
+
+- **Input Area**: Clean search bar with an integrated search icon and real-time result count indicator.
+- **Result Row Structure**:
+  - **Favicon**: Cached tab favicon or fallback globe icon.
+  - **Title**: Primary label with highlighted matching text (`<mark>`).
+  - **Tab Group Badge**: If a tab is part of a Chromium Tab Group, its group title and color accent are displayed.
+  - **Clean Domain / URL**: Secondary label with highlighted matching text.
+  - **Pinned Icon**: Displays a pin icon for pinned tabs.
+- **Accessibility**:
+  - Implements WAI-ARIA 1.2 Combobox pattern (`role="combobox"`, `role="listbox"`, `role="option"`).
+  - Selected tab maintains `aria-selected="true"` and updates `aria-activedescendant`.
+  - Accessible contrast ratios for dark and light modes according to WCAG 2.1 AA standards.
