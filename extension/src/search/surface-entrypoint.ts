@@ -162,6 +162,14 @@ export async function initializeSearchSurface(doc: Document = document): Promise
   selectedIndex = currentResults.length > 1 ? 1 : 0;
   renderTabList(doc);
 
+  // Trigger smooth waterfall animation right as tab items enter the DOM
+  const waterfall = doc.querySelector('.waterfall-body') as HTMLElement | null;
+  if (waterfall && waterfall.style && typeof waterfall.offsetHeight === 'number') {
+    waterfall.style.animation = 'none';
+    void waterfall.offsetHeight;
+    waterfall.style.animation = '';
+  }
+
   input.addEventListener('input', () => {
     const query = input.value.trim();
     if (query.length === 0) {
