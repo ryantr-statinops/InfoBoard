@@ -36,7 +36,12 @@ export async function loadTabsAndReconcileMRU(): Promise<SearchTabItem[]> {
   return items;
 }
 
+let isClosing = false;
+
 export async function dismissWithAnimation(doc?: Document): Promise<void> {
+  if (isClosing) return;
+  isClosing = true;
+
   const currentDoc = doc ?? (typeof document !== 'undefined' ? document : undefined);
   const container = currentDoc?.querySelector?.('.search-container') as HTMLElement | null | undefined;
   if (container) {
@@ -194,14 +199,27 @@ export async function initializeSearchSurface(doc: Document = document): Promise
     renderTabList(doc);
   });
 
+  const isCloseShortcut = (e: KeyboardEvent): boolean => {
+    if (e.key === 'Escape') return true;
+    if (e.altKey && (e.key === 'w' || e.key === 'W' || e.code === 'KeyW')) return true;
+    if (e.metaKey && e.shiftKey && (e.key === 'k' || e.key === 'K' || e.code === 'KeyK')) return true;
+    return false;
+  };
+
   input.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (isCloseShortcut(e)) {
+      e.preventDefault();
+      void dismissWithAnimation(doc);
+      return;
+    }
+
     if (currentResults.length === 0) return;
 
     if (e.key === 'Enter') {
       e.preventDefault();
       const selected = currentResults[selectedIndex];
       if (selected) {
-        void activateTab(selected);
+        void activateTab(selected, doc);
       }
     } else if (e.key === 'ArrowDown' || (e.ctrlKey && e.key === 'n')) {
       e.preventDefault();
@@ -215,9 +233,6 @@ export async function initializeSearchSurface(doc: Document = document): Promise
     } else if (e.key === 'End') {
       e.preventDefault();
       updateSelection(currentResults.length - 1, doc);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      void dismissWithAnimation(doc);
     }
   });
 
