@@ -36,14 +36,33 @@ export async function loadTabsAndReconcileMRU(): Promise<SearchTabItem[]> {
   return items;
 }
 
-export async function activateTab(tab: SearchTabItem): Promise<void> {
+export async function dismissWithAnimation(doc?: Document): Promise<void> {
+  const currentDoc = doc ?? (typeof document !== 'undefined' ? document : undefined);
+  const container = currentDoc?.querySelector?.('.search-container') as HTMLElement | null | undefined;
+  if (container) {
+    if (container.classList) {
+      container.classList.add('is-closing');
+    } else {
+      container.className += ' is-closing';
+    }
+  }
+
+  // 80ms delay allows the reverse waterfall exit animation to play smoothly
+  await new Promise(resolve => setTimeout(resolve, 80));
+
+  if (typeof window !== 'undefined' && typeof window.close === 'function') {
+    window.close();
+  }
+}
+
+export async function activateTab(tab: SearchTabItem, doc?: Document): Promise<void> {
   try {
     await chrome.tabs.update(tab.id, { active: true });
     await chrome.windows.update(tab.windowId, { focused: true });
   } catch (err) {
     console.error('Failed to activate tab:', err);
   } finally {
-    window.close();
+    await dismissWithAnimation(doc);
   }
 }
 
@@ -197,7 +216,7 @@ export async function initializeSearchSurface(doc: Document = document): Promise
       updateSelection(currentResults.length - 1, doc);
     } else if (e.key === 'Escape') {
       e.preventDefault();
-      window.close();
+      void dismissWithAnimation(doc);
     }
   });
 
