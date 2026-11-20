@@ -90,6 +90,25 @@ html, body {
   }
 }
 
+/* Snappy Reverse Waterfall Exit Animation */
+@keyframes waterfall-exit {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+    clip-path: inset(0 0 100% 0);
+  }
+}
+
+.search-container.is-closing {
+  animation: waterfall-exit 90ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: none;
+}
+
 /* Phase 1: Search Header */
 .search-header {
   position: relative;
@@ -313,7 +332,8 @@ mark {
 @media (prefers-reduced-motion: reduce) {
   .search-header,
   .results-wrapper,
-  .shortcuts-footer {
+  .shortcuts-footer,
+  .search-container.is-closing {
     animation: none !important;
     clip-path: none !important;
     transform: none !important;
