@@ -90,7 +90,7 @@ html, body {
   }
 }
 
-/* Snappy Reverse Waterfall Exit Animation */
+/* Smooth Reverse Waterfall Exit Animation (500ms) */
 @keyframes waterfall-exit {
   0% {
     opacity: 1;
@@ -99,13 +99,13 @@ html, body {
   }
   100% {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(-10px);
     clip-path: inset(0 0 100% 0);
   }
 }
 
 .search-container.is-closing {
-  animation: waterfall-exit 90ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: waterfall-exit 500ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
   pointer-events: none;
 }
 
