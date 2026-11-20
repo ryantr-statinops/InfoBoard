@@ -1,217 +1,213 @@
-import { ChromeBrowserAdapter, type BrowserProfileContext } from '../browser/browser-adapter.js';
-import { parseProfileID } from '../../domain/index.js';
-import { createActivationHandoff } from './activation-handoff.js';
-import { createNativeSearchQuerySource } from './search-query-source.js';
-import {
-  SurfaceController,
-  type ActivationHandoff,
-  type SearchQuerySource,
-} from './surface-controller.js';
-import { findSurfaceElements } from './surface-renderer.js';
-import type { SurfaceState } from './surface-state.js';
-import type { QueryRenderModel } from '../runtime/query-client.js';
+import { normalizeTab, type SearchTabItem } from './types.js';
+import { searchTabs } from './scorer.js';
+import { MRU_STORAGE_KEY } from '../background/mru-manager.js';
 
-const adapter = new ChromeBrowserAdapter();
-const SURFACE_STARTED_AT = Date.now();
-const COMMAND_STARTED_KEY = 'infoboard_search_command_started_at';
-const EMPTY_MODEL: QueryRenderModel = {
-  profileId: parseProfileID('00000000-0000-4000-8000-000000000000'),
-  sequence: 0,
-  status: 'idle',
-  rows: [],
-  projectionRevision: null,
-};
+export let allTabs: SearchTabItem[] = [];
+export let currentResults: SearchTabItem[] = [];
+export let selectedIndex = 0;
 
-export interface SurfaceTestDriver {
-  context?: BrowserProfileContext;
-  querySource: SearchQuerySource;
-  activation: ActivationHandoff;
-  dismiss?: () => void;
-  openSettings?: () => void;
-  privateUnavailable?: boolean;
-  commandStartedAt?: number;
-}
+export async function loadTabsAndReconcileMRU(): Promise<SearchTabItem[]> {
+  const [sessionData, rawTabs] = await Promise.all([
+    chrome.storage.session.get(MRU_STORAGE_KEY).catch(() => ({} as Record<string, any>)),
+    chrome.tabs.query({}).catch(() => [] as chrome.tabs.Tab[])
+  ]);
 
-declare global {
-  interface Window {
-    __INFOBOARD_SURFACE_TEST__?: SurfaceTestDriver;
+  const rawMru = (sessionData as Record<string, any>)[MRU_STORAGE_KEY];
+  const mruIds: number[] = Array.isArray(rawMru) ? rawMru : [];
+  const mruMap = new Map<number, number>();
+  mruIds.forEach((id, idx) => mruMap.set(id, idx));
+
+  if (mruMap.size === 0) {
+    const sorted = [...rawTabs].sort((a, b) => (b.lastAccessed ?? 0) - (a.lastAccessed ?? 0));
+    sorted.forEach((tab, idx) => {
+      if (typeof tab.id === 'number') mruMap.set(tab.id, idx);
+    });
   }
+
+  const items: SearchTabItem[] = [];
+  for (const tab of rawTabs) {
+    const item = normalizeTab(tab, mruMap);
+    if (item) items.push(item);
+  }
+
+  items.sort((a, b) => a.mruRank - b.mruRank);
+  allTabs = items;
+  currentResults = [...items];
+  return items;
 }
 
-interface SurfaceSessionStorageApi {
-  storage?: {
-    session?: {
-      get(key: string): Promise<Record<string, unknown>>;
-      set(items: Record<string, unknown>): Promise<void>;
-      remove(key: string): Promise<void>;
-    };
-  };
-}
-
-function sessionStorage(): SurfaceSessionStorageApi['storage'] | undefined {
-  return (globalThis as unknown as { chrome?: SurfaceSessionStorageApi }).chrome?.storage;
-}
-
-async function readCommandStartedAt(): Promise<number | undefined> {
+export async function activateTab(tab: SearchTabItem): Promise<void> {
   try {
-    const values = await sessionStorage()?.session?.get(COMMAND_STARTED_KEY);
-    const startedAt = values?.[COMMAND_STARTED_KEY];
-    return typeof startedAt === 'number' && Number.isFinite(startedAt) ? startedAt : undefined;
-  } catch {
-    return undefined;
+    await chrome.tabs.update(tab.id, { active: true });
+    await chrome.windows.update(tab.windowId, { focused: true });
+  } catch (err) {
+    console.error('Failed to activate tab:', err);
+  } finally {
+    window.close();
   }
 }
 
-async function clearCommandStartedAt(): Promise<void> {
-  try {
-    await sessionStorage()?.session?.remove(COMMAND_STARTED_KEY);
-  } catch {
-    // The timestamp is supporting evidence only.
+export function updateSelection(newIndex: number, doc: Document = document): void {
+  if (currentResults.length === 0) return;
+  const listEl = doc.getElementById('tab-results');
+  if (!listEl) return;
+
+  const prevEl = listEl.children[selectedIndex] as HTMLElement | undefined;
+  if (prevEl) prevEl.setAttribute('aria-selected', 'false');
+
+  selectedIndex = (newIndex + currentResults.length) % currentResults.length;
+
+  const nextEl = listEl.children[selectedIndex] as HTMLElement | undefined;
+  if (nextEl) {
+    nextEl.setAttribute('aria-selected', 'true');
+    nextEl.scrollIntoView({ block: 'nearest' });
   }
 }
 
-function recordFocusMetric(state: SurfaceState): void {
-  if (state.status !== 'ready' || state.shortcutFocusMs === undefined) return;
-  try {
-    void sessionStorage()?.session?.set({ infoboard_search_shortcut_focus_ms: state.shortcutFocusMs });
-  } catch {
-    // Timing evidence must never block the focused input.
+export function renderTabList(doc: Document = document): void {
+  const listEl = doc.getElementById('tab-results');
+  const emptyEl = doc.getElementById('empty-state');
+  if (!listEl) return;
+
+  listEl.innerHTML = '';
+
+  if (currentResults.length === 0) {
+    if (emptyEl) emptyEl.hidden = false;
+    return;
+  }
+  if (emptyEl) emptyEl.hidden = true;
+
+  currentResults.forEach((tab, idx) => {
+    const li = doc.createElement('li');
+    li.className = 'tab-item';
+    li.setAttribute('role', 'option');
+    li.id = `tab-opt-${tab.id}`;
+    li.setAttribute('aria-selected', idx === selectedIndex ? 'true' : 'false');
+    li.addEventListener('click', () => { void activateTab(tab); });
+
+    // Favicon
+    if (tab.favIconUrl && !tab.favIconUrl.startsWith('chrome://')) {
+      const img = doc.createElement('img');
+      img.className = 'tab-favicon';
+      img.src = tab.favIconUrl;
+      img.alt = '';
+      img.onerror = () => {
+        img.replaceWith(createFaviconPlaceholder(doc, tab.title || tab.domain));
+      };
+      li.appendChild(img);
+    } else {
+      li.appendChild(createFaviconPlaceholder(doc, tab.title || tab.domain));
+    }
+
+    // Tab Info
+    const info = doc.createElement('div');
+    info.className = 'tab-info';
+
+    const titleEl = doc.createElement('span');
+    titleEl.className = 'tab-title';
+    titleEl.textContent = tab.title;
+    info.appendChild(titleEl);
+
+    const meta = doc.createElement('div');
+    meta.className = 'tab-meta';
+
+    if (tab.domain) {
+      const domainEl = doc.createElement('span');
+      domainEl.className = 'tab-domain';
+      domainEl.textContent = tab.domain;
+      meta.appendChild(domainEl);
+    }
+
+    if (tab.active) {
+      const activeBadge = doc.createElement('span');
+      activeBadge.className = 'tab-badge tab-badge-active';
+      activeBadge.textContent = 'Current';
+      meta.appendChild(activeBadge);
+    }
+
+    if (tab.pinned) {
+      const pinBadge = doc.createElement('span');
+      pinBadge.className = 'tab-badge';
+      pinBadge.textContent = 'Pinned';
+      meta.appendChild(pinBadge);
+    }
+
+    info.appendChild(meta);
+    li.appendChild(info);
+    listEl.appendChild(li);
+  });
+
+  // Ensure selected item is visible
+  const selectedEl = listEl.children[selectedIndex] as HTMLElement | undefined;
+  if (selectedEl) {
+    selectedEl.scrollIntoView({ block: 'nearest' });
   }
 }
 
-function reportError(doc: Document, code: 'profile-unavailable' | 'query-input-missing' | 'focus-unavailable'): void {
-  doc.documentElement.dataset.searchError = code;
-  doc.documentElement.dataset.searchReady = 'false';
-  doc.documentElement.dataset.surfaceState = 'unavailable';
-  const status = doc.querySelector<HTMLElement>('[data-surface-status]');
-  if (status) {
-    const messages = {
-      'profile-unavailable': 'This browser profile is unavailable. Close and retry the search window.',
-      'query-input-missing': 'Search is unavailable. Close and reopen the search popup.',
-      'focus-unavailable': 'Search could not receive keyboard focus. Close and reopen the search popup.',
-    };
-    status.textContent = messages[code];
-  }
-}
-
-function noopQuerySource(): SearchQuerySource {
-  return {
-    view: () => EMPTY_MODEL,
-    subscribe: () => () => undefined,
-    search: async () => EMPTY_MODEL,
-    cancel: () => EMPTY_MODEL,
-  };
-}
-
-function openSettingsPage(): void {
-  try {
-    const chromeApi = (globalThis as {
-      chrome?: { runtime?: { openOptionsPage?: () => void | Promise<void> } };
-    }).chrome;
-    const opened = chromeApi?.runtime?.openOptionsPage?.();
-    if (opened && typeof opened.catch === 'function') void opened.catch(() => undefined);
-  } catch {
-    // The search surface stays usable if the options page cannot open.
-  }
-}
-
-function noopActivation(): ActivationHandoff {
-  return {
-    activate: async () => ({
-      ok: false,
-      confirmed: true,
-      browserState: 'unchanged',
-      nextAction: 'none',
-      errorCode: 'private_context',
-      reportState: 'not_configured',
-    }),
-  };
+function createFaviconPlaceholder(doc: Document, text: string): HTMLElement {
+  const placeholder = doc.createElement('span');
+  placeholder.className = 'tab-favicon-placeholder';
+  placeholder.textContent = (text.trim()[0] || '?').toUpperCase();
+  return placeholder;
 }
 
 export async function initializeSearchSurface(doc: Document = document): Promise<void> {
-  const driver = (globalThis as typeof globalThis & { __INFOBOARD_SURFACE_TEST__?: SurfaceTestDriver }).__INFOBOARD_SURFACE_TEST__;
-  if (driver) {
-    await initializeWithDriver(doc, driver);
-    return;
-  }
+  const input = doc.querySelector<HTMLInputElement>('[data-search-input]');
+  if (!input) return;
 
-  const elements = findSurfaceElements(doc);
-  if (!elements) { reportError(doc, 'query-input-missing'); return; }
+  allTabs = await loadTabsAndReconcileMRU();
+  currentResults = [...allTabs];
 
-  // Focus before profile/storage handshakes. The command-to-focus budget must
-  // not include host readiness or a slow extension storage read.
-  elements.input.value = '';
-  try { elements.input.focus({ preventScroll: true }); } catch { /* controller retries focus */ }
-  const focusTimestamp = Date.now();
-  try {
-    void sessionStorage()?.session?.set({
-      infoboard_search_surface_focus_ms: Math.max(0, focusTimestamp - SURFACE_STARTED_AT),
-    });
-  } catch {
-    // Timing evidence must never block the focused input.
-  }
+  // Pre-select previous tab (index 1) for instant Alt+Tab toggle
+  selectedIndex = currentResults.length > 1 ? 1 : 0;
+  renderTabList(doc);
 
-  const context = await adapter.currentProfileContext();
-  if (!context.ok) { reportError(doc, 'profile-unavailable'); return; }
-
-  doc.documentElement.dataset.searchSession = crypto.randomUUID();
-  const commandStartedAt = await readCommandStartedAt();
-  if (commandStartedAt !== undefined) void clearCommandStartedAt();
-
-  if (context.value.contextKind === 'private') {
-    const access = await adapter.privateContextAccess();
-    const controller = new SurfaceController({
-      doc,
-      querySource: noopQuerySource(),
-      activation: noopActivation(),
-      dismiss: () => doc.defaultView?.close(),
-      openSettings: openSettingsPage,
-      commandStartedAt,
-      focusTimestamp,
-    });
-    controller.start();
-    if (!access.ok || !access.value) controller.showPrivateUnavailable();
-    adapter.registerPopupCloseListener(() => controller.dismiss());
-    return;
-  }
-
-  const runtime = createNativeSearchQuerySource(context.value);
-  const closeSurface = () => doc.defaultView?.close();
-  const controller = new SurfaceController({
-    doc,
-    querySource: runtime.source,
-    activation: createActivationHandoff({
-      context: context.value,
-      querySource: runtime.source,
-      closeSurface,
-      transport: runtime.activationTransport,
-    }),
-    dismiss: closeSurface,
-    openSettings: openSettingsPage,
-    commandStartedAt,
-    focusTimestamp,
-    onState: recordFocusMetric,
+  input.addEventListener('input', () => {
+    const query = input.value.trim();
+    if (query.length === 0) {
+      currentResults = [...allTabs];
+      selectedIndex = currentResults.length > 1 ? 1 : 0;
+    } else {
+      currentResults = searchTabs(allTabs, query);
+      selectedIndex = 0;
+    }
+    renderTabList(doc);
   });
-  controller.start();
-  adapter.registerPopupCloseListener(() => controller.dismiss());
-  doc.defaultView?.addEventListener('pagehide', () => runtime.close(), { once: true });
+
+  input.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (currentResults.length === 0) return;
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const selected = currentResults[selectedIndex];
+      if (selected) {
+        void activateTab(selected);
+      }
+    } else if (e.key === 'ArrowDown' || (e.ctrlKey && e.key === 'n')) {
+      e.preventDefault();
+      updateSelection(selectedIndex + 1, doc);
+    } else if (e.key === 'ArrowUp' || (e.ctrlKey && e.key === 'p')) {
+      e.preventDefault();
+      updateSelection(selectedIndex - 1, doc);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      updateSelection(0, doc);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      updateSelection(currentResults.length - 1, doc);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      window.close();
+    }
+  });
+
+  input.focus();
 }
 
-async function initializeWithDriver(doc: Document, driver: SurfaceTestDriver): Promise<void> {
-  if (!findSurfaceElements(doc)) { reportError(doc, 'query-input-missing'); return; }
-  doc.documentElement.dataset.searchSession = crypto.randomUUID();
-  const controller = new SurfaceController({
-    doc,
-    querySource: driver.querySource,
-    activation: driver.activation,
-    dismiss: driver.dismiss ?? (() => doc.defaultView?.close()),
-    openSettings: driver.openSettings ?? openSettingsPage,
-    commandStartedAt: driver.commandStartedAt,
-  });
-  controller.start();
-  if (driver.privateUnavailable) controller.showPrivateUnavailable();
-  doc.defaultView?.addEventListener('pagehide', () => controller.stop(), { once: true });
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => { void initializeSearchSurface(); }, { once: true });
+  } else {
+    void initializeSearchSurface();
+  }
 }
-
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { void initializeSearchSurface(); }, { once: true });
-else void initializeSearchSurface();

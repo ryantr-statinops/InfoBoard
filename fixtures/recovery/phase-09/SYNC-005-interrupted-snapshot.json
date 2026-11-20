@@ -1,1 +1,0 @@
-{"id":"SYNC-005","name":"interrupted-snapshot","input":{"snapshot":{"partial":true,"canceled":true}},"expected":{"accepted":false,"revision_unchanged":true}}

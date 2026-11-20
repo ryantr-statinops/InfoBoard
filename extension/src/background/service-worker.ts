@@ -1,24 +1,36 @@
-import { ChromeBrowserAdapter, type BrowserAdapter } from '../browser/browser-adapter.js';
-import { TabObserver } from '../browser/tab-observer.js';
-import { createCommandHandler } from './open-search-command.js';
+import { touchTab, removeTab, hydrateFromTabs } from './mru-manager.js';
 
-interface SessionStorageApi {
-  storage?: {
-    session?: {
-      set(items: Record<string, unknown>): Promise<void>;
-    };
-  };
-}
-
-const adapter: BrowserAdapter = new ChromeBrowserAdapter();
-const chromeApi = globalThis as unknown as SessionStorageApi;
-const handleCommand = createCommandHandler(adapter, {
-  recordCommandStart: async startedAt => {
-    await chromeApi.storage?.session?.set({ infoboard_search_command_started_at: startedAt });
-  },
+// Track tab activation for MRU order
+chrome.tabs.onActivated.addListener(activeInfo => {
+  if (typeof activeInfo.tabId === 'number') {
+    void touchTab(activeInfo.tabId);
+  }
 });
-adapter.registerCommandListener(command => { void handleCommand(command); });
-const tabObserver = new TabObserver(adapter);
-adapter.registerLifecycleListeners(() => { void tabObserver.start(); }, () => { void tabObserver.start(); });
-void tabObserver.start();
-export { tabObserver };
+
+// Remove closed tabs from MRU stack
+chrome.tabs.onRemoved.addListener(tabId => {
+  if (typeof tabId === 'number') {
+    void removeTab(tabId);
+  }
+});
+
+// Track window focus changes to update active tab MRU
+chrome.windows.onFocusChanged.addListener(windowId => {
+  if (windowId === chrome.windows.WINDOW_ID_NONE) return;
+  chrome.tabs.query({ active: true, windowId }, ([activeTab]) => {
+    if (activeTab && typeof activeTab.id === 'number') {
+      void touchTab(activeTab.id);
+    }
+  });
+});
+
+// Initialize MRU order from open tabs if session storage is empty
+const initializeMRU = () => {
+  chrome.tabs.query({}, tabs => {
+    void hydrateFromTabs(tabs);
+  });
+};
+
+chrome.runtime.onStartup.addListener(initializeMRU);
+chrome.runtime.onInstalled.addListener(initializeMRU);
+initializeMRU();

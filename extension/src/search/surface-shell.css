@@ -1,0 +1,220 @@
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f4f5f7;
+  --bg-active: #e8f0fe;
+  --text-primary: #1f2328;
+  --text-secondary: #656d76;
+  --border-color: #d0d7de;
+  --accent-color: #0969da;
+  --highlight-bg: #fff8c5;
+  --highlight-text: #24292f;
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #1e1e20;
+    --bg-secondary: #28282c;
+    --bg-active: #2f3542;
+    --text-primary: #f0f3f6;
+    --text-secondary: #8b949e;
+    --border-color: #383b40;
+    --accent-color: #58a6ff;
+    --highlight-bg: #4d3800;
+    --highlight-text: #ffd33d;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 480px;
+  height: 540px;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 14px;
+}
+
+.search-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.search-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+}
+
+.search-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-secondary);
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+#query {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+#query::placeholder {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.results-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px 0;
+}
+
+.tab-results {
+  list-style: none;
+}
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  cursor: pointer;
+  user-select: none;
+  gap: 10px;
+  border-left: 3px solid transparent;
+  transition: background-color 0.1s ease, border-color 0.1s ease;
+}
+
+.tab-item:hover {
+  background-color: var(--bg-secondary);
+}
+
+.tab-item[aria-selected="true"] {
+  background-color: var(--bg-active);
+  border-left-color: var(--accent-color);
+}
+
+mark {
+  background-color: var(--highlight-bg);
+  color: var(--highlight-text);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.tab-badge-active {
+  background-color: var(--accent-color);
+  color: #ffffff;
+}
+
+.tab-favicon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 3px;
+}
+
+.tab-favicon-placeholder {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  background-color: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--text-secondary);
+}
+
+.tab-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.tab-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+
+.tab-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.tab-domain {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+.empty-state {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.shortcuts-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+kbd {
+  font-family: inherit;
+  font-size: 11px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}

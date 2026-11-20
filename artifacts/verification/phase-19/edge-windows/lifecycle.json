@@ -1,8 +1,0 @@
-{
-  "clean-install": "complete",
-  "startup": "complete",
-  "upgrade": "complete",
-  "reconnect": "complete",
-  "reset": "complete",
-  "uninstall": "complete"
-}
