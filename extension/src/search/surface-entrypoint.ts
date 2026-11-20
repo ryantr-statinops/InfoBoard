@@ -31,6 +31,8 @@ export async function loadTabsAndReconcileMRU(): Promise<SearchTabItem[]> {
   }
 
   items.sort((a, b) => a.mruRank - b.mruRank);
+  allTabs = items;
+  currentResults = [...items];
   return items;
 }
 
@@ -202,8 +204,10 @@ export async function initializeSearchSurface(doc: Document = document): Promise
   input.focus();
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => { void initializeSearchSurface(); }, { once: true });
-} else {
-  void initializeSearchSurface();
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => { void initializeSearchSurface(); }, { once: true });
+  } else {
+    void initializeSearchSurface();
+  }
 }
