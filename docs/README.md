@@ -1,29 +1,44 @@
-# InfoBoard documentation
+# InfoBoard Documentation
 
-The documentation keeps the existing folder names while separating canonical product contracts from detailed reader views and future implementation plans.
+InfoBoard is a keyboard-first, ultra-lightweight Chrome/Edge extension for searching and activating open browser tabs across windows.
 
-## Source of truth
+This documentation describes the **Pure Manifest V3 Architecture**, product contracts, search scoring algorithms, UX design, operations, and quality assurance.
 
-- [`plan/refactor/`](plan/refactor/README.md) — binding product specification. It is the authority for product behavior, requirements, browser/platform boundaries, privacy, UX, ranking, architecture, runtime, persistence, operations, verification, decisions, and roadmap.
-- [`plan/implementation/`](plan/implementation/README.md) — active implementation plans, dependency DAG, commit mappings, and execution tracker. IP-01 is the kickoff phase.
+---
 
-The detailed documents in the folders below explain the same contracts for different review concerns. They must link back to the canonical source and must not create conflicting behavior.
+## Architecture at a Glance
 
-## Folder map
+InfoBoard operates 100% inside the browser sandbox:
+- **No Native Messaging Host**: Zero external background binaries or daemons.
+- **No SQLite / Disk Database**: State is maintained in-memory and in `chrome.storage.session`.
+- **Instant Response (< 1ms)**: Multi-tier lexical search running directly on Chromium's V8 engine.
 
-| Folder | Detailed responsibility |
-| --- | --- |
-| [`agent/`](agent/skill-integration.md) | Coding-agent skill routing and documentation boundaries; not product behavior |
-| [`architecture/`](architecture/README.md) | System shape, component ownership, runtime lifecycle, data flow, and failure isolation |
-| [`design/`](design/README.md) | Search surface, interaction states, accessibility, ranking behavior, and optional mockups |
-| [`operations/`](operations/README.md) | Packaging, installation, update, rollback, repair, diagnostics, reset, and uninstall |
-| [`plan/`](plan/README.md) | Canonical product specification plus the retained implementation-plan tree |
-| [`product/`](product/README.md) | User problem, domain/data model, requirements, decisions, and delivery roadmap |
-| [`quality/`](quality/README.md) | Acceptance matrix, test seams, compatibility/performance, privacy, and security evidence |
+```text
+Chrome / Edge Extension (Manifest V3)
+  ├── Popup Search Surface (HTML / CSS / TS)
+  │     ├── Input autofocus & instant live filtering (0ms debounce)
+  │     ├── ArrowUp / ArrowDown / Ctrl+N / Ctrl+P navigation
+  │     └── Quick Toggle: Pre-selects previous tab for instant Enter switch
+  ├── In-Memory Scorer & Tab Indexer
+  │     ├── Exact Prefix on Domain/Title (1000 pts)
+  │     ├── Word-boundary Prefix Match (800-850 pts)
+  │     ├── Acronym Match (650 pts)
+  │     └── MRU Recency Boost (+ 50 / (rank + 1))
+  └── Background Service Worker (MRU Tracker)
+        ├── chrome.tabs.onActivated / onRemoved
+        ├── chrome.windows.onFocusChanged
+        └── chrome.storage.session ring buffer (max 100 tabs)
+```
 
-## Change rules
+---
 
-1. Update the canonical refactor document before adding a capability or weakening a boundary.
-2. Update the relevant detailed view only as a synchronized explanation of that canonical decision.
-3. Every new data source documents value, privacy impact, retention, removal, ownership, and acceptance.
-4. Implement only work authorized by the assigned phase plan after its dependencies are integrated. Use the README tracker and index branch protocol.
+## Documentation Map
+
+| Directory | Scope & Purpose |
+| :--- | :--- |
+| [`architecture/`](architecture/README.md) | System shape, component ownership, data flow, and lifecycle boundaries |
+| [`product/`](product/README.md) | User problem, requirements, product contract, and architectural decisions |
+| [`design/`](design/README.md) | Popup UX, interaction states, keyboard ergonomics, and visual design |
+| [`operations/`](operations/README.md) | Packaging, Chrome Web Store distribution, updates, and uninstallation |
+| [`quality/`](quality/README.md) | Test strategy (32 automated tests, ~75ms), privacy model, and performance |
+| [`plan/`](plan/README.md) | Implementation roadmap and refactor records |
