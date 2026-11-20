@@ -1,25 +1,42 @@
-# Privacy and security
+# Privacy and Security
 
-## Permission review
+InfoBoard is engineered with a strict privacy-first model. Because it operates 100% inside the browser's extension sandbox with zero native binaries, user tab data never leaves the browser process.
 
-The extension requests only permissions required to observe eligible open tabs, invoke the configured command, present the search surface, and activate the selected tab. History, cookies, bookmarks, downloads, page content, broad host access, and unrelated storage are outside the contract.
+---
 
-## Trust boundaries
+## 1. Minimal Permissions & Least Privilege
 
-- Browser APIs are the authority for current tabs and activation.
-- Native Messaging is the local process boundary.
-- The host validates protocol, profile identity, revisions, limits, and payloads before indexing.
-- SQLite contains only declared configuration, installation state, and bounded activation metadata.
-- Diagnostics are metadata-first and redact URLs, titles, queries, and tokens by default.
+InfoBoard requests only the absolute minimum permissions required for tab search and activation:
 
-## Required checks
+```json
+{
+  "permissions": [
+    "tabs",
+    "storage",
+    "tabGroups"
+  ]
+}
+```
 
-- No network requests occur in the normal search path.
-- No page-content reads, history API calls, cookie reads, or shell execution from user-controlled fields occur.
-- Native Messaging manifests allow only the released extension origin.
-- Unknown protocol versions and malformed/oversized messages fail closed.
-- Private contexts remain separated from normal profiles.
-- Reset and uninstall remove only InfoBoard-owned data.
-- Logs and diagnostic exports do not become an accidental browsing-data export.
+### Excluded Permissions
+- **NO `history`**: InfoBoard cannot see closed tabs, past browsing history, or search queries from browser omnibox.
+- **NO `cookies`**: No access to authentication tokens or session cookies.
+- **NO `<all_urls>` / host permissions**: InfoBoard cannot read page contents, DOM nodes, passwords, or personal data.
+- **NO `webRequest` / network proxy**: InfoBoard cannot intercept or monitor network traffic.
+- **NO `nativeMessaging`**: No external OS processes or daemons are registered or spawned.
 
-Any exception requires a new product decision, updated privacy documentation, retention/removal rules, and explicit acceptance tests.
+---
+
+## 2. Zero Network Egress
+
+- **100% Offline Execution**: All tab scoring, sorting, and filtering happen locally in-memory using JavaScript in the browser process.
+- **No Analytics / Telemetry**: No tracking pings, Google Analytics, Sentry, or remote logging.
+- **No Remote Code Execution**: All JavaScript is packaged locally in the extension bundle, complying strictly with Manifest V3 policies.
+
+---
+
+## 3. Data Storage & Privacy Boundaries
+
+- **Session-Only Persistence**: Tab recency metadata (MRU ring buffer) is stored exclusively in `chrome.storage.session`. This data is stored in memory and completely purged when the browser process terminates.
+- **No Disk Database**: Zero SQLite, IndexedDB, or local filesystem footprint.
+- **Incognito Profile Isolation**: By default in Chromium, extensions are disabled in incognito windows. If the user explicitly enables InfoBoard in incognito mode, incognito tabs are searched only within the incognito window context and never mixed with normal browsing profiles.
