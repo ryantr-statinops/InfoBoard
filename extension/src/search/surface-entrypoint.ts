@@ -57,6 +57,7 @@ export async function dismissWithAnimation(doc?: Document): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, delayMs));
 
   if (typeof window !== 'undefined' && typeof window.close === 'function') {
+    isClosing = false;
     window.close();
   }
 }

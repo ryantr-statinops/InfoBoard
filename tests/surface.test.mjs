@@ -71,6 +71,7 @@ const mockDoc = {
 const {
   loadTabsAndReconcileMRU,
   activateTab,
+  dismissWithAnimation,
   updateSelection,
   renderTabList,
   currentResults,
@@ -135,4 +136,18 @@ test('updateSelection: updates aria-selected attributes and cycles selection', a
   updateSelection(1, mockDoc);
   assert.equal(opt1.getAttribute('aria-selected'), 'true');
   assert.equal(opt0.getAttribute('aria-selected'), 'false');
+});
+
+test('dismissWithAnimation: triggers exit animation class and closes popup', async () => {
+  closed = false;
+  const container = new MockElement('div');
+  container.className = 'search-container';
+  const testDoc = {
+    ...mockDoc,
+    querySelector: (sel) => (sel === '.search-container' ? container : new MockElement('div'))
+  };
+
+  await dismissWithAnimation(testDoc);
+  assert.equal(closed, true);
+  assert.ok(container.className.includes('is-closing'));
 });
