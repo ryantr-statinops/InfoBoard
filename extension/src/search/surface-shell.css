@@ -64,12 +64,12 @@ html, body {
   background-color: var(--bg-primary);
 }
 
-/* Smooth Sheet Waterfall Reveal Animation */
+/* Smooth Sheet Waterfall Reveal Animation (5x slower: 900ms) */
 @keyframes waterfall-flow {
   0% {
     clip-path: inset(0 0 100% 0);
-    transform: translateY(-8px);
-    opacity: 0.3;
+    transform: translateY(-24px);
+    opacity: 0.2;
   }
   100% {
     clip-path: inset(0 0 0 0);
@@ -84,7 +84,7 @@ html, body {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  animation: waterfall-flow 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: waterfall-flow 900ms cubic-bezier(0.25, 1, 0.5, 1) both;
   will-change: clip-path, transform, opacity;
 }
 
