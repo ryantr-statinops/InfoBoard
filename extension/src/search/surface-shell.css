@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light dark;
   --bg-primary: #ffffff;
   --bg-secondary: #f4f5f7;
   --bg-active: #e8f0fe;
@@ -8,6 +9,9 @@
   --accent-color: #0969da;
   --highlight-bg: #fff8c5;
   --highlight-text: #24292f;
+  --scrollbar-thumb: rgba(31, 35, 40, 0.2);
+  --scrollbar-thumb-hover: rgba(31, 35, 40, 0.38);
+  --scrollbar-track: transparent;
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -22,6 +26,9 @@
     --accent-color: #58a6ff;
     --highlight-bg: #4d3800;
     --highlight-text: #ffd33d;
+    --scrollbar-thumb: rgba(240, 243, 246, 0.22);
+    --scrollbar-thumb-hover: rgba(240, 243, 246, 0.4);
+    --scrollbar-track: transparent;
   }
 }
 
@@ -83,7 +90,29 @@ html, body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior: contain;
   padding: 6px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* Custom modern scrollbar for Chromium */
+.results-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.results-wrapper::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+.results-wrapper::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  transition: background-color 0.15s ease;
+}
+
+.results-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
 }
 
 .tab-results {
