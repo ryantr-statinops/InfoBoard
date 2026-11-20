@@ -14,18 +14,17 @@ export interface SearchTabItem {
   windowId: number;
   title: string;
   url: string;
-  cleanDomain: string; // e.g. "github.com" or "tiktok.com"
+  domain: string; // e.g. "github.com" or "tiktok.com"
   favIconUrl?: string;
-  pinned: boolean;
-  groupId: number;
-  groupTitle?: string;
-  groupColor?: string;
   mruRank: number; // 0 = currently active, 1 = previous, ...
+  active: boolean;
+  pinned: boolean;
+  groupId?: number;
 }
 ```
 
 ### Domain Field Derivation
-- **cleanDomain**: Derived by parsing `url` via `new URL(url).hostname` and stripping leading `www.`. Non-standard URLs (e.g., `chrome://`, `edge://`) use their protocol or host prefix.
+- **domain**: Derived by parsing `url` via `new URL(url).hostname` and stripping leading `www.`. Non-standard URLs (e.g., `chrome://`, `edge://`) use their protocol or host prefix.
 - **mruRank**: Position in the MRU ring buffer. Lower numbers indicate more recent activation. Tabs not in the buffer are assigned `mruRank = buffer.length`.
 
 ---
