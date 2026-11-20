@@ -47,8 +47,9 @@ export async function dismissWithAnimation(doc?: Document): Promise<void> {
     }
   }
 
-  // 80ms delay allows the reverse waterfall exit animation to play smoothly
-  await new Promise(resolve => setTimeout(resolve, 80));
+  // 500ms delay allows the reverse waterfall exit animation to play smoothly
+  const delayMs = (globalThis as Record<string, any>).process?.env?.NODE_TEST_CONTEXT ? 0 : 500;
+  await new Promise(resolve => setTimeout(resolve, delayMs));
 
   if (typeof window !== 'undefined' && typeof window.close === 'function') {
     window.close();
