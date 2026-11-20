@@ -1,23 +1,17 @@
-# Plans
+# Implementation & Planning
 
-## Product specification
+This directory contains historical implementation plans, architectural refactor archives, and evolution records for the InfoBoard project.
 
-[`refactor/`](refactor/README.md) is the canonical and complete InfoBoard product specification. Its contract is ready for implementation.
+---
 
-Its documents cover:
+## 1. Architectural Evolution
 
-- product contract and complete capability boundary;
-- requirements and acceptance signals;
-- browser/platform and privacy/domain boundaries;
-- user experience and search/ranking semantics;
-- target architecture and Native Messaging protocol;
-- persistence/lifecycle and packaging/operations;
-- verification/acceptance, decisions, and roadmap.
+- **Current Architecture (Active)**: **Pure Manifest V3 Tab Search**
+  - All functionality runs directly inside the Chromium extension environment.
+  - Zero native messaging daemons, zero external Go hosts, zero SQLite dependencies.
+  - Sub-millisecond in-memory lexical scoring, MRU tracking via `chrome.storage.session`, and quick-toggle tab switching.
+  - See [`../architecture/system-overview.md`](../architecture/system-overview.md) and [`../product/roadmap.md`](../product/roadmap.md).
 
-Detailed reader views live in [`../architecture/`](../architecture/README.md), [`../design/`](../design/README.md), [`../operations/`](../operations/README.md), [`../product/`](../product/README.md), and [`../quality/`](../quality/README.md). They explain the canonical material without replacing it.
-
-## Implementation plans
-
-[`implementation/`](implementation/README.md) contains the active 20-phase implementation plans, dependency DAG, commit mappings, execution dashboard, and branch protocol. Start with IP-01; implementation status is tracked in its README.
-
-Do not mix product decisions into implementation slices. A product or boundary change belongs in `refactor/` first; implement the approved contract by following `implementation/index.md` and its phase acceptance gates.
+- **Historical Architecture (Archived)**:
+  - [`refactor/`](refactor/README.md): Initial refactor proposals and formal boundaries.
+  - [`implementation/`](implementation/README.md): The original 20-phase implementation plan (IP-01 through IP-20) covering the deprecated Go Native Messaging host and SQLite projection pipeline. These documents are preserved for historical reference and architectural decision traceability.
