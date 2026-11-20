@@ -40,7 +40,11 @@ InfoBoard/
 │   │       └── chrome.d.ts     # Minimal Chrome WebExtension type declarations
 │   └── tsconfig.json
 ├── tests/
-│   └── scorer.test.mjs         # Fast unit tests for scoring & MRU ordering
+│   ├── manifest-and-bundle.test.mjs # Validates MV3 manifest and < 50KB bundle
+│   ├── mru-manager.test.mjs         # Tests MRU ring buffer and session storage
+│   ├── scorer.test.mjs              # Multi-tier prefix/boundary/acronym ranking
+│   ├── surface.test.mjs             # Popup DOM rendering and keyboard navigation
+│   └── types.test.mjs               # Tab normalization and domain extraction
 ├── scripts/
 │   └── copy-extension-assets.mjs
 └── package.json

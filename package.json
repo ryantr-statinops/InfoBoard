@@ -6,7 +6,8 @@
     "extension"
   ],
   "scripts": {
-    "build:extension": "tsc -p extension/tsconfig.json && node scripts/copy-extension-assets.mjs",
+    "clean": "node -e \"import('node:fs/promises').then(fs => fs.rm('extension/dist', { recursive: true, force: true }))\"",
+    "build:extension": "npm run clean && tsc -p extension/tsconfig.json && node scripts/copy-extension-assets.mjs",
     "test": "npm run build:extension && node --test tests/*.test.mjs"
   },
   "devDependencies": {

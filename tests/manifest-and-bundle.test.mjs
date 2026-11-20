@@ -25,6 +25,7 @@ test('manifest.json conforms to Pure MV3 requirements', async () => {
   assert.ok(manifest.commands._execute_action, '_execute_action command must be configured');
   assert.equal(manifest.commands._execute_action.suggested_key.default, 'Alt+W');
   assert.equal(manifest.commands._execute_action.suggested_key.mac, 'Command+Shift+K');
+  assert.deepEqual(Object.keys(manifest.commands), ['_execute_action']);
 });
 
 test('build artifacts exist in extension/dist and are ultra-lightweight (< 50KB)', async () => {

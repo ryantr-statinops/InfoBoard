@@ -16,14 +16,6 @@
     "_execute_action": {
       "suggested_key": { "default": "Alt+W", "mac": "Command+Shift+K" },
       "description": "Open InfoBoard tab search"
-    },
-    "open-search": {
-      "suggested_key": { "default": "Ctrl+Shift+Y", "mac": "Command+Shift+Y" },
-      "description": "Open InfoBoard search"
-    },
-    "close-search": {
-      "suggested_key": { "default": "Ctrl+Shift+X", "mac": "Command+Shift+X" },
-      "description": "Close InfoBoard search"
     }
   }
 }
