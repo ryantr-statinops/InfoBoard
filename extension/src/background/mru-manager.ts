@@ -22,14 +22,14 @@ export async function setMRUTabIds(ids: number[]): Promise<void> {
 }
 
 export async function touchTab(tabId: number): Promise<void> {
-  if (typeof tabId !== 'number' || tabId < 0) return;
+  if (typeof tabId !== 'number' || !Number.isInteger(tabId) || tabId < 0) return;
   const current = await getMRUTabIds();
   const next = [tabId, ...current.filter(id => id !== tabId)].slice(0, MAX_MRU_SIZE);
   await setMRUTabIds(next);
 }
 
 export async function removeTab(tabId: number): Promise<void> {
-  if (typeof tabId !== 'number') return;
+  if (typeof tabId !== 'number' || !Number.isInteger(tabId) || tabId < 0) return;
   const current = await getMRUTabIds();
   const next = current.filter(id => id !== tabId);
   await setMRUTabIds(next);
