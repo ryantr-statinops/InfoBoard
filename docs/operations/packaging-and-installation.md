@@ -1,28 +1,38 @@
-# Packaging and installation
+# Packaging and Installation
 
-## Product artifacts
+## Release Artifacts
 
-A release consists of the browser extension package, the signed or integrity-checked Go Native Messaging host binary for each supported operating system and architecture, Native Messaging manifests, and the installer or registration instructions needed to bind the extension to the host.
+Because InfoBoard is a **Pure Manifest V3 Web Extension**, the release artifact is a single, self-contained extension zip archive containing:
 
-Supported browser families are Chrome and Edge desktop. Supported operating systems are Linux, macOS, and Windows. The release matrix must identify browser versions, OS versions, CPU architecture, extension version, host version, protocol version, and ranking-model version.
+- `manifest.json` (declarations, permissions, commands)
+- `dist/search/surface-shell.html` & `surface-shell.css` (popup UI)
+- `dist/src/search/` (in-memory scorer and popup controller)
+- `dist/src/background/` (MRU manager and service worker)
 
-## Installation responsibilities
+Total uncompressed bundle size is **under 20 KB**. No operating system installers (`.exe`, `.msi`, `.pkg`, `.deb`), code-signing certificates, or registry configurations are required.
 
-Installation must:
+---
 
-1. place the host artifact in the platform-appropriate application location;
-2. register the Native Messaging manifest with the supported browser family;
-3. restrict allowed extension origins to the released extension identity;
-4. install the extension package and required command registration;
-5. verify host discovery, handshake, profile separation, and a full tab snapshot;
-6. report a repairable error when registration, permissions, or compatibility checks fail.
+## Distribution Channels
 
-Installation must not request history, cookies, page-content, broad host, or unrelated storage permissions. It must not expose a loopback listening port.
+### 1. Chrome Web Store & Edge Add-ons
+- Users install directly with a single click from the official store.
+- Automatic background updates are handled securely by Chromium.
+- Zero administrative permissions required.
 
-## Idempotence and ownership
+### 2. Developer / Unpacked Mode
+- Clone repository or extract release zip.
+- Open `chrome://extensions` or `edge://extensions`.
+- Enable **Developer mode** in the upper right corner.
+- Click **Load unpacked** and select the `extension/` folder.
 
-Repeated installation must converge on one known version without duplicating manifests, registrations, data directories, or startup entries. The installer owns only InfoBoard artifacts. It must not alter browser tabs, unrelated browser data, or user content.
+---
 
-## Release evidence
+## Permissions & Security
 
-A release is not installable by declaration alone. Verification must cover clean installation, existing installation upgrade, missing host, wrong extension origin, incompatible protocol, permission denial, profile separation, and first full-snapshot convergence.
+InfoBoard requests only 3 narrow browser permissions:
+- `tabs`: Read open tab titles, URLs, and IDs to display search results and activate tabs.
+- `storage`: Utilize `chrome.storage.session` for ephemeral in-memory MRU tracking.
+- `tabGroups`: Group visibility and organization.
+
+InfoBoard requests **NO host permissions** (`<all_urls>`), NO history permissions, and NO native messaging permissions.

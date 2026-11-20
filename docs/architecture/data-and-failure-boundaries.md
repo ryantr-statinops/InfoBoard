@@ -1,37 +1,33 @@
-# Data and failure boundaries
+# Data and Failure Boundaries
 
-## Data flow
+## Data Boundary & Privacy
 
-1. Browser APIs expose eligible open tabs for the active profile.
-2. The extension creates a normalized projection containing title, URL/domain, window, group, pinned state, and allowed activation metadata.
-3. A full snapshot establishes the host projection and revision.
-4. Subsequent browser events become ordered deltas.
-5. The host indexes searchable fields and applies deterministic ranking.
-6. Query results return references and bounded display metadata.
-7. The extension performs activation and reports the confirmed outcome.
-8. Only allowed configuration and bounded activation metadata reach SQLite.
+InfoBoard adheres to strict data minimalism:
 
-## Failure isolation
+- **Collected Data**:
+  - `tab.id`, `tab.windowId` (ephemeral identifiers)
+  - `tab.title`, `tab.url` (used strictly for in-memory string matching)
+  - `tab.favIconUrl` (visual icon display)
+  - `tab.lastAccessed` (fallback recency timestamp)
+  - `tab.active`, `tab.pinned`, `tab.groupId` (context badges)
+- **Forbidden Data**:
+  - NO browsing history indexing
+  - NO DOM or page content scraping
+  - NO cookies or session credentials
+  - NO network request interception
+  - NO telemetry or remote tracking
+  - NO disk database persistence
 
-| Failure | User-visible effect | Must remain intact |
-| --- | --- | --- |
-| Host unavailable | Search shows retry/repair state | Browser tabs and navigation |
-| Host crash | Reconnect and rebuild | Browser state; no false activation |
-| SQLite unavailable | Persistence health warning | Current lexical search when safe |
-| Missed browser event | Rebuild from full snapshot | Projection convergence |
-| Stale result | Refresh before activation | No silent activation of another tab |
-| Optional component failure | Optional capability unavailable | Normal lexical search |
-| Missing optional field | Reduced context/ranking signal | Other fields and deterministic order |
-| Protocol mismatch | Repairable incompatibility state | No tab data sent to incompatible host |
+All metadata stays strictly within the local browser memory and is discarded when tabs or the browser are closed.
 
-## Privacy boundary
+---
 
-No network path, cookies, browser history, page contents, cloud index, or arbitrary page injection is required. Diagnostics use metadata such as counts, durations, versions, and error classes; sensitive tab content is redacted or disabled by default.
+## Failure Isolation
 
-## Scale envelope
-
-The declared performance envelope is 1,000 open tabs per browser profile. The implementation must bound payload sizes, field lengths, token counts, query length, result count, and memory growth before allocation or indexing. Correctness above the envelope is required; performance commitments are measured at the declared envelope.
-
-## Review rule
-
-A proposed data source, process boundary, persistence responsibility, or failure fallback is incomplete until it names its owner, privacy impact, retention behavior, failure behavior, and measurable acceptance signal.
+| Failure Scenario | Consequence | Recovery Mechanism |
+| :--- | :--- | :--- |
+| **Service Worker Suspended** | Normal operation in Manifest V3 | Browser wakes worker on next `onActivated` event; session storage state is fully preserved. |
+| **Session Storage Unavailable** | MRU ring buffer cannot be read | System transparently falls back to sorting open tabs by `tab.lastAccessed`. Search remains fully functional. |
+| **Selected Tab Closed Concurrently** | User presses Enter on a tab closed just before activation | `chrome.tabs.update()` throws an error caught by `try/catch`. Popup closes cleanly without crashing the browser. |
+| **Special Regex Characters in Query** | User types `[`, `*`, `+`, `?`, `\`, `(` | Query string is sanitized with `replace(/[.*+?^${}()|[\]\\]/g, '\\$&')` before building boundary regex. Never throws `SyntaxError`. |
+| **Extension Updated While Browser Runs** | Existing popup instance might hold stale context | Browser unloads previous popup; next shortcut invocation loads fresh assets from `dist/`. |

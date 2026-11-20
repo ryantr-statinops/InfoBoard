@@ -1,41 +1,59 @@
-# Runtime lifecycle
+# Runtime Lifecycle
 
-## State machine
+Manifest V3 extensions operate under an ephemeral execution model where background service workers terminate after short periods of inactivity (~30 seconds). InfoBoard is designed specifically to thrive under this model without data loss or startup delays.
+
+---
+
+## Service Worker Lifecycle
 
 ```text
-Disconnected -> Connecting -> Handshaking -> Synchronizing -> Ready
-      ▲             │              │              │          │
-      └─────────────┴──────────────┴──────────────┴──────────┘
-                         recoverable failure
+Browser Startup / Extension Load
+  │
+  ▼
+[Initialize MRU State] ────► Query open tabs ────► Hydrate storage.session from lastAccessed
+  │
+  ▼
+[Idle / Sleep State]
+  │
+  ├─► chrome.tabs.onActivated ──────► Wake worker ──► touchTab(id) ──► Save to session ──► Sleep
+  ├─► chrome.windows.onFocusChanged ─► Wake worker ──► touchTab(id) ──► Save to session ──► Sleep
+  └─► chrome.tabs.onRemoved ────────► Wake worker ──► removeTab(id) ─► Save to session ──► Sleep
 ```
 
-- **Disconnected** — no host connection; the surface can explain unavailable search and offer retry or repair.
-- **Connecting** — the client starts or reaches the registered host and applies a startup timeout.
-- **Handshaking** — protocol version, extension version, browser family/version, profile identity, capabilities, limits, ranking model, and persistence health are checked.
-- **Synchronizing** — a complete snapshot or resync is being applied; results tied to an unknown revision cannot activate.
-- **Ready** — bounded queries and ordered deltas are accepted.
-- **Recovering** — reconnect backoff and snapshot rebuild occur after a crash, restart, timeout, or sequence gap.
+### Why `chrome.storage.session`?
+- **In-Memory RAM**: Stored directly in the browser's memory space, bypassing disk I/O.
+- **Survives Worker Sleep**: Data remains intact when the background service worker terminates and wakes up again.
+- **Session Bounded**: Automatically cleared when the browser closes, preventing stale state accumulation.
 
-## Startup sequence
+---
 
-1. The extension opens its profile-scoped browser adapter.
-2. It obtains a complete eligible-tab snapshot and projection revision.
-3. The Native Messaging client connects to the registered Go host.
-4. The client and host complete the versioned handshake.
-5. The extension sends the snapshot with profile identity and revision.
-6. The host atomically replaces its projection, builds the index, and acknowledges readiness.
-7. The UI exposes search only against the acknowledged revision.
+## Popup Surface Lifecycle
 
-## Steady state
-
-Browser events become ordered deltas. Each query carries the projection revision known by the client. The host returns result references, bounded display metadata, ranking-model version, revision, and timing counters. The extension validates the revision before rendering or activating.
-
-## Recovery rules
-
-- Missing or out-of-order deltas trigger a full snapshot.
-- Service-worker restart reconnects and reconciles instead of assuming the old projection is valid.
-- Host failure affects search availability, not browser tabs or browser navigation.
-- SQLite failure affects persistence health, not the in-memory lexical path when the host can continue safely.
-- An incompatible handshake stops tab-data transmission and exposes repair guidance.
-
-The [runtime protocol](../plan/refactor/runtime-protocol.md) defines the wire-level messages and failure classes.
+```text
+User presses Alt+W (_execute_action)
+  │
+  ▼
+[Popup HTML & Script Loaded] (< 15ms)
+  │
+  ├─► Promise.all([
+  │     chrome.storage.session.get('mru_tab_ids'),
+  │     chrome.tabs.query({})
+  │   ])
+  │
+  ▼
+[Normalize & Map MRU Rank] (< 1ms)
+  │
+  ▼
+[Initial Render]
+  │  • Query is empty: tabs ordered purely by MRU
+  │  • Pre-select index 1 (previous tab)
+  │  • Input autofocus
+  │
+  ▼
+[User Keystrokes]
+  │
+  ├─► G keypress: scoreTab() runs in < 0.2ms ──► update DOM list (< 1ms)
+  ├─► ↑ / ↓ arrows: updateSelection() ───────► update aria-selected (< 0.1ms)
+  ├─► Escape: window.close() ────────────────► popup dismissed
+  └─► Enter: activateTab() ──────────────────► chrome.tabs.update() + window.close()
+```

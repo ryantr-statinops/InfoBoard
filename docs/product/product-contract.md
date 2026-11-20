@@ -1,43 +1,51 @@
-# Product contract
+# Product Contract
 
 ## Problem
 
-People lose time when many browser tabs are distributed across windows and groups. Their memory is often a fragment of a title, domain, URL, project name, or topic, while browser navigation favors spatial and recent movement. InfoBoard turns that fragment into a predictable switch to an already-open tab.
+Users waste time when dozens or hundreds of browser tabs are distributed across windows and tab groups. When recalling a tab, their memory is usually a fragment of a title, a domain, or an acronym, while browser navigation favors spatial and mouse movement.
 
-## Primary user and outcome
+InfoBoard turns that fragment into an instant, predictable tab switch with zero lag and zero setup complexity.
 
-The primary user is a desktop browser user who keeps many tabs open across several windows and wants a fast keyboard-driven way to return to a known tab. The user values speed, predictable ordering, privacy, and recovery when the local runtime is unavailable.
+---
 
-For any eligible currently open tab, the user can:
+## Primary User and Outcome
 
-1. invoke a configurable shortcut;
-2. type a remembered fragment;
-3. understand why results are ordered;
-4. activate the intended tab and window; and
-5. return to the previous browser task without losing context.
+The primary user is a keyboard-first desktop user who regularly keeps many tabs open across multiple windows and needs a lightning-fast way to switch between tasks.
 
-## Complete capability boundary
+### Core User Journey:
+1. **Quick Toggle**: Press `Alt+W` followed immediately by `Enter` to switch to the previously active tab (Alt+Tab pattern).
+2. **Instant Search**: Press `Alt+W`, type a few letters (`t` for TikTok/Threads, `ti` for Tiki/TikTok, `gh` for GitHub), see matches update in < 1ms, and press `Enter` to activate.
+3. **Keyboard Ergonomics**: Use `↑` / `↓` or `Ctrl+N` / `Ctrl+P` to cycle selections, `Esc` to cancel without side effects.
 
-- Focused extension-owned search surface.
-- Live projection of eligible tabs across windows in the active profile.
-- Local lexical search over title, URL, domain, window, group, and bounded state labels.
-- Deterministic contextual and recency ranking.
-- Keyboard and pointer navigation with safe activation.
-- Profile-scoped configuration and runtime status.
-- Reconciliation after missed events, service-worker restart, browser restart, or host reconnect.
-- Reset, uninstall, diagnostics, installation, update, rollback, and repair behavior.
+---
 
-## Explicit exclusions
+## Capability Boundary
 
-The product does not require cookies, browser local storage, whole browsing history, network interception, page-content indexing, cloud indexing, arbitrary page injection, or a loopback listening service. Semantic retrieval and embedding experiments are separate proposals, not hidden dependencies.
+- **Action Popup Surface**: Triggered by standard browser command (`_execute_action`), accessible anywhere in the browser.
+- **In-Memory Tab Search**: Real-time evaluation of open tabs across all browser windows.
+- **Multi-Tier Matching**:
+  - Exact prefix on domain & title
+  - Word-boundary matching on title words
+  - Acronym matching for initials (`gh` -> GitHub, `yt` -> YouTube)
+  - Subsequence fuzzy matching
+  - MRU Recency Boost: recently used tabs rank higher on equal keyword matches.
+- **MRU Tracking**: Real-time tab activation tracking backed by `chrome.storage.session` and `tab.lastAccessed`.
+- **Tab Activation**: Confirmed tab and window focus with safe error handling if a tab was closed concurrently.
 
-## Product boundary
+---
 
-- Browsers: Chrome and Edge desktop.
-- Operating systems: Linux, macOS, and Windows.
-- Runtime: Manifest V3 extension plus a Go Native Messaging host.
-- Persistence: local SQLite for configuration, installation state, and bounded activation metadata.
-- Current tab state: rebuildable from browser APIs.
-- Privacy: local-only lexical search with explicit permission and retention boundaries.
+## Explicit Exclusions
 
-Read the [canonical product contract](../plan/refactor/idea-brief.md) for binding behavior.
+- NO Go Native Messaging host or external OS binaries.
+- NO SQLite or local disk databases.
+- NO browsing history indexing or page content scraping.
+- NO cookies, session credentials, or network interception.
+- NO telemetry, remote servers, or cloud dependencies.
+
+---
+
+## Platform & Distribution
+
+- **Browsers**: All Chromium-based desktop browsers (Google Chrome, Microsoft Edge, Brave, Opera, Vivaldi, Arc).
+- **Operating Systems**: macOS, Windows, Linux, ChromeOS.
+- **Distribution**: Chrome Web Store, Edge Add-ons, or unpacked developer mode. Zero OS installers required.

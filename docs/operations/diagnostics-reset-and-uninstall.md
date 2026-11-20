@@ -1,21 +1,35 @@
-# Diagnostics, reset, and uninstall
+# Diagnostics, Reset, and Uninstall
 
 ## Diagnostics
 
-Diagnostics describe the local state without exporting browsing content. Useful fields include extension/host/protocol/schema/ranking versions, lifecycle state, projection count, synchronization revision, query and activation durations, reconnect count, and typed error classes.
+InfoBoard operates completely in-memory with near-zero latency (< 1ms). Diagnostic verification can be checked locally:
 
-URLs, titles, query strings, tokens, cookies, page content, and full tab projections are redacted or disabled by default. A diagnostic export must state its retention and destination before leaving the local machine.
+1. **Automated Unit & Integration Tests**:
+   Run `npm test` to verify all 32 tests (Scorer, MRU Manager, Tab Normalizer, Surface, Manifest).
+2. **Browser DevTools**:
+   - Inspect background service worker at `chrome://extensions` -> `Inspect views: service worker`.
+   - Inspect popup UI by right-clicking the extension icon -> `Inspect popup`.
 
-## Reset
+---
 
-Reset removes InfoBoard-owned configuration, installation state, bounded activation metadata, and rebuildable local index state. It then reconnects and requests a fresh browser snapshot. Reset must not close tabs, change tab positions, delete browser history, or remove unrelated browser data.
+## Reset State
+
+Because InfoBoard stores MRU tab history in `chrome.storage.session`, resetting the extension state is effortless:
+
+1. **Clear Session Memory**:
+   Closing and reopening the browser automatically purges the in-memory MRU state.
+2. **Manual Reload**:
+   Clicking the **Reload** button on `chrome://extensions` immediately restarts the service worker and rehydrates MRU state from active tabs.
+3. **Tab Safety**:
+   Resetting or reloading the extension never modifies, closes, or rearranges open tabs.
+
+---
 
 ## Uninstall
 
-Uninstall removes the extension, Native Messaging registration, host artifacts, InfoBoard-owned local data, and diagnostics according to the platform package contract. It must be safe to run repeatedly and must clearly distinguish owned data from browser-owned data.
+Uninstallation is handled entirely through standard browser controls:
 
-The current tab projection is always rebuildable from browser APIs. Uninstall therefore must not claim to delete browser tabs or browsing history because those are outside InfoBoard ownership.
+- Right-click the extension icon on the toolbar -> **Remove from Chrome...**
+- Or remove via `chrome://extensions`.
 
-## Acceptance
-
-The [verification contract](../plan/refactor/verification-and-acceptance.md) must cover host absence, host crash, malformed messages, persistence failure, reset ownership boundaries, private-context cleanup, uninstall idempotence, and redaction defaults.
+Because InfoBoard does not write to the host filesystem, registry, or local databases, removing the extension leaves **zero residual files or background processes** on the user's operating system.

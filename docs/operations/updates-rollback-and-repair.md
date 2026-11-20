@@ -1,26 +1,48 @@
-# Updates, rollback, and repair
+# Updates, Rollback, and Repair
 
-## Update flow
+This document details the update lifecycle, rollback mechanisms, and diagnostic recovery procedures for the InfoBoard extension.
 
-An update replaces extension and host artifacts as a compatible unit. The package records extension version, host version, protocol version, schema version, and ranking-model version. The Native Messaging handshake refuses incompatible combinations rather than exchanging tab data under an unknown contract.
+---
 
-The updater must:
+## 1. Extension Update Lifecycle
 
-- preserve allowed profile-scoped configuration;
-- migrate SQLite before advertising healthy persistence;
-- retain enough metadata to explain the previous version and failure reason;
-- validate manifest origin and executable ownership;
-- restart or reconnect the host through the browser-managed boundary;
-- verify a fresh snapshot before returning to `Ready`.
+Because InfoBoard has zero native binaries or external daemons, all updates follow standard Chromium extension lifecycle rules:
 
-## Rollback
+### Automated Web Store Updates
+- When a new version is published to the Chrome Web Store or Edge Add-ons Store, the browser automatically downloads and stages the update in the background.
+- Upon browser restart or service worker update cycle, Chromium smoothly transitions to the new version without requiring system restarts or installer scripts.
 
-Rollback restores a previously known compatible extension/host pair. It must not silently reuse an incompatible schema or ranking model. If rollback cannot validate the pair, the product remains in a repairable unavailable state and gives the user a concrete next action.
+### Developer / Unpacked Updates
+- To update local development builds:
+  ```bash
+  npm run build:extension
+  ```
+- Navigate to `chrome://extensions` and click the **Reload** icon on the InfoBoard card.
+- The background service worker reloads and automatically re-hydrates active tabs via `hydrateTabs()`.
 
-## Repair
+---
 
-Repair is idempotent. It may recreate manifests, restore executable permissions, remove stale registrations, repair owned directories, and re-run the handshake. Repair must not delete browser tabs or unrelated browser data. Destructive data reset is a separate, explicit action.
+## 2. Rollback Procedures
 
-## Failure presentation
+### Web Store Rollback
+- In the event of a regression, developers can revert the git commit on `main`, rebuild, and publish a new version bump to the Web Store.
 
-Every update, rollback, or repair failure exposes an error class, affected component, whether browser state changed, and the next safe action. Logs contain versions, counts, durations, and error classes by default—not URLs, titles, queries, or tokens.
+### Local Unpacked Rollback
+- To roll back a local installation:
+  ```bash
+  git checkout <previous-tag-or-commit>
+  npm run build:extension
+  ```
+- Reload the extension in `chrome://extensions`.
+
+---
+
+## 3. Repair & Self-Healing
+
+InfoBoard incorporates built-in self-healing mechanisms:
+
+| Symptom | Cause | Automatic Resolution |
+| :--- | :--- | :--- |
+| **Empty or Stale Tab List** | Service worker was asleep during mass tab creation/closing | The popup executes `hydrateTabs()` on launch, performing a fresh `chrome.tabs.query` to rebuild the tab set. |
+| **Missing Recency Order** | `chrome.storage.session` cleared or corrupted | `mru-manager.ts` handles missing storage gracefully by falling back to `tab.lastAccessed` or tab index order. |
+| **Shortcut Conflicts** | Another extension has bound `Alt+W` | Visit `chrome://extensions/shortcuts` to reassign the invocation shortcut. |

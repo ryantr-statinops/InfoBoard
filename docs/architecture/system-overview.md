@@ -1,52 +1,50 @@
-# System overview
+# System Overview
 
-## Product shape
+## System Topology
 
-InfoBoard is a Manifest V3 Chrome/Edge desktop extension connected to a local Go Native Messaging host.
+InfoBoard runs entirely inside the Chromium extension environment. There are no native companion applications, background OS daemons, local network servers, or SQLite databases.
 
 ```text
-Chrome or Edge profile
-  ├─ configurable command
-  ├─ focused search surface
-  ├─ browser event adapter
-  ├─ profile-scoped tab projection
-  ├─ activation controller
-  └─ Native Messaging client
-          │ framed JSON over stdin/stdout
-          ▼
-Go Native Messaging host
-  ├─ protocol and session manager
-  ├─ projection reconciler
-  ├─ in-memory lexical index
-  ├─ deterministic ranking engine
-  ├─ bounded SQLite repository
-  └─ diagnostics and health
+┌────────────────────────────────────────────────────────┐
+│               Chromium Browser (Chrome / Edge)         │
+│                                                        │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │ 1. Search Surface (Action Popup)                 │  │
+│  │    • Triggered via _execute_action (Alt+W)       │  │
+│  │    • Input autofocus, arrow cycling, Escape/Enter│  │
+│  │    • Renders tabs, favicons, badges, highlights  │  │
+│  └────────────────────────▲─────────────────────────┘  │
+│                           │ in-memory (< 1ms)          │
+│  ┌────────────────────────▼─────────────────────────┐  │
+│  │ 2. Scorer & Tab Indexer                          │  │
+│  │    • Multi-tier prefix/boundary/acronym matching │  │
+│  │    • MRU Recency Boost (+ 50 / (rank + 1))       │  │
+│  │    • Deterministic tie-breaking                  │  │
+│  └────────────────────────▲─────────────────────────┘  │
+│                           │ tab snapshot & MRU ranks   │
+│  ┌────────────────────────▼─────────────────────────┐  │
+│  │ 3. Background Service Worker (MRU Tracker)       │  │
+│  │    • chrome.tabs.onActivated / onRemoved         │  │
+│  │    • chrome.windows.onFocusChanged               │  │
+│  │    • Bounded ring buffer in chrome.storage.session│ │
+│  │    • Fallback: tab.lastAccessed                  │  │
+│  └──────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────┘
 ```
 
-The extension owns browser authority. The host owns local indexing, ranking, protocol state, diagnostics, and the bounded persistence allowed by the product contract.
+## Component Boundaries
 
-## Authority boundaries
+| Component | Owns | Does Not Own |
+| :--- | :--- | :--- |
+| **Search Surface (Popup)** | Focus management, query input, keyboard navigation, tab rendering, and tab activation via `chrome.tabs.update` | Tab observation events or long-term history storage |
+| **Scorer Engine** | String normalization, exact prefix scoring, word-boundary regex matching, acronym matching, and MRU boost calculations | Browser permissions, DOM manipulation, or disk storage |
+| **Background Service Worker** | Tab activation and window focus listeners, MRU ring-buffer state management | Persistent history, page content inspection, or UI layout |
+| **Session Storage** | Holding up to 100 recent tab IDs in browser RAM across service worker sleep cycles | Disk persistence or sync across devices |
 
-| Boundary | Owns | Does not own |
-| --- | --- | --- |
-| Browser extension | Browser permissions, tab snapshots, browser events, UI, activation calls | Ranking weights, SQL, process residency policy |
-| Native Messaging client | Framing, request IDs, reconnect, compatibility, send/receive state | Direct browser mutation outside extension APIs |
-| Go host | Protocol validation, synchronization, index, ranking, health | Browser APIs, network access, page content |
-| SQLite repository | Configuration, installation state, migrations, bounded activation metadata | Current open tabs as durable truth |
-| Search surface | Input, selection, status, accessible presentation | Hidden ranking or stale activation decisions |
+## Design Invariants
 
-## Product boundary
-
-Only the current profile's eligible open tabs enter the projection. The architecture does not require cookies, browser history, page contents, network interception, cloud indexing, or a loopback listening port.
-
-The current tab projection is rebuildable. Persistence improves configuration and bounded activation context; it is not a second source of truth for currently open tabs.
-
-## Design invariants
-
-- Every runtime request has a bounded payload, timeout, and typed error path.
-- Every result is tied to a known profile and projection revision.
-- Browser state changes are performed by the extension, never by the host.
-- A failed optional component cannot remove the normal lexical search path.
-- The architecture is measured at 1,000 open tabs per profile and remains correct above that envelope.
-
-See the [canonical target architecture](../plan/refactor/architecture.md) for the binding contract.
+1. **Zero External Processes**: The extension never spawns OS processes, opens network sockets, or relies on native messaging.
+2. **Zero Disk I/O on Search**: Querying and ranking occur entirely in-memory using JavaScript V8 string/regex operations.
+3. **Sub-millisecond Hot Path**: Searching through 100+ open tabs executes in under 1 millisecond.
+4. **Quick Toggle Ergonomics**: Opening the popup automatically pre-selects the previously active tab (`index 1`), allowing instant toggle back and forth using shortcut + `Enter`.
+5. **Fail-safe Degradation**: If session storage is empty or fails, the system immediately falls back to Chromium's native `tab.lastAccessed` timestamp without interrupting search.

@@ -1,17 +1,14 @@
 # Architecture
 
-This folder explains how the product contract is realized as cooperating boundaries. The binding source remains [`docs/plan/refactor/architecture.md`](../plan/refactor/architecture.md); these documents provide a reader-oriented breakdown and must not introduce alternate ownership.
+InfoBoard is designed around a single guiding principle: **extreme lightness, zero latency, and zero friction**.
 
-## Reading order
+It replaces the previous complex multi-tier native architecture with a **Pure Manifest V3 Web Extension** running entirely within the Chromium browser process.
 
-1. [System overview](system-overview.md) — process shape and authority boundaries.
-2. [Component ownership](components-and-ownership.md) — responsibilities and forbidden coupling.
-3. [Runtime lifecycle](runtime-lifecycle.md) — connection, synchronization, readiness, and recovery.
-4. [Data and failure boundaries](data-and-failure-boundaries.md) — data flow, failure isolation, and scale envelope.
+---
 
-Related contracts:
+## Documents in this Section
 
-- [Runtime protocol](../plan/refactor/runtime-protocol.md)
-- [Persistence and lifecycle](../plan/refactor/persistence-and-lifecycle.md)
-- [Domain and privacy](../plan/refactor/domain-and-privacy.md)
-- [Browser landscape](../plan/refactor/browser-landscape.md)
+1. [**System Overview**](system-overview.md): High-level system topology, runtime components, and design invariants.
+2. [**Components and Ownership**](components-and-ownership.md): Detailed responsibilities of the popup UI, search scorer, background MRU manager, and Chrome API adapter.
+3. [**Runtime Lifecycle**](runtime-lifecycle.md): Service worker sleep/wake management, session storage persistence, and popup lifecycle.
+4. [**Data and Failure Boundaries**](data-and-failure-boundaries.md): Failure isolation, privacy boundaries, and scaling characteristics.
