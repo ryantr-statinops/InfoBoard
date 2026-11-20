@@ -42,7 +42,7 @@ html, body {
   width: 480px;
   height: 480px;
   overflow: hidden;
-  background-color: var(--bg-primary);
+  background-color: transparent;
   color: var(--text-primary);
   font-family: var(--font-family);
   font-size: 14px;
