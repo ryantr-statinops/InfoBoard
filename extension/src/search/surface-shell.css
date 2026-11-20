@@ -40,7 +40,7 @@
 
 html, body {
   width: 480px;
-  height: 540px;
+  height: 480px;
   overflow: hidden;
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -224,26 +224,44 @@ mark {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 14px;
-  padding: 8px 14px;
+  gap: 12px;
+  padding: 5px 14px;
   border-top: 1px solid var(--border-color);
-  background-color: var(--bg-secondary);
-  font-size: 11.5px;
+  background-color: var(--bg-primary);
+  font-size: 11px;
   color: var(--text-secondary);
+  user-select: none;
 }
 
 .shortcut-item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
+  line-height: 1;
 }
 
-kbd {
-  font-family: inherit;
-  font-size: 11px;
-  padding: 1px 4px;
+.kbd-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 3px;
   border-radius: 3px;
-  background-color: var(--bg-primary);
+  background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  color: var(--text-secondary);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+.kbd-text {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  text-transform: uppercase;
+}
+
+.shortcut-icon {
+  width: 10px;
+  height: 10px;
 }
