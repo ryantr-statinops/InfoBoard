@@ -67,6 +67,13 @@ html, body {
   will-change: transform, opacity;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .search-container {
+    animation: none;
+    will-change: auto;
+  }
+}
+
 .search-header {
   position: relative;
   display: flex;
