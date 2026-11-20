@@ -42,7 +42,7 @@ html, body {
   width: 480px;
   height: 480px;
   overflow: hidden;
-  background-color: transparent;
+  background-color: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-family);
   font-size: 14px;
@@ -52,11 +52,9 @@ html, body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-radius: 8px;
-  overflow: hidden;
 }
 
-/* 1-Second 3-Stage Sequential Waterfall Keyframes */
+/* Snappy 150ms Waterfall Entrance Keyframes */
 @keyframes waterfall-header {
   0% {
     opacity: 0;
@@ -71,11 +69,8 @@ html, body {
 @keyframes waterfall-results {
   0% {
     clip-path: inset(0 0 100% 0);
-    transform: translateY(-24px);
-    opacity: 0;
-  }
-  1% {
-    opacity: 1;
+    transform: translateY(-8px);
+    opacity: 0.3;
   }
   100% {
     clip-path: inset(0 0 0 0);
@@ -87,7 +82,7 @@ html, body {
 @keyframes waterfall-footer {
   0% {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: translateY(-3px);
   }
   100% {
     opacity: 1;
@@ -95,7 +90,7 @@ html, body {
   }
 }
 
-/* Phase 1: Search Header (0 - 200ms) */
+/* Phase 1: Search Header */
 .search-header {
   position: relative;
   z-index: 10;
@@ -104,7 +99,7 @@ html, body {
   padding: 12px 14px;
   border-bottom: 1px solid var(--border-color);
   background-color: var(--bg-primary);
-  animation: waterfall-header 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: waterfall-header 100ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .search-icon {
@@ -130,17 +125,16 @@ html, body {
   font-size: 14px;
 }
 
-/* Phase 2: Tab Results Waterfall Cascade (200ms - 800ms, duration 600ms) */
+/* Phase 2: Tab Results Waterfall Cascade */
 .results-wrapper {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
   padding: 6px 0;
-  background-color: var(--bg-primary);
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-  animation: waterfall-results 600ms cubic-bezier(0.25, 1, 0.5, 1) 200ms both;
+  animation: waterfall-results 130ms cubic-bezier(0.16, 1, 0.3, 1) 20ms both;
   will-change: clip-path, transform;
 }
 
@@ -268,7 +262,7 @@ mark {
   font-size: 14px;
 }
 
-/* Phase 3: Shortcuts Footer Basin (800ms - 1000ms, duration 200ms) */
+/* Phase 3: Shortcuts Footer Basin */
 .shortcuts-footer {
   display: flex;
   align-items: center;
@@ -280,7 +274,7 @@ mark {
   font-size: 11px;
   color: var(--text-secondary);
   user-select: none;
-  animation: waterfall-footer 200ms cubic-bezier(0.16, 1, 0.3, 1) 800ms both;
+  animation: waterfall-footer 90ms cubic-bezier(0.16, 1, 0.3, 1) 50ms both;
 }
 
 .shortcut-item {
