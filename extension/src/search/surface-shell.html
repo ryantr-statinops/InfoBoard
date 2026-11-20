@@ -25,41 +25,39 @@
       >
     </header>
 
-    <div class="waterfall-body">
-      <main class="results-wrapper">
-        <ul id="tab-results" class="tab-results" role="listbox" aria-label="Open tabs"></ul>
-        <div id="empty-state" class="empty-state" hidden>No matching tabs found</div>
-      </main>
+    <main class="results-wrapper">
+      <ul id="tab-results" class="tab-results" role="listbox" aria-label="Open tabs"></ul>
+      <div id="empty-state" class="empty-state" hidden>No matching tabs found</div>
+    </main>
 
-      <footer class="shortcuts-footer">
-        <span class="shortcut-item">
-          <kbd class="kbd-key" aria-label="Arrow Up">
-            <svg class="shortcut-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="18 15 12 9 6 15"></polyline>
-            </svg>
-          </kbd>
-          <kbd class="kbd-key" aria-label="Arrow Down">
-            <svg class="shortcut-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </kbd>
-          Navigate
-        </span>
-        <span class="shortcut-item">
-          <kbd class="kbd-key" aria-label="Enter">
-            <svg class="shortcut-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 10 4 15 9 20"></polyline>
-              <path d="M20 4v7a4 4 0 0 1-4 4H4"></path>
-            </svg>
-          </kbd>
-          Switch tab
-        </span>
-        <span class="shortcut-item">
-          <kbd class="kbd-key kbd-text" aria-label="Escape">esc</kbd>
-          Close
-        </span>
-      </footer>
-    </div>
+    <footer class="shortcuts-footer">
+      <span class="shortcut-item">
+        <kbd class="kbd-key" aria-label="Arrow Up">
+          <svg class="shortcut-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+        </kbd>
+        <kbd class="kbd-key" aria-label="Arrow Down">
+          <svg class="shortcut-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </kbd>
+        Navigate
+      </span>
+      <span class="shortcut-item">
+        <kbd class="kbd-key" aria-label="Enter">
+          <svg class="shortcut-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 10 4 15 9 20"></polyline>
+            <path d="M20 4v7a4 4 0 0 1-4 4H4"></path>
+          </svg>
+        </kbd>
+        Switch tab
+      </span>
+      <span class="shortcut-item">
+        <kbd class="kbd-key kbd-text" aria-label="Escape">esc</kbd>
+        Close
+      </span>
+    </footer>
   </div>
 
   <script type="module" src="../src/search/surface-entrypoint.js"></script>
