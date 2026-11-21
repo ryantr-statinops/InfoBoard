@@ -1,0 +1,54 @@
+{
+  "extensionName": {
+    "message": "InfoBoard - Tìm kiếm Tab nhanh",
+    "description": "Tên tiện ích."
+  },
+  "extensionDescription": {
+    "message": "Tìm kiếm và chuyển đổi giữa các tab trình duyệt đang mở với độ trễ siêu thấp.",
+    "description": "Mô tả tiện ích."
+  },
+  "extensionActionTitle": {
+    "message": "Mở tìm kiếm tab InfoBoard (Alt+W)",
+    "description": "Tooltip cho nút action popup."
+  },
+  "searchPlaceholder": {
+    "message": "Tìm kiếm tab theo tiêu đề hoặc tên miền...",
+    "description": "Placeholder cho ô tìm kiếm."
+  },
+  "emptyState": {
+    "message": "Không tìm thấy tab phù hợp",
+    "description": "Thông báo khi không có kết quả."
+  },
+  "shortcutNavigate": {
+    "message": "Di chuyển",
+    "description": "Nhãn phím tắt điều hướng."
+  },
+  "shortcutSwitchTab": {
+    "message": "Chuyển tab",
+    "description": "Nhãn phím tắt kích hoạt tab."
+  },
+  "shortcutCloseTab": {
+    "message": "Đóng tab",
+    "description": "Nhãn phím tắt đóng tab."
+  },
+  "shortcutClose": {
+    "message": "Đóng",
+    "description": "Nhãn phím tắt đóng popup."
+  },
+  "badgeCurrent": {
+    "message": "Hiện tại",
+    "description": "Nhãn tab đang mở."
+  },
+  "badgePinned": {
+    "message": "Đã ghim",
+    "description": "Nhãn tab đã ghim."
+  },
+  "badgeAudio": {
+    "message": "Âm thanh",
+    "description": "Nhãn tab đang phát âm thanh."
+  },
+  "badgeMuted": {
+    "message": "Tắt tiếng",
+    "description": "Nhãn tab bị tắt tiếng."
+  }
+}

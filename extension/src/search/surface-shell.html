@@ -18,6 +18,7 @@
         data-search-input
         type="search"
         placeholder="Search open tabs (e.g. t, ti, gh)..."
+        data-i18n-placeholder="searchPlaceholder"
         autocomplete="off"
         spellcheck="false"
         aria-autocomplete="list"
@@ -27,7 +28,7 @@
 
     <main class="results-wrapper">
       <ul id="tab-results" class="tab-results" role="listbox" aria-label="Open tabs"></ul>
-      <div id="empty-state" class="empty-state" hidden>No matching tabs found</div>
+      <div id="empty-state" class="empty-state" data-i18n="emptyState" hidden>No matching tabs found</div>
     </main>
 
     <footer class="shortcuts-footer">
@@ -42,7 +43,7 @@
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
         </kbd>
-        Navigate
+        <span data-i18n="shortcutNavigate">Navigate</span>
       </span>
       <span class="shortcut-item">
         <kbd class="kbd-key" aria-label="Enter">
@@ -51,15 +52,15 @@
             <path d="M20 4v7a4 4 0 0 1-4 4H4"></path>
           </svg>
         </kbd>
-        Switch tab
+        <span data-i18n="shortcutSwitchTab">Switch tab</span>
       </span>
       <span class="shortcut-item">
         <kbd class="kbd-key kbd-text" aria-label="Alt D">alt+d</kbd>
-        Close tab
+        <span data-i18n="shortcutCloseTab">Close tab</span>
       </span>
       <span class="shortcut-item">
         <kbd class="kbd-key kbd-text" aria-label="Escape">esc</kbd>
-        Close
+        <span data-i18n="shortcutClose">Close</span>
       </span>
     </footer>
   </div>

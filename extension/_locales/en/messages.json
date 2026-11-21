@@ -1,0 +1,54 @@
+{
+  "extensionName": {
+    "message": "InfoBoard - Quick Tab Search",
+    "description": "The name of the extension."
+  },
+  "extensionDescription": {
+    "message": "Search and switch between eligible open browser tabs with ultra-low latency.",
+    "description": "The description of the extension."
+  },
+  "extensionActionTitle": {
+    "message": "Open InfoBoard tab search (Alt+W)",
+    "description": "Tooltip for the action popup button."
+  },
+  "searchPlaceholder": {
+    "message": "Search open tabs by title or domain...",
+    "description": "Placeholder for the search input."
+  },
+  "emptyState": {
+    "message": "No matching tabs found",
+    "description": "Message shown when search query returns no results."
+  },
+  "shortcutNavigate": {
+    "message": "Navigate",
+    "description": "Shortcut label for arrow navigation."
+  },
+  "shortcutSwitchTab": {
+    "message": "Switch tab",
+    "description": "Shortcut label for enter tab activation."
+  },
+  "shortcutCloseTab": {
+    "message": "Close tab",
+    "description": "Shortcut label for direct tab closing."
+  },
+  "shortcutClose": {
+    "message": "Close",
+    "description": "Shortcut label for escape dismissal."
+  },
+  "badgeCurrent": {
+    "message": "Current",
+    "description": "Badge for active tab."
+  },
+  "badgePinned": {
+    "message": "Pinned",
+    "description": "Badge for pinned tab."
+  },
+  "badgeAudio": {
+    "message": "Audio",
+    "description": "Badge for audible tab."
+  },
+  "badgeMuted": {
+    "message": "Muted",
+    "description": "Badge for muted audio tab."
+  }
+}

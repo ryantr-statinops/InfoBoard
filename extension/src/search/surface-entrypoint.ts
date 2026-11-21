@@ -2,6 +2,47 @@ import { normalizeTab, type SearchTabItem } from './types.js';
 import { searchTabs } from './scorer.js';
 import { MRU_STORAGE_KEY, removeTab } from '../background/mru-manager.js';
 
+export function getI18nMessage(key: string, fallback: string): string {
+  try {
+    if (typeof chrome !== 'undefined' && chrome.i18n?.getMessage) {
+      const msg = chrome.i18n.getMessage(key);
+      if (msg) return msg;
+    }
+  } catch {
+    // fallback
+  }
+  return fallback;
+}
+
+export function applyI18n(doc: Document): void {
+  try {
+    const textEls = doc.querySelectorAll?.('[data-i18n]');
+    if (textEls && typeof textEls.forEach === 'function') {
+      textEls.forEach((el) => {
+        const key = el.getAttribute?.('data-i18n');
+        if (key) {
+          const fallback = el.textContent || '';
+          el.textContent = getI18nMessage(key, fallback);
+        }
+      });
+    }
+
+    const placeholderEls = doc.querySelectorAll?.('[data-i18n-placeholder]');
+    if (placeholderEls && typeof placeholderEls.forEach === 'function') {
+      placeholderEls.forEach((el) => {
+        const key = el.getAttribute?.('data-i18n-placeholder');
+        if (key) {
+          const inputEl = el as HTMLInputElement;
+          const fallback = inputEl.placeholder || '';
+          inputEl.placeholder = getI18nMessage(key, fallback);
+        }
+      });
+    }
+  } catch {
+    // fallback gracefully
+  }
+}
+
 export let allTabs: SearchTabItem[] = [];
 export let currentResults: SearchTabItem[] = [];
 export let selectedIndex = 0;
@@ -176,21 +217,21 @@ export function renderTabList(doc: Document = document): void {
     if (tab.active) {
       const activeBadge = doc.createElement('span');
       activeBadge.className = 'tab-badge tab-badge-active';
-      activeBadge.textContent = 'Current';
+      activeBadge.textContent = getI18nMessage('badgeCurrent', 'Current');
       meta.appendChild(activeBadge);
     }
 
     if (tab.pinned) {
       const pinBadge = doc.createElement('span');
       pinBadge.className = 'tab-badge';
-      pinBadge.textContent = 'Pinned';
+      pinBadge.textContent = getI18nMessage('badgePinned', 'Pinned');
       meta.appendChild(pinBadge);
     }
 
     if (tab.audible) {
       const audioBadge = doc.createElement('span');
       audioBadge.className = tab.muted ? 'tab-badge tab-badge-muted' : 'tab-badge tab-badge-audio';
-      audioBadge.textContent = tab.muted ? 'Muted' : 'Audio';
+      audioBadge.textContent = getI18nMessage(tab.muted ? 'badgeMuted' : 'badgeAudio', tab.muted ? 'Muted' : 'Audio');
       meta.appendChild(audioBadge);
     }
 
@@ -230,6 +271,8 @@ function createFaviconPlaceholder(doc: Document, text: string): HTMLElement {
 export async function initializeSearchSurface(doc: Document = document): Promise<void> {
   const input = doc.querySelector<HTMLInputElement>('[data-search-input]');
   if (!input) return;
+
+  applyI18n(doc);
 
   allTabs = await loadTabsAndReconcileMRU();
   currentResults = [...allTabs];

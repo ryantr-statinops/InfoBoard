@@ -8,7 +8,8 @@ test('manifest.json conforms to Pure MV3 requirements', async () => {
   const manifest = JSON.parse(manifestRaw);
 
   assert.equal(manifest.manifest_version, 3);
-  assert.equal(manifest.name, 'InfoBoard');
+  assert.equal(manifest.name, '__MSG_extensionName__');
+  assert.equal(manifest.default_locale, 'en');
 
   // Verify permissions are strictly trimmed to the essential 3
   assert.deepEqual(manifest.permissions.sort(), ['storage', 'tabGroups', 'tabs']);

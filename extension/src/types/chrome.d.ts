@@ -136,3 +136,8 @@ declare namespace chrome.runtime {
   export const onStartup: RuntimeEvent;
   export const onInstalled: RuntimeEvent;
 }
+
+declare namespace chrome.i18n {
+  export function getMessage(messageName: string, substitutions?: any): string;
+  export function getUILanguage(): string;
+}
