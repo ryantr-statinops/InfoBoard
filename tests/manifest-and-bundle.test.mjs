@@ -21,6 +21,14 @@ test('manifest.json conforms to Pure MV3 requirements', async () => {
   // Action popup
   assert.equal(manifest.action.default_popup, 'dist/search/surface-shell.html');
 
+  // Icons configuration
+  assert.ok(manifest.icons, 'Manifest must define icons');
+  assert.equal(manifest.icons['16'], 'icons/icon-16.png');
+  assert.equal(manifest.icons['32'], 'icons/icon-32.png');
+  assert.equal(manifest.icons['48'], 'icons/icon-48.png');
+  assert.equal(manifest.icons['128'], 'icons/icon-128.png');
+  assert.ok(manifest.action.default_icon, 'Action must define default_icon');
+
   // Keyboard command shortcut
   assert.ok(manifest.commands._execute_action, '_execute_action command must be configured');
   assert.equal(manifest.commands._execute_action.suggested_key.default, 'Alt+W');

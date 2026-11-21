@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 let closed = false;
 let updatedTab = null;
 let updatedWindow = null;
+let removedTabId = null;
 let sessionStorage = { mru_tab_ids: [102, 101] };
 
 globalThis.window = {
@@ -14,7 +15,8 @@ globalThis.window = {
 globalThis.chrome = {
   storage: {
     session: {
-      get: async (key) => ({ [key]: sessionStorage[key] })
+      get: async (key) => ({ [key]: sessionStorage[key] }),
+      set: async (obj) => { Object.assign(sessionStorage, obj); }
     }
   },
   tabs: {
@@ -26,6 +28,9 @@ globalThis.chrome = {
     update: async (tabId, props) => {
       updatedTab = { tabId, props };
       return {};
+    },
+    remove: async (tabId) => {
+      removedTabId = tabId;
     }
   },
   windows: {
@@ -71,8 +76,10 @@ const mockDoc = {
 const {
   loadTabsAndReconcileMRU,
   activateTab,
+  dismissWithAnimation,
   updateSelection,
   renderTabList,
+  closeTab,
   currentResults,
   selectedIndex
 } = await import('../extension/dist/src/search/surface-entrypoint.js');
@@ -135,4 +142,30 @@ test('updateSelection: updates aria-selected attributes and cycles selection', a
   updateSelection(1, mockDoc);
   assert.equal(opt1.getAttribute('aria-selected'), 'true');
   assert.equal(opt0.getAttribute('aria-selected'), 'false');
+});
+
+test('dismissWithAnimation: triggers exit animation class and closes popup', async () => {
+  closed = false;
+  const container = new MockElement('div');
+  container.className = 'search-container';
+  const testDoc = {
+    ...mockDoc,
+    querySelector: (sel) => (sel === '.search-container' ? container : new MockElement('div'))
+  };
+
+  await dismissWithAnimation(testDoc);
+  assert.equal(closed, true);
+  assert.ok(container.className.includes('is-closing'));
+});
+
+test('closeTab: calls chrome.tabs.remove, purges from currentResults, and re-renders', async () => {
+  removedTabId = null;
+  const tabs = await loadTabsAndReconcileMRU();
+  assert.equal(tabs.length >= 1, true);
+
+  const targetTab = tabs[0];
+  await closeTab(targetTab, mockDoc);
+
+  assert.equal(removedTabId, targetTab.id);
+  assert.equal(currentResults.find(t => t.id === targetTab.id), undefined);
 });

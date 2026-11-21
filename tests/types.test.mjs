@@ -26,6 +26,8 @@ test('normalizeTab: correctly normalizes standard open tab', () => {
     active: true,
     pinned: true,
     groupId: 5,
+    audible: true,
+    mutedInfo: { muted: false },
     highlighted: true,
     incognito: false,
     index: 0
@@ -41,6 +43,8 @@ test('normalizeTab: correctly normalizes standard open tab', () => {
   assert.equal(item.active, true);
   assert.equal(item.pinned, true);
   assert.equal(item.groupId, 5);
+  assert.equal(item.audible, true);
+  assert.equal(item.muted, false);
 });
 
 test('normalizeTab: falls back title to domain when title is missing or whitespace', () => {
