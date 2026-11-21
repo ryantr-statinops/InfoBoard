@@ -8,6 +8,7 @@
 **/dist/
 **/build/
 **/target/
+release/
 
 # Generated test and runtime artifacts
 __pycache__/
