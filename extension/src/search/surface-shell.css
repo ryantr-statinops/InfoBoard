@@ -54,13 +54,71 @@ html, body {
   height: 100%;
 }
 
+/* Smooth 500ms Waterfall Entrance Keyframes */
+@keyframes waterfall-header {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes waterfall-results {
+  0% {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(-12px);
+    opacity: 0.2;
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes waterfall-footer {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Smooth Reverse Waterfall Exit Animation (500ms) */
+@keyframes waterfall-exit {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+    clip-path: inset(0 0 100% 0);
+  }
+}
+
+.search-container.is-closing {
+  animation: waterfall-exit 500ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  pointer-events: none;
+}
+
+/* Phase 1: Search Header (0 - 120ms) */
 .search-header {
   position: relative;
+  z-index: 10;
   display: flex;
   align-items: center;
   padding: 12px 14px;
   border-bottom: 1px solid var(--border-color);
   background-color: var(--bg-primary);
+  animation: waterfall-header 120ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .search-icon {
@@ -86,6 +144,7 @@ html, body {
   font-size: 14px;
 }
 
+/* Phase 2: Tab Results Waterfall Cascade (100ms - 420ms, duration 320ms) */
 .results-wrapper {
   flex: 1;
   overflow-y: auto;
@@ -94,6 +153,8 @@ html, body {
   padding: 6px 0;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  animation: waterfall-results 320ms cubic-bezier(0.25, 1, 0.5, 1) 100ms both;
+  will-change: clip-path, transform;
 }
 
 /* Custom modern scrollbar for Chromium */
@@ -180,6 +241,40 @@ mark {
   flex: 1;
 }
 
+.tab-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+  flex-shrink: 0;
+  padding: 0;
+  margin-left: 6px;
+}
+
+.tab-close-btn svg {
+  width: 11px;
+  height: 11px;
+}
+
+.tab-item:hover .tab-close-btn,
+.tab-item[aria-selected="true"] .tab-close-btn {
+  opacity: 0.7;
+}
+
+.tab-close-btn:hover {
+  opacity: 1 !important;
+  background-color: var(--bg-secondary);
+  color: #ef4444;
+}
+
 .tab-title {
   font-size: 13.5px;
   font-weight: 500;
@@ -213,6 +308,41 @@ mark {
   color: var(--text-secondary);
 }
 
+.tab-badge-audio {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--accent-color);
+  background-color: rgba(99, 102, 241, 0.12);
+}
+
+.tab-badge-audio::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  background-color: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M11.555 1.468a.5.5 0 0 0-.555.082l-4.5 4.5H3.5a1.5 1.5 0 0 0-1.5 1.5v1a1.5 1.5 0 0 0 1.5 1.5h3l4.5 4.5A.5.5 0 0 0 12 14V2a.5.5 0 0 0-.445-.532zM14.5 8a4.5 4.5 0 0 0-1.32-3.18.5.5 0 0 0-.71.71 3.5 3.5 0 0 1 0 4.94.5.5 0 0 0 .71.71A4.5 4.5 0 0 0 14.5 8z'/%3E%3C/svg%3E") no-repeat center / contain;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M11.555 1.468a.5.5 0 0 0-.555.082l-4.5 4.5H3.5a1.5 1.5 0 0 0-1.5 1.5v1a1.5 1.5 0 0 0 1.5 1.5h3l4.5 4.5A.5.5 0 0 0 12 14V2a.5.5 0 0 0-.445-.532zM14.5 8a4.5 4.5 0 0 0-1.32-3.18.5.5 0 0 0-.71.71 3.5 3.5 0 0 1 0 4.94.5.5 0 0 0 .71.71A4.5 4.5 0 0 0 14.5 8z'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
+.tab-badge-muted {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-secondary);
+}
+
+.tab-badge-muted::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  background-color: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06zm7.137 2.096a.5.5 0 0 1 0 .708L12.707 7.5l1.147 1.146a.5.5 0 0 1-.708.708L12 8.207l-1.146 1.147a.5.5 0 0 1-.708-.708L11.293 7.5l-1.147-1.146a.5.5 0 0 1 .708-.708L12 6.793l1.146-1.147a.5.5 0 0 1 .708 0z'/%3E%3C/svg%3E") no-repeat center / contain;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06zm7.137 2.096a.5.5 0 0 1 0 .708L12.707 7.5l1.147 1.146a.5.5 0 0 1-.708.708L12 8.207l-1.146 1.147a.5.5 0 0 1-.708-.708L11.293 7.5l-1.147-1.146a.5.5 0 0 1 .708-.708L12 6.793l1.146-1.147a.5.5 0 0 1 .708 0z'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
 .empty-state {
   padding: 32px 16px;
   text-align: center;
@@ -220,6 +350,7 @@ mark {
   font-size: 14px;
 }
 
+/* Phase 3: Shortcuts Footer Basin (380ms - 500ms, duration 120ms) */
 .shortcuts-footer {
   display: flex;
   align-items: center;
@@ -231,6 +362,7 @@ mark {
   font-size: 11px;
   color: var(--text-secondary);
   user-select: none;
+  animation: waterfall-footer 120ms cubic-bezier(0.16, 1, 0.3, 1) 380ms both;
 }
 
 .shortcut-item {
@@ -264,4 +396,16 @@ mark {
 .shortcut-icon {
   width: 10px;
   height: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-header,
+  .results-wrapper,
+  .shortcuts-footer,
+  .search-container.is-closing {
+    animation: none !important;
+    clip-path: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
 }

@@ -9,6 +9,8 @@ export interface SearchTabItem {
   active: boolean;
   pinned: boolean;
   groupId?: number;
+  audible?: boolean;
+  muted?: boolean;
 }
 
 export function extractDomain(rawUrl: string): string {
@@ -38,6 +40,8 @@ export function normalizeTab(tab: chrome.tabs.Tab, mruMap: Map<number, number>):
     mruRank,
     active: Boolean(tab.active),
     pinned: Boolean(tab.pinned),
-    groupId: tab.groupId && tab.groupId > 0 ? tab.groupId : undefined
+    groupId: tab.groupId && tab.groupId > 0 ? tab.groupId : undefined,
+    audible: Boolean(tab.audible),
+    muted: Boolean(tab.mutedInfo?.muted)
   };
 }

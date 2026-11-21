@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect x="32" y="32" width="448" height="448" rx="112" fill="#18181b"/>
+  <!-- Layered back tab -->
+  <rect x="136" y="116" width="240" height="180" rx="24" fill="none" stroke="#71717a" stroke-width="24"/>
+  <!-- Front tab window -->
+  <rect x="112" y="168" width="288" height="208" rx="28" fill="#27272a" stroke="#ffffff" stroke-width="24"/>
+  <!-- Tab search bar indicator -->
+  <line x1="152" y1="228" x2="240" y2="228" stroke="#ffffff" stroke-width="22" stroke-linecap="round"/>
+  <line x1="152" y1="280" x2="200" y2="280" stroke="#a1a1aa" stroke-width="18" stroke-linecap="round"/>
+  <!-- Search loop glass -->
+  <circle cx="332" cy="324" r="68" fill="#18181b" stroke="#ffffff" stroke-width="26"/>
+  <line x1="380" y1="372" x2="430" y2="422" stroke="#ffffff" stroke-width="26" stroke-linecap="round"/>
+</svg>

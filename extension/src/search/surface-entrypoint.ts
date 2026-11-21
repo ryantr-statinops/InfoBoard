@@ -1,6 +1,47 @@
 import { normalizeTab, type SearchTabItem } from './types.js';
 import { searchTabs } from './scorer.js';
-import { MRU_STORAGE_KEY } from '../background/mru-manager.js';
+import { MRU_STORAGE_KEY, removeTab } from '../background/mru-manager.js';
+
+export function getI18nMessage(key: string, fallback: string): string {
+  try {
+    if (typeof chrome !== 'undefined' && chrome.i18n?.getMessage) {
+      const msg = chrome.i18n.getMessage(key);
+      if (msg) return msg;
+    }
+  } catch {
+    // fallback
+  }
+  return fallback;
+}
+
+export function applyI18n(doc: Document): void {
+  try {
+    const textEls = doc.querySelectorAll?.('[data-i18n]');
+    if (textEls && typeof textEls.forEach === 'function') {
+      textEls.forEach((el) => {
+        const key = el.getAttribute?.('data-i18n');
+        if (key) {
+          const fallback = el.textContent || '';
+          el.textContent = getI18nMessage(key, fallback);
+        }
+      });
+    }
+
+    const placeholderEls = doc.querySelectorAll?.('[data-i18n-placeholder]');
+    if (placeholderEls && typeof placeholderEls.forEach === 'function') {
+      placeholderEls.forEach((el) => {
+        const key = el.getAttribute?.('data-i18n-placeholder');
+        if (key) {
+          const inputEl = el as HTMLInputElement;
+          const fallback = inputEl.placeholder || '';
+          inputEl.placeholder = getI18nMessage(key, fallback);
+        }
+      });
+    }
+  } catch {
+    // fallback gracefully
+  }
+}
 
 export let allTabs: SearchTabItem[] = [];
 export let currentResults: SearchTabItem[] = [];
@@ -36,14 +77,69 @@ export async function loadTabsAndReconcileMRU(): Promise<SearchTabItem[]> {
   return items;
 }
 
-export async function activateTab(tab: SearchTabItem): Promise<void> {
+let isClosing = false;
+
+export async function dismissWithAnimation(doc?: Document): Promise<void> {
+  if (isClosing) return;
+  isClosing = true;
+
+  const currentDoc = doc ?? (typeof document !== 'undefined' ? document : undefined);
+  const container = currentDoc?.querySelector?.('.search-container') as HTMLElement | null | undefined;
+  if (container) {
+    if (container.classList) {
+      container.classList.add('is-closing');
+    } else {
+      container.className += ' is-closing';
+    }
+  }
+
+  // 500ms delay allows the reverse waterfall exit animation to play smoothly
+  const delayMs = (globalThis as Record<string, any>).process?.env?.NODE_TEST_CONTEXT ? 0 : 500;
+  await new Promise(resolve => setTimeout(resolve, delayMs));
+
+  if (typeof window !== 'undefined' && typeof window.close === 'function') {
+    isClosing = false;
+    window.close();
+  }
+}
+
+export async function activateTab(tab: SearchTabItem, doc?: Document): Promise<void> {
   try {
     await chrome.tabs.update(tab.id, { active: true });
     await chrome.windows.update(tab.windowId, { focused: true });
   } catch (err) {
     console.error('Failed to activate tab:', err);
   } finally {
-    window.close();
+    await dismissWithAnimation(doc);
+  }
+}
+
+export async function closeTab(tab: SearchTabItem, doc?: Document): Promise<void> {
+  const currentDoc = doc ?? (typeof document !== 'undefined' ? document : undefined);
+
+  try {
+    if (typeof chrome !== 'undefined' && chrome.tabs?.remove) {
+      await chrome.tabs.remove(tab.id);
+    }
+  } catch (err) {
+    console.error('Failed to close tab:', err);
+  }
+
+  try {
+    await removeTab(tab.id);
+  } catch {
+    // Graceful fallback if storage fails
+  }
+
+  allTabs = allTabs.filter(t => t.id !== tab.id);
+  currentResults = currentResults.filter(t => t.id !== tab.id);
+
+  if (selectedIndex >= currentResults.length) {
+    selectedIndex = Math.max(0, currentResults.length - 1);
+  }
+
+  if (currentDoc) {
+    renderTabList(currentDoc);
   }
 }
 
@@ -121,19 +217,40 @@ export function renderTabList(doc: Document = document): void {
     if (tab.active) {
       const activeBadge = doc.createElement('span');
       activeBadge.className = 'tab-badge tab-badge-active';
-      activeBadge.textContent = 'Current';
+      activeBadge.textContent = getI18nMessage('badgeCurrent', 'Current');
       meta.appendChild(activeBadge);
     }
 
     if (tab.pinned) {
       const pinBadge = doc.createElement('span');
       pinBadge.className = 'tab-badge';
-      pinBadge.textContent = 'Pinned';
+      pinBadge.textContent = getI18nMessage('badgePinned', 'Pinned');
       meta.appendChild(pinBadge);
+    }
+
+    if (tab.audible) {
+      const audioBadge = doc.createElement('span');
+      audioBadge.className = tab.muted ? 'tab-badge tab-badge-muted' : 'tab-badge tab-badge-audio';
+      audioBadge.textContent = getI18nMessage(tab.muted ? 'badgeMuted' : 'badgeAudio', tab.muted ? 'Muted' : 'Audio');
+      meta.appendChild(audioBadge);
     }
 
     info.appendChild(meta);
     li.appendChild(info);
+
+    // Close button
+    const closeBtn = doc.createElement('button');
+    closeBtn.className = 'tab-close-btn';
+    closeBtn.setAttribute('type', 'button');
+    closeBtn.setAttribute('aria-label', 'Close tab');
+    closeBtn.title = 'Close tab (Alt+D or Del)';
+    closeBtn.innerHTML = '<svg viewBox="0 0 14 14" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="3" x2="11" y2="11"></line><line x1="11" y1="3" x2="3" y2="11"></line></svg>';
+    closeBtn.addEventListener('click', (e: Event) => {
+      e.stopPropagation();
+      void closeTab(tab, doc);
+    });
+    li.appendChild(closeBtn);
+
     listEl.appendChild(li);
   });
 
@@ -155,6 +272,8 @@ export async function initializeSearchSurface(doc: Document = document): Promise
   const input = doc.querySelector<HTMLInputElement>('[data-search-input]');
   if (!input) return;
 
+  applyI18n(doc);
+
   allTabs = await loadTabsAndReconcileMRU();
   currentResults = [...allTabs];
 
@@ -174,14 +293,36 @@ export async function initializeSearchSurface(doc: Document = document): Promise
     renderTabList(doc);
   });
 
+  const isCloseShortcut = (e: KeyboardEvent): boolean => {
+    if (e.key === 'Escape') return true;
+    if (e.altKey && (e.key === 'w' || e.key === 'W' || e.code === 'KeyW')) return true;
+    if (e.metaKey && e.shiftKey && (e.key === 'k' || e.key === 'K' || e.code === 'KeyK')) return true;
+    return false;
+  };
+
   input.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (isCloseShortcut(e)) {
+      e.preventDefault();
+      void dismissWithAnimation(doc);
+      return;
+    }
+
     if (currentResults.length === 0) return;
+
+    if ((e.altKey && (e.key === 'd' || e.key === 'D' || e.code === 'KeyD')) || (e.key === 'Delete' && (input as HTMLInputElement).value === '')) {
+      e.preventDefault();
+      const selected = currentResults[selectedIndex];
+      if (selected) {
+        void closeTab(selected, doc);
+      }
+      return;
+    }
 
     if (e.key === 'Enter') {
       e.preventDefault();
       const selected = currentResults[selectedIndex];
       if (selected) {
-        void activateTab(selected);
+        void activateTab(selected, doc);
       }
     } else if (e.key === 'ArrowDown' || (e.ctrlKey && e.key === 'n')) {
       e.preventDefault();
@@ -195,9 +336,6 @@ export async function initializeSearchSurface(doc: Document = document): Promise
     } else if (e.key === 'End') {
       e.preventDefault();
       updateSelection(currentResults.length - 1, doc);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      window.close();
     }
   });
 
