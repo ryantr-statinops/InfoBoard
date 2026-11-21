@@ -241,6 +241,40 @@ mark {
   flex: 1;
 }
 
+.tab-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+  flex-shrink: 0;
+  padding: 0;
+  margin-left: 6px;
+}
+
+.tab-close-btn svg {
+  width: 11px;
+  height: 11px;
+}
+
+.tab-item:hover .tab-close-btn,
+.tab-item[aria-selected="true"] .tab-close-btn {
+  opacity: 0.7;
+}
+
+.tab-close-btn:hover {
+  opacity: 1 !important;
+  background-color: var(--bg-secondary);
+  color: #ef4444;
+}
+
 .tab-title {
   font-size: 13.5px;
   font-weight: 500;

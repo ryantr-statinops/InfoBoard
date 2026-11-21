@@ -1,6 +1,6 @@
 import { normalizeTab, type SearchTabItem } from './types.js';
 import { searchTabs } from './scorer.js';
-import { MRU_STORAGE_KEY } from '../background/mru-manager.js';
+import { MRU_STORAGE_KEY, removeTab } from '../background/mru-manager.js';
 
 export let allTabs: SearchTabItem[] = [];
 export let currentResults: SearchTabItem[] = [];
@@ -70,6 +70,35 @@ export async function activateTab(tab: SearchTabItem, doc?: Document): Promise<v
     console.error('Failed to activate tab:', err);
   } finally {
     await dismissWithAnimation(doc);
+  }
+}
+
+export async function closeTab(tab: SearchTabItem, doc?: Document): Promise<void> {
+  const currentDoc = doc ?? (typeof document !== 'undefined' ? document : undefined);
+
+  try {
+    if (typeof chrome !== 'undefined' && chrome.tabs?.remove) {
+      await chrome.tabs.remove(tab.id);
+    }
+  } catch (err) {
+    console.error('Failed to close tab:', err);
+  }
+
+  try {
+    await removeTab(tab.id);
+  } catch {
+    // Graceful fallback if storage fails
+  }
+
+  allTabs = allTabs.filter(t => t.id !== tab.id);
+  currentResults = currentResults.filter(t => t.id !== tab.id);
+
+  if (selectedIndex >= currentResults.length) {
+    selectedIndex = Math.max(0, currentResults.length - 1);
+  }
+
+  if (currentDoc) {
+    renderTabList(currentDoc);
   }
 }
 
@@ -167,6 +196,20 @@ export function renderTabList(doc: Document = document): void {
 
     info.appendChild(meta);
     li.appendChild(info);
+
+    // Close button
+    const closeBtn = doc.createElement('button');
+    closeBtn.className = 'tab-close-btn';
+    closeBtn.setAttribute('type', 'button');
+    closeBtn.setAttribute('aria-label', 'Close tab');
+    closeBtn.title = 'Close tab (Alt+D or Del)';
+    closeBtn.innerHTML = '<svg viewBox="0 0 14 14" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="3" x2="11" y2="11"></line><line x1="11" y1="3" x2="3" y2="11"></line></svg>';
+    closeBtn.addEventListener('click', (e: Event) => {
+      e.stopPropagation();
+      void closeTab(tab, doc);
+    });
+    li.appendChild(closeBtn);
+
     listEl.appendChild(li);
   });
 
@@ -222,6 +265,15 @@ export async function initializeSearchSurface(doc: Document = document): Promise
     }
 
     if (currentResults.length === 0) return;
+
+    if ((e.altKey && (e.key === 'd' || e.key === 'D' || e.code === 'KeyD')) || (e.key === 'Delete' && (input as HTMLInputElement).value === '')) {
+      e.preventDefault();
+      const selected = currentResults[selectedIndex];
+      if (selected) {
+        void closeTab(selected, doc);
+      }
+      return;
+    }
 
     if (e.key === 'Enter') {
       e.preventDefault();
