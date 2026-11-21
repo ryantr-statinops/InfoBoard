@@ -16,6 +16,12 @@ declare namespace chrome.tabs {
     sessionId?: string;
     groupId?: number;
     lastAccessed?: number;
+    audible?: boolean;
+    mutedInfo?: {
+      muted: boolean;
+      reason?: string;
+      extensionId?: string;
+    };
   }
 
   export interface ActiveInfo {
@@ -69,6 +75,7 @@ declare namespace chrome.tabs {
   export function query(queryInfo: QueryInfo, callback: (result: Tab[]) => void): void;
   export function get(tabId: number): Promise<Tab>;
   export function update(tabId: number, updateProperties: UpdateProperties): Promise<Tab>;
+  export function remove(tabIds: number | number[]): Promise<void>;
 }
 
 declare namespace chrome.windows {

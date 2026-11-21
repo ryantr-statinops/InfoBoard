@@ -158,6 +158,13 @@ export function renderTabList(doc: Document = document): void {
       meta.appendChild(pinBadge);
     }
 
+    if (tab.audible) {
+      const audioBadge = doc.createElement('span');
+      audioBadge.className = tab.muted ? 'tab-badge tab-badge-muted' : 'tab-badge tab-badge-audio';
+      audioBadge.textContent = tab.muted ? 'Muted' : 'Audio';
+      meta.appendChild(audioBadge);
+    }
+
     info.appendChild(meta);
     li.appendChild(info);
     listEl.appendChild(li);
