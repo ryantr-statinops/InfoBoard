@@ -6,13 +6,51 @@ This guide covers setting up your development environment, compiling TypeScript,
 
 ## 1. Toolchain & Prerequisites
 
-- **Node.js**: `v20.x` or later (LTS recommended).
+### Required Environment
+- **Node.js**: `v20.x` or later (LTS recommended) OR alternative JavaScript runtimes like **Bun** (`v1.0+`).
 - **TypeScript**: `v5.9+` (configured under `extension/tsconfig.json`).
-- **No External Daemon / No Python**: Pure Manifest V3 architecture runs entirely in Node.js (for build/test) and Chromium V8 (for runtime).
+- **No External Companion Daemon / No Native Messaging Host**: InfoBoard runs 100% inside Chromium's V8 engine at runtime.
+
+### Why Node.js in a Browser Extension?
+A common question when developing browser extensions is why Node.js is required if the extension runs in the browser. 
+
+> [!NOTE]
+> **Build-Time Toolchain vs. Browser Runtime:**
+> Node.js functions strictly as an **offline developer toolchain**; it **never** runs inside the browser or extension runtime.
+
+Node.js fulfills three essential development responsibilities in InfoBoard:
+1. **TypeScript Compilation (`tsc`)**: InfoBoard's source code is written in strongly-typed TypeScript (`extension/src/**/*.ts`). Node.js runs `tsc` to compile this into production-grade, optimized JavaScript inside `extension/dist/`.
+2. **Native Zero-Dependency Test Suite (`node --test`)**: InfoBoard utilizes Node.js's built-in test runner (`node --test tests/*.test.mjs`) to validate scoring algorithms, regex boundaries, and tab normalizers across 34 test cases in under 100ms without requiring heavy third-party testing frameworks (no Jest/Vitest).
+3. **Cross-Platform Asset Pipeline**: Node.js executes pure ESM scripts ([scripts/copy-extension-assets.mjs](file:///D:/01_Workspace/04_Personal_Showcase/InfoBoard/scripts/copy-extension-assets.mjs) and [scripts/package-extension.mjs](file:///D:/01_Workspace/04_Personal_Showcase/InfoBoard/scripts/package-extension.mjs)) to structure distribution bundles consistently on Windows, macOS, and Linux without shell incompatibilities.
 
 ---
 
-## 2. Common Development Commands
+## 2. Alternative Toolchains (Bun & Deno)
+
+If you prefer a faster or lighter environment without installing Node.js, InfoBoard is fully compatible with modern alternative runtimes:
+
+### Using Bun (`bun`)
+[Bun](https://bun.sh) has built-in TypeScript transpilation and an ultra-fast package manager:
+```bash
+# Install dependencies
+bun install
+
+# Build extension
+bun run build:extension
+
+# Run automated tests
+bun test tests/*.test.mjs
+```
+
+### Pure Zero-Toolchain Development (No Build Step)
+If you wish to develop without any runtime or compiler:
+- You can write native ES modules directly in `.js` within `extension/`.
+- Point `manifest.json` directly to source HTML/JS files.
+*(Note: You will forfeit TypeScript compile-time type verification and automated test runners).*
+
+---
+
+## 3. Common Development Commands
 
 All tasks are driven through root `npm` scripts:
 
@@ -25,7 +63,7 @@ All tasks are driven through root `npm` scripts:
 
 ---
 
-## 3. Directory Layout
+## 4. Directory Layout
 
 ```text
 InfoBoard/
@@ -59,7 +97,7 @@ InfoBoard/
 
 ---
 
-## 4. Debugging & Hot Reloading
+## 5. Debugging & Hot Reloading
 
 1. Make edits in `extension/src/`.
 2. Run `npm run build:extension` (or compile via `tsc -w -p extension/tsconfig.json`).

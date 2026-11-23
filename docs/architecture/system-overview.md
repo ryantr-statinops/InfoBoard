@@ -78,3 +78,40 @@ flowchart TD
 Manifest V3 terminates service workers after ~30 seconds of inactivity. InfoBoard is architected specifically to handle this:
 1. **Zero Cold-Start Latency**: Popup loads tabs directly via `chrome.tabs.query({})` and reads `chrome.storage.session` in parallel (`Promise.all`), requiring no message exchange with a sleeping service worker.
 2. **Session Storage Persistence**: `chrome.storage.session` lives in RAM across service worker sleep/wake cycles and automatically clears when the browser shuts down.
+
+---
+
+## 4. Build-Time vs. Runtime Boundary
+
+A core architectural guarantee of InfoBoard is the strict isolation between the **development toolchain (build-time)** and the **client execution sandbox (runtime)**:
+
+```mermaid
+flowchart LR
+    subgraph Build_Stage["Build-Time Pipeline (Node.js / Bun)"]
+        S1["TypeScript Source (src/**/*.ts)"]
+        S2["Static Assets (HTML, CSS, Icons, _locales)"]
+        T1["TypeScript Compiler (tsc)"]
+        T2["Asset Distributor (copy-extension-assets.mjs)"]
+        S1 --> T1
+        S2 --> T2
+    end
+
+    subgraph Production_Artifacts["Distribution Bundle (extension/dist)"]
+        P1["Pure ES2022 JavaScript (< 50KB total)"]
+        P2["Structured Assets & Dictionaries"]
+        T1 --> P1
+        T2 --> P2
+    end
+
+    subgraph Runtime_Sandbox["Browser Runtime Sandbox (Zero Dependencies)"]
+        B1["Chromium V8 Engine"]
+        B2["Supported: Google Chrome, Brave, Edge, Arc"]
+        P1 --> B1
+        P2 --> B1
+        B1 --> B2
+    end
+```
+
+### Architectural Guarantees:
+- **Zero Client Dependencies**: End-users installing InfoBoard run solely within Chromium's sandboxed V8 engine. No background daemons, local web servers, Python, or Node.js processes exist on the client machine.
+- **Development Toolchain Role**: Node.js (or Bun) serves exclusively as an offline build harness—executing `tsc` type-checking, running the 34-test in-memory validation suite via `node --test`, and assembling production distribution ZIPs.
