@@ -56,6 +56,7 @@ InfoBoard/
 ├── scripts/
 │   ├── copy-extension-assets.mjs    # Static asset distribution
 │   └── package-extension.mjs        # Production zip packager (< 100KB)
+├── LICENSE                     # MIT License
 ├── PRIVACY.md                  # Chrome Web Store compliant privacy policy
 └── package.json
 ```
@@ -98,3 +99,9 @@ npm test
 2. Enable **Developer mode** toggle in the top-right corner.
 3. Click **Load unpacked** and select the `extension/` directory.
 4. Press `Alt+W` (or `Command+Shift+K` on macOS) to open Tab Search.
+
+---
+
+## License
+
+This project is licensed under the terms of the [MIT License](LICENSE). Copyright (c) 2026 Ryan Tran (InfoBoard Contributors).
