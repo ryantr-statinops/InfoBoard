@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { scoreTab, searchTabs } from '../extension/dist/src/search/scorer.js';
+import { scoreTab, searchTabs, matchSubsequence } from '../extension/dist/src/search/scorer.js';
 
 const mockTabs = [
   { id: 1, windowId: 1, title: 'TikTok - Make Your Day', url: 'https://www.tiktok.com', domain: 'tiktok.com', mruRank: 0, active: false, pinned: false },
@@ -93,4 +93,32 @@ test('exact prefix score (1000) dominates over word-boundary match (800) regardl
   const scoreB = scoreTab(tabB, 'tiki');
 
   assert.ok(scoreA > scoreB, `Exact domain prefix score (${scoreA}) should beat word-boundary score (${scoreB})`);
+});
+
+test('subsequence matching: matches abbreviations across words and CamelCase (gdoc, ytm, amz)', () => {
+  const customTabs = [
+    { id: 101, title: 'Google Docs - Untitled document', domain: 'docs.google.com', mruRank: 5, url: 'https://docs.google.com' },
+    { id: 102, title: 'YouTube Music - Web Player', domain: 'music.youtube.com', mruRank: 5, url: 'https://music.youtube.com' },
+    { id: 103, title: 'Amazon.com: Online Shopping', domain: 'amazon.com', mruRank: 5, url: 'https://amazon.com' }
+  ];
+
+  const gdocRes = searchTabs(customTabs, 'gdoc');
+  assert.ok(gdocRes.length > 0);
+  assert.equal(gdocRes[0].id, 101);
+
+  const ytmRes = searchTabs(customTabs, 'ytm');
+  assert.ok(ytmRes.length > 0);
+  assert.equal(ytmRes[0].id, 102);
+
+  const amzRes = searchTabs(customTabs, 'amz');
+  assert.ok(amzRes.length > 0);
+  assert.equal(amzRes[0].id, 103);
+});
+
+test('subsequence scoring bonus: consecutive and compact matches score higher than scattered matches', () => {
+  const compactScore = matchSubsequence('Google Docs', 'gdoc');
+  const scatteredScore = matchSubsequence('Getting Documents Organized Cleanly', 'gdoc');
+  assert.ok(compactScore > 0);
+  assert.ok(scatteredScore > 0);
+  assert.ok(compactScore > scatteredScore, `Compact match (${compactScore}) should outscore scattered match (${scatteredScore})`);
 });

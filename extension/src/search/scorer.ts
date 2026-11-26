@@ -62,8 +62,8 @@ export function matchSubsequence(target: string, query: string): number {
   const excessSpan = Math.max(0, span - query.length);
   const spanPenalty = excessSpan * 4;
 
-  const rawScore = 500 + bonus - spanPenalty;
-  return Math.min(580, Math.max(450, rawScore));
+  const rawScore = 480 + bonus - spanPenalty;
+  return Math.min(600, Math.max(200, rawScore));
 }
 
 export function scoreTab(item: SearchTabItem, rawQuery: string): number {
@@ -100,19 +100,10 @@ export function scoreTab(item: SearchTabItem, rawQuery: string): number {
       if (acronym.length >= q.length && acronym.startsWith(q)) {
         matchScore = 650;
       } else {
-        // 4. Subsequence / FZF-style ordered character match
-        let qIdx = 0;
-        let gaps = 0;
-        for (let i = 0; i < title.length && qIdx < q.length; i++) {
-          if (title[i] === q[qIdx]) {
-            qIdx++;
-          } else if (qIdx > 0) {
-            gaps++;
-          }
-        }
-        if (qIdx === q.length) {
-          matchScore = Math.max(100, 450 - gaps * 10);
-        }
+        // 4. Subsequence / FZF-style ordered character match (Domain & Title)
+        const subDomainScore = matchSubsequence(item.domain, q);
+        const subTitleScore = matchSubsequence(item.title, q);
+        matchScore = Math.max(subDomainScore, subTitleScore);
       }
     }
   }
