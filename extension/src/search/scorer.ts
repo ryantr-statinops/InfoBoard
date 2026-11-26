@@ -1,5 +1,54 @@
 import type { SearchTabItem } from './types.js';
 
+export interface ContextFilters {
+  audioOnly: boolean;
+  pinnedOnly: boolean;
+  groupedOnly: boolean;
+  currentWindowOnly: boolean;
+  cleanQuery: string;
+}
+
+/**
+ * Parses raw input query into structured context filters and clean text query.
+ * Supported filters:
+ * - @audio or @a: Only audible tabs
+ * - @pinned or @p: Only pinned tabs
+ * - @group or @g: Only tabs belonging to a tab group
+ * - @win or @w: Only tabs in the current window
+ */
+export function parseContextQuery(rawInput: string): ContextFilters {
+  const tokens = rawInput.trim().split(/\s+/);
+  const remainingTokens: string[] = [];
+
+  let audioOnly = false;
+  let pinnedOnly = false;
+  let groupedOnly = false;
+  let currentWindowOnly = false;
+
+  for (const token of tokens) {
+    const lower = token.toLowerCase();
+    if (lower === '@audio' || lower === '@a') {
+      audioOnly = true;
+    } else if (lower === '@pinned' || lower === '@p') {
+      pinnedOnly = true;
+    } else if (lower === '@group' || lower === '@g') {
+      groupedOnly = true;
+    } else if (lower === '@win' || lower === '@w') {
+      currentWindowOnly = true;
+    } else if (token.length > 0) {
+      remainingTokens.push(token);
+    }
+  }
+
+  return {
+    audioOnly,
+    pinnedOnly,
+    groupedOnly,
+    currentWindowOnly,
+    cleanQuery: remainingTokens.join(' ')
+  };
+}
+
 /**
  * Calculates a subsequence match score between target text and query string.
  * Employs fzf/VS Code style scoring with bonuses for:
