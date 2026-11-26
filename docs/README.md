@@ -59,3 +59,6 @@ Explore the documentation through the 5 core modules:
 ### 🤝 5. Contributing & Community
 - [**Contributing Guidelines**](contributing/CONTRIBUTING.md): Git branching model (`dev` $\rightarrow$ `main`), atomic commit standards, and PR requirements.
 - [**Code of Conduct**](contributing/CODE_OF_CONDUCT.md): Contributor Covenant v2.1 community pledge and enforcement standards.
+
+### 💡 6. Proposals & RFCs
+- [**Advanced Search Engine Enhancements**](proposals/search-engine-enhancements.md): Technical RFC for Fuzzy Subsequence Matching, Two-Phase Typo Fallback, and `@-Syntax` Context Filters.
