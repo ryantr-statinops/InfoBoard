@@ -36,7 +36,16 @@ InfoBoard is a **keyboard-first** productivity tool designed to keep your hands 
 3. Press `Alt + D` repeatedly or click the hover `x` button on matching items.
 4. Result: Close unnecessary tabs in seconds without loading their web pages.
 
-### C. Audio Triage
+### C. Audio Triage & Context Filters
 1. Press `Alt + W`.
-2. Look for the `Audio` soundwave badge in the results list.
-3. Switch directly to mute or pause unwanted background noise.
+2. Type `@audio` (or `@a`) to view only noisy tabs currently playing sound.
+3. Combine with a search term: `@audio lofi` to isolate your music stream.
+4. Additional filters:
+   - `@pinned` or `@p`: Restrict to pinned tabs.
+   - `@group` or `@g`: Restrict to Chrome tab groups.
+   - `@win` or `@w`: Restrict to the current focused window.
+
+### D. Typo Tolerance & Smart Abbreviation
+- Type `gdoc` to jump straight to Google Docs.
+- Type `ytm` to jump to YouTube Music.
+- Made a typo? Queries like `githbu` or `youtbe` automatically fall back to match GitHub or YouTube without retyping.

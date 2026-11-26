@@ -113,6 +113,7 @@ declare namespace chrome.windows {
 
   export const onFocusChanged: WindowFocusChangedEvent;
   export function update(windowId: number, updateInfo: UpdateInfo): Promise<Window>;
+  export function getCurrent(): Promise<Window>;
 }
 
 declare namespace chrome.storage {

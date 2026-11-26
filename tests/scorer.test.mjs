@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { scoreTab, searchTabs } from '../extension/dist/src/search/scorer.js';
+import { scoreTab, searchTabs, matchSubsequence, damerauLevenshtein, parseContextQuery } from '../extension/dist/src/search/scorer.js';
 
 const mockTabs = [
   { id: 1, windowId: 1, title: 'TikTok - Make Your Day', url: 'https://www.tiktok.com', domain: 'tiktok.com', mruRank: 0, active: false, pinned: false },
@@ -93,4 +93,117 @@ test('exact prefix score (1000) dominates over word-boundary match (800) regardl
   const scoreB = scoreTab(tabB, 'tiki');
 
   assert.ok(scoreA > scoreB, `Exact domain prefix score (${scoreA}) should beat word-boundary score (${scoreB})`);
+});
+
+test('subsequence matching: matches abbreviations across words and CamelCase (gdoc, ytm, amz)', () => {
+  const customTabs = [
+    { id: 101, title: 'Google Docs - Untitled document', domain: 'docs.google.com', mruRank: 5, url: 'https://docs.google.com' },
+    { id: 102, title: 'YouTube Music - Web Player', domain: 'music.youtube.com', mruRank: 5, url: 'https://music.youtube.com' },
+    { id: 103, title: 'Amazon.com: Online Shopping', domain: 'amazon.com', mruRank: 5, url: 'https://amazon.com' }
+  ];
+
+  const gdocRes = searchTabs(customTabs, 'gdoc');
+  assert.ok(gdocRes.length > 0);
+  assert.equal(gdocRes[0].id, 101);
+
+  const ytmRes = searchTabs(customTabs, 'ytm');
+  assert.ok(ytmRes.length > 0);
+  assert.equal(ytmRes[0].id, 102);
+
+  const amzRes = searchTabs(customTabs, 'amz');
+  assert.ok(amzRes.length > 0);
+  assert.equal(amzRes[0].id, 103);
+});
+
+test('subsequence scoring bonus: consecutive and compact matches score higher than scattered matches', () => {
+  const compactScore = matchSubsequence('Google Docs', 'gdoc');
+  const scatteredScore = matchSubsequence('Getting Documents Organized Cleanly', 'gdoc');
+  assert.ok(compactScore > 0);
+  assert.ok(scatteredScore > 0);
+  assert.ok(compactScore > scatteredScore, `Compact match (${compactScore}) should outscore scattered match (${scatteredScore})`);
+});
+
+test('damerauLevenshtein: correctly identifies edit distance <= 1', () => {
+  // Transposition
+  assert.equal(damerauLevenshtein('githbu', 'github', 1), 1);
+  // Substitution
+  assert.equal(damerauLevenshtein('gathub', 'github', 1), 1);
+  // Insertion
+  assert.equal(damerauLevenshtein('githb', 'github', 1), 1);
+  // Deletion
+  assert.equal(damerauLevenshtein('githubb', 'github', 1), 1);
+  // Identical
+  assert.equal(damerauLevenshtein('github', 'github', 1), 0);
+  // Distance > 1 terminates
+  assert.ok(damerauLevenshtein('gihtubxx', 'github', 1) > 1);
+});
+
+test('two-phase typo fallback: triggers for transposed and misspelled queries when Phase 1 returns 0', () => {
+  // "githbu" (typo for GitHub)
+  const ghRes = searchTabs(mockTabs, 'githbu');
+  assert.ok(ghRes.length > 0);
+  assert.equal(ghRes[0].domain, 'github.com');
+
+  // "youtbe" (typo for YouTube)
+  const ytRes = searchTabs(mockTabs, 'youtbe');
+  assert.ok(ytRes.length > 0);
+  assert.equal(ytRes[0].domain, 'youtube.com');
+
+  // Short query typo (< 4 chars) does not trigger fallback to prevent false positives
+  const shortTypo = searchTabs(mockTabs, 'xyt');
+  assert.equal(shortTypo.length, 0);
+});
+
+test('parseContextQuery: parses @-syntax tokens and isolates remaining query', () => {
+  const parsed1 = parseContextQuery('@audio lofi girl');
+  assert.equal(parsed1.audioOnly, true);
+  assert.equal(parsed1.pinnedOnly, false);
+  assert.equal(parsed1.cleanQuery, 'lofi girl');
+
+  const parsed2 = parseContextQuery('@pinned @win github');
+  assert.equal(parsed2.pinnedOnly, true);
+  assert.equal(parsed2.currentWindowOnly, true);
+  assert.equal(parsed2.audioOnly, false);
+  assert.equal(parsed2.cleanQuery, 'github');
+
+  const parsed3 = parseContextQuery('@a @p @g @w');
+  assert.equal(parsed3.audioOnly, true);
+  assert.equal(parsed3.pinnedOnly, true);
+  assert.equal(parsed3.groupedOnly, true);
+  assert.equal(parsed3.currentWindowOnly, true);
+  assert.equal(parsed3.cleanQuery, '');
+});
+
+test('searchTabs with @-filters: filters candidates by audio, pinned, grouped, window', () => {
+  const filterTabs = [
+    { id: 201, windowId: 1, title: 'Lofi Hip Hop Radio', domain: 'youtube.com', mruRank: 0, audible: true, pinned: false, groupId: undefined },
+    { id: 202, windowId: 1, title: 'Pinned Dashboard', domain: 'linear.app', mruRank: 1, audible: false, pinned: true, groupId: undefined },
+    { id: 203, windowId: 1, title: 'Grouped Work Ticket', domain: 'jira.atlassian.com', mruRank: 2, audible: false, pinned: false, groupId: 12 },
+    { id: 204, windowId: 2, title: 'Other Window Tab', domain: 'github.com', mruRank: 3, audible: false, pinned: false, groupId: undefined }
+  ];
+
+  // Test @audio filter
+  const audioResults = searchTabs(filterTabs, '@audio');
+  assert.equal(audioResults.length, 1);
+  assert.equal(audioResults[0].id, 201);
+
+  // Test @audio with chained query
+  const audioQueryResults = searchTabs(filterTabs, '@audio lofi');
+  assert.equal(audioQueryResults.length, 1);
+  assert.equal(audioQueryResults[0].id, 201);
+
+  // Test @pinned filter
+  const pinnedResults = searchTabs(filterTabs, '@pinned');
+  assert.equal(pinnedResults.length, 1);
+  assert.equal(pinnedResults[0].id, 202);
+
+  // Test @group filter
+  const groupResults = searchTabs(filterTabs, '@group');
+  assert.equal(groupResults.length, 1);
+  assert.equal(groupResults[0].id, 203);
+
+  // Test @win filter with currentWindowId = 1
+  const winResults = searchTabs(filterTabs, '@win', 1);
+  assert.equal(winResults.length, 3);
+  assert.ok(winResults.every(t => t.windowId === 1));
 });
