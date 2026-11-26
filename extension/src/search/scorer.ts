@@ -187,11 +187,63 @@ export function scoreTab(item: SearchTabItem, rawQuery: string): number {
   return matchScore + mruBoost;
 }
 
+/**
+ * Performs a typo-tolerant fuzzy check against tab domain and title tokens.
+ * Only triggers if query length is >= 4 characters and Phase 1 produced 0 matches.
+ * Returns score (100 to 150) if edit distance is <= 1, otherwise -1.
+ */
+export function scoreTypoFallback(item: SearchTabItem, query: string): number {
+  const q = query.trim().toLowerCase();
+  if (q.length < 4) return -1;
+
+  // Check domain tokens (e.g., "github", "com" from "github.com")
+  const domainParts = item.domain.toLowerCase().split(/[\s._/\-:]+/).filter(w => w.length >= 3);
+  for (const part of domainParts) {
+    // If query is close to domain part (e.g. "githbu" vs "github")
+    if (Math.abs(part.length - q.length) <= 1) {
+      if (damerauLevenshtein(q, part, 1) <= 1) {
+        return 150 + 50 / (item.mruRank + 1);
+      }
+    }
+  }
+
+  // Check title tokens (e.g., "youtube", "music", "docs")
+  const titleWords = item.title.toLowerCase().split(/[\s._/\-:]+/).filter(w => w.length >= 3);
+  for (const word of titleWords) {
+    if (Math.abs(word.length - q.length) <= 1) {
+      if (damerauLevenshtein(q, word, 1) <= 1) {
+        return 120 + 50 / (item.mruRank + 1);
+      }
+    }
+  }
+
+  return -1;
+}
+
 export function searchTabs(items: SearchTabItem[], query: string): SearchTabItem[] {
+  const q = query.trim();
+  
+  // Phase 1: High-speed exact, prefix, word boundary, acronym & subsequence scoring
   const scored = items
-    .map(item => ({ item, score: scoreTab(item, query) }))
+    .map(item => ({ item, score: scoreTab(item, q) }))
     .filter(res => res.score > 0);
 
-  scored.sort((a, b) => b.score - a.score);
-  return scored.map(res => res.item);
+  if (scored.length > 0) {
+    scored.sort((a, b) => b.score - a.score);
+    return scored.map(res => res.item);
+  }
+
+  // Phase 2: Typo tolerance fallback (only when Phase 1 returns 0 results and query length >= 4)
+  if (q.length >= 4) {
+    const typoScored = items
+      .map(item => ({ item, score: scoreTypoFallback(item, q) }))
+      .filter(res => res.score > 0);
+
+    if (typoScored.length > 0) {
+      typoScored.sort((a, b) => b.score - a.score);
+      return typoScored.map(res => res.item);
+    }
+  }
+
+  return [];
 }

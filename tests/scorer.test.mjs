@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { scoreTab, searchTabs, matchSubsequence } from '../extension/dist/src/search/scorer.js';
+import { scoreTab, searchTabs, matchSubsequence, damerauLevenshtein } from '../extension/dist/src/search/scorer.js';
 
 const mockTabs = [
   { id: 1, windowId: 1, title: 'TikTok - Make Your Day', url: 'https://www.tiktok.com', domain: 'tiktok.com', mruRank: 0, active: false, pinned: false },
@@ -121,4 +121,35 @@ test('subsequence scoring bonus: consecutive and compact matches score higher th
   assert.ok(compactScore > 0);
   assert.ok(scatteredScore > 0);
   assert.ok(compactScore > scatteredScore, `Compact match (${compactScore}) should outscore scattered match (${scatteredScore})`);
+});
+
+test('damerauLevenshtein: correctly identifies edit distance <= 1', () => {
+  // Transposition
+  assert.equal(damerauLevenshtein('githbu', 'github', 1), 1);
+  // Substitution
+  assert.equal(damerauLevenshtein('gathub', 'github', 1), 1);
+  // Insertion
+  assert.equal(damerauLevenshtein('githb', 'github', 1), 1);
+  // Deletion
+  assert.equal(damerauLevenshtein('githubb', 'github', 1), 1);
+  // Identical
+  assert.equal(damerauLevenshtein('github', 'github', 1), 0);
+  // Distance > 1 terminates
+  assert.ok(damerauLevenshtein('gihtubxx', 'github', 1) > 1);
+});
+
+test('two-phase typo fallback: triggers for transposed and misspelled queries when Phase 1 returns 0', () => {
+  // "githbu" (typo for GitHub)
+  const ghRes = searchTabs(mockTabs, 'githbu');
+  assert.ok(ghRes.length > 0);
+  assert.equal(ghRes[0].domain, 'github.com');
+
+  // "youtbe" (typo for YouTube)
+  const ytRes = searchTabs(mockTabs, 'youtbe');
+  assert.ok(ytRes.length > 0);
+  assert.equal(ytRes[0].domain, 'youtube.com');
+
+  // Short query typo (< 4 chars) does not trigger fallback to prevent false positives
+  const shortTypo = searchTabs(mockTabs, 'xyt');
+  assert.equal(shortTypo.length, 0);
 });
