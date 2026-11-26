@@ -1,5 +1,71 @@
 import type { SearchTabItem } from './types.js';
 
+/**
+ * Calculates a subsequence match score between target text and query string.
+ * Employs fzf/VS Code style scoring with bonuses for:
+ * - Consecutive character matches (+15 per consecutive match)
+ * - Word boundary, delimiter, or CamelCase starts (+40)
+ * - Penalty for wide spans between first and last match
+ * Returns a score between 450 and 580 if matched, or 0 if query is not a subsequence.
+ */
+export function matchSubsequence(target: string, query: string): number {
+  if (query.length === 0 || target.length === 0 || query.length > target.length) {
+    return 0;
+  }
+
+  const tLower = target.toLowerCase();
+  const qLower = query.toLowerCase();
+
+  let tIdx = 0;
+  let qIdx = 0;
+  let consecutive = 0;
+  let bonus = 0;
+  let firstMatch = -1;
+  let lastMatch = -1;
+
+  while (tIdx < target.length && qIdx < query.length) {
+    if (tLower[tIdx] === qLower[qIdx]) {
+      if (firstMatch === -1) firstMatch = tIdx;
+      lastMatch = tIdx;
+
+      // Consecutive match bonus
+      bonus += consecutive * 15;
+      consecutive++;
+
+      // Word boundary or delimiter bonus: start of word, preceded by space, dash, dot, slash, underscore
+      if (tIdx === 0) {
+        bonus += 40;
+      } else {
+        const prevChar = target[tIdx - 1];
+        const currChar = target[tIdx];
+        if (/[\s._/\-:]/.test(prevChar)) {
+          bonus += 40;
+        } else if (prevChar >= 'a' && prevChar <= 'z' && currChar >= 'A' && currChar <= 'Z') {
+          // CamelCase boundary: e.g. "Docs" in "GoogleDocs"
+          bonus += 40;
+        }
+      }
+
+      qIdx++;
+    } else {
+      consecutive = 0;
+    }
+    tIdx++;
+  }
+
+  if (qIdx < query.length) {
+    return 0; // Not all query characters were matched in order
+  }
+
+  // Span distance penalty: compact matches score higher than sprawling matches
+  const span = lastMatch - firstMatch + 1;
+  const excessSpan = Math.max(0, span - query.length);
+  const spanPenalty = excessSpan * 4;
+
+  const rawScore = 500 + bonus - spanPenalty;
+  return Math.min(580, Math.max(450, rawScore));
+}
+
 export function scoreTab(item: SearchTabItem, rawQuery: string): number {
   const q = rawQuery.trim().toLowerCase();
   
