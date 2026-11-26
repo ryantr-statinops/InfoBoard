@@ -66,6 +66,76 @@ export function matchSubsequence(target: string, query: string): number {
   return Math.min(600, Math.max(200, rawScore));
 }
 
+/**
+ * Computes Damerau-Levenshtein distance between two strings with support for
+ * adjacent transpositions, insertions, deletions, and substitutions.
+ * Memory complexity: O(min(N, M)) using 3 rolling rows.
+ * Early exit: if current row minimum exceeds maxDistance, terminates early.
+ */
+export function damerauLevenshtein(a: string, b: string, maxDistance: number = 1): number {
+  if (a === b) return 0;
+  const lenA = a.length;
+  const lenB = b.length;
+  if (Math.abs(lenA - lenB) > maxDistance) return maxDistance + 1;
+
+  // Ensure 'a' is shorter or equal to 'b' to minimize column array size
+  if (lenA > lenB) {
+    return damerauLevenshtein(b, a, maxDistance);
+  }
+
+  // Row buffers: dMinus2 (i-2), dMinus1 (i-1), dCurrent (i)
+  let dMinus2 = new Int32Array(lenA + 1);
+  let dMinus1 = new Int32Array(lenA + 1);
+  let dCurrent = new Int32Array(lenA + 1);
+
+  for (let j = 0; j <= lenA; j++) {
+    dMinus1[j] = j;
+  }
+
+  for (let i = 1; i <= lenB; i++) {
+    dCurrent[0] = i;
+    let minInRow = dCurrent[0];
+
+    for (let j = 1; j <= lenA; j++) {
+      const cost = a[j - 1] === b[i - 1] ? 0 : 1;
+      
+      let val = Math.min(
+        dCurrent[j - 1] + 1,     // insertion
+        dMinus1[j] + 1,          // deletion
+        dMinus1[j - 1] + cost    // substitution
+      );
+
+      // Transposition check
+      if (
+        i > 1 &&
+        j > 1 &&
+        b[i - 1] === a[j - 2] &&
+        b[i - 2] === a[j - 1]
+      ) {
+        val = Math.min(val, dMinus2[j - 2] + 1);
+      }
+
+      dCurrent[j] = val;
+      if (val < minInRow) {
+        minInRow = val;
+      }
+    }
+
+    // Early termination if all values in this row exceed maxDistance
+    if (minInRow > maxDistance) {
+      return maxDistance + 1;
+    }
+
+    // Shift row buffers
+    const temp = dMinus2;
+    dMinus2 = dMinus1;
+    dMinus1 = dCurrent;
+    dCurrent = temp;
+  }
+
+  return dMinus1[lenA];
+}
+
 export function scoreTab(item: SearchTabItem, rawQuery: string): number {
   const q = rawQuery.trim().toLowerCase();
   
