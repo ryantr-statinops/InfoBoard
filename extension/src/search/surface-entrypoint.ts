@@ -46,12 +46,18 @@ export function applyI18n(doc: Document): void {
 export let allTabs: SearchTabItem[] = [];
 export let currentResults: SearchTabItem[] = [];
 export let selectedIndex = 0;
+export let currentWindowId: number | undefined = undefined;
 
 export async function loadTabsAndReconcileMRU(): Promise<SearchTabItem[]> {
-  const [sessionData, rawTabs] = await Promise.all([
+  const [sessionData, rawTabs, currentWin] = await Promise.all([
     chrome.storage.session.get(MRU_STORAGE_KEY).catch(() => ({} as Record<string, any>)),
-    chrome.tabs.query({}).catch(() => [] as chrome.tabs.Tab[])
+    chrome.tabs.query({}).catch(() => [] as chrome.tabs.Tab[]),
+    chrome.windows?.getCurrent ? chrome.windows.getCurrent().catch(() => null) : Promise.resolve(null)
   ]);
+
+  if (currentWin && typeof currentWin.id === 'number') {
+    currentWindowId = currentWin.id;
+  }
 
   const rawMru = (sessionData as Record<string, any>)[MRU_STORAGE_KEY];
   const mruIds: number[] = Array.isArray(rawMru) ? rawMru : [];
@@ -287,7 +293,7 @@ export async function initializeSearchSurface(doc: Document = document): Promise
       currentResults = [...allTabs];
       selectedIndex = currentResults.length > 1 ? 1 : 0;
     } else {
-      currentResults = searchTabs(allTabs, query);
+      currentResults = searchTabs(allTabs, query, currentWindowId);
       selectedIndex = 0;
     }
     renderTabList(doc);

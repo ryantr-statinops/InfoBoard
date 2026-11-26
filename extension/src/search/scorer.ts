@@ -269,11 +269,33 @@ export function scoreTypoFallback(item: SearchTabItem, query: string): number {
   return -1;
 }
 
-export function searchTabs(items: SearchTabItem[], query: string): SearchTabItem[] {
-  const q = query.trim();
+export function searchTabs(items: SearchTabItem[], query: string, currentWindowId?: number): SearchTabItem[] {
+  const { audioOnly, pinnedOnly, groupedOnly, currentWindowOnly, cleanQuery } = parseContextQuery(query);
+
+  // Apply contextual pre-filters
+  let candidates = items;
+  if (audioOnly) {
+    candidates = candidates.filter(t => Boolean(t.audible));
+  }
+  if (pinnedOnly) {
+    candidates = candidates.filter(t => Boolean(t.pinned));
+  }
+  if (groupedOnly) {
+    candidates = candidates.filter(t => typeof t.groupId === 'number' && t.groupId > 0);
+  }
+  if (currentWindowOnly && typeof currentWindowId === 'number') {
+    candidates = candidates.filter(t => t.windowId === currentWindowId);
+  }
+
+  // If after extracting @-filters the query is empty, return filtered candidates in MRU order
+  if (cleanQuery.length === 0) {
+    return candidates;
+  }
+
+  const q = cleanQuery;
   
   // Phase 1: High-speed exact, prefix, word boundary, acronym & subsequence scoring
-  const scored = items
+  const scored = candidates
     .map(item => ({ item, score: scoreTab(item, q) }))
     .filter(res => res.score > 0);
 
@@ -284,7 +306,7 @@ export function searchTabs(items: SearchTabItem[], query: string): SearchTabItem
 
   // Phase 2: Typo tolerance fallback (only when Phase 1 returns 0 results and query length >= 4)
   if (q.length >= 4) {
-    const typoScored = items
+    const typoScored = candidates
       .map(item => ({ item, score: scoreTypoFallback(item, q) }))
       .filter(res => res.score > 0);
 

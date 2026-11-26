@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { scoreTab, searchTabs, matchSubsequence, damerauLevenshtein } from '../extension/dist/src/search/scorer.js';
+import { scoreTab, searchTabs, matchSubsequence, damerauLevenshtein, parseContextQuery } from '../extension/dist/src/search/scorer.js';
 
 const mockTabs = [
   { id: 1, windowId: 1, title: 'TikTok - Make Your Day', url: 'https://www.tiktok.com', domain: 'tiktok.com', mruRank: 0, active: false, pinned: false },
@@ -152,4 +152,58 @@ test('two-phase typo fallback: triggers for transposed and misspelled queries wh
   // Short query typo (< 4 chars) does not trigger fallback to prevent false positives
   const shortTypo = searchTabs(mockTabs, 'xyt');
   assert.equal(shortTypo.length, 0);
+});
+
+test('parseContextQuery: parses @-syntax tokens and isolates remaining query', () => {
+  const parsed1 = parseContextQuery('@audio lofi girl');
+  assert.equal(parsed1.audioOnly, true);
+  assert.equal(parsed1.pinnedOnly, false);
+  assert.equal(parsed1.cleanQuery, 'lofi girl');
+
+  const parsed2 = parseContextQuery('@pinned @win github');
+  assert.equal(parsed2.pinnedOnly, true);
+  assert.equal(parsed2.currentWindowOnly, true);
+  assert.equal(parsed2.audioOnly, false);
+  assert.equal(parsed2.cleanQuery, 'github');
+
+  const parsed3 = parseContextQuery('@a @p @g @w');
+  assert.equal(parsed3.audioOnly, true);
+  assert.equal(parsed3.pinnedOnly, true);
+  assert.equal(parsed3.groupedOnly, true);
+  assert.equal(parsed3.currentWindowOnly, true);
+  assert.equal(parsed3.cleanQuery, '');
+});
+
+test('searchTabs with @-filters: filters candidates by audio, pinned, grouped, window', () => {
+  const filterTabs = [
+    { id: 201, windowId: 1, title: 'Lofi Hip Hop Radio', domain: 'youtube.com', mruRank: 0, audible: true, pinned: false, groupId: undefined },
+    { id: 202, windowId: 1, title: 'Pinned Dashboard', domain: 'linear.app', mruRank: 1, audible: false, pinned: true, groupId: undefined },
+    { id: 203, windowId: 1, title: 'Grouped Work Ticket', domain: 'jira.atlassian.com', mruRank: 2, audible: false, pinned: false, groupId: 12 },
+    { id: 204, windowId: 2, title: 'Other Window Tab', domain: 'github.com', mruRank: 3, audible: false, pinned: false, groupId: undefined }
+  ];
+
+  // Test @audio filter
+  const audioResults = searchTabs(filterTabs, '@audio');
+  assert.equal(audioResults.length, 1);
+  assert.equal(audioResults[0].id, 201);
+
+  // Test @audio with chained query
+  const audioQueryResults = searchTabs(filterTabs, '@audio lofi');
+  assert.equal(audioQueryResults.length, 1);
+  assert.equal(audioQueryResults[0].id, 201);
+
+  // Test @pinned filter
+  const pinnedResults = searchTabs(filterTabs, '@pinned');
+  assert.equal(pinnedResults.length, 1);
+  assert.equal(pinnedResults[0].id, 202);
+
+  // Test @group filter
+  const groupResults = searchTabs(filterTabs, '@group');
+  assert.equal(groupResults.length, 1);
+  assert.equal(groupResults[0].id, 203);
+
+  // Test @win filter with currentWindowId = 1
+  const winResults = searchTabs(filterTabs, '@win', 1);
+  assert.equal(winResults.length, 3);
+  assert.ok(winResults.every(t => t.windowId === 1));
 });
