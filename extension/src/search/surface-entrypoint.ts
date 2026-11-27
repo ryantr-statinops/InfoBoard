@@ -353,10 +353,24 @@ export async function initializeSearchSurface(doc: Document = document): Promise
   // Pre-select previous tab (index 1) for instant Alt+Tab toggle
   selectedIndex = currentResults.length > 1 ? 1 : 0;
   updateSearchNotice(doc, false);
+  renderFilterChips(doc, { isActive: false, prefix: '', matchedFilters: [] }, () => {});
   renderTabList(doc);
 
+  const applyAutocomplete = (def: FilterDefinition): void => {
+    const raw = input.value;
+    const tokens = raw.split(/\s+/);
+    tokens[tokens.length - 1] = `@${def.full} `;
+    input.value = tokens.join(' ');
+    input.focus();
+    input.dispatchEvent(new Event('input'));
+  };
+
   input.addEventListener('input', () => {
-    const query = input.value.trim();
+    const rawValue = input.value;
+    const activeChipState = getActiveFilterToken(rawValue);
+    renderFilterChips(doc, activeChipState, applyAutocomplete);
+
+    const query = rawValue.trim();
     if (query.length === 0) {
       currentResults = [...allTabs];
       selectedIndex = currentResults.length > 1 ? 1 : 0;
