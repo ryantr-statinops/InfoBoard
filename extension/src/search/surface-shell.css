@@ -144,6 +144,64 @@ html, body {
   font-size: 14px;
 }
 
+/* Inline Filter Chip Bar */
+.filter-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filter-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.filter-chip:hover {
+  background-color: var(--bg-active);
+  border-color: var(--accent-color);
+}
+
+.filter-chip-token {
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+.filter-chip-desc {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.filter-chip-hint {
+  display: inline-block;
+  font-size: 9px;
+  padding: 0 3px;
+  border-radius: 3px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  margin-left: 2px;
+}
+
 /* Phase 2: Tab Results Waterfall Cascade (100ms - 420ms, duration 320ms) */
 .results-wrapper {
   flex: 1;

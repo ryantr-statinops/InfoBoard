@@ -14,6 +14,65 @@ export interface SearchResultMeta {
   activeFilters: ContextFilters;
 }
 
+export interface FilterDefinition {
+  key: string;
+  prefix: string;
+  full: string;
+}
+
+export interface ActiveFilterState {
+  isActive: boolean;
+  prefix: string;
+  matchedFilters: FilterDefinition[];
+}
+
+export const SUPPORTED_FILTERS: readonly FilterDefinition[] = [
+  { key: 'audio', prefix: 'a', full: 'audio' },
+  { key: 'pinned', prefix: 'p', full: 'pinned' },
+  { key: 'group', prefix: 'g', full: 'group' },
+  { key: 'win', prefix: 'w', full: 'win' }
+] as const;
+
+/**
+ * Checks if the user is actively typing a '@...' filter token at the end of the query.
+ * Returns the matching filters available for autocomplete.
+ */
+export function getActiveFilterToken(rawInput: string): ActiveFilterState {
+  // If input ends with space, the token has been concluded
+  if (rawInput.endsWith(' ') || rawInput.length === 0) {
+    return { isActive: false, prefix: '', matchedFilters: [] };
+  }
+
+  const tokens = rawInput.split(/\s+/);
+  const lastToken = tokens[tokens.length - 1] || '';
+
+  if (!lastToken.startsWith('@')) {
+    return { isActive: false, prefix: '', matchedFilters: [] };
+  }
+
+  const queryPrefix = lastToken.slice(1).toLowerCase();
+  const matched = SUPPORTED_FILTERS.filter(def => {
+    if (queryPrefix.length === 0) return true;
+    return def.full.startsWith(queryPrefix) || def.prefix === queryPrefix;
+  });
+
+  return {
+    isActive: true,
+    prefix: queryPrefix,
+    matchedFilters: matched
+  };
+}
+
+/**
+ * Checks if a token matches a filter definition by exact full name, short key, or non-ambiguous prefix.
+ */
+export function matchesFilterDefinition(token: string, def: FilterDefinition): boolean {
+  if (!token.startsWith('@')) return false;
+  const raw = token.slice(1).toLowerCase();
+  if (raw.length === 0) return false;
+  return def.full.startsWith(raw) || def.prefix === raw;
+}
+
 /**
  * Parses raw input query into structured context filters and clean text query.
  * Supported filters:
@@ -32,15 +91,23 @@ export function parseContextQuery(rawInput: string): ContextFilters {
   let currentWindowOnly = false;
 
   for (const token of tokens) {
-    const lower = token.toLowerCase();
-    if (lower === '@audio' || lower === '@a') {
-      audioOnly = true;
-    } else if (lower === '@pinned' || lower === '@p') {
-      pinnedOnly = true;
-    } else if (lower === '@group' || lower === '@g') {
-      groupedOnly = true;
-    } else if (lower === '@win' || lower === '@w') {
-      currentWindowOnly = true;
+    if (token.startsWith('@') && token.length > 1) {
+      const audioDef = SUPPORTED_FILTERS[0];
+      const pinnedDef = SUPPORTED_FILTERS[1];
+      const groupDef = SUPPORTED_FILTERS[2];
+      const winDef = SUPPORTED_FILTERS[3];
+
+      if (matchesFilterDefinition(token, audioDef)) {
+        audioOnly = true;
+      } else if (matchesFilterDefinition(token, pinnedDef)) {
+        pinnedOnly = true;
+      } else if (matchesFilterDefinition(token, groupDef)) {
+        groupedOnly = true;
+      } else if (matchesFilterDefinition(token, winDef)) {
+        currentWindowOnly = true;
+      } else {
+        remainingTokens.push(token);
+      }
     } else if (token.length > 0) {
       remainingTokens.push(token);
     }

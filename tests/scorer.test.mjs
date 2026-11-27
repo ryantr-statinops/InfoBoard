@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { scoreTab, searchTabs, searchTabsWithMeta, matchSubsequence, damerauLevenshtein, parseContextQuery } from '../extension/dist/src/search/scorer.js';
+import { scoreTab, searchTabs, searchTabsWithMeta, matchSubsequence, damerauLevenshtein, parseContextQuery, getActiveFilterToken } from '../extension/dist/src/search/scorer.js';
 
 const mockTabs = [
   { id: 1, windowId: 1, title: 'TikTok - Make Your Day', url: 'https://www.tiktok.com', domain: 'tiktok.com', mruRank: 0, active: false, pinned: false },
@@ -206,6 +206,18 @@ test('searchTabs with @-filters: filters candidates by audio, pinned, grouped, w
   const winResults = searchTabs(filterTabs, '@win', 1);
   assert.equal(winResults.length, 3);
   assert.ok(winResults.every(t => t.windowId === 1));
+
+  // Test prefix filters (@au for audio, @pi for pinned, @gr for group, @wi for win)
+  assert.equal(searchTabs(filterTabs, '@au').length, 1);
+  assert.equal(searchTabs(filterTabs, '@audi').length, 1);
+  assert.equal(searchTabs(filterTabs, '@pi').length, 1);
+  assert.equal(searchTabs(filterTabs, '@gr').length, 1);
+  assert.equal(searchTabs(filterTabs, '@wi', 1).length, 3);
+
+  // Unrecognized @ token remains search query
+  const unrecognized = parseContextQuery('@openai code');
+  assert.equal(unrecognized.cleanQuery, '@openai code');
+  assert.equal(unrecognized.audioOnly, false);
 });
 
 test('searchTabsWithMeta: reports usedTypoFallback and activeFilters accurately', () => {
@@ -231,4 +243,31 @@ test('searchTabsWithMeta: reports usedTypoFallback and activeFilters accurately'
   assert.equal(filterMeta.usedTypoFallback, false);
   assert.equal(filterMeta.activeFilters.pinnedOnly, true);
   assert.equal(filterMeta.activeFilters.cleanQuery, '');
+});
+
+test('getActiveFilterToken: accurately detects active @ token and matches filters', () => {
+  // Just "@" -> active, matches all 4 filters
+  const allState = getActiveFilterToken('@');
+  assert.equal(allState.isActive, true);
+  assert.equal(allState.matchedFilters.length, 4);
+
+  // "@au" -> matches only audio
+  const auState = getActiveFilterToken('@au');
+  assert.equal(auState.isActive, true);
+  assert.equal(auState.matchedFilters.length, 1);
+  assert.equal(auState.matchedFilters[0].key, 'audio');
+
+  // Multi-word ending with "@p" -> active, matches pinned
+  const multiState = getActiveFilterToken('lofi girl @p');
+  assert.equal(multiState.isActive, true);
+  assert.equal(multiState.matchedFilters.length, 1);
+  assert.equal(multiState.matchedFilters[0].key, 'pinned');
+
+  // Space after token -> concluded, not active
+  const spaceState = getActiveFilterToken('@audio ');
+  assert.equal(spaceState.isActive, false);
+
+  // Normal query without @ -> not active
+  const normalState = getActiveFilterToken('github');
+  assert.equal(normalState.isActive, false);
 });

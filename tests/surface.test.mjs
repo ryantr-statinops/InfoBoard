@@ -49,12 +49,28 @@ class MockElement {
     this.className = '';
     this.textContent = '';
     this.hidden = false;
+    this.listeners = new Map();
+  }
+  set innerHTML(val) {
+    if (val === '') this.children = [];
+  }
+  get innerHTML() {
+    return '';
   }
   setAttribute(k, v) { this.attributes.set(k, String(v)); }
   getAttribute(k) { return this.attributes.get(k) || null; }
   appendChild(child) { this.children.push(child); }
   scrollIntoView() {}
-  addEventListener() {}
+  addEventListener(event, fn) {
+    if (!this.listeners.has(event)) this.listeners.set(event, []);
+    this.listeners.get(event).push(fn);
+  }
+  dispatchEvent(event) {
+    const handlers = this.listeners.get(event?.type || event) || [];
+    for (const h of handlers) {
+      h(event);
+    }
+  }
 }
 
 const mockDoc = {
@@ -81,6 +97,7 @@ const {
   renderTabList,
   closeTab,
   updateSearchNotice,
+  renderFilterChips,
   currentResults,
   selectedIndex
 } = await import('../extension/dist/src/search/surface-entrypoint.js');
@@ -184,4 +201,40 @@ test('updateSearchNotice: shows notice on typo fallback and hides otherwise', ()
 
   updateSearchNotice(testDoc, false);
   assert.equal(noticeEl.hidden, true);
+});
+
+test('renderFilterChips: renders chip buttons when active and handles click selection', () => {
+  const chipsContainer = new MockElement('div');
+  chipsContainer.hidden = true;
+  const testDoc = {
+    ...mockDoc,
+    getElementById: (id) => (id === 'filter-chips' ? chipsContainer : null),
+    createElement: (tag) => new MockElement(tag)
+  };
+
+  let selectedDef = null;
+  const activeState = {
+    isActive: true,
+    prefix: 'au',
+    matchedFilters: [{ key: 'audio', prefix: 'a', full: 'audio' }]
+  };
+
+  renderFilterChips(testDoc, activeState, (def) => {
+    selectedDef = def;
+  });
+
+  assert.equal(chipsContainer.hidden, false);
+  assert.equal(chipsContainer.children.length, 1);
+  const chipBtn = chipsContainer.children[0];
+  assert.equal(chipBtn.getAttribute('data-filter-key'), 'audio');
+
+  // Trigger click
+  chipBtn.dispatchEvent(new Event('click'));
+  assert.notEqual(selectedDef, null);
+  assert.equal(selectedDef.key, 'audio');
+
+  // Inactive state hides container and empties children
+  renderFilterChips(testDoc, { isActive: false, prefix: '', matchedFilters: [] }, () => {});
+  assert.equal(chipsContainer.hidden, true);
+  assert.equal(chipsContainer.children.length, 0);
 });

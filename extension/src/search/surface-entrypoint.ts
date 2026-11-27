@@ -1,6 +1,62 @@
 import { normalizeTab, type SearchTabItem } from './types.js';
-import { searchTabsWithMeta } from './scorer.js';
+import { searchTabsWithMeta, getActiveFilterToken, type ActiveFilterState, type FilterDefinition } from './scorer.js';
 import { MRU_STORAGE_KEY, removeTab } from '../background/mru-manager.js';
+
+export function getFilterChipDescription(key: string): string {
+  switch (key) {
+    case 'audio': return getI18nMessage('filterChipAudio', 'Playing audio');
+    case 'pinned': return getI18nMessage('filterChipPinned', 'Pinned tabs');
+    case 'group': return getI18nMessage('filterChipGroup', 'Tab groups');
+    case 'win': return getI18nMessage('filterChipWin', 'Current window');
+    default: return '';
+  }
+}
+
+export function renderFilterChips(doc: Document, state: ActiveFilterState, onSelect: (def: FilterDefinition) => void): void {
+  const container = doc.getElementById('filter-chips');
+  if (!container) return;
+
+  if (!state.isActive || state.matchedFilters.length === 0) {
+    container.hidden = true;
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = '';
+  state.matchedFilters.forEach((def, idx) => {
+    const chip = doc.createElement('button');
+    chip.className = 'filter-chip';
+    chip.setAttribute('type', 'button');
+    chip.setAttribute('data-filter-key', def.key);
+
+    const tokenSpan = doc.createElement('span');
+    tokenSpan.className = 'filter-chip-token';
+    tokenSpan.textContent = `@${def.full}`;
+
+    const descSpan = doc.createElement('span');
+    descSpan.className = 'filter-chip-desc';
+    descSpan.textContent = getFilterChipDescription(def.key);
+
+    chip.appendChild(tokenSpan);
+    chip.appendChild(descSpan);
+
+    if (idx === 0) {
+      const hintKbd = doc.createElement('kbd');
+      hintKbd.className = 'filter-chip-hint';
+      hintKbd.textContent = 'Tab';
+      chip.appendChild(hintKbd);
+    }
+
+    chip.addEventListener('click', (e: Event) => {
+      e.preventDefault();
+      onSelect(def);
+    });
+
+    container.appendChild(chip);
+  });
+
+  container.hidden = false;
+}
 
 export function getI18nMessage(key: string, fallback: string): string {
   try {
@@ -297,10 +353,24 @@ export async function initializeSearchSurface(doc: Document = document): Promise
   // Pre-select previous tab (index 1) for instant Alt+Tab toggle
   selectedIndex = currentResults.length > 1 ? 1 : 0;
   updateSearchNotice(doc, false);
+  renderFilterChips(doc, { isActive: false, prefix: '', matchedFilters: [] }, () => {});
   renderTabList(doc);
 
+  const applyAutocomplete = (def: FilterDefinition): void => {
+    const raw = input.value;
+    const tokens = raw.split(/\s+/);
+    tokens[tokens.length - 1] = `@${def.full} `;
+    input.value = tokens.join(' ');
+    input.focus();
+    input.dispatchEvent(new Event('input'));
+  };
+
   input.addEventListener('input', () => {
-    const query = input.value.trim();
+    const rawValue = input.value;
+    const activeChipState = getActiveFilterToken(rawValue);
+    renderFilterChips(doc, activeChipState, applyAutocomplete);
+
+    const query = rawValue.trim();
     if (query.length === 0) {
       currentResults = [...allTabs];
       selectedIndex = currentResults.length > 1 ? 1 : 0;
@@ -326,6 +396,16 @@ export async function initializeSearchSurface(doc: Document = document): Promise
       e.preventDefault();
       void dismissWithAnimation(doc);
       return;
+    }
+
+    // Tab autocomplete for active filter chips
+    if (e.key === 'Tab') {
+      const activeChipState = getActiveFilterToken(input.value);
+      if (activeChipState.isActive && activeChipState.matchedFilters.length > 0) {
+        e.preventDefault();
+        applyAutocomplete(activeChipState.matchedFilters[0]);
+        return;
+      }
     }
 
     if (currentResults.length === 0) return;
