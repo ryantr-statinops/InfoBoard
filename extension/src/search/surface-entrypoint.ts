@@ -398,6 +398,16 @@ export async function initializeSearchSurface(doc: Document = document): Promise
       return;
     }
 
+    // Tab autocomplete for active filter chips
+    if (e.key === 'Tab') {
+      const activeChipState = getActiveFilterToken(input.value);
+      if (activeChipState.isActive && activeChipState.matchedFilters.length > 0) {
+        e.preventDefault();
+        applyAutocomplete(activeChipState.matchedFilters[0]);
+        return;
+      }
+    }
+
     if (currentResults.length === 0) return;
 
     if ((e.altKey && (e.key === 'd' || e.key === 'D' || e.code === 'KeyD')) || (e.key === 'Delete' && (input as HTMLInputElement).value === '')) {
