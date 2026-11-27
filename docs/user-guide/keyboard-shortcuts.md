@@ -38,11 +38,13 @@ InfoBoard is a **keyboard-first** productivity tool designed to keep your hands 
 
 ### C. Audio Triage & Context Filters
 1. Press `Alt + W`.
-2. Type `@` to instantly reveal the **Interactive Filter Chip Bar** (`@audio`, `@pinned`, `@group`, `@win`).
-3. Press `Tab` or click any chip to autocomplete the filter immediately.
-4. Prefix matching works out of the box: typing `@au` automatically activates the `@audio` filter without needing to type the full keyword.
-5. Combine with a search term: `@audio lofi` (or `@au lofi`) to isolate your music stream.
-6. Additional filters:
+2. Notice the search watermark hint `Type @ for filters` in the input bar.
+3. Type `@` to instantly reveal the **Vertical Filter Dropdown Menu** (`@audio`, `@pinned`, `@group`, `@win`) complete with intuitive SVG icons and descriptions.
+4. Use `ArrowUp` / `ArrowDown` (or `Ctrl+P` / `Ctrl+N`) to highlight any filter, then press `Tab` or `Enter` (or click) to apply it immediately.
+5. Prefix matching works out of the box: typing `@au` automatically focuses `@audio` without typing the full keyword.
+6. Combine with a search term: `@audio lofi` (or `@au lofi`) to isolate your music stream.
+7. Supported filters:
+   - `@audio` or `@a`: Restrict to tabs actively playing sound.
    - `@pinned` or `@p`: Restrict to pinned tabs.
    - `@group` or `@g`: Restrict to Chrome tab groups.
    - `@win` or `@w`: Restrict to the current focused window.
