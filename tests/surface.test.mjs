@@ -80,6 +80,7 @@ const {
   updateSelection,
   renderTabList,
   closeTab,
+  updateSearchNotice,
   currentResults,
   selectedIndex
 } = await import('../extension/dist/src/search/surface-entrypoint.js');
@@ -168,4 +169,19 @@ test('closeTab: calls chrome.tabs.remove, purges from currentResults, and re-ren
 
   assert.equal(removedTabId, targetTab.id);
   assert.equal(currentResults.find(t => t.id === targetTab.id), undefined);
+});
+
+test('updateSearchNotice: shows notice on typo fallback and hides otherwise', () => {
+  const noticeEl = new MockElement('div');
+  noticeEl.hidden = true;
+  const testDoc = {
+    getElementById: (id) => (id === 'search-notice' ? noticeEl : null)
+  };
+
+  updateSearchNotice(testDoc, true);
+  assert.equal(noticeEl.hidden, false);
+  assert.ok(noticeEl.textContent.length > 0);
+
+  updateSearchNotice(testDoc, false);
+  assert.equal(noticeEl.hidden, true);
 });
