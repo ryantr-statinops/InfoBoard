@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { scoreTab, searchTabs, matchSubsequence, damerauLevenshtein, parseContextQuery } from '../extension/dist/src/search/scorer.js';
+import { scoreTab, searchTabs, searchTabsWithMeta, matchSubsequence, damerauLevenshtein, parseContextQuery } from '../extension/dist/src/search/scorer.js';
 
 const mockTabs = [
   { id: 1, windowId: 1, title: 'TikTok - Make Your Day', url: 'https://www.tiktok.com', domain: 'tiktok.com', mruRank: 0, active: false, pinned: false },
@@ -206,4 +206,29 @@ test('searchTabs with @-filters: filters candidates by audio, pinned, grouped, w
   const winResults = searchTabs(filterTabs, '@win', 1);
   assert.equal(winResults.length, 3);
   assert.ok(winResults.every(t => t.windowId === 1));
+});
+
+test('searchTabsWithMeta: reports usedTypoFallback and activeFilters accurately', () => {
+  // Phase 1 exact/prefix match -> usedTypoFallback is false
+  const exactMeta = searchTabsWithMeta(mockTabs, 'github');
+  assert.equal(exactMeta.usedTypoFallback, false);
+  assert.ok(exactMeta.results.length > 0);
+  assert.equal(exactMeta.results[0].domain, 'github.com');
+
+  // Phase 2 typo fallback -> usedTypoFallback is true ("gathub" cannot subsequence-match title)
+  const typoMeta = searchTabsWithMeta(mockTabs, 'gathub');
+  assert.equal(typoMeta.usedTypoFallback, true);
+  assert.ok(typoMeta.results.length > 0);
+  assert.equal(typoMeta.results[0].domain, 'github.com');
+
+  // No match even after Phase 2 -> usedTypoFallback is false
+  const noneMeta = searchTabsWithMeta(mockTabs, 'zzzzzz');
+  assert.equal(noneMeta.usedTypoFallback, false);
+  assert.equal(noneMeta.results.length, 0);
+
+  // Context filter only -> usedTypoFallback is false and activeFilters populated
+  const filterMeta = searchTabsWithMeta(mockTabs, '@pinned');
+  assert.equal(filterMeta.usedTypoFallback, false);
+  assert.equal(filterMeta.activeFilters.pinnedOnly, true);
+  assert.equal(filterMeta.activeFilters.cleanQuery, '');
 });
