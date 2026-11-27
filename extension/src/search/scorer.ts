@@ -8,6 +8,12 @@ export interface ContextFilters {
   cleanQuery: string;
 }
 
+export interface SearchResultMeta {
+  results: SearchTabItem[];
+  usedTypoFallback: boolean;
+  activeFilters: ContextFilters;
+}
+
 /**
  * Parses raw input query into structured context filters and clean text query.
  * Supported filters:
