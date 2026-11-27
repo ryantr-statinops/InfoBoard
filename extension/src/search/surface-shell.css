@@ -144,6 +144,41 @@ html, body {
   font-size: 14px;
 }
 
+.search-filter-hint {
+  position: absolute;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+  white-space: nowrap;
+}
+
+#query:not(:placeholder-shown) ~ .search-filter-hint {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hint-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--accent-color);
+  line-height: 1.2;
+}
+
 /* Inline Filter Chip Bar */
 .filter-chips {
   display: flex;

@@ -12,8 +12,16 @@
     "description": "Tooltip cho nút action popup."
   },
   "searchPlaceholder": {
-    "message": "Tìm tab hoặc lọc (@audio, @pinned, @group, @win)...",
+    "message": "Tìm kiếm tab (gõ @ để mở bộ lọc)...",
     "description": "Placeholder cho ô tìm kiếm."
+  },
+  "searchHintPrefix": {
+    "message": "Gõ",
+    "description": "Tiền tố cho gợi ý bộ lọc trong thanh tìm kiếm."
+  },
+  "searchHintSuffix": {
+    "message": "để lọc",
+    "description": "Hậu tố cho gợi ý bộ lọc trong thanh tìm kiếm."
   },
   "typoNotice": {
     "message": "Hiển thị kết quả gần đúng (tự động sửa lỗi gõ)",

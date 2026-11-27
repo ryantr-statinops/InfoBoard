@@ -12,8 +12,16 @@
     "description": "Tooltip for the action popup button."
   },
   "searchPlaceholder": {
-    "message": "Search tabs or filter (@audio, @pinned, @group, @win)...",
+    "message": "Search open tabs (type @ for filters)...",
     "description": "Placeholder for the search input."
+  },
+  "searchHintPrefix": {
+    "message": "Type",
+    "description": "Prefix text for the search bar filter hint."
+  },
+  "searchHintSuffix": {
+    "message": "for filters",
+    "description": "Suffix text for the search bar filter hint."
   },
   "typoNotice": {
     "message": "Showing closest matches (typo tolerance)",
