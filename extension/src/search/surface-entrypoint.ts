@@ -12,8 +12,28 @@ export function getFilterChipDescription(key: string): string {
   }
 }
 
-export function renderFilterChips(doc: Document, state: ActiveFilterState, onSelect: (def: FilterDefinition) => void): void {
-  const container = doc.getElementById('filter-chips');
+export function getFilterIconSvg(key: string): string {
+  switch (key) {
+    case 'audio':
+      return '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" class="filter-item-icon"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>';
+    case 'pinned':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="filter-item-icon"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.89A2 2 0 0 1 15 10.77V5h1a1 1 0 0 0 0-2H8a1 1 0 0 0 0 2h1v5.77a2 2 0 0 1-1.11 1.79l-1.78.89A2 2 0 0 0 5 15.24Z"></path></svg>';
+    case 'group':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="filter-item-icon"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>';
+    case 'win':
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="filter-item-icon"><rect x="3" width="18" height="18" rx="2" ry="2" y="3"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>';
+    default:
+      return '';
+  }
+}
+
+export function renderFilterDropdown(
+  doc: Document,
+  state: ActiveFilterState,
+  onSelect: (def: FilterDefinition) => void,
+  selectedDropdownIndex: number = 0
+): void {
+  const container = doc.getElementById('filter-dropdown') || doc.getElementById('filter-chips');
   if (!container) return;
 
   if (!state.isActive || state.matchedFilters.length === 0) {
@@ -24,39 +44,50 @@ export function renderFilterChips(doc: Document, state: ActiveFilterState, onSel
 
   container.innerHTML = '';
   state.matchedFilters.forEach((def, idx) => {
-    const chip = doc.createElement('button');
-    chip.className = 'filter-chip';
-    chip.setAttribute('type', 'button');
-    chip.setAttribute('data-filter-key', def.key);
+    const item = doc.createElement('div');
+    item.className = 'filter-dropdown-item';
+    item.setAttribute('role', 'option');
+    item.setAttribute('data-filter-key', def.key);
+    item.setAttribute('aria-selected', idx === selectedDropdownIndex ? 'true' : 'false');
+
+    const iconWrapper = doc.createElement('span');
+    iconWrapper.className = 'filter-item-icon-wrapper';
+    iconWrapper.innerHTML = getFilterIconSvg(def.key);
+
+    const content = doc.createElement('div');
+    content.className = 'filter-item-content';
 
     const tokenSpan = doc.createElement('span');
-    tokenSpan.className = 'filter-chip-token';
+    tokenSpan.className = 'filter-item-token';
     tokenSpan.textContent = `@${def.full}`;
 
     const descSpan = doc.createElement('span');
-    descSpan.className = 'filter-chip-desc';
+    descSpan.className = 'filter-item-desc';
     descSpan.textContent = getFilterChipDescription(def.key);
 
-    chip.appendChild(tokenSpan);
-    chip.appendChild(descSpan);
+    content.appendChild(tokenSpan);
+    content.appendChild(descSpan);
 
-    if (idx === 0) {
-      const hintKbd = doc.createElement('kbd');
-      hintKbd.className = 'filter-chip-hint';
-      hintKbd.textContent = 'Tab';
-      chip.appendChild(hintKbd);
-    }
+    const kbd = doc.createElement('kbd');
+    kbd.className = 'filter-item-kbd';
+    kbd.textContent = idx === selectedDropdownIndex ? 'Tab / ↵' : 'Tab';
 
-    chip.addEventListener('click', (e: Event) => {
+    item.appendChild(iconWrapper);
+    item.appendChild(content);
+    item.appendChild(kbd);
+
+    item.addEventListener('click', (e: Event) => {
       e.preventDefault();
       onSelect(def);
     });
 
-    container.appendChild(chip);
+    container.appendChild(item);
   });
 
   container.hidden = false;
 }
+
+export const renderFilterChips = renderFilterDropdown;
 
 export function getI18nMessage(key: string, fallback: string): string {
   try {
@@ -352,8 +383,9 @@ export async function initializeSearchSurface(doc: Document = document): Promise
 
   // Pre-select previous tab (index 1) for instant Alt+Tab toggle
   selectedIndex = currentResults.length > 1 ? 1 : 0;
+  let activeDropdownIndex = 0;
   updateSearchNotice(doc, false);
-  renderFilterChips(doc, { isActive: false, prefix: '', matchedFilters: [] }, () => {});
+  renderFilterDropdown(doc, { isActive: false, prefix: '', matchedFilters: [] }, () => {});
   renderTabList(doc);
 
   const applyAutocomplete = (def: FilterDefinition): void => {
@@ -361,6 +393,7 @@ export async function initializeSearchSurface(doc: Document = document): Promise
     const tokens = raw.split(/\s+/);
     tokens[tokens.length - 1] = `@${def.full} `;
     input.value = tokens.join(' ');
+    activeDropdownIndex = 0;
     input.focus();
     input.dispatchEvent(new Event('input'));
   };
@@ -368,7 +401,10 @@ export async function initializeSearchSurface(doc: Document = document): Promise
   input.addEventListener('input', () => {
     const rawValue = input.value;
     const activeChipState = getActiveFilterToken(rawValue);
-    renderFilterChips(doc, activeChipState, applyAutocomplete);
+    if (!activeChipState.isActive || activeDropdownIndex >= activeChipState.matchedFilters.length) {
+      activeDropdownIndex = 0;
+    }
+    renderFilterDropdown(doc, activeChipState, applyAutocomplete, activeDropdownIndex);
 
     const query = rawValue.trim();
     if (query.length === 0) {
@@ -398,12 +434,27 @@ export async function initializeSearchSurface(doc: Document = document): Promise
       return;
     }
 
-    // Tab autocomplete for active filter chips
-    if (e.key === 'Tab') {
-      const activeChipState = getActiveFilterToken(input.value);
-      if (activeChipState.isActive && activeChipState.matchedFilters.length > 0) {
+    // Keyboard navigation & autocomplete for active filter dropdown
+    const activeFilterState = getActiveFilterToken(input.value);
+    const hasDropdown = activeFilterState.isActive && activeFilterState.matchedFilters.length > 0;
+
+    if (hasDropdown) {
+      if (e.key === 'ArrowDown' || (e.ctrlKey && e.key === 'n')) {
         e.preventDefault();
-        applyAutocomplete(activeChipState.matchedFilters[0]);
+        activeDropdownIndex = (activeDropdownIndex + 1) % activeFilterState.matchedFilters.length;
+        renderFilterDropdown(doc, activeFilterState, applyAutocomplete, activeDropdownIndex);
+        return;
+      }
+      if (e.key === 'ArrowUp' || (e.ctrlKey && e.key === 'p')) {
+        e.preventDefault();
+        activeDropdownIndex = (activeDropdownIndex - 1 + activeFilterState.matchedFilters.length) % activeFilterState.matchedFilters.length;
+        renderFilterDropdown(doc, activeFilterState, applyAutocomplete, activeDropdownIndex);
+        return;
+      }
+      if (e.key === 'Tab' || e.key === 'Enter') {
+        e.preventDefault();
+        const selectedFilter = activeFilterState.matchedFilters[activeDropdownIndex] || activeFilterState.matchedFilters[0];
+        applyAutocomplete(selectedFilter);
         return;
       }
     }
