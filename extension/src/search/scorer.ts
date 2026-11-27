@@ -14,6 +14,29 @@ export interface SearchResultMeta {
   activeFilters: ContextFilters;
 }
 
+export interface FilterDefinition {
+  key: string;
+  prefix: string;
+  full: string;
+}
+
+export const SUPPORTED_FILTERS: readonly FilterDefinition[] = [
+  { key: 'audio', prefix: 'a', full: 'audio' },
+  { key: 'pinned', prefix: 'p', full: 'pinned' },
+  { key: 'group', prefix: 'g', full: 'group' },
+  { key: 'win', prefix: 'w', full: 'win' }
+] as const;
+
+/**
+ * Checks if a token matches a filter definition by exact full name, short key, or non-ambiguous prefix.
+ */
+export function matchesFilterDefinition(token: string, def: FilterDefinition): boolean {
+  if (!token.startsWith('@')) return false;
+  const raw = token.slice(1).toLowerCase();
+  if (raw.length === 0) return false;
+  return def.full.startsWith(raw) || def.prefix === raw;
+}
+
 /**
  * Parses raw input query into structured context filters and clean text query.
  * Supported filters:
