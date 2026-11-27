@@ -1,6 +1,62 @@
 import { normalizeTab, type SearchTabItem } from './types.js';
-import { searchTabsWithMeta } from './scorer.js';
+import { searchTabsWithMeta, getActiveFilterToken, type ActiveFilterState, type FilterDefinition } from './scorer.js';
 import { MRU_STORAGE_KEY, removeTab } from '../background/mru-manager.js';
+
+export function getFilterChipDescription(key: string): string {
+  switch (key) {
+    case 'audio': return getI18nMessage('filterChipAudio', 'Playing audio');
+    case 'pinned': return getI18nMessage('filterChipPinned', 'Pinned tabs');
+    case 'group': return getI18nMessage('filterChipGroup', 'Tab groups');
+    case 'win': return getI18nMessage('filterChipWin', 'Current window');
+    default: return '';
+  }
+}
+
+export function renderFilterChips(doc: Document, state: ActiveFilterState, onSelect: (def: FilterDefinition) => void): void {
+  const container = doc.getElementById('filter-chips');
+  if (!container) return;
+
+  if (!state.isActive || state.matchedFilters.length === 0) {
+    container.hidden = true;
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = '';
+  state.matchedFilters.forEach((def, idx) => {
+    const chip = doc.createElement('button');
+    chip.className = 'filter-chip';
+    chip.setAttribute('type', 'button');
+    chip.setAttribute('data-filter-key', def.key);
+
+    const tokenSpan = doc.createElement('span');
+    tokenSpan.className = 'filter-chip-token';
+    tokenSpan.textContent = `@${def.full}`;
+
+    const descSpan = doc.createElement('span');
+    descSpan.className = 'filter-chip-desc';
+    descSpan.textContent = getFilterChipDescription(def.key);
+
+    chip.appendChild(tokenSpan);
+    chip.appendChild(descSpan);
+
+    if (idx === 0) {
+      const hintKbd = doc.createElement('kbd');
+      hintKbd.className = 'filter-chip-hint';
+      hintKbd.textContent = 'Tab';
+      chip.appendChild(hintKbd);
+    }
+
+    chip.addEventListener('click', (e: Event) => {
+      e.preventDefault();
+      onSelect(def);
+    });
+
+    container.appendChild(chip);
+  });
+
+  container.hidden = false;
+}
 
 export function getI18nMessage(key: string, fallback: string): string {
   try {
