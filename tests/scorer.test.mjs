@@ -206,6 +206,18 @@ test('searchTabs with @-filters: filters candidates by audio, pinned, grouped, w
   const winResults = searchTabs(filterTabs, '@win', 1);
   assert.equal(winResults.length, 3);
   assert.ok(winResults.every(t => t.windowId === 1));
+
+  // Test prefix filters (@au for audio, @pi for pinned, @gr for group, @wi for win)
+  assert.equal(searchTabs(filterTabs, '@au').length, 1);
+  assert.equal(searchTabs(filterTabs, '@audi').length, 1);
+  assert.equal(searchTabs(filterTabs, '@pi').length, 1);
+  assert.equal(searchTabs(filterTabs, '@gr').length, 1);
+  assert.equal(searchTabs(filterTabs, '@wi', 1).length, 3);
+
+  // Unrecognized @ token remains search query
+  const unrecognized = parseContextQuery('@openai code');
+  assert.equal(unrecognized.cleanQuery, '@openai code');
+  assert.equal(unrecognized.audioOnly, false);
 });
 
 test('searchTabsWithMeta: reports usedTypoFallback and activeFilters accurately', () => {
