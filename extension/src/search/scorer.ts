@@ -275,8 +275,13 @@ export function scoreTypoFallback(item: SearchTabItem, query: string): number {
   return -1;
 }
 
-export function searchTabs(items: SearchTabItem[], query: string, currentWindowId?: number): SearchTabItem[] {
-  const { audioOnly, pinnedOnly, groupedOnly, currentWindowOnly, cleanQuery } = parseContextQuery(query);
+export function searchTabsWithMeta(
+  items: SearchTabItem[],
+  query: string,
+  currentWindowId?: number
+): SearchResultMeta {
+  const activeFilters = parseContextQuery(query);
+  const { audioOnly, pinnedOnly, groupedOnly, currentWindowOnly, cleanQuery } = activeFilters;
 
   // Apply contextual pre-filters
   let candidates = items;
@@ -295,11 +300,15 @@ export function searchTabs(items: SearchTabItem[], query: string, currentWindowI
 
   // If after extracting @-filters the query is empty, return filtered candidates in MRU order
   if (cleanQuery.length === 0) {
-    return candidates;
+    return {
+      results: candidates,
+      usedTypoFallback: false,
+      activeFilters
+    };
   }
 
   const q = cleanQuery;
-  
+
   // Phase 1: High-speed exact, prefix, word boundary, acronym & subsequence scoring
   const scored = candidates
     .map(item => ({ item, score: scoreTab(item, q) }))
@@ -307,7 +316,11 @@ export function searchTabs(items: SearchTabItem[], query: string, currentWindowI
 
   if (scored.length > 0) {
     scored.sort((a, b) => b.score - a.score);
-    return scored.map(res => res.item);
+    return {
+      results: scored.map(res => res.item),
+      usedTypoFallback: false,
+      activeFilters
+    };
   }
 
   // Phase 2: Typo tolerance fallback (only when Phase 1 returns 0 results and query length >= 4)
@@ -318,9 +331,21 @@ export function searchTabs(items: SearchTabItem[], query: string, currentWindowI
 
     if (typoScored.length > 0) {
       typoScored.sort((a, b) => b.score - a.score);
-      return typoScored.map(res => res.item);
+      return {
+        results: typoScored.map(res => res.item),
+        usedTypoFallback: true,
+        activeFilters
+      };
     }
   }
 
-  return [];
+  return {
+    results: [],
+    usedTypoFallback: false,
+    activeFilters
+  };
+}
+
+export function searchTabs(items: SearchTabItem[], query: string, currentWindowId?: number): SearchTabItem[] {
+  return searchTabsWithMeta(items, query, currentWindowId).results;
 }
