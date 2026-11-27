@@ -55,15 +55,23 @@ export function parseContextQuery(rawInput: string): ContextFilters {
   let currentWindowOnly = false;
 
   for (const token of tokens) {
-    const lower = token.toLowerCase();
-    if (lower === '@audio' || lower === '@a') {
-      audioOnly = true;
-    } else if (lower === '@pinned' || lower === '@p') {
-      pinnedOnly = true;
-    } else if (lower === '@group' || lower === '@g') {
-      groupedOnly = true;
-    } else if (lower === '@win' || lower === '@w') {
-      currentWindowOnly = true;
+    if (token.startsWith('@') && token.length > 1) {
+      const audioDef = SUPPORTED_FILTERS[0];
+      const pinnedDef = SUPPORTED_FILTERS[1];
+      const groupDef = SUPPORTED_FILTERS[2];
+      const winDef = SUPPORTED_FILTERS[3];
+
+      if (matchesFilterDefinition(token, audioDef)) {
+        audioOnly = true;
+      } else if (matchesFilterDefinition(token, pinnedDef)) {
+        pinnedOnly = true;
+      } else if (matchesFilterDefinition(token, groupDef)) {
+        groupedOnly = true;
+      } else if (matchesFilterDefinition(token, winDef)) {
+        currentWindowOnly = true;
+      } else {
+        remainingTokens.push(token);
+      }
     } else if (token.length > 0) {
       remainingTokens.push(token);
     }
