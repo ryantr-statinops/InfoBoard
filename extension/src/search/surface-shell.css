@@ -38,6 +38,10 @@
   padding: 0;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html, body {
   width: 480px;
   height: 480px;
@@ -187,6 +191,10 @@ html, body {
   background-color: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   gap: 2px;
+}
+
+.filter-dropdown[hidden] {
+  display: none !important;
 }
 
 .filter-dropdown-item {
@@ -474,6 +482,10 @@ mark {
   font-size: 14px;
 }
 
+.empty-state[hidden] {
+  display: none !important;
+}
+
 /* Subtle Typo Fallback Notice */
 .search-notice {
   padding: 6px 14px;
@@ -481,6 +493,10 @@ mark {
   color: var(--text-secondary);
   background-color: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
+}
+
+.search-notice[hidden] {
+  display: none !important;
 }
 
 /* Phase 3: Shortcuts Footer Basin (380ms - 500ms, duration 120ms) */
