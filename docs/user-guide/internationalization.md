@@ -19,7 +19,7 @@ All user-facing strings are dynamically localized:
 
 | UI Key | English (`en`) | Tiếng Việt (`vi`) |
 | :--- | :--- | :--- |
-| `searchPlaceholder` | Search open tabs (type @ for filters)... | Tìm kiếm tab (gõ @ để mở bộ lọc)... |
+| `searchPlaceholder` | Search open tabs... | Tìm kiếm tab... |
 | `searchHintPrefix` | Type | Gõ |
 | `searchHintSuffix` | for filters | để lọc |
 | `emptyState` | No matching tabs found | Không tìm thấy tab phù hợp |

@@ -12,7 +12,7 @@
     "description": "Tooltip cho nút action popup."
   },
   "searchPlaceholder": {
-    "message": "Tìm kiếm tab (gõ @ để mở bộ lọc)...",
+    "message": "Tìm kiếm tab...",
     "description": "Placeholder cho ô tìm kiếm."
   },
   "searchHintPrefix": {
