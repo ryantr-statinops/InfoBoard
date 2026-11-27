@@ -17,15 +17,20 @@
         id="query"
         data-search-input
         type="search"
-        placeholder="Search open tabs (e.g. t, ti, gh)..."
+        placeholder="Search open tabs (type @ for filters)..."
         data-i18n-placeholder="searchPlaceholder"
         autocomplete="off"
         spellcheck="false"
         aria-autocomplete="list"
         aria-controls="tab-results"
       >
+      <div id="search-filter-hint" class="search-filter-hint" aria-hidden="true">
+        <span class="hint-prefix" data-i18n="searchHintPrefix">Type</span>
+        <kbd class="hint-kbd">@</kbd>
+        <span class="hint-suffix" data-i18n="searchHintSuffix">for filters</span>
+      </div>
     </header>
-    <div id="filter-chips" class="filter-chips" role="toolbar" aria-label="Filter suggestions" hidden></div>
+    <div id="filter-dropdown" class="filter-dropdown" role="listbox" aria-label="Filter suggestions" hidden></div>
 
     <main class="results-wrapper">
       <div id="search-notice" class="search-notice" role="status" data-i18n="typoNotice" hidden>Showing closest matches (typo tolerance)</div>

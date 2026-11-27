@@ -19,7 +19,9 @@ All user-facing strings are dynamically localized:
 
 | UI Key | English (`en`) | Tiếng Việt (`vi`) |
 | :--- | :--- | :--- |
-| `searchPlaceholder` | Search open tabs by title or domain... | Tìm kiếm tab theo tiêu đề hoặc tên miền... |
+| `searchPlaceholder` | Search open tabs (type @ for filters)... | Tìm kiếm tab (gõ @ để mở bộ lọc)... |
+| `searchHintPrefix` | Type | Gõ |
+| `searchHintSuffix` | for filters | để lọc |
 | `emptyState` | No matching tabs found | Không tìm thấy tab phù hợp |
 | `shortcutNavigate` | Navigate | Di chuyển |
 | `shortcutSwitchTab` | Switch tab | Chuyển tab |
