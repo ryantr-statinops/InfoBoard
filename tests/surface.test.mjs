@@ -98,6 +98,8 @@ const {
   closeTab,
   updateSearchNotice,
   renderFilterChips,
+  renderFilterDropdown,
+  getFilterIconSvg,
   currentResults,
   selectedIndex
 } = await import('../extension/dist/src/search/surface-entrypoint.js');
@@ -203,38 +205,58 @@ test('updateSearchNotice: shows notice on typo fallback and hides otherwise', ()
   assert.equal(noticeEl.hidden, true);
 });
 
-test('renderFilterChips: renders chip buttons when active and handles click selection', () => {
-  const chipsContainer = new MockElement('div');
-  chipsContainer.hidden = true;
+test('getFilterIconSvg: returns SVG markup for supported filter keys', () => {
+  assert.ok(getFilterIconSvg('audio').includes('<polygon'));
+  assert.ok(getFilterIconSvg('pinned').includes('<line'));
+  assert.ok(getFilterIconSvg('group').includes('<path'));
+  assert.ok(getFilterIconSvg('win').includes('<rect'));
+  assert.equal(getFilterIconSvg('unknown'), '');
+});
+
+test('renderFilterDropdown: renders vertical dropdown with icons, descriptions, and aria-selected', () => {
+  const dropdownContainer = new MockElement('div');
+  dropdownContainer.hidden = true;
   const testDoc = {
     ...mockDoc,
-    getElementById: (id) => (id === 'filter-chips' ? chipsContainer : null),
+    getElementById: (id) => (id === 'filter-dropdown' ? dropdownContainer : null),
     createElement: (tag) => new MockElement(tag)
   };
 
   let selectedDef = null;
   const activeState = {
     isActive: true,
-    prefix: 'au',
-    matchedFilters: [{ key: 'audio', prefix: 'a', full: 'audio' }]
+    prefix: '',
+    matchedFilters: [
+      { key: 'audio', prefix: 'a', full: 'audio' },
+      { key: 'pinned', prefix: 'p', full: 'pinned' }
+    ]
   };
 
-  renderFilterChips(testDoc, activeState, (def) => {
-    selectedDef = def;
-  });
+  // Render with index 0 active
+  renderFilterDropdown(testDoc, activeState, (def) => { selectedDef = def; }, 0);
 
-  assert.equal(chipsContainer.hidden, false);
-  assert.equal(chipsContainer.children.length, 1);
-  const chipBtn = chipsContainer.children[0];
-  assert.equal(chipBtn.getAttribute('data-filter-key'), 'audio');
+  assert.equal(dropdownContainer.hidden, false);
+  assert.equal(dropdownContainer.children.length, 2);
+  const firstItem = dropdownContainer.children[0];
+  const secondItem = dropdownContainer.children[1];
 
-  // Trigger click
-  chipBtn.dispatchEvent(new Event('click'));
+  assert.equal(firstItem.getAttribute('data-filter-key'), 'audio');
+  assert.equal(firstItem.getAttribute('aria-selected'), 'true');
+  assert.equal(secondItem.getAttribute('data-filter-key'), 'pinned');
+  assert.equal(secondItem.getAttribute('aria-selected'), 'false');
+
+  // Re-render with index 1 active
+  renderFilterDropdown(testDoc, activeState, (def) => { selectedDef = def; }, 1);
+  assert.equal(dropdownContainer.children[0].getAttribute('aria-selected'), 'false');
+  assert.equal(dropdownContainer.children[1].getAttribute('aria-selected'), 'true');
+
+  // Trigger click on second item
+  dropdownContainer.children[1].dispatchEvent(new Event('click'));
   assert.notEqual(selectedDef, null);
-  assert.equal(selectedDef.key, 'audio');
+  assert.equal(selectedDef.key, 'pinned');
 
   // Inactive state hides container and empties children
-  renderFilterChips(testDoc, { isActive: false, prefix: '', matchedFilters: [] }, () => {});
-  assert.equal(chipsContainer.hidden, true);
-  assert.equal(chipsContainer.children.length, 0);
+  renderFilterDropdown(testDoc, { isActive: false, prefix: '', matchedFilters: [] }, () => {});
+  assert.equal(dropdownContainer.hidden, true);
+  assert.equal(dropdownContainer.children.length, 0);
 });
