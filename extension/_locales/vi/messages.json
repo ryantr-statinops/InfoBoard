@@ -54,5 +54,21 @@
   "badgeMuted": {
     "message": "Tắt tiếng",
     "description": "Nhãn tab bị tắt tiếng."
+  },
+  "filterChipAudio": {
+    "message": "Đang phát âm thanh",
+    "description": "Mô tả cho chip lọc @audio."
+  },
+  "filterChipPinned": {
+    "message": "Tab đã ghim",
+    "description": "Mô tả cho chip lọc @pinned."
+  },
+  "filterChipGroup": {
+    "message": "Nhóm tab",
+    "description": "Mô tả cho chip lọc @group."
+  },
+  "filterChipWin": {
+    "message": "Cửa sổ hiện tại",
+    "description": "Mô tả cho chip lọc @win."
   }
 }
