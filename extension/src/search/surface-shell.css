@@ -144,6 +144,22 @@ html, body {
   font-size: 14px;
 }
 
+/* Inline Filter Chip Bar */
+.filter-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filter-chips::-webkit-scrollbar {
+  display: none;
+}
+
 /* Phase 2: Tab Results Waterfall Cascade (100ms - 420ms, duration 320ms) */
 .results-wrapper {
   flex: 1;
