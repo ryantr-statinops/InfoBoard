@@ -1,6 +1,6 @@
 # RFC: Advanced Search Engine Enhancements
 
-* **Status**: `Draft / Under Review`
+* **Status**: `Implemented (v0.2.0)`
 * **Author**: InfoBoard Core Contributors
 * **Created**: November 26, 2026
 * **Target Milestone**: v0.2.0
@@ -146,13 +146,13 @@ Users can combine filters with search terms seamlessly:
 | **Release Zip Size** | ~61 KB | **~64 KB** | Safe (< 100 KB ceiling) |
 | **External Dependencies** | 0 | **0** | Strict Pure MV3 |
 | **Average Query Latency** | < 0.10 ms | **< 0.20 ms** | 100% In-Memory RAM |
-| **Unit Test Coverage** | 34 tests | **45+ tests** | Automated CI verified |
+| **Unit Test Coverage** | 34 tests | **42 tests** | Automated CI verified |
 
 ---
 
 ## 5. Implementation Roadmap
 
-1. **Milestone 1**: Implement `matchSubsequence` in `scorer.ts` with comprehensive unit tests (`tests/scorer.test.mjs`).
-2. **Milestone 2**: Implement Context Filters (`@audio`, `@pinned`, `@group`, `@win`) in `surface-entrypoint.ts` and query parser.
-3. **Milestone 3**: Implement Two-Phase Typo Fallback (`damerauLevenshteinDistance <= 1`) on zero-result fallback.
-4. **Milestone 4**: Update User Guide and Keyboard Shortcuts documentation.
+1. **Milestone 1**: `[Done]` Implement `matchSubsequence` in `scorer.ts` with comprehensive unit tests (`tests/scorer.test.mjs`).
+2. **Milestone 2**: `[Done]` Implement Context Filters (`@audio`, `@pinned`, `@group`, `@win`) in `surface-entrypoint.ts` and query parser.
+3. **Milestone 3**: `[Done]` Implement Two-Phase Typo Fallback (`damerauLevenshtein <= 1`) and subtle UI notice on zero-result fallback.
+4. **Milestone 4**: `[Done]` Update User Guide, Keyboard Shortcuts, and Architecture documentation.
