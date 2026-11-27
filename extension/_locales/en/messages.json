@@ -54,5 +54,21 @@
   "badgeMuted": {
     "message": "Muted",
     "description": "Badge for muted audio tab."
+  },
+  "filterChipAudio": {
+    "message": "Playing audio",
+    "description": "Description for @audio filter chip."
+  },
+  "filterChipPinned": {
+    "message": "Pinned tabs",
+    "description": "Description for @pinned filter chip."
+  },
+  "filterChipGroup": {
+    "message": "Tab groups",
+    "description": "Description for @group filter chip."
+  },
+  "filterChipWin": {
+    "message": "Current window",
+    "description": "Description for @win filter chip."
   }
 }
