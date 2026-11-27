@@ -12,8 +12,12 @@
     "description": "Tooltip cho nút action popup."
   },
   "searchPlaceholder": {
-    "message": "Tìm kiếm tab theo tiêu đề hoặc tên miền...",
+    "message": "Tìm tab hoặc lọc (@audio, @pinned, @group, @win)...",
     "description": "Placeholder cho ô tìm kiếm."
+  },
+  "typoNotice": {
+    "message": "Hiển thị kết quả gần đúng (tự động sửa lỗi gõ)",
+    "description": "Thông báo nhẹ khi bộ lọc sửa lỗi gõ được kích hoạt."
   },
   "emptyState": {
     "message": "Không tìm thấy tab phù hợp",
