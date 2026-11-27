@@ -19,6 +19,9 @@ Built with a **Pure Manifest V3 architecture**, it runs 100% in-browser with zer
   - Exact prefix on domain & title (`ti` -> `tiki.vn`, `tiktok.com`)
   - Word-boundary matching (`t` -> `Instagram - Threads`)
   - Acronym matching (`gh` -> `GitHub`, `yt` -> `YouTube`)
+  - Fuzzy subsequence matching with clustering & CamelCase bonuses (`gdoc` -> `Google Docs`, `ytm` -> `YouTube Music`, `amz` -> `Amazon`)
+  - Two-phase typo tolerance fallback (`githbu` -> `GitHub`, `youtbe` -> `YouTube`) with subtle UI notice
+  - Contextual quick filters (`@audio`/`@a`, `@pinned`/`@p`, `@group`/`@g`, `@win`/`@w`, e.g., `@audio lofi`)
   - Recency Boost: tabs used more recently rank higher on equal keyword matches.
 - **Privacy-first & Local**: Operates strictly on open-tab metadata (title, URL, domain). No history indexing, no page content scraping, no cloud connections.
 
