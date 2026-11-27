@@ -350,6 +350,15 @@ mark {
   font-size: 14px;
 }
 
+/* Subtle Typo Fallback Notice */
+.search-notice {
+  padding: 6px 14px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
 /* Phase 3: Shortcuts Footer Basin (380ms - 500ms, duration 120ms) */
 .shortcuts-footer {
   display: flex;

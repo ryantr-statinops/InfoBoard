@@ -1,6 +1,6 @@
 {
   "name": "infoboard",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Ultra-fast, keyboard-first Chromium desktop extension for searching and switching open tabs across windows.",
   "license": "MIT",
   "author": "Ryan Tran <https://github.com/ryantr-statinops>",

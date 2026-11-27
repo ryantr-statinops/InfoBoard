@@ -12,8 +12,12 @@
     "description": "Tooltip for the action popup button."
   },
   "searchPlaceholder": {
-    "message": "Search open tabs by title or domain...",
+    "message": "Search tabs or filter (@audio, @pinned, @group, @win)...",
     "description": "Placeholder for the search input."
+  },
+  "typoNotice": {
+    "message": "Showing closest matches (typo tolerance)",
+    "description": "Subtle notice shown when typo tolerance fallback produces results."
   },
   "emptyState": {
     "message": "No matching tabs found",

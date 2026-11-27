@@ -1,5 +1,5 @@
 import { normalizeTab, type SearchTabItem } from './types.js';
-import { searchTabs } from './scorer.js';
+import { searchTabsWithMeta } from './scorer.js';
 import { MRU_STORAGE_KEY, removeTab } from '../background/mru-manager.js';
 
 export function getI18nMessage(key: string, fallback: string): string {
@@ -274,6 +274,17 @@ function createFaviconPlaceholder(doc: Document, text: string): HTMLElement {
   return placeholder;
 }
 
+export function updateSearchNotice(doc: Document, usedTypoFallback: boolean): void {
+  const notice = doc.getElementById('search-notice');
+  if (!notice) return;
+  if (usedTypoFallback) {
+    notice.textContent = getI18nMessage('typoNotice', 'Showing closest matches (typo tolerance)');
+    notice.hidden = false;
+  } else {
+    notice.hidden = true;
+  }
+}
+
 export async function initializeSearchSurface(doc: Document = document): Promise<void> {
   const input = doc.querySelector<HTMLInputElement>('[data-search-input]');
   if (!input) return;
@@ -285,6 +296,7 @@ export async function initializeSearchSurface(doc: Document = document): Promise
 
   // Pre-select previous tab (index 1) for instant Alt+Tab toggle
   selectedIndex = currentResults.length > 1 ? 1 : 0;
+  updateSearchNotice(doc, false);
   renderTabList(doc);
 
   input.addEventListener('input', () => {
@@ -292,9 +304,12 @@ export async function initializeSearchSurface(doc: Document = document): Promise
     if (query.length === 0) {
       currentResults = [...allTabs];
       selectedIndex = currentResults.length > 1 ? 1 : 0;
+      updateSearchNotice(doc, false);
     } else {
-      currentResults = searchTabs(allTabs, query, currentWindowId);
+      const { results, usedTypoFallback } = searchTabsWithMeta(allTabs, query, currentWindowId);
+      currentResults = results;
       selectedIndex = 0;
+      updateSearchNotice(doc, usedTypoFallback);
     }
     renderTabList(doc);
   });
