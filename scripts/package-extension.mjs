@@ -29,9 +29,16 @@ try {
 
 console.log(`Packaging InfoBoard v${version}...`);
 
-await execFileAsync('zip', ['-r', zipPath, ...itemsToInclude], {
-  cwd: resolve('extension')
-});
+try {
+  await execFileAsync('zip', ['-r', zipPath, ...itemsToInclude], {
+    cwd: resolve('extension')
+  });
+} catch (error) {
+  if (error && error.code === 'ENOENT') {
+    throw new Error('zip command not found. Install zip (e.g. sudo apt-get install -y zip) before packaging.');
+  }
+  throw error;
+}
 
 const zipStat = await stat(zipPath);
 const sizeKb = (zipStat.size / 1024).toFixed(2);
