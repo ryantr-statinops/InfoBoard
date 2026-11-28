@@ -53,3 +53,15 @@ Before opening a PR:
 After creating or updating a PR, share the PR link in the handoff/report so the reviewer can merge it.
 
 CI validates build, tests, and packaging on pushes/PRs to `main` and `dev` (see `.github/workflows/ci.yml`).
+
+## Release
+
+Release publishing is tag-driven via `.github/workflows/release.yml`.
+
+1. Bump `extension/manifest.json` and `package.json` to the same semver version in a PR.
+2. Run `npm test` and `npm run package`; verify `release/infoboard-v<version>.zip` exists.
+3. Merge the PR to `main`.
+4. Create and push tag `v<version>` from the merged `main` commit.
+5. The release workflow verifies tag/version alignment, rebuilds, runs tests, packages the extension, verifies zip contents, and publishes a GitHub Release with generated notes.
+
+Do not use GitHub Packages/npm publish for this extension. The release asset is `release/infoboard-v<version>.zip`.

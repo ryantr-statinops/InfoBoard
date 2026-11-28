@@ -83,7 +83,7 @@ npm run package
 - `npm test` rebuilds and runs the Node test suite under `tests/`.
 - `npm run package` creates `release/infoboard-v<version>.zip` from `extension/manifest.json` version.
 
-CI runs build, test, and package on pushes/PRs to `main` and `dev` (`.github/workflows/ci.yml`).
+CI runs build, test, and package on pushes/PRs to `main` and `dev` (`.github/workflows/ci.yml`). Tag pushes matching `v*` publish a GitHub Release with the packaged zip (`.github/workflows/release.yml`).
 
 ## Contributing
 
