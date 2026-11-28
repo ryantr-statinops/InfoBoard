@@ -30,3 +30,7 @@ This file is the shared language and operating context for agents working in thi
 - Unit tests: `tests/scorer.test.mjs` running on Node.js native test runner via `npm test`.
 - Build verification: `npm run build:extension`.
 - Manual verification: Load unpacked extension in Chrome/Edge, test `Alt+W` shortcut, typing prefixes, acronyms, and Enter tab switching.
+
+## Workflow reporting
+
+- After creating or updating a pull request, report the PR link so the reviewer can merge it.

@@ -50,4 +50,6 @@ Before opening a PR:
 2. For release-impacting changes, run `npm run package`.
 3. Include a clear summary, motivation, and verification evidence.
 
+After creating or updating a PR, share the PR link in the handoff/report so the reviewer can merge it.
+
 CI validates build, tests, and packaging on pushes/PRs to `main` and `dev` (see `.github/workflows/ci.yml`).
