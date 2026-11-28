@@ -1,110 +1,94 @@
 # InfoBoard
 
-InfoBoard is an ultra-fast, keyboard-first Chrome/Edge desktop extension for searching and switching open tabs across windows.
+InfoBoard is a keyboard-first Chromium Manifest V3 extension for searching and switching open tabs across windows. It runs entirely in the browser extension runtime with no native host, background daemon, or remote service.
 
-Built with a **Pure Manifest V3 architecture**, it runs 100% in-browser with zero external native hosts, zero daemons, and zero database overhead.
+## Features
 
----
+- Search open tabs by title, domain, word boundary, acronym, and fuzzy subsequence.
+- Two-phase typo fallback (Damerau-Levenshtein distance <= 1) when an exact/prefix/subsequence pass returns no results and the query is long enough.
+- Context filters: `@audio` (`@a`), `@pinned` (`@p`), `@group` (`@g`), `@win` (`@w`), with autocomplete in the popup.
+- MRU-aware ranking using `chrome.storage.session` and tab activity listeners.
+- Quick switch: opening the popup pre-selects the previous tab for an Alt+Tab-style toggle.
+- Direct tab close from the popup (`Alt+D` or `Delete` when input is empty), plus mouse close button.
+- Localized UI (`en`, `vi`) via `chrome.i18n`.
 
-## Key Features
+## Install
 
-- **Blazing Fast (< 1ms)**: In-memory lexical search and ranking directly on Chromium's V8 engine.
-- **MRU Tab Tracking**: Automatically orders open tabs by Most Recently Used recency using in-memory `chrome.storage.session` and `tab.lastAccessed`.
-- **Quick Switch (Alt+Tab Pattern)**: Opening search automatically pre-selects the previous tab—press shortcut then `Enter` to toggle immediately between your last two tabs.
-- **Direct Tab Close**: Close tabs instantly using `Alt + D`, `Delete`, or the hover `x` button without switching.
-- **Tab Audio Indicator**: Live soundwave and muted indicator on tabs actively playing audio.
-- **Bilingual i18n**: Automatic localization for English and Vietnamese based on browser language.
-- **Cinematic 500ms Motion Engine**: Smooth waterfall entrance cascade and reverse exit dissolution.
-- **Multi-tier Fuzzy & Prefix Matcher**:
-  - Exact prefix on domain & title (`ti` -> `tiki.vn`, `tiktok.com`)
-  - Word-boundary matching (`t` -> `Instagram - Threads`)
-  - Acronym matching (`gh` -> `GitHub`, `yt` -> `YouTube`)
-  - Fuzzy subsequence matching with clustering & CamelCase bonuses (`gdoc` -> `Google Docs`, `ytm` -> `YouTube Music`, `amz` -> `Amazon`)
-  - Two-phase typo tolerance fallback (`githbu` -> `GitHub`, `youtbe` -> `YouTube`) with subtle UI notice
-  - Contextual quick filters (`@audio`/`@a`, `@pinned`/`@p`, `@group`/`@g`, `@win`/`@w`, e.g., `@audio lofi`)
-  - Recency Boost: tabs used more recently rank higher on equal keyword matches.
-- **Privacy-first & Local**: Operates strictly on open-tab metadata (title, URL, domain). No history indexing, no page content scraping, no cloud connections.
+### Chrome Web Store
 
----
+Install from the Chrome Web Store listing when available. End users do not need Node.js.
 
-## Project Structure
+### Load unpacked (development)
 
-```text
-InfoBoard/
-├── .github/workflows/ci.yml    # GitHub Actions automated test & package pipeline
-├── docs/                       # Comprehensive open-source documentation hub
-├── extension/
-│   ├── manifest.json           # Manifest V3 (tabs, storage, tabGroups)
-│   ├── icons/                  # Monochrome icons (16, 32, 48, 128px)
-│   ├── _locales/               # Bilingual i18n dictionaries (en, vi)
-│   ├── src/
-│   │   ├── background/
-│   │   │   ├── mru-manager.ts  # Session-based MRU ring buffer
-│   │   │   └── service-worker.ts # Tab/window activation listeners
-│   │   ├── search/
-│   │   │   ├── types.ts        # Tab item definitions & normalizers
-│   │   │   ├── scorer.ts       # Prefix/boundary/acronym/boost scoring engine (< 1KB)
-│   │   │   ├── surface-shell.html # Popup UI layout with i18n data bindings
-│   │   │   ├── surface-shell.css  # Dark/light styling & 500ms waterfall animations
-│   │   │   └── surface-entrypoint.ts # DOM rendering, keyboard navigation & tab close
-│   │   └── types/
-│   │       └── chrome.d.ts     # Minimal Chrome WebExtension type declarations
-│   └── tsconfig.json
-├── tests/
-│   ├── manifest-and-bundle.test.mjs # Validates MV3 manifest and < 50KB bundle
-│   ├── mru-manager.test.mjs         # Tests MRU ring buffer and session storage
-│   ├── scorer.test.mjs              # Multi-tier prefix/boundary/acronym ranking
-│   ├── surface.test.mjs             # Popup DOM rendering, keyboard actions & closeTab
-│   └── types.test.mjs               # Tab normalization, domain & audio extraction
-├── scripts/
-│   ├── copy-extension-assets.mjs    # Static asset distribution
-│   └── package-extension.mjs        # Production zip packager (< 100KB)
-├── LICENSE                     # MIT License
-├── PRIVACY.md                  # Chrome Web Store compliant privacy policy
-└── package.json
-```
-
----
-
-## Documentation
-
-Comprehensive guides are available in the [**Documentation Hub**](docs/README.md):
-
-- [**Installation Guide**](docs/getting-started/installation.md) & [**Development Setup**](docs/getting-started/development.md)
-- [**Architecture Overview**](docs/architecture/system-overview.md), [**Search Algorithm**](docs/architecture/search-and-ranking.md) & [**Security Model**](docs/architecture/security-and-privacy.md)
-- [**Keyboard Shortcuts**](docs/user-guide/keyboard-shortcuts.md), [**UI Features**](docs/user-guide/features-and-ui.md) & [**Internationalization**](docs/user-guide/internationalization.md)
-- [**Packaging & Distribution**](docs/operations/packaging-and-distribution.md) & [**CI/CD Pipeline**](docs/operations/ci-cd-pipeline.md)
-- [**Contributing Guidelines**](docs/contributing/CONTRIBUTING.md) & [**Code of Conduct**](docs/contributing/CODE_OF_CONDUCT.md)
-
----
-
-## Development & Build
-
-### Prerequisites
-- Node.js >= 18
-
-### Build Extension
 ```bash
+git clone https://github.com/ryantr-statinops/InfoBoard.git
+cd InfoBoard
+npm ci
 npm run build:extension
 ```
-Build output is generated into `extension/dist/`.
 
-### Run Tests
+1. Open `chrome://extensions` (or `edge://extensions`).
+2. Enable **Developer mode**.
+3. Click **Load unpacked** and select the `extension/` directory.
+4. Press `Alt+W` (Windows/Linux) or `Command+Shift+K` (macOS).
+
+## Usage
+
+| Action | Windows/Linux | macOS |
+|---|---|---|
+| Open/toggle popup | `Alt+W` | `Command+Shift+K` |
+| Navigate results | `ArrowUp` / `ArrowDown`, `Ctrl+P` / `Ctrl+N` | Same |
+| Jump | `Home` / `End` | Same |
+| Activate selected tab | `Enter` | `Return` |
+| Close selected tab | `Alt+D`, or `Delete` when query is empty | Same |
+| Dismiss popup | `Esc` | `Esc` |
+
+Filter examples: `@audio lofi`, `@pinned git`, `@win`.
+
+## Architecture
+
+- `extension/manifest.json`: MV3 manifest, permissions, command, popup, service worker.
+- `extension/src/background/service-worker.ts`: listens to tab/window activation and removal events.
+- `extension/src/background/mru-manager.ts`: maintains an MRU ring buffer in `chrome.storage.session`.
+- `extension/src/search/types.ts`: tab model, domain extraction, normalization.
+- `extension/src/search/scorer.ts`: context filter parsing, lexical/subsequence scoring, typo fallback, MRU boost.
+- `extension/src/search/surface-entrypoint.ts`: popup rendering, keyboard/filter interactions, tab activation/close.
+- `extension/src/search/surface-shell.html` + `surface-shell.css`: popup markup and styles.
+- `extension/_locales/`: English and Vietnamese message catalogs.
+- `scripts/`: build asset copy and release packaging scripts.
+- `tests/`: Node built-in test runner coverage for manifest/bundle, MRU, scorer, surface, and types.
+
+## Permissions
+
+| Permission | Purpose |
+|---|---|
+| `tabs` | Read open tab metadata needed for local search and activation. |
+| `tabGroups` | Read tab group metadata for group-aware display/filtering. |
+| `storage` | Store ephemeral MRU tab IDs in `chrome.storage.session`. |
+
+InfoBoard does not request host permissions, content script access, browsing history, or native messaging. See [PRIVACY.md](PRIVACY.md).
+
+## Development
+
+Node.js is a build/test/packaging toolchain only; it is not part of the extension runtime.
+
 ```bash
+npm ci
+npm run build:extension
 npm test
+npm run package
 ```
 
----
+- `npm run build:extension` compiles TypeScript and copies static extension assets into `extension/dist/`.
+- `npm test` rebuilds and runs the Node test suite under `tests/`.
+- `npm run package` creates `release/infoboard-v<version>.zip` from `extension/manifest.json` version.
 
-## Load in Browser
+CI runs build, test, and package on pushes/PRs to `main` and `dev` (`.github/workflows/ci.yml`).
 
-1. Open Chrome or Edge and navigate to `chrome://extensions` (or `edge://extensions`).
-2. Enable **Developer mode** toggle in the top-right corner.
-3. Click **Load unpacked** and select the `extension/` directory.
-4. Press `Alt+W` (or `Command+Shift+K` on macOS) to open Tab Search.
+## Contributing
 
----
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## License
 
-This project is licensed under the terms of the [MIT License](LICENSE). Copyright (c) 2026 Ryan Tran (InfoBoard Contributors).
+[MIT](LICENSE)
