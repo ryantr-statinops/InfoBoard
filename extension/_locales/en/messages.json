@@ -12,7 +12,7 @@
     "description": "Tooltip for the action popup button."
   },
   "searchPlaceholder": {
-    "message": "Search open tabs (type @ for filters)...",
+    "message": "Search open tabs...",
     "description": "Placeholder for the search input."
   },
   "searchHintPrefix": {
