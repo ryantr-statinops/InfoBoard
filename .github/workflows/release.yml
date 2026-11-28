@@ -1,0 +1,116 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Validate, Build, and Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install zip
+        run: sudo apt-get update && sudo apt-get install -y zip
+
+      - name: Verify tag and manifest versions
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          node --input-type=module -e "
+            import { readFileSync } from 'node:fs';
+            const tag = process.env.TAG_NAME;
+            const semver = /^v(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?)$/;
+            const match = tag.match(semver);
+            if (!match) {
+              console.error(\`Invalid release tag '\${tag}'. Expected vX.Y.Z or vX.Y.Z-prerelease.\`);
+              process.exit(1);
+            }
+            const tagVersion = match[1];
+            const manifest = JSON.parse(readFileSync('extension/manifest.json', 'utf8'));
+            const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
+            if (manifest.version !== tagVersion) {
+              console.error(\`Tag/version mismatch: tag \${tag} but extension/manifest.json is \${manifest.version}.\`);
+              process.exit(1);
+            }
+            if (pkg.version !== tagVersion) {
+              console.error(\`Tag/version mismatch: tag \${tag} but package.json is \${pkg.version}.\`);
+              process.exit(1);
+            }
+            console.log(\`Version verified: \${tagVersion}\`);
+          "
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build extension
+        run: npm run build:extension
+
+      - name: Run automated test suite
+        run: node --test tests/*.test.mjs
+
+      - name: Package extension release artifact
+        run: node scripts/package-extension.mjs
+
+      - name: Verify release artifact
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          VERSION="${TAG_NAME#v}"
+          ZIP_PATH="release/infoboard-v${VERSION}.zip"
+          test -f "$ZIP_PATH" || { echo "Missing release artifact: $ZIP_PATH"; exit 1; }
+          unzip -Z1 "$ZIP_PATH" > /tmp/infoboard-release-entries.txt
+          for required in manifest.json dist/ icons/ _locales/; do
+            grep -qx "$required" /tmp/infoboard-release-entries.txt || {
+              echo "Release zip missing required top-level entry: $required"
+              cat /tmp/infoboard-release-entries.txt
+              exit 1
+            }
+          done
+          if grep -q '^extension/' /tmp/infoboard-release-entries.txt; then
+            echo "Release zip must not contain extension/ prefix"
+            cat /tmp/infoboard-release-entries.txt
+            exit 1
+          fi
+          echo "Release artifact verified: $ZIP_PATH"
+
+      - name: Determine prerelease flag
+        id: semver
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          VERSION="${TAG_NAME#v}"
+          if [[ "$VERSION" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: InfoBoard ${{ github.ref_name }}
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ steps.semver.outputs.prerelease == 'true' }}
+          files: release/infoboard-${{ github.ref_name }}.zip
+          fail_on_unmatched_files: true
